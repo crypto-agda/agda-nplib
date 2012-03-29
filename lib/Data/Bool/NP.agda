@@ -2,6 +2,8 @@
 module Data.Bool.NP where
 
 open import Data.Bool using (Bool; true; false; T; if_then_else_; not)
+import Algebra
+import Data.Bool.Properties
 open import Data.Unit using (⊤)
 open import Data.Sum
 open import Function
@@ -11,6 +13,9 @@ open import Relation.Nullary
 open import Relation.Nullary.Decidable
 import Relation.Binary.PropositionalEquality as ≡
 open ≡ using (_≡_)
+
+module Xor° = Algebra.CommutativeRing Data.Bool.Properties.commutativeRing-xor-∧
+module Bool° = Algebra.CommutativeSemiring Data.Bool.Properties.commutativeSemiring-∧-∨
 
 check : ∀ b → {pf : T b} → ⊤
 check = _
