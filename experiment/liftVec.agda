@@ -49,14 +49,24 @@ module single (A : Set)(_+_ : A → A → A)where
   prf (lhs ==' rhs) pr [] rewrite lemma1 lhs | lemma1 rhs = refl
   prf (l ==' r) pr (x ∷ xs) rewrite lemma2 x xs l | lemma2 x xs r = cong₂ (_∷_) (pr x) (prf (l ==' r) pr xs)
 
-module MultiDataType (A : Set) (nrVar : ℕ) where
+module MultiDataType {A : Set} {nrVar : ℕ} where
   data Tm : Set where
     var : Fin nrVar → Tm
     cst : A → Tm
     fun : Tm → Tm → Tm
 
+  infixl 6 _+'_
+  _+'_ : Tm → Tm → Tm
+  _+'_ = fun  
+
+  infix 4 _≡'_
+  record TmEq : Set where
+    constructor _≡'_ 
+    field 
+      lhs rhs : Tm
+
 module multi (A : Set)(_+_ : A → A → A)(nrVar : ℕ) where
-  open MultiDataType A nrVar public
+  open MultiDataType {A} {nrVar} public
 
   sEnv : Set
   sEnv = Vec A nrVar
@@ -118,19 +128,35 @@ module Full (A : Set)(_+_ : A → A → A) (m : ℕ) n where
     where f = λ G → veval {m} l G ≡ veval r G
           g = λ G → eval l G ≡ eval r G
 
+  mkTm : N-ary n Tm TmEq → TmEq
+  mkTm = go (tabulate id) where
+    go : {m : ℕ} -> Vec (Fin n) m → N-ary m Tm TmEq → TmEq
+    go [] f         = f
+    go (x ∷ args) f = go args (f (var x))
+
+  prove :  ∀ (t : N-ary n Tm TmEq) → 
+           let 
+             l = TmEq.lhs (mkTm t)
+             r = TmEq.rhs (mkTm t)
+           in ∀ⁿ n (curryⁿ′ (λ G → eval l G ≡ eval r G))
+         → ∀ⁿ n (curryⁿ′ (λ G → veval {m} l G ≡ veval r G))
+  prove t x = solve (TmEq.lhs (mkTm t)) (TmEq.rhs (mkTm t)) x
+
 open import Data.Bool
 
 module example where
 
   open import Data.Fin
   open import Data.Bool.NP
+  open import Data.Product using (Σ ; proj₁)
 
-  module VecBoolXorProps m n = Full Bool _xor_ m n
+  module VecBoolXorProps {m} = Full Bool _xor_ m
   open MultiDataType
 
   coolTheorem : {m : ℕ} → (xs ys : Vec Bool m) → zipWith _xor_ xs ys ≡ zipWith _xor_ ys xs
-  coolTheorem {m} = VecBoolXorProps.solve m 2 l r Xor°.+-comm where
-    l = fun (var zero) (var (suc zero))
-    r = fun (var (suc zero)) (var zero)
+  coolTheorem = VecBoolXorProps.prove 2 (λ x y → x +' y ≡' y +' x) Xor°.+-comm 
 
+  coolTheorem2 : {m : ℕ} → (xs : Vec Bool m) → _
+  coolTheorem2 = VecBoolXorProps.prove 1 (λ x → (x +' x) ≡' (cst false)) (proj₁ Xor°.-‿inverse) 
+ 
 test = example.coolTheorem (true ∷ false ∷ []) (false ∷ false ∷ [])
