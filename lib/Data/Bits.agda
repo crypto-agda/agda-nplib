@@ -4,14 +4,18 @@ module Data.Bits where
 open import Category.Applicative
 open import Category.Monad
 open import Data.Nat.NP hiding (_≤_; _==_)
-open import Data.Bool
-open import Data.Fin using (Fin; zero; suc; toℕ; #_; inject₁)
-open import Data.Vec hiding (_⊛_) renaming (map to vmap)
+open import Data.Nat.DivMod
+open import Data.Bool.NP hiding (_==_)
+open import Data.Maybe
+import Data.Fin as Fin
+open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise)
+open import Data.Vec.NP hiding (_⊛_) renaming (map to vmap)
+open import Data.Vec.N-ary.NP
 open import Data.Unit using (⊤)
 open import Data.Empty using (⊥)
-open import Data.Product using (_×_; _,_; uncurry)
+open import Data.Product using (_×_; _,_; uncurry; proj₁; proj₂)
 open import Function.NP hiding (_→⟨_⟩_)
-open import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality.NP
 open import Algebra.FunctionProperties
 import Data.List as L
 
@@ -20,10 +24,6 @@ Bit = Bool
 
 pattern 0b = false
 pattern 1b = true
-{-
-data Bit : Set where
-  0b 1b : Bit
--}
 
 Bits : ℕ → Set
 Bits = Vec Bit
@@ -34,6 +34,12 @@ Bits = Vec Bit
 -- Warning: 0… {0} ≡ 1… {0}
 1… : ∀ {n} → Bits n
 1… = replicate 1b
+
+0∷_ : ∀ {n} → Bits n → Bits (suc n)
+0∷ xs = 0b ∷ xs
+
+1∷_ : ∀ {n} → Bits n → Bits (suc n)
+1∷ xs = 1b ∷ xs
 
 _!_ : ∀ {a n} {A : Set a} → Vec A n → Fin n → A
 _!_ = flip lookup
@@ -52,15 +58,33 @@ _⊕_ = zipWith _xor_
 vnot : ∀ {n} → Endo (Bits n)
 vnot = _⊕_ 1…
 
-postulate
-  ⊕-assoc : ∀ {n} → Associative _≡_ (_⊕_ {n})
-  ⊕-comm  : ∀ {n} → Commutative _≡_ (_⊕_ {n})
-  ⊕-left-identity : ∀ {n} → LeftIdentity _≡_ (replicate 0b) (_⊕_ {n})
-  ⊕-right-identity : ∀ {n} → RightIdentity _≡_ (replicate 0b) (_⊕_ {n})
-  ⊕-≡ : ∀ {n} (x : Bits n) → x ⊕ x ≡ replicate 0b
+⊕-assoc : ∀ {n} → Associative _≡_ (_⊕_ {n})
+⊕-assoc [] [] [] = refl
+⊕-assoc (x ∷ xs) (y ∷ ys) (z ∷ zs) rewrite ⊕-assoc xs ys zs | Xor°.+-assoc x y z = refl
 
-  ⊕-≢ : ∀ {n} (x : Bits n) → x ⊕ vnot x ≡ replicate 1b
-  -- x ⊕ vnot x ≡ x ⊕ (1… ⊕ x) ≡ (x ⊕ x) ⊕ 1… ≡ 0… ⊕ 1… ≡ 1…
+⊕-comm  : ∀ {n} → Commutative _≡_ (_⊕_ {n})
+⊕-comm [] [] = refl
+⊕-comm (x ∷ xs) (y ∷ ys) rewrite ⊕-comm xs ys | Xor°.+-comm x y = refl
+
+⊕-left-identity : ∀ {n} → LeftIdentity _≡_ (replicate 0b) (_⊕_ {n})
+⊕-left-identity [] = refl
+⊕-left-identity (x ∷ xs) rewrite ⊕-left-identity xs = refl
+
+⊕-right-identity : ∀ {n} → RightIdentity _≡_ (replicate 0b) (_⊕_ {n})
+⊕-right-identity [] = refl
+⊕-right-identity (x ∷ xs) rewrite ⊕-right-identity xs | proj₂ Xor°.+-identity x = refl
+
+⊕-≡ : ∀ {n} (x : Bits n) → x ⊕ x ≡ replicate 0b
+⊕-≡ [] = refl
+⊕-≡ (x ∷ xs) rewrite ⊕-≡ xs | proj₂ Xor°.-‿inverse x = refl
+
+⊕-≢ : ∀ {n} (x : Bits n) → x ⊕ vnot x ≡ replicate 1b
+⊕-≢ x = x ⊕ vnot x   ≡⟨ refl ⟩
+         x ⊕ (1… ⊕ x) ≡⟨ cong (_⊕_ x) (⊕-comm 1… x) ⟩
+         x ⊕ (x ⊕ 1…) ≡⟨ sym (⊕-assoc x x 1…) ⟩
+         (x ⊕ x) ⊕ 1… ≡⟨ cong (flip _⊕_ 1…) (⊕-≡ x) ⟩
+         0… ⊕ 1…       ≡⟨ ⊕-left-identity 1… ⟩
+         1… ∎ where open ≡-Reasoning
 
 msb : ∀ {n} k → Bits (k + n) → Bits k
 msb zero    bs       = []
@@ -83,12 +107,6 @@ lsb₂ = reverse ∘ msb 2 ∘ reverse
 #0 : ∀ {n} → Bits n → Fin (suc n)
 #0 = #1 ∘ vmap not
 
--- _ᴮ : (s : String) {pf : IsBitString s} → Bits (length s)
--- _ᴮ =
-
-11ᵇ : Bits 2
-11ᵇ = 1b ∷ 1b ∷ []
-
 private
  module M {a} {A : Set a} {M} (appl : RawApplicative M) where
   open RawApplicative appl
@@ -99,30 +117,72 @@ private
 
 open M public
 
-bits⁴ : Vec (Bits 4) 16
-bits⁴ = fromList $ replicateM rawIApplicative (toList (0b ∷ 1b ∷ []))
+allBitsL : ∀ n → L.List (Bits n)
+allBitsL _ = replicateM rawIApplicative (toList (0b ∷ 1b ∷ []))
+
   where open RawMonad L.monad
+allBits : ∀ n → Vec (Bits n) (2 ^ n)
+allBits zero = [] ∷ []
+allBits (suc n) rewrite ℕ°.+-comm (2 ^ n) 0 = vmap 0∷_ bs ++ vmap 1∷_ bs
+  where bs = allBits n
 
-0000b = bits⁴ ! # 0
-0001b = bits⁴ ! # 1
-0010b = bits⁴ ! # 2
-0011b = bits⁴ ! # 3
-0100b = bits⁴ ! # 4
-0101b = bits⁴ ! # 5
-0110b = bits⁴ ! # 6
-0111b = bits⁴ ! # 7
-1000b = bits⁴ ! # 8
-1001b = bits⁴ ! # 9
-1010b = bits⁴ ! # 10
-1011b = bits⁴ ! # 11
-1100b = bits⁴ ! # 12
-1101b = bits⁴ ! # 13
-1110b = bits⁴ ! # 14
-1111b = bits⁴ ! # 15
+#⟨_⟩ : ∀ {n} → (Bits n → Bool) → Fin (suc (2 ^ n))
+#⟨ pred ⟩ = count pred (allBits _)
 
-η : ∀ {n a} {A : Set a} → Vec A n → Vec A n
-η = tabulate ∘ flip lookup
-{- alternative
-η {zero} = λ _ → []
-η {suc n} = λ xs → head xs ∷ η (tail xs)
+sucBCarry : ∀ {n} → Bits n → Maybe (Bits n)
+sucBCarry [] = nothing
+sucBCarry (0b ∷ xs) = just (maybe′ 0∷_ (1b ∷ 0…) (sucBCarry xs))
+sucBCarry (1b ∷ xs) = maybe′ (just ∘′ 1∷_) nothing (sucBCarry xs)
+
+sucB : ∀ {n} → Bits n → Bits n
+sucB xs = maybe′ id 0… (sucBCarry xs)
+
+_[mod_] : ℕ → ℕ → Set
+a [mod b ] = DivMod' a b
+
+module ReversedBits where
+  sucRB : ∀ {n} → Bits n → Bits n
+  sucRB [] = []
+  sucRB (0b ∷ xs) = 1b ∷ xs
+  sucRB (1b ∷ xs) = 0b ∷ sucRB xs
+
+toFin : ∀ {n} → Bits n → Fin (2 ^ n)
+toFin         []        = zero
+toFin         (0b ∷ xs) = inject+ _ (toFin xs)
+toFin {suc n} (1b ∷ xs) = raise (2 ^ n) (inject+ 0 (toFin xs))
+
+{-
+toℕ : ∀ {n} → Bits n → ℕ
+toℕ = Fin.toℕ ∘ toFin
+-}
+
+toℕ : ∀ {n} → Bits n → ℕ
+toℕ         []        = zero
+toℕ         (0b ∷ xs) = toℕ xs
+toℕ {suc n} (1b ∷ xs) = 2 ^ n + toℕ xs
+
+fromℕ : ∀ {n} → ℕ → Bits n
+fromℕ = fold 0… sucB
+
+fromFin : ∀ {n} → Fin (2 ^ n) → Bits n
+fromFin = fromℕ ∘ Fin.toℕ
+
+{-
+sucB-lem : ∀ {n} x → toℕ {2 ^ n} (sucB x) [mod 2 ^ n ] ≡ (suc (toℕ x)) [mod 2 ^ n ]
+sucB-lem x = {!!}
+
+-- sucB-lem : ∀ {n} x → (sucB (fromℕ x)) [mod 2 ^ n ] ≡ fromℕ ((suc x) [mod 2 ^ n ])
+
+toℕ∘fromℕ : ∀ {n} x → toℕ (fromℕ {n} x) ≡ x
+toℕ∘fromℕ zero = {!!}
+toℕ∘fromℕ (suc x) = {!toℕ∘fromℕ x!}
+
+toℕ∘fromFin : ∀ {n} (x : Fin (2 ^ n)) → toℕ (fromFin x) ≡ Fin.toℕ x
+toℕ∘fromFin x = {!!}
+
+toFin∘fromFin : ∀ {n} (x : Fin (2 ^ n)) → toFin (fromFin x) ≡ x
+toFin∘fromFin x = {!!}
+
+-- _ᴮ : (s : String) {pf : IsBitString s} → Bits (length s)
+-- _ᴮ =
 -}
