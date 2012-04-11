@@ -16,6 +16,7 @@ open ≡ using (_≡_; _≗_; module ≡-Reasoning)
 module ℕ°   = Algebra.CommutativeSemiring Props.commutativeSemiring
 module ℕcmp = StrictTotalOrder Props.strictTotalOrder
 module ℕ≤   = DecTotalOrder    decTotalOrder
+module ⊔°   = Algebra.CommutativeSemiringWithoutOne ⊔-⊓-0-commutativeSemiringWithoutOne
 
 module ≤-Reasoning where
   open Preorder-Reasoning ℕ≤.preorder public renaming (_∼⟨_⟩_ to _≤⟨_⟩_)
