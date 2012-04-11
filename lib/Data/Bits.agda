@@ -19,6 +19,8 @@ open import Relation.Binary.PropositionalEquality.NP
 open import Algebra.FunctionProperties
 import Data.List as L
 
+open import Data.Bool.NP public using (_xor_)
+
 Bit : Set
 Bit = Bool
 
@@ -86,9 +88,8 @@ vnot = _⊕_ 1…
          0… ⊕ 1…       ≡⟨ ⊕-left-identity 1… ⟩
          1… ∎ where open ≡-Reasoning
 
-msb : ∀ {n} k → Bits (k + n) → Bits k
-msb zero    bs       = []
-msb (suc k) (b ∷ bs) = b ∷ msb k bs
+msb : ∀ k {n} → Bits (k + n) → Bits k
+msb = take
 
 lsb : ∀ {n} k → Bits (n + k) → Bits k
 lsb {n} k rewrite ℕ°.+-comm n k = reverse ∘ msb k ∘ reverse
