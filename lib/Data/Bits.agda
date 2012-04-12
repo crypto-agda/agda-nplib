@@ -15,7 +15,8 @@ open import Data.Unit using (⊤)
 open import Data.Empty using (⊥)
 open import Data.Product using (_×_; _,_; uncurry; proj₁; proj₂)
 open import Function.NP hiding (_→⟨_⟩_)
-open import Relation.Binary.PropositionalEquality.NP
+import Relation.Binary.PropositionalEquality.NP as ≡
+open ≡
 open import Algebra.FunctionProperties
 import Data.List as L
 
@@ -40,6 +41,7 @@ Bits = Vec Bit
 0∷_ : ∀ {n} → Bits n → Bits (suc n)
 0∷ xs = 0b ∷ xs
 
+-- can't we make these pattern aliases?
 1∷_ : ∀ {n} → Bits n → Bits (suc n)
 1∷ xs = 1b ∷ xs
 
@@ -167,6 +169,38 @@ fromℕ = fold 0… sucB
 
 fromFin : ∀ {n} → Fin (2 ^ n) → Bits n
 fromFin = fromℕ ∘ Fin.toℕ
+
+lookupTbl : ∀ {n a} {A : Set a} → Bits n → Vec A (2 ^ n) → A
+lookupTbl         []         (x ∷ []) = x
+lookupTbl         (0b ∷ key) tbl      = lookupTbl key (take _ tbl)
+lookupTbl {suc n} (1b ∷ key) tbl      = lookupTbl key (take (2 ^ n) (drop (2 ^ n) tbl))
+
+funFromTbl : ∀ {n a} {A : Set a} → Vec A (2 ^ n) → (Bits n → A)
+funFromTbl = flip lookupTbl
+
+tblFromFun : ∀ {n a} {A : Set a} → (Bits n → A) → Vec A (2 ^ n)
+-- tblFromFun f = tabulate (f ∘ fromFin)
+tblFromFun {zero} f = f [] ∷ []
+tblFromFun {suc n} f = tblFromFun {n} (f ∘ 0∷_) ++ tblFromFun {n} (f ∘ 1∷_) ++ []
+
+funFromTbl∘tblFromFun : ∀ {n a} {A : Set a} (fun : Bits n → A) → funFromTbl (tblFromFun fun) ≗ fun
+funFromTbl∘tblFromFun {zero} f [] = refl
+funFromTbl∘tblFromFun {suc n} f (0b ∷ xs)
+  rewrite take-++ (2 ^ n) (tblFromFun {n} (f ∘ 0∷_)) (tblFromFun {n} (f ∘ 1∷_) ++ []) =
+    funFromTbl∘tblFromFun {n} (f ∘ 0∷_) xs
+funFromTbl∘tblFromFun {suc n} f (1b ∷ xs)
+  rewrite drop-++ (2 ^ n) (tblFromFun {n} (f ∘ 0∷_)) (tblFromFun {n} (f ∘ 1∷_) ++ [])
+        | take-++ (2 ^ n) (tblFromFun {n} (f ∘ 1∷_)) [] =
+    funFromTbl∘tblFromFun {n} (f ∘ 1∷_) xs
+
+tblFromFun∘funFromTbl : ∀ {n a} {A : Set a} (tbl : Vec A (2 ^ n)) → tblFromFun {n} (funFromTbl tbl) ≡ tbl
+tblFromFun∘funFromTbl {zero} (x ∷ []) = refl
+tblFromFun∘funFromTbl {suc n} tbl
+  rewrite tblFromFun∘funFromTbl {n} (take _ tbl)
+        | tblFromFun∘funFromTbl {n} (take (2 ^ n) (drop (2 ^ n) tbl))
+        | take-them-all (2 ^ n) (drop (2 ^ n) tbl)
+        | take-drop-lem (2 ^ n) tbl
+   = refl
 
 {-
 sucB-lem : ∀ {n} x → toℕ {2 ^ n} (sucB x) [mod 2 ^ n ] ≡ (suc (toℕ x)) [mod 2 ^ n ]
