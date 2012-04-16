@@ -31,12 +31,12 @@ pattern 1b = true
 Bits : ℕ → Set
 Bits = Vec Bit
 
-0… : ∀ {n} → Bits n
-0… = replicate 0b
+0ⁿ : ∀ {n} → Bits n
+0ⁿ = replicate 0b
 
--- Warning: 0… {0} ≡ 1… {0}
-1… : ∀ {n} → Bits n
-1… = replicate 1b
+-- Warning: 0ⁿ {0} ≡ 1ⁿ {0}
+1ⁿ : ∀ {n} → Bits n
+1ⁿ = replicate 1b
 
 0∷_ : ∀ {n} → Bits n → Bits (suc n)
 0∷ xs = 0b ∷ xs
@@ -60,7 +60,7 @@ _⊕_ : ∀ {n} (bs₀ bs₁ : Bits n) → Bits n
 _⊕_ = zipWith _xor_
 
 vnot : ∀ {n} → Endo (Bits n)
-vnot = _⊕_ 1…
+vnot = _⊕_ 1ⁿ
 
 ⊕-assoc : ∀ {n} → Associative _≡_ (_⊕_ {n})
 ⊕-assoc [] [] [] = refl
@@ -84,11 +84,11 @@ vnot = _⊕_ 1…
 
 ⊕-≢ : ∀ {n} (x : Bits n) → x ⊕ vnot x ≡ replicate 1b
 ⊕-≢ x = x ⊕ vnot x   ≡⟨ refl ⟩
-         x ⊕ (1… ⊕ x) ≡⟨ cong (_⊕_ x) (⊕-comm 1… x) ⟩
-         x ⊕ (x ⊕ 1…) ≡⟨ sym (⊕-assoc x x 1…) ⟩
-         (x ⊕ x) ⊕ 1… ≡⟨ cong (flip _⊕_ 1…) (⊕-≡ x) ⟩
-         0… ⊕ 1…       ≡⟨ ⊕-left-identity 1… ⟩
-         1… ∎ where open ≡-Reasoning
+         x ⊕ (1ⁿ ⊕ x) ≡⟨ cong (_⊕_ x) (⊕-comm 1ⁿ x) ⟩
+         x ⊕ (x ⊕ 1ⁿ) ≡⟨ sym (⊕-assoc x x 1ⁿ) ⟩
+         (x ⊕ x) ⊕ 1ⁿ ≡⟨ cong (flip _⊕_ 1ⁿ) (⊕-≡ x) ⟩
+         0ⁿ ⊕ 1ⁿ       ≡⟨ ⊕-left-identity 1ⁿ ⟩
+         1ⁿ ∎ where open ≡-Reasoning
 
 msb : ∀ k {n} → Bits (k + n) → Bits k
 msb = take
@@ -134,11 +134,11 @@ allBits (suc n) rewrite ℕ°.+-comm (2 ^ n) 0 = vmap 0∷_ bs ++ vmap 1∷_ bs
 
 sucBCarry : ∀ {n} → Bits n → Maybe (Bits n)
 sucBCarry [] = nothing
-sucBCarry (0b ∷ xs) = just (maybe′ 0∷_ (1b ∷ 0…) (sucBCarry xs))
+sucBCarry (0b ∷ xs) = just (maybe′ 0∷_ (1b ∷ 0ⁿ) (sucBCarry xs))
 sucBCarry (1b ∷ xs) = maybe′ (just ∘′ 1∷_) nothing (sucBCarry xs)
 
 sucB : ∀ {n} → Bits n → Bits n
-sucB xs = maybe′ id 0… (sucBCarry xs)
+sucB xs = maybe′ id 0ⁿ (sucBCarry xs)
 
 _[mod_] : ℕ → ℕ → Set
 a [mod b ] = DivMod' a b
@@ -165,7 +165,7 @@ toℕ         (0b ∷ xs) = toℕ xs
 toℕ {suc n} (1b ∷ xs) = 2 ^ n + toℕ xs
 
 fromℕ : ∀ {n} → ℕ → Bits n
-fromℕ = fold 0… sucB
+fromℕ = fold 0ⁿ sucB
 
 fromFin : ∀ {n} → Fin (2 ^ n) → Bits n
 fromFin = fromℕ ∘ Fin.toℕ
