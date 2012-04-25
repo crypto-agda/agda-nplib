@@ -33,7 +33,9 @@ Cmp A = A → A → Bool
 
 -- More properties about fold are in Data.Nat.NP
 nest : ∀ {a} {A : Set a} → ℕ → Endo (Endo A)
-nest n f x = fold x f n
+-- TMP nest n f x = fold x f n
+nest zero f x = x
+nest (suc n) f x = f (nest n f x)
 
 module nest-Properties {a} {A : Set a} (f : Endo A) where
   nest₀ : nest 0 f ≡ id
