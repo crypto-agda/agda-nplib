@@ -21,6 +21,7 @@ open import Algebra.FunctionProperties
 import Data.List as L
 
 open import Data.Bool.NP public using (_xor_)
+open import Data.Vec.NP public using ([]; _∷_; head; tail)
 
 Bit : Set
 Bit = Bool
