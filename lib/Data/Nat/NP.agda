@@ -2,7 +2,7 @@
 module Data.Nat.NP where
 
 import Algebra
-open import Data.Nat public hiding (module GeneralisedArithmetic; module ≤-Reasoning)
+open import Data.Nat public hiding (module GeneralisedArithmetic; module ≤-Reasoning; fold)
 open import Data.Nat.Properties as Props
 open import Data.Bool
 open import Data.Product using (proj₁; proj₂; ∃; _,_)
@@ -29,6 +29,9 @@ module ≤-Reasoning where
 
 suc-injective : ∀ {n m : ℕ} → (suc n ∶ ℕ) ≡ suc m → n ≡ m
 suc-injective = ≡.cong pred
+
+fold : ∀ {a} {A : Set a} → A → Endo A → ℕ → A
+fold x f n = nest n f x
 
 _==_ : (x y : ℕ) → Bool
 zero   == zero   = true
