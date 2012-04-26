@@ -44,6 +44,13 @@ _^_ : ℕ → ℕ → ℕ
 b ^ zero  = 1
 b ^ suc n = b * b ^ n
 
+2*_ : ℕ → ℕ
+2* x = x + x
+
+2^_ : ℕ → ℕ
+2^ zero  = 1
+2^ suc n = 2* 2^ n
+
 -- https://en.wikipedia.org/wiki/Hyper_operator
 _↑⟨_⟩_ : ℕ → ℕ → ℕ → ℕ
 a ↑⟨ suc n             ⟩ (suc b) = a ↑⟨ n ⟩ (a ↑⟨ suc n ⟩ b)
