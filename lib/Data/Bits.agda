@@ -21,7 +21,7 @@ open import Algebra.FunctionProperties
 import Data.List as L
 
 open import Data.Bool.NP public using (_xor_)
-open import Data.Vec.NP public using ([]; _∷_; head; tail)
+open import Data.Vec.NP public using ([]; _∷_; head; tail; replicate)
 
 Bit : Set
 Bit = Bool
@@ -71,19 +71,19 @@ vnot = _⊕_ 1ⁿ
 ⊕-comm [] [] = refl
 ⊕-comm (x ∷ xs) (y ∷ ys) rewrite ⊕-comm xs ys | Xor°.+-comm x y = refl
 
-⊕-left-identity : ∀ {n} → LeftIdentity _≡_ (replicate 0b) (_⊕_ {n})
+⊕-left-identity : ∀ {n} → LeftIdentity _≡_ 0ⁿ (_⊕_ {n})
 ⊕-left-identity [] = refl
 ⊕-left-identity (x ∷ xs) rewrite ⊕-left-identity xs = refl
 
-⊕-right-identity : ∀ {n} → RightIdentity _≡_ (replicate 0b) (_⊕_ {n})
+⊕-right-identity : ∀ {n} → RightIdentity _≡_ 0ⁿ (_⊕_ {n})
 ⊕-right-identity [] = refl
 ⊕-right-identity (x ∷ xs) rewrite ⊕-right-identity xs | proj₂ Xor°.+-identity x = refl
 
-⊕-≡ : ∀ {n} (x : Bits n) → x ⊕ x ≡ replicate 0b
+⊕-≡ : ∀ {n} (x : Bits n) → x ⊕ x ≡ 0ⁿ
 ⊕-≡ [] = refl
 ⊕-≡ (x ∷ xs) rewrite ⊕-≡ xs | proj₂ Xor°.-‿inverse x = refl
 
-⊕-≢ : ∀ {n} (x : Bits n) → x ⊕ vnot x ≡ replicate 1b
+⊕-≢ : ∀ {n} (x : Bits n) → x ⊕ vnot x ≡ 1ⁿ
 ⊕-≢ x = x ⊕ vnot x   ≡⟨ refl ⟩
          x ⊕ (1ⁿ ⊕ x) ≡⟨ cong (_⊕_ x) (⊕-comm 1ⁿ x) ⟩
          x ⊕ (x ⊕ 1ⁿ) ≡⟨ sym (⊕-assoc x x 1ⁿ) ⟩
@@ -133,13 +133,15 @@ allBits (suc n) rewrite ℕ°.+-comm (2 ^ n) 0 = vmap 0∷_ bs ++ vmap 1∷_ bs
 #⟨_⟩ : ∀ {n} → (Bits n → Bool) → Fin (suc (2 ^ n))
 #⟨ pred ⟩ = count pred (allBits _)
 
-sucBCarry : ∀ {n} → Bits n → Maybe (Bits n)
-sucBCarry [] = nothing
-sucBCarry (0b ∷ xs) = just (maybe′ 0∷_ (1b ∷ 0ⁿ) (sucBCarry xs))
-sucBCarry (1b ∷ xs) = maybe′ (just ∘′ 1∷_) nothing (sucBCarry xs)
+sucBCarry : ∀ {n} → Bits n → Bits (1 + n)
+sucBCarry [] = 0b ∷ []
+sucBCarry (0b ∷ xs) = 0b ∷ sucBCarry xs
+sucBCarry (1b ∷ xs) with sucBCarry xs
+... | 0b ∷ bs = 0b ∷ 1b ∷ bs
+... | 1b ∷ bs = 1b ∷ 0b ∷ bs
 
 sucB : ∀ {n} → Bits n → Bits n
-sucB xs = maybe′ id 0ⁿ (sucBCarry xs)
+sucB = tail ∘ sucBCarry
 
 _[mod_] : ℕ → ℕ → Set
 a [mod b ] = DivMod' a b
