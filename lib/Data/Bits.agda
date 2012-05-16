@@ -112,7 +112,7 @@ lsb₂ = reverse ∘ msb 2 ∘ reverse
 #0 = #1 ∘ vmap not
 
 private
- module M {a} {A : Set a} {M} (appl : RawApplicative M) where
+ module M {a} {A : Set a} {M : Set a → Set a} (appl : RawApplicative M) where
   open RawApplicative appl
 
   replicateM : ∀ {n} → M A → M (Vec A n)
