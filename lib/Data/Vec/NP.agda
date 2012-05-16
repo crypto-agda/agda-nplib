@@ -27,10 +27,10 @@ filter pred (x ∷ xs) with pred x
 η′ {zero}  = λ _ → []
 η′ {suc n} = λ xs → head xs ∷ η (tail xs)
 
-≡-splitAt : ∀ {m n a} {A : Set a} {xs zs : Vec A m} {ys ts : Vec A n}
+++-decomp : ∀ {m n a} {A : Set a} {xs zs : Vec A m} {ys ts : Vec A n}
              → (xs ++ ys) ≡ (zs ++ ts) → (xs ≡ zs × ys ≡ ts)
-≡-splitAt {zero} {xs = []} {[]} p = refl , p
-≡-splitAt {suc m} {xs = x ∷ xs} {z ∷ zs} eq with ≡-splitAt {m} {xs = xs} {zs} (cong tail eq)
+++-decomp {zero} {xs = []} {[]} p = refl , p
+++-decomp {suc m} {xs = x ∷ xs} {z ∷ zs} eq with ++-decomp {m} {xs = xs} {zs} (cong tail eq)
 ... | (q₁ , q₂) = (cong₂ _∷_ (cong head eq) q₁) , q₂
 
 {-
@@ -46,10 +46,10 @@ module Here {a} {A : Set a} where
 -}
 
 ++-inj₁ : ∀ {m n} {a} {A : Set a} (xs ys : Vec A m) {zs ts : Vec A n} → xs ++ zs ≡ ys ++ ts → xs ≡ ys
-++-inj₁ xs ys eq = proj₁ (≡-splitAt eq)
+++-inj₁ xs ys eq = proj₁ (++-decomp eq)
 
 ++-inj₂ : ∀ {m n} {a} {A : Set a} (xs ys : Vec A m) {zs ts : Vec A n} → xs ++ zs ≡ ys ++ ts → zs ≡ ts
-++-inj₂ xs ys eq = proj₂ (≡-splitAt {xs = xs} {ys} eq)
+++-inj₂ xs ys eq = proj₂ (++-decomp {xs = xs} {ys} eq)
 
 take-++ : ∀ m {n} {a} {A : Set a} (xs : Vec A m) (ys : Vec A n) → take m (xs ++ ys) ≡ xs
 take-++ m xs ys with xs ++ ys | inspect (_++_ xs) ys
