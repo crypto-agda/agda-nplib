@@ -33,6 +33,12 @@ lift₁ : ∀ {a b} {A : Set a} {B : Set b} (f g : A → B) → (∀ x → f x �
 lift₁ f g pf [] = refl
 lift₁ f g pf (x ∷ xs) rewrite lift₁ f g pf xs | pf x = refl
 
+lift₃ : ∀ {a b} {A : Set a} {B : Set b} (f g : N-ary 3 A B) → (∀ x y z → f x y z ≡ g x y z)
+        → ∀ {n} (xs ys zs : Vec A n)
+        → replicate f ⊛ xs ⊛ ys ⊛ zs ≡ replicate g ⊛ xs ⊛ ys ⊛ zs
+lift₃ f g pf [] [] [] = refl
+lift₃ f g pf (x ∷ xs) (y ∷ ys) (z ∷ zs) rewrite lift₃ f g pf xs ys zs | pf x y z = refl
+
 -- move it
 transpose : ∀ {m n a} {A : Set a} → Vec (Vec A m) n → Vec (Vec A n) m
 transpose [] = replicate []
