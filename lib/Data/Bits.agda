@@ -146,6 +146,10 @@ sucB = tail ∘ sucBCarry
 _[mod_] : ℕ → ℕ → Set
 a [mod b ] = DivMod' a b
 
+proj : ∀ {a} {A : Set a} → A × A → Bit → A
+proj (x₀ , x₁) 0b = x₀
+proj (x₀ , x₁) 1b = x₁
+
 module ReversedBits where
   sucRB : ∀ {n} → Bits n → Bits n
   sucRB [] = []
