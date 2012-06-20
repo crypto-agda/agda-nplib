@@ -27,6 +27,9 @@ filter pred (x ∷ xs) with pred x
 η′ {zero}  = λ _ → []
 η′ {suc n} = λ xs → head xs ∷ η (tail xs)
 
+splitAt′ : ∀ {a} {A : Set a} m {n} → Vec A (m + n) → Vec A m × Vec A n
+splitAt′ m xs = case splitAt m xs of λ { (ys , zs , _) → (ys , zs) }
+
 ++-decomp : ∀ {m n a} {A : Set a} {xs zs : Vec A m} {ys ts : Vec A n}
              → (xs ++ ys) ≡ (zs ++ ts) → (xs ≡ zs × ys ≡ ts)
 ++-decomp {zero} {xs = []} {[]} p = refl , p
