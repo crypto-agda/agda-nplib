@@ -27,8 +27,13 @@ open import Data.Vec.NP public using ([]; _∷_; head; tail; replicate)
 Bit : Set
 Bit = Bool
 
-pattern 0b = false
-pattern 1b = true
+module Defs where
+  0b = false
+  1b = true
+module Patterns where
+  pattern 0b = false
+  pattern 1b = true
+open Patterns
 
 Bits : ℕ → Set
 Bits = Vec Bit
@@ -233,3 +238,5 @@ toFin∘fromFin x = {!!}
 -- _ᴮ : (s : String) {pf : IsBitString s} → Bits (length s)
 -- _ᴮ =
 -}
+
+open Defs public
