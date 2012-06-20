@@ -6,6 +6,7 @@ open import Category.Monad
 open import Data.Nat.NP hiding (_≤_; _==_)
 open import Data.Nat.DivMod
 open import Data.Bool.NP hiding (_==_)
+open import Data.Bool.Properties using (not-involutive)
 open import Data.Maybe
 import Data.Fin as Fin
 open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise)
@@ -62,6 +63,10 @@ _⊕_ = zipWith _xor_
 
 vnot : ∀ {n} → Endo (Bits n)
 vnot = _⊕_ 1ⁿ
+
+vnot∘vnot≗id : ∀ {n} → vnot {n} ∘ vnot ≗ id
+vnot∘vnot≗id [] = refl
+vnot∘vnot≗id (x ∷ xs) rewrite not-involutive x = cong (_∷_ x) (vnot∘vnot≗id xs)
 
 ⊕-assoc : ∀ {n} → Associative _≡_ (_⊕_ {n})
 ⊕-assoc [] [] [] = refl
