@@ -65,7 +65,7 @@ private
 ⟦ℕ⟧-cong _ zero     = refl
 ⟦ℕ⟧-cong f (suc nᵣ) = ⟦ℕ⟧-cong (f ∘ suc) nᵣ
 
-module ⟦ℕ⟧-Reasoning = Trans-Reasoning ⟦ℕ⟧ trans
+module ⟦ℕ⟧-Reasoning = Setoid-Reasoning ⟦ℕ⟧-setoid
 
 data ⟦≤⟧ : ⟦REL⟧ ⟦ℕ⟧ ⟦ℕ⟧ L.zero _≤_ _≤_ where
   z≤n : ∀ {m₁ m₂} {mᵣ : ⟦ℕ⟧ m₁ m₂} → ⟦≤⟧ zero mᵣ z≤n z≤n
