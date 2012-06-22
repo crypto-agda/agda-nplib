@@ -38,6 +38,9 @@ open Patterns
 Bits : ℕ → Set
 Bits = Vec Bit
 
+_→ᵇ_ : ℕ → ℕ → Set
+i →ᵇ o = Bits i → Bits o
+
 0ⁿ : ∀ {n} → Bits n
 0ⁿ = replicate 0b
 
