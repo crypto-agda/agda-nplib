@@ -39,6 +39,26 @@ zero   == suc _  = false
 suc _  == zero   = false
 suc m  == suc n  = m == n
 
+dist : ℕ → ℕ → ℕ
+dist zero    y       = y
+dist x       zero    = x
+dist (suc x) (suc y) = dist x y
+
+{-
+postulate
+  dist-refl  : ∀ x → dist x x ≡ 0
+  dist-sym   : ∀ x y → dist x y ≡ dist y x
+  dist-sum   : ∀ x y z → dist x y + dist y z ≤ dist x z
+  dist-≤     : ∀ x y → dist x y ≤ x
+  dist-x+    : ∀ x y z → dist (x + y) (x + z) ≡ dist y z
+  dist-mono₁ : ∀ x y z t → x ≤ y → dist z t ≤ dist (x + z) (y + t)
+  dist-x*  : ∀ x y z → dist (x * y) (x * z) ≡ x * dist y z
+-}
+
+-- Haskell
+-- let dist x y = abs (x - y)
+-- quickCheck (forAll (replicateM 3 (choose (0,100))) (\ [x,y,z] -> dist (x * y) (x * z) == x * dist y z))
+
 infix 8 _^_
 _^_ : ℕ → ℕ → ℕ
 b ^ zero  = 1
