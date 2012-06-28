@@ -138,12 +138,12 @@ allBitsL : ∀ n → L.List (Bits n)
 allBitsL _ = replicateM rawIApplicative (toList (0b ∷ 1b ∷ []))
 
   where open RawMonad L.monad
-allBits : ∀ n → Vec (Bits n) (2 ^ n)
-allBits zero = [] ∷ []
-allBits (suc n) rewrite ℕ°.+-comm (2 ^ n) 0 = vmap 0∷_ bs ++ vmap 1∷_ bs
+allBits : ∀ n → Vec (Bits n) (2^ n)
+allBits zero    = [] ∷ []
+allBits (suc n) = vmap 0∷_ bs ++ vmap 1∷_ bs
   where bs = allBits n
 
-#⟨_⟩ : ∀ {n} → (Bits n → Bool) → Fin (suc (2 ^ n))
+#⟨_⟩ : ∀ {n} → (Bits n → Bool) → Fin (suc (2^ n))
 #⟨ pred ⟩ = count pred (allBits _)
 
 sucBCarry : ∀ {n} → Bits n → Bits (1 + n)
