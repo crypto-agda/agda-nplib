@@ -15,7 +15,7 @@ open import Data.Unit using (⊤)
 open import Data.Nat using (ℕ; zero; suc)
 
 module M? ℓ where
-  open Cat.RawMonad (monad {ℓ}) public
+  open Cat.RawMonadPlus (monadPlus {ℓ}) public
 
 Π? : ∀ {a b} (A : Set a) (B : A → Set b) → Set _
 Π? A B = (x : A) → Maybe (B x)
