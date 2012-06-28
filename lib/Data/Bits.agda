@@ -1,15 +1,16 @@
 module Data.Bits where
 
 -- cleanup
+import Level
 open import Category.Applicative
 open import Category.Monad
 open import Data.Nat.NP hiding (_≤_; _==_)
 open import Data.Nat.DivMod
 open import Data.Bool.NP hiding (_==_)
 open import Data.Bool.Properties using (not-involutive)
-open import Data.Maybe
+open import Data.Maybe.NP
 import Data.Fin as Fin
-open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise)
+open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise) renaming (_+_ to _+ᶠ_)
 open import Data.Vec.NP hiding (_⊛_) renaming (map to vmap)
 open import Data.Vec.N-ary.NP
 open import Data.Unit using (⊤)
@@ -143,8 +144,31 @@ allBits zero    = [] ∷ []
 allBits (suc n) = vmap 0∷_ bs ++ vmap 1∷_ bs
   where bs = allBits n
 
-#⟨_⟩ : ∀ {n} → (Bits n → Bool) → Fin (suc (2^ n))
-#⟨ pred ⟩ = count pred (allBits _)
+search : ∀ {n a} {A : Set a} → (A → A → A) → (Bits n → A) → A
+search {zero}  _   f = f []
+search {suc n} _·_ f = search {n} _·_ (f ∘ 0∷_) · search {n} _·_ (f ∘ 1∷_)
+
+#⟨_⟩ᶠ : ∀ {n} → (Bits n → Bool) → Fin (suc (2^ n))
+#⟨ pred ⟩ᶠ = countᶠ pred (allBits _)
+
+#⟨_⟩ : ∀ {n} → (Bits n → Bool) → ℕ
+#⟨ pred ⟩ = search _+_ (λ x → if pred x then 1 else 0)
+
+#⟨⟩-spec : ∀ {n} (pred : Bits n → Bool) → #⟨ pred ⟩ ≡ Fin.toℕ #⟨ pred ⟩ᶠ
+#⟨⟩-spec {zero}  pred with pred []
+... | true = refl
+... | false = refl
+#⟨⟩-spec {suc n} pred rewrite count-++ pred (vmap 0∷_ (allBits n)) (vmap 1∷_ (allBits n))
+                            | #⟨⟩-spec {n} (pred ∘ 0∷_)
+                            | #⟨⟩-spec {n} (pred ∘ 1∷_)
+                            | count-∘ 0∷_ pred (allBits n)
+                            | count-∘ 1∷_ pred (allBits n) = refl
+
+find? : ∀ {n a} {A : Set a} → (Bits n →? A) →? A
+find? = search (M?._∣_ _)
+
+findB : ∀ {n} → (Bits n → Bool) → Maybe (Bits n)
+findB pred = find? (λ x → if pred x then just x else nothing)
 
 sucBCarry : ∀ {n} → Bits n → Bits (1 + n)
 sucBCarry [] = 0b ∷ []
