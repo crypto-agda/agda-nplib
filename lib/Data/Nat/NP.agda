@@ -67,9 +67,27 @@ b ^ suc n = b * b ^ n
 2*_ : ℕ → ℕ
 2* x = x + x
 
+2*-spec : ∀ n → 2* n ≡ 2 * n
+2*-spec n rewrite ℕ°.+-comm n 0 = ≡.refl
+
+2*′_ : ℕ → ℕ
+2*′_ = fold 0 (suc ∘ suc)
+
+2*′-spec : ∀ n → 2*′ n ≡ 2* n
+2*′-spec zero = ≡.refl
+2*′-spec (suc n) rewrite 2*′-spec n
+                      | ℕ°.+-comm 1 (n + n)
+                      | ℕ°.+-assoc n n 1
+                      | ℕ°.+-comm n 1
+                      = ≡.refl
+
 2^_ : ℕ → ℕ
 2^ zero  = 1
 2^ suc n = 2* 2^ n
+
+2^-spec : ∀ n → 2^ n ≡ 2 ^ n
+2^-spec zero = ≡.refl
+2^-spec (suc n) rewrite 2^-spec n | 2*-spec (2 ^ n) = ≡.refl
 
 -- https://en.wikipedia.org/wiki/Hyper_operator
 _↑⟨_⟩_ : ℕ → ℕ → ℕ → ℕ
