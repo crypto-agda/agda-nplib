@@ -2,23 +2,42 @@ module Data.Vec.NP where
 
 open import Data.Vec public
 open import Data.Nat using (ℕ; suc; zero; _+_)
-open import Data.Fin hiding (_+_)
+open import Data.Fin renaming (_+_ to _+ᶠ_)
 open import Data.Fin.Props
 open import Data.Bool
-open import Data.Product
+open import Data.Product hiding (map)
 open import Function
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡
 
-count : ∀ {n a} {A : Set a} → (A → Bool) → Vec A n → Fin (suc n)
-count pred [] = zero
-count pred (x ∷ xs) = (if pred x then suc else inject₁) (count pred xs)
+countᶠ : ∀ {n a} {A : Set a} → (A → Bool) → Vec A n → Fin (suc n)
+countᶠ pred = foldr (Fin ∘ suc) (λ x → if pred x then suc else inject₁) zero
 
-filter : ∀ {n a} {A : Set a} (pred : A → Bool) (xs : Vec A n) → Vec A (toℕ (count pred xs))
+count : ∀ {n a} {A : Set a} → (A → Bool) → Vec A n → ℕ
+count pred = toℕ ∘ countᶠ pred
+
+count-∘ : ∀ {n a b} {A : Set a} {B : Set b} (f : A → B) (pred : B → Bool) →
+            count {n} (pred ∘ f) ≗ count pred ∘ map f
+count-∘ f pred [] = refl
+count-∘ f pred (x ∷ xs) with pred (f x)
+... | true rewrite count-∘ f pred xs = refl
+... | false rewrite inject₁-lemma (countᶠ pred (map f xs))
+                  | inject₁-lemma (countᶠ (pred ∘ f) xs)
+                  | count-∘ f pred xs = refl
+
+count-++ : ∀ {m n a} {A : Set a} (pred : A → Bool) (xs : Vec A m) (ys : Vec A n)
+            → count pred (xs ++ ys) ≡ count pred xs + count pred ys
+count-++ pred [] ys = refl
+count-++ pred (x ∷ xs) ys with pred x
+... | true  rewrite count-++ pred xs ys = refl
+... | false rewrite inject₁-lemma (countᶠ pred (xs ++ ys))
+                  | inject₁-lemma (countᶠ pred xs) | count-++ pred xs ys = refl
+
+filter : ∀ {n a} {A : Set a} (pred : A → Bool) (xs : Vec A n) → Vec A (count pred xs)
 filter pred [] = []
 filter pred (x ∷ xs) with pred x
 ... | true  = x ∷ filter pred xs
-... | false rewrite inject₁-lemma (count pred xs) = filter pred xs
+... | false rewrite inject₁-lemma (countᶠ pred xs) = filter pred xs
 
 η : ∀ {n a} {A : Set a} → Vec A n → Vec A n
 η = tabulate ∘ flip lookup
