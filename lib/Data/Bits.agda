@@ -146,7 +146,7 @@ allBits (suc n) = vmap 0∷_ bs ++ vmap 1∷_ bs
 
 search : ∀ {n a} {A : Set a} → (A → A → A) → (Bits n → A) → A
 search {zero}  _   f = f []
-search {suc n} _·_ f = search {n} _·_ (f ∘ 0∷_) · search {n} _·_ (f ∘ 1∷_)
+search {suc n} _·_ f = search _·_ (f ∘ 0∷_) · search _·_ (f ∘ 1∷_)
 
 #⟨_⟩ᶠ : ∀ {n} → (Bits n → Bool) → Fin (suc (2^ n))
 #⟨ pred ⟩ᶠ = countᶠ pred (allBits _)
@@ -167,7 +167,7 @@ search {suc n} _·_ f = search {n} _·_ (f ∘ 0∷_) · search {n} _·_ (f ∘ 
 find? : ∀ {n a} {A : Set a} → (Bits n →? A) →? A
 find? = search (M?._∣_ _)
 
-findB : ∀ {n} → (Bits n → Bool) → Maybe (Bits n)
+findB : ∀ {n} → (Bits n → Bool) →? Bits n
 findB pred = find? (λ x → if pred x then just x else nothing)
 
 sucBCarry : ∀ {n} → Bits n → Bits (1 + n)
