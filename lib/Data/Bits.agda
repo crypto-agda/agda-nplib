@@ -11,7 +11,8 @@ open import Data.Bool.Properties using (not-involutive)
 open import Data.Maybe.NP
 import Data.Fin as Fin
 open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise) renaming (_+_ to _+ᶠ_)
-open import Data.Vec.NP hiding (_⊛_) renaming (map to vmap)
+import Data.Vec.NP as V
+open V hiding (_⊛_; rewire; rewireTbl) renaming (map to vmap)
 open import Data.Vec.N-ary.NP
 open import Data.Unit using (⊤)
 open import Data.Empty using (⊥)
@@ -23,7 +24,7 @@ open import Algebra.FunctionProperties
 import Data.List as L
 
 open import Data.Bool.NP public using (_xor_)
-open import Data.Vec.NP public using ([]; _∷_; head; tail; replicate)
+open V public using ([]; _∷_; head; tail; replicate; RewireTbl)
 
 Bit : Set
 Bit = Bool
@@ -139,6 +140,7 @@ allBitsL : ∀ n → L.List (Bits n)
 allBitsL _ = replicateM rawIApplicative (toList (0b ∷ 1b ∷ []))
 
   where open RawMonad L.monad
+
 allBits : ∀ n → Vec (Bits n) (2^ n)
 allBits zero    = [] ∷ []
 allBits (suc n) = vmap 0∷_ bs ++ vmap 1∷_ bs
@@ -186,6 +188,12 @@ a [mod b ] = DivMod' a b
 proj : ∀ {a} {A : Set a} → A × A → Bit → A
 proj (x₀ , x₁) 0b = x₀
 proj (x₀ , x₁) 1b = x₁
+
+rewire : ∀ {i o} → (Fin o → Fin i) → i →ᵇ o
+rewire = V.rewire
+
+rewireTbl : ∀ {i o} → RewireTbl i o → i →ᵇ o
+rewireTbl = V.rewireTbl
 
 module ReversedBits where
   sucRB : ∀ {n} → Bits n → Bits n

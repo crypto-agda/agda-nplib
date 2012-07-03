@@ -93,3 +93,12 @@ take-drop-lem m .(ys ++ zs) | ys , zs , refl = refl
 take-them-all : ∀ n {a} {A : Set a} (xs : Vec A (n + 0)) → take n xs ++ [] ≡ xs
 take-them-all n xs with splitAt n xs
 take-them-all n .(ys ++ []) | ys , [] , refl = refl
+
+rewire : ∀ {a i o} {A : Set a} → (Fin o → Fin i) → Vec A i → Vec A o
+rewire f v = tabulate (flip lookup v ∘ f)
+
+RewireTbl : (i o : ℕ) → Set
+RewireTbl i o = Vec (Fin i) o
+
+rewireTbl : ∀ {a i o} {A : Set a} → RewireTbl i o → Vec A i → Vec A o
+rewireTbl tbl v = map (flip lookup v) tbl
