@@ -3,8 +3,9 @@ module Data.Bool.NP where
 
 open import Data.Bool using (Bool; true; false; T; if_then_else_; not)
 import Algebra
-import Data.Bool.Properties
+import Data.Bool.Properties as B
 open import Data.Unit using (⊤)
+open import Data.Product
 open import Data.Sum
 open import Function
 open import Relation.Binary.NP
@@ -12,10 +13,13 @@ open import Relation.Binary.Logical
 open import Relation.Nullary
 open import Relation.Nullary.Decidable
 import Relation.Binary.PropositionalEquality as ≡
+import Function.Equivalence as E
+open E.Equivalence using (to; from)
+open import Function.Equality using (_⟨$⟩_)
 open ≡ using (_≡_)
 
-module Xor° = Algebra.CommutativeRing Data.Bool.Properties.commutativeRing-xor-∧
-module Bool° = Algebra.CommutativeSemiring Data.Bool.Properties.commutativeSemiring-∧-∨
+module Xor° = Algebra.CommutativeRing B.commutativeRing-xor-∧
+module Bool° = Algebra.CommutativeSemiring B.commutativeSemiring-∧-∨
 
 check : ∀ b → {pf : T b} → ⊤
 check = _
@@ -168,34 +172,22 @@ open Data.Bool public
 ⟦false⟧′ {false} _ = ⟦false⟧
 
 T∧ : ∀ {b₁ b₂} → T b₁ → T b₂ → T (b₁ ∧ b₂)
-T∧ {true}   {true}  _   _  = _
-T∧ {false}  {_}     ()  _
-T∧ {true}   {false} _   ()
+T∧ p q = _⟨$⟩_ (from B.T-∧) (p , q)
 
 T∧₁ : ∀ {b₁ b₂} → T (b₁ ∧ b₂) → T b₁
-T∧₁ {true} {true} _ = _
-T∧₁ {false} {_}   ()
-T∧₁ {true} {false}   ()
+T∧₁ = proj₁ ∘ _⟨$⟩_ (to B.T-∧)
 
 T∧₂ : ∀ {b₁ b₂} → T (b₁ ∧ b₂) → T b₂
-T∧₂ {true} {true} _ = _
-T∧₂ {false} {_}   ()
-T∧₂ {true} {false}   ()
+T∧₂ {b₁} = proj₂ ∘ _⟨$⟩_ (to (B.T-∧ {b₁}))
 
 T∨'⊎ : ∀ {b₁ b₂} → T (b₁ ∨ b₂) → T b₁ ⊎ T b₂
-T∨'⊎ {true} _ = inj₁ _
-T∨'⊎ {false} {true} _ = inj₂ _
-T∨'⊎ {false} {false} ()
+T∨'⊎ {b₁} = _⟨$⟩_ (to (B.T-∨ {b₁}))
 
 T∨₁ : ∀ {b₁ b₂} → T b₁ → T (b₁ ∨ b₂)
-T∨₁ {true} _ = _
-T∨₁ {false} {true} _ = _
-T∨₁ {false} {false} ()
+T∨₁ = _⟨$⟩_ (from B.T-∨) ∘ inj₁
 
 T∨₂ : ∀ {b₁ b₂} → T b₂ → T (b₁ ∨ b₂)
-T∨₂ {true} _ = _
-T∨₂ {false} {true} _ = _
-T∨₂ {false} {false} ()
+T∨₂ {b₁} = _⟨$⟩_ (from (B.T-∨ {b₁})) ∘ inj₂
 
 T'not'¬ : ∀ {b} → T (not b) → ¬ (T b)
 T'not'¬ {false} _ = λ()
