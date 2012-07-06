@@ -166,6 +166,9 @@ search {suc n} _·_ f = search _·_ (f ∘ 0∷_) · search _·_ (f ∘ 1∷_)
                             | count-∘ 0∷_ pred (allBits n)
                             | count-∘ 1∷_ pred (allBits n) = refl
 
+ext-# : ∀ {c} {f g : Bits c → Bit} → f ≗ g → #⟨ f ⟩ᶠ ≡ #⟨ g ⟩ᶠ
+ext-# f≗g = ext-countᶠ f≗g (allBits _)
+
 find? : ∀ {n a} {A : Set a} → (Bits n →? A) →? A
 find? = search (M?._∣_ _)
 

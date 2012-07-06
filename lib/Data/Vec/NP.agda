@@ -33,6 +33,10 @@ count-++ pred (x ∷ xs) ys with pred x
 ... | false rewrite inject₁-lemma (countᶠ pred (xs ++ ys))
                   | inject₁-lemma (countᶠ pred xs) | count-++ pred xs ys = refl
 
+ext-countᶠ : ∀ {n a} {A : Set a} {f g : A → Bool} → f ≗ g → (xs : Vec A n) → countᶠ f xs ≡ countᶠ g xs
+ext-countᶠ f≗g [] = refl
+ext-countᶠ f≗g (x ∷ xs) rewrite ext-countᶠ f≗g xs | f≗g x = refl
+
 filter : ∀ {n a} {A : Set a} (pred : A → Bool) (xs : Vec A n) → Vec A (count pred xs)
 filter pred [] = []
 filter pred (x ∷ xs) with pred x
