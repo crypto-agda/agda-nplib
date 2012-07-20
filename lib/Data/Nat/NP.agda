@@ -4,6 +4,7 @@ module Data.Nat.NP where
 import Algebra
 open import Data.Nat public hiding (module GeneralisedArithmetic; module ≤-Reasoning; fold)
 open import Data.Nat.Properties as Props
+open import Data.Nat.Logical
 open import Data.Bool
 open import Data.Product using (proj₁; proj₂; ∃; _,_)
 open import Data.Empty using (⊥-elim)
@@ -46,6 +47,13 @@ assoc-comm : ∀ x y z → x + (y + z) ≡ y + (x + z)
 assoc-comm x y z rewrite ≡.sym (ℕ°.+-assoc x y z)
                        | ℕ°.+-comm x y
                        | ℕ°.+-assoc y x z = ≡.refl
+
+2*′_ : ℕ → ℕ
+2*′_ = fold 0 (suc ∘′ suc)
+
+2*′-spec : ∀ n → 2*′ n ≡ 2* n
+2*′-spec zero = ≡.refl
+2*′-spec (suc n) rewrite 2*′-spec n | assoc-comm 1 n n = ≡.refl
 
 dist : ℕ → ℕ → ℕ
 dist zero    y       = y
@@ -144,6 +152,21 @@ dist-2^* x y z = dist-sym-wlog ⟨2^ x ⟩* (pf x) y z
 2^-+ zero    y z = ≡.refl
 2^-+ (suc x) y z = ≡.cong 2*_ (2^-+ x y z)
 
+2*′-inj : ∀ {m n} → ⟦ℕ⟧ (2*′ m) (2*′ n) → ⟦ℕ⟧ m n
+2*′-inj {zero}  {zero}  _ = zero
+2*′-inj {zero}  {suc _} ()
+2*′-inj {suc _} {zero}  ()
+2*′-inj {suc m} {suc n} (suc (suc p)) = suc (2*′-inj p)
+
+2*-inj : ∀ {m n} → 2* m ≡ 2* n → m ≡ n
+2*-inj {m} {n} p rewrite ≡.sym (2*′-spec m)
+                       | ≡.sym (2*′-spec n)
+                       = ⟦ℕ⟧⇒≡ (2*′-inj (⟦ℕ⟧ˢ.reflexive p))
+
+2^-inj : ∀ k {m n} → ⟨2^ k ⟩* m ≡ ⟨2^ k ⟩* n → m ≡ n
+2^-inj zero    eq = eq
+2^-inj (suc k) eq = 2^-inj k (2*-inj eq)
+
 {-
 post--ulate
   dist-sum   : ∀ x y z → dist x y + dist y z ≤ dist x z
@@ -162,13 +185,6 @@ b ^ suc n = b * b ^ n
 
 2*-spec : ∀ n → 2* n ≡ 2 * n
 2*-spec n rewrite ℕ°.+-comm n 0 = ≡.refl
-
-2*′_ : ℕ → ℕ
-2*′_ = fold 0 (suc ∘ suc)
-
-2*′-spec : ∀ n → 2*′ n ≡ 2* n
-2*′-spec zero = ≡.refl
-2*′-spec (suc n) rewrite 2*′-spec n | assoc-comm 1 n n = ≡.refl
 
 2^_ : ℕ → ℕ
 2^ n = ⟨2^ n ⟩* 1

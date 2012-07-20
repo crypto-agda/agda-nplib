@@ -65,6 +65,8 @@ private
 ⟦ℕ⟧-cong _ zero     = refl
 ⟦ℕ⟧-cong f (suc nᵣ) = ⟦ℕ⟧-cong (f ∘ suc) nᵣ
 
+module ⟦ℕ⟧ᵉ = Equality ⟦ℕ⟧-equality
+module ⟦ℕ⟧ˢ = DecSetoid ⟦ℕ⟧-decSetoid
 module ⟦ℕ⟧-Reasoning = Setoid-Reasoning ⟦ℕ⟧-setoid
 
 data ⟦≤⟧ : ⟦REL⟧ ⟦ℕ⟧ ⟦ℕ⟧ L.zero _≤_ _≤_ where
