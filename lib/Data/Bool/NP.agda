@@ -200,3 +200,7 @@ T'¬'not {false} _ = _
 Tdec : ∀ b → Dec (T b)
 Tdec true = yes _
 Tdec false = no λ()
+
+de-morgan : ∀ x y → not (x ∨ y) ≡ not x ∧ not y
+de-morgan true  _ = ≡.refl
+de-morgan false _ = ≡.refl
