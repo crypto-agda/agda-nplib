@@ -7,6 +7,7 @@ import Data.Bool.Properties as B
 open import Data.Unit using (⊤)
 open import Data.Product
 open import Data.Sum
+open import Data.Nat using (ℕ; _≤_; z≤n; s≤s)
 open import Function
 open import Relation.Binary.NP
 open import Relation.Binary.Logical
@@ -201,6 +202,10 @@ T'¬'not : ∀ {b} → ¬ (T b) → T (not b)
 T'¬'not {true}  f = f _
 T'¬'not {false} _ = _
 
+∧⇒∨ : ∀ x y → T (x ∧ y) → T (x ∨ y)
+∧⇒∨ true y = _
+∧⇒∨ false y = λ ()
+
 Tdec : ∀ b → Dec (T b)
 Tdec true = yes _
 Tdec false = no λ()
@@ -208,3 +213,11 @@ Tdec false = no λ()
 de-morgan : ∀ x y → not (x ∨ y) ≡ not x ∧ not y
 de-morgan true  _ = ≡.refl
 de-morgan false _ = ≡.refl
+
+-- false is 0 and true is 1
+toℕ : Bool → ℕ
+toℕ b = if b then 1 else 0
+
+toℕ≤1 : ∀ b → toℕ b ≤ 1
+toℕ≤1 true  = s≤s z≤n
+toℕ≤1 false = z≤n
