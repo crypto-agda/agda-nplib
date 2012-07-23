@@ -176,6 +176,28 @@ dist-2^* x = dist-sym-wlog (2^⟨ x ⟩*) pf
 2ⁿ*0≡0 zero    = ≡.refl
 2ⁿ*0≡0 (suc n) = ≡.cong₂ _+_ (2ⁿ*0≡0 n) (2ⁿ*0≡0 n)
 
+0∸_≡0 : ∀ x → 0 ∸ x ≡ 0
+0∸ zero  ≡0 = ≡.refl
+0∸ suc x ≡0 = ≡.refl
+
+2*-∸ : ∀ x y → 2* x ∸ 2* y ≡ 2* (x ∸ y)
+2*-∸ _       zero    = ≡.refl
+2*-∸ zero    (suc _) = ≡.refl
+2*-∸ (suc x) (suc y) rewrite ≡.sym (2*-∸ x y) | ℕ°.+-comm x (1 + x) | ℕ°.+-comm y (1 + y) = ≡.refl
+
+n+k∸m : ∀ {m n} k → m ≤ n → n + k ∸ m ≡ (n ∸ m) + k
+n+k∸m k z≤n = ≡.refl
+n+k∸m k (s≤s m≤n) = n+k∸m k m≤n
+
+factor-+-∸ : ∀ {b x y} → x ≤ b → y ≤ b → (b ∸ x) + (b ∸ y) ≡ 2* b ∸ (x + y)
+factor-+-∸ {b} {zero} {y} z≤n y≤b rewrite ℕ°.+-comm b (b ∸ y) = ≡.sym (n+k∸m b y≤b)
+factor-+-∸ (s≤s {x} {b} x≤b) z≤n             rewrite ℕ°.+-comm x 0 = ≡.sym (n+k∸m (suc b) x≤b)
+factor-+-∸ (s≤s {x} {b} x≤b) (s≤s {y} y≤b)   rewrite factor-+-∸ x≤b y≤b
+                                              | ℕ°.+-comm b (suc b)
+                                              | ℕ°.+-comm x (suc y)
+                                              | n+k∸m (suc y) x≤b
+                                              | ℕ°.+-comm x y = ≡.refl
+
 {-
 post--ulate
   dist-sum   : ∀ x y z → dist x y + dist y z ≤ dist x z
