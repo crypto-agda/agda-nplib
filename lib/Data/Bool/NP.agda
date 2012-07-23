@@ -54,6 +54,10 @@ cong-if : ∀ {A B : Set} b {t₀ t₁} (f : A → B) → (if b then f t₀ else
 cong-if true  _ = ≡.refl
 cong-if false _ = ≡.refl
 
+if-not : ∀ {a} {A : Set a} b {t₀ t₁ : A} → (if b then t₀ else t₁) ≡ (if not b then t₁ else t₀)
+if-not true  = ≡.refl
+if-not false = ≡.refl
+
 data ⟦Bool⟧ : (b₁ b₂ : Bool) → Set where
   ⟦true⟧   : ⟦Bool⟧ true true
   ⟦false⟧  : ⟦Bool⟧ false false
