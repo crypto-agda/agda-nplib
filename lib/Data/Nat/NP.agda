@@ -165,9 +165,9 @@ dist-2^* x = dist-sym-wlog (2^⟨ x ⟩*) pf
                        | ≡.sym (2*′-spec n)
                        = ⟦ℕ⟧⇒≡ (2*′-inj (⟦ℕ⟧ˢ.reflexive p))
 
-2^-inj : ∀ k {m n} → ⟨2^ k ⟩* m ≡ ⟨2^ k ⟩* n → m ≡ n
-2^-inj zero    eq = eq
-2^-inj (suc k) eq = 2^-inj k (2*-inj eq)
+2^-inj : ∀ k {m n} → ⟨2^ k * m ⟩ ≡ ⟨2^ k * n ⟩ → m ≡ n
+2^-inj zero    = id
+2^-inj (suc k) = 2^-inj k ∘ 2*-inj
 
 2ⁿ*0≡0 : ∀ n → ⟨2^ n * 0 ⟩ ≡ 0
 2ⁿ*0≡0 zero    = ≡.refl
