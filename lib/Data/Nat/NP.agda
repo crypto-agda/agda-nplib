@@ -105,9 +105,11 @@ dist-x* x = dist-sym-wlog (_*_ x) pf
   where pf : ∀ a k → dist (x * a) (x * (a + k)) ≡ x * k
         pf a k rewrite proj₁ ℕ°.distrib x a k = dist-x-x+y≡y (x * a) _
 
-⟨2^_⟩* : ℕ → ℕ → ℕ
-⟨2^ zero  ⟩* = id
-⟨2^ suc k ⟩* = 2*_ ∘ ⟨2^ k ⟩*
+2^⟨_⟩* : ℕ → ℕ → ℕ
+2^⟨ n ⟩* x = fold x 2*_ n
+
+⟨2^_*_⟩ : ℕ → ℕ → ℕ
+⟨2^ n * x ⟩ = 2^⟨ n ⟩* x
 
 2*-distrib : ∀ x y → 2* x + 2* y ≡ 2* (x + y) 
 2*-distrib = solve 2 (λ x y → 2:* x :+ 2:* y := 2:* (x :+ y)) ≡.refl
@@ -115,22 +117,22 @@ dist-x* x = dist-sym-wlog (_*_ x) pf
             2:* : ∀ {n} → Polynomial n → Polynomial n
             2:* x = x :+ x
 
-2^*-distrib : ∀ k x y → ⟨2^ k ⟩* (x + y) ≡ ⟨2^ k ⟩* x + ⟨2^ k ⟩* y
+2^*-distrib : ∀ k x y → ⟨2^ k * (x + y)⟩ ≡ ⟨2^ k * x ⟩ + ⟨2^ k * y ⟩
 2^*-distrib zero x y = ≡.refl
-2^*-distrib (suc k) x y rewrite 2^*-distrib k x y = ≡.sym (2*-distrib (⟨2^ k ⟩* x) (⟨2^ k ⟩* y))
+2^*-distrib (suc k) x y rewrite 2^*-distrib k x y = ≡.sym (2*-distrib ⟨2^ k * x ⟩ ⟨2^ k * y ⟩)
 
-2^*-2*-comm : ∀ k x → ⟨2^ k ⟩* (2* x) ≡ 2* (⟨2^ k ⟩* x)
+2^*-2*-comm : ∀ k x → ⟨2^ k * 2* x ⟩ ≡ 2* ⟨2^ k * x ⟩
 2^*-2*-comm k x = 2^*-distrib k x x
 
-dist-2^* : ∀ x y z → dist (⟨2^ x ⟩* y) (⟨2^ x ⟩* z) ≡ ⟨2^ x ⟩* (dist y z)
-dist-2^* x y z = dist-sym-wlog ⟨2^ x ⟩* (pf x) y z
-  where pf : ∀ x a k → dist (⟨2^ x ⟩* a) (⟨2^ x ⟩* (a + k)) ≡ ⟨2^ x ⟩* k
-        pf x a k rewrite 2^*-distrib x a k = dist-x-x+y≡y (⟨2^ x ⟩* a) (⟨2^ x ⟩* k)
+dist-2^* : ∀ x y z → dist ⟨2^ x * y ⟩ ⟨2^ x * z ⟩ ≡ ⟨2^ x * dist y z ⟩
+dist-2^* x = dist-sym-wlog (2^⟨ x ⟩*) pf
+  where pf : ∀ a k → dist ⟨2^ x * a ⟩ ⟨2^ x * (a + k) ⟩ ≡ ⟨2^ x * k ⟩
+        pf a k rewrite 2^*-distrib x a k = dist-x-x+y≡y ⟨2^ x * a ⟩ ⟨2^ x * k ⟩
 
 2*-mono : ∀ {a b} → a ≤ b → 2* a ≤ 2* b
 2*-mono pf = pf +-mono pf
 
-2^*-mono : ∀ k {a b} → a ≤ b → ⟨2^ k ⟩* a ≤ ⟨2^ k ⟩* b
+2^*-mono : ∀ k {a b} → a ≤ b → ⟨2^ k * a ⟩ ≤ ⟨2^ k * b ⟩
 2^*-mono zero    pf = pf
 2^*-mono (suc k) pf = 2*-mono (2^*-mono k pf)
 
@@ -140,15 +142,15 @@ dist-2^* x y z = dist-sym-wlog ⟨2^ x ⟩* (pf x) y z
 2*-mono′ {suc a} {suc b} pf rewrite assoc-comm a 1 a
                                   | assoc-comm b 1 b = s≤s (2*-mono′ (≤-pred (≤-pred pf)))
 
-2^*-mono′ : ∀ k {a b} → ⟨2^ k ⟩* a ≤ ⟨2^ k ⟩* b → a ≤ b
+2^*-mono′ : ∀ k {a b} → ⟨2^ k * a ⟩ ≤ ⟨2^ k * b ⟩ → a ≤ b
 2^*-mono′ zero    = id
 2^*-mono′ (suc k) = 2^*-mono′ k ∘ 2*-mono′
 
-2^-comm : ∀ x y z → ⟨2^ x ⟩* (⟨2^ y ⟩* z) ≡ ⟨2^ y ⟩* (⟨2^ x ⟩* z)
+2^-comm : ∀ x y z → ⟨2^ x * ⟨2^ y * z ⟩ ⟩ ≡ ⟨2^ y * ⟨2^ x * z ⟩ ⟩
 2^-comm zero y z = ≡.refl
-2^-comm (suc x) y z rewrite 2^-comm x y z = ≡.sym (2^*-2*-comm y (⟨2^ x ⟩* z))
+2^-comm (suc x) y z rewrite 2^-comm x y z = ≡.sym (2^*-2*-comm y ⟨2^ x * z ⟩)
 
-2^-+ : ∀ x y z → ⟨2^ x ⟩* (⟨2^ y ⟩* z) ≡ ⟨2^ x + y ⟩* z
+2^-+ : ∀ x y z → ⟨2^ x * ⟨2^ y * z ⟩ ⟩ ≡ ⟨2^ (x + y) * z ⟩
 2^-+ zero    y z = ≡.refl
 2^-+ (suc x) y z = ≡.cong 2*_ (2^-+ x y z)
 
@@ -166,6 +168,10 @@ dist-2^* x y z = dist-sym-wlog ⟨2^ x ⟩* (pf x) y z
 2^-inj : ∀ k {m n} → ⟨2^ k ⟩* m ≡ ⟨2^ k ⟩* n → m ≡ n
 2^-inj zero    eq = eq
 2^-inj (suc k) eq = 2^-inj k (2*-inj eq)
+
+2ⁿ*0≡0 : ∀ n → ⟨2^ n * 0 ⟩ ≡ 0
+2ⁿ*0≡0 zero    = ≡.refl
+2ⁿ*0≡0 (suc n) = ≡.cong₂ _+_ (2ⁿ*0≡0 n) (2ⁿ*0≡0 n)
 
 {-
 post--ulate
@@ -187,7 +193,7 @@ b ^ suc n = b * b ^ n
 2*-spec n rewrite ℕ°.+-comm n 0 = ≡.refl
 
 2^_ : ℕ → ℕ
-2^ n = ⟨2^ n ⟩* 1
+2^ n = ⟨2^ n * 1 ⟩
 
 2^-spec : ∀ n → 2^ n ≡ 2 ^ n
 2^-spec zero = ≡.refl
