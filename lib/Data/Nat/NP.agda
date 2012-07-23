@@ -37,6 +37,9 @@ fold x f n = nest n f x
 2*_ : ℕ → ℕ
 2* x = x + x
 
+2*-spec : ∀ n → 2* n ≡ 2 * n
+2*-spec n rewrite ℕ°.+-comm n 0 = ≡.refl
+
 _==_ : (x y : ℕ) → Bool
 zero   == zero   = true
 zero   == suc _  = false
@@ -188,9 +191,6 @@ infix 8 _^_
 _^_ : ℕ → ℕ → ℕ
 b ^ zero  = 1
 b ^ suc n = b * b ^ n
-
-2*-spec : ∀ n → 2* n ≡ 2 * n
-2*-spec n rewrite ℕ°.+-comm n 0 = ≡.refl
 
 2^_ : ℕ → ℕ
 2^ n = ⟨2^ n * 1 ⟩
