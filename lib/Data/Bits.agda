@@ -7,7 +7,8 @@ open import Category.Monad
 open import Data.Nat.NP hiding (_==_)
 open import Data.Nat.Properties
 open import Data.Nat.DivMod
-open import Data.Bool.NP hiding (_==_)
+import Data.Bool.NP as Bool
+open Bool hiding (_==_; toℕ)
 open import Data.Bool.Properties using (not-involutive)
 open import Data.Maybe.NP
 import Data.Fin as Fin
@@ -72,12 +73,17 @@ infixr 5 _⊕_
 _⊕_ : ∀ {n} (bs₀ bs₁ : Bits n) → Bits n
 _⊕_ = zipWith _xor_
 
+-- Negate all bits, i.e. "xor"ing them by one.
 vnot : ∀ {n} → Endo (Bits n)
 vnot = _⊕_ 1ⁿ
 
 vnot∘vnot≗id : ∀ {n} → vnot {n} ∘ vnot ≗ id
 vnot∘vnot≗id [] = refl
-vnot∘vnot≗id (x ∷ xs) rewrite not-involutive x = cong (_∷_ x) (vnot∘vnot≗id xs)
+vnot∘vnot≗id (x ∷ xs) rewrite not-involutive x | vnot∘vnot≗id xs = refl
+
+-- Negate the i-th bit.
+notᵢ : ∀ {n} (i : Fin n) → Bits n → Bits n
+notᵢ = onᵢ not
 
 ⊕-assoc : ∀ {n} → Associative _≡_ (_⊕_ {n})
 ⊕-assoc [] [] [] = refl
@@ -106,6 +112,13 @@ vnot∘vnot≗id (x ∷ xs) rewrite not-involutive x = cong (_∷_ x) (vnot∘vn
          (x ⊕ x) ⊕ 1ⁿ ≡⟨ cong (flip _⊕_ 1ⁿ) (⊕-≡ x) ⟩
          0ⁿ ⊕ 1ⁿ       ≡⟨ ⊕-left-identity 1ⁿ ⟩
          1ⁿ ∎ where open ≡-Reasoning
+
+-- "Xor"ing the i-th bit with `b' is the same thing as "xor"ing with a vector of zeros
+-- except at the i-th position.
+-- Such a vector can be obtained by "xor"ing the i-th bit of a vector of zeros.
+onᵢ-xor-⊕ : ∀ b {n} (i : Fin n) → onᵢ (_xor_ b) i ≗ _⊕_ (onᵢ (_xor_ b) i 0ⁿ)
+onᵢ-xor-⊕ b zero    (x ∷ xs) rewrite proj₂ Xor°.+-identity b | ⊕-left-identity xs = refl
+onᵢ-xor-⊕ b (suc i) (x ∷ xs) rewrite onᵢ-xor-⊕ b i xs = refl
 
 msb : ∀ k {n} → Bits (k + n) → Bits k
 msb = take
@@ -173,7 +186,7 @@ sum-const zero    _ = refl
 sum-const (suc n) x = cong₂ _+_ (sum-const n x) (sum-const n x)
 
 #⟨_⟩ : ∀ {n} → (Bits n → Bool) → ℕ
-#⟨ pred ⟩ = sum (λ x → if pred x then 1 else 0)
+#⟨ pred ⟩ = sum (Bool.toℕ ∘ pred)
 
 #⟨⟩-spec : ∀ {n} (pred : Bits n → Bool) → #⟨ pred ⟩ ≡ Fin.toℕ #⟨ pred ⟩ᶠ
 #⟨⟩-spec {zero}  pred with pred []
@@ -313,8 +326,7 @@ search-·-ε≡ε ε _·_ ε·ε = go
 #never≡0 = search-·-ε≡ε _ _ refl
 
 #always≡2^_ : ∀ n → #⟨ always n ⟩ ≡ 2^ n
-#always≡2^_ zero = refl
-#always≡2^_ (suc n) = cong₂ _+_ pf pf where pf = #always≡2^ n
+#always≡2^ n = sum-const n 1
 
 ==-comm : ∀ {n} (xs ys : Bits n) → xs == ys ≡ ys == xs
 ==-comm [] [] = refl
@@ -338,14 +350,6 @@ countᵇ b = if b then 1 else 0
 
 #-+ : ∀ {n a b} (f : Bits (suc n) → Bit) → #⟨ f ∘ 0∷_ ⟩ ≡ a → #⟨ f ∘ 1∷_ ⟩ ≡ b → #⟨ f ⟩ ≡ a + b
 #-+ f f0 f1 rewrite f0 | f1 = refl
-
-take-∷ : ∀ {m a} {A : Set a} n x (xs : Vec A (n + m)) → take (suc n) (x ∷ xs) ≡ x ∷ take n xs
-take-∷ n x xs with splitAt n xs
-take-∷ _ _ ._ | _ , _ , refl = refl
-
-drop-∷ : ∀ {m a} {A : Set a} n x (xs : Vec A (n + m)) → drop (suc n) (x ∷ xs) ≡ drop n xs
-drop-∷ n x xs with splitAt n xs
-drop-∷ _ _ ._ | _ , _ , refl = refl
 
 ==-refl : ∀ {n} (xs : Bits n) → (xs == xs) ≡ 1b
 ==-refl [] = refl
@@ -451,12 +455,41 @@ _|∧|_ f g x = f x ∧ g x
 #∨ : ∀ {m n o} {f g : Bits o → Bit} → #⟨ f ⟩ ≤ m → #⟨ g ⟩ ≤ n → #⟨ (λ x → f x ∨ g x) ⟩ ≤ (m + n)
 #∨ {m} {n} {o} {f} {g} pf pg = ℕ≤.trans (#∨' f g) (pf +-mono pg)
 
-∧⇒∨ : ∀ x y → T (x ∧ y) → T (x ∨ y)
-∧⇒∨ true y = _
-∧⇒∨ false y = λ ()
-
 #∧ : ∀ {m n o} {f g : Bits o → Bit} → #⟨ f ⟩ ≤ m → #⟨ g ⟩ ≤ n → #⟨ f |∧| g ⟩ ≤ (m + n)
 #∧ {f = f} {g} pf pg = ℕ≤.trans (#⇒ (f |∧| g) (f |∨| g) (λ x → ∧⇒∨ (f x) (g x))) (#∨ {f = f} pf pg)
+
+#-bound : ∀ c (f : Bits c → Bit) → #⟨ f ⟩ ≤ 2^ c
+#-bound zero    f = Bool.toℕ≤1 (f [])
+#-bound (suc c) f = #-bound c (f ∘ 0∷_) +-mono #-bound c (f ∘ 1∷_)
+
+#-⊕ : ∀ {c} (bs : Bits c) (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ _⊕_ bs ⟩
+#-⊕ [] f = ≡.refl
+#-⊕ (b ∷ bs) f
+  rewrite #-⊕ bs (f ∘ 0∷_)
+        | #-⊕ bs (f ∘ 1∷_)
+  with b
+... | false = refl
+... | true  = ℕ°.+-comm #⟨ f ∘ 0∷_ ∘ _⊕_ bs ⟩ _
+
+#-∘vnot : ∀ c (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ vnot ⟩
+#-∘vnot _ f = #-⊕ 1ⁿ f
+
+#-∘xorᵢ : ∀ {c} (i : Fin c) (f : Bits c → Bit) b → #⟨ f ⟩ ≡ #⟨ f ∘ onᵢ (_xor_ b) i ⟩
+#-∘xorᵢ i f b = pf
+  where pad = onᵢ (_xor_ b) i 0ⁿ
+        pf : #⟨ f ⟩ ≡ #⟨ f ∘ onᵢ (_xor_ b) i ⟩
+        pf rewrite #-⊕ pad f = ≗-cong-# (f ∘ _⊕_ pad) (f ∘ onᵢ (_xor_ b) i) (cong (_$_ f) ∘ sym ∘ onᵢ-xor-⊕ b i)
+
+#-∘notᵢ : ∀ {c} (i : Fin c) (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ notᵢ i ⟩
+#-∘notᵢ i f = #-∘xorᵢ i f true
+
+#-not∘ : ∀ c (f : Bits c → Bit) → #⟨ f ⟩ ≡ 2^ c ∸ #⟨ not ∘ f ⟩
+#-not∘ zero f with f []
+... | true  = ≡.refl
+... | false = ≡.refl
+#-not∘ (suc c) f
+  rewrite #-not∘ c (f ∘ 0∷_)
+        | #-not∘ c (f ∘ 1∷_) = factor-+-∸ (#-bound c (not ∘ f ∘ 0∷_)) (#-bound c (not ∘ f ∘ 1∷_))
 
 |de-morgan| : ∀ {n} (f g : Bits n → Bit) → f |∨| g ≗ not ∘ ((not ∘ f) |∧| (not ∘ g))
 |de-morgan| f g x with f x
@@ -464,7 +497,7 @@ _|∧|_ f g x = f x ∧ g x
 ... | false = sym (not-involutive _)
 
 search-de-morgan : ∀ {n} op (f g : Bits n → Bit) → search op (f |∨| g) ≡ search op (not ∘ ((not ∘ f) |∧| (not ∘ g)))
-search-de-morgan op f g = ≗-cong-search op {-(f |∨| g) (not ∘ ((not ∘ f) |∧| (not ∘ g)))-} (|de-morgan| f g)
+search-de-morgan op f g = ≗-cong-search op (|de-morgan| f g)
 
 search-comm :
   ∀ {n a b}
@@ -481,14 +514,5 @@ search-comm {suc n} _+_ _*_ f p hom =
          (cong₂ _*_ (search-comm {n} _+_ _*_ f (p ∘ 0∷_) hom)
                     (search-comm _+_ _*_ f (p ∘ 1∷_) hom))
 
-[0↔_] : ∀ {n} → Fin n → Bits n → Bits n
-[0↔_] {zero}  i xs = xs
-[0↔_] {suc n} i xs = lookup i xs ∷ tail (xs [ i ]≔ head xs)
-
-[0↔1] : Bits 2 → Bits 2
-[0↔1] = [0↔ suc zero ]
-
-[0↔1]-spec : [0↔1] ≗ (λ { (x ∷ y ∷ []) → y ∷ x ∷ [] })
-[0↔1]-spec (x ∷ y ∷ []) = refl
 
 open Defs public
