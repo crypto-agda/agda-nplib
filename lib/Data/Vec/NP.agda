@@ -80,6 +80,14 @@ module Here {a} {A : Set a} where
 ++-inj₂ : ∀ {m n} {a} {A : Set a} (xs ys : Vec A m) {zs ts : Vec A n} → xs ++ zs ≡ ys ++ ts → zs ≡ ts
 ++-inj₂ xs ys eq = proj₂ (++-decomp {xs = xs} {ys} eq)
 
+take-∷ : ∀ {m a} {A : Set a} n x (xs : Vec A (n + m)) → take (suc n) (x ∷ xs) ≡ x ∷ take n xs
+take-∷ n x xs with splitAt n xs
+take-∷ _ _ ._ | _ , _ , refl = refl
+
+drop-∷ : ∀ {m a} {A : Set a} n x (xs : Vec A (n + m)) → drop (suc n) (x ∷ xs) ≡ drop n xs
+drop-∷ n x xs with splitAt n xs
+drop-∷ _ _ ._ | _ , _ , refl = refl
+
 take-++ : ∀ m {n} {a} {A : Set a} (xs : Vec A m) (ys : Vec A n) → take m (xs ++ ys) ≡ xs
 take-++ m xs ys with xs ++ ys | inspect (_++_ xs) ys
 ... | zs | eq with splitAt m zs
@@ -106,3 +114,74 @@ RewireTbl i o = Vec (Fin i) o
 
 rewireTbl : ∀ {a i o} {A : Set a} → RewireTbl i o → Vec A i → Vec A o
 rewireTbl tbl v = map (flip lookup v) tbl
+
+onᵢ : ∀ {a} {A : Set a} (f : A → A) {n} (i : Fin n) → Vec A n → Vec A n
+onᵢ f zero    (x ∷ xs) = f x ∷ xs
+onᵢ f (suc i) (x ∷ xs) = x ∷ onᵢ f i xs
+
+-- Exchange elements at positions 0 and 1 of a given vector
+-- (this only apply if the vector is long enough).
+0↔1 : ∀ {n a} {A : Set a} → Vec A n → Vec A n
+0↔1 (x₀ ∷ x₁ ∷ xs) = x₁ ∷ x₀ ∷ xs
+0↔1 xs = xs
+
+map-tail : ∀ {m n a} {A : Set a} → (Vec A m → Vec A n) → Vec A (suc m) → Vec A (suc n)
+map-tail f (x ∷ xs) = x ∷ f xs
+
+map-tail-id : ∀ {n a} {A : Set a} → map-tail id ≗ id {A = Vec A (suc n)}
+map-tail-id (x ∷ xs) = ≡.refl
+
+-- ⟨ i ↔+1⟩: Exchange elements at position i and i + 1.
+⟨_↔+1⟩ : ∀ {n} (i : Fin n) {a} {A : Set a} → Vec A n → Vec A n
+⟨ zero  ↔+1⟩ = 0↔1
+⟨ suc i ↔+1⟩ = map-tail ⟨ i ↔+1⟩
+
+-- rot-up-to i (x₀ ∷ x₁ ∷ x₂ ∷ … ∷ xᵢ ∷ xs)
+--           ≡ (x₁ ∷ x₂ ∷ x₃ ∷ … ∷ x₀ ∷ xs)
+rot-up-to : ∀ {n} (i : Fin n) {a} {A : Set a} → Vec A n → Vec A n
+rot-up-to zero    = id
+rot-up-to (suc i) = map-tail (rot-up-to i) ∘ 0↔1
+
+-- Inverse of rot-up-to
+rot⁻¹-up-to : ∀ {n} (i : Fin n) {a} {A : Set a} → Vec A n → Vec A n
+rot⁻¹-up-to zero    = id
+rot⁻¹-up-to (suc i) = 0↔1 ∘ map-tail (rot⁻¹-up-to i)
+
+rot⁻¹-up-to∘rot-up-to : ∀ {n} (i : Fin n) {a} {A : Set a} → rot⁻¹-up-to i ∘ rot-up-to i ≗ id {a} {Vec A n}
+rot⁻¹-up-to∘rot-up-to zero            _ = ≡.refl
+rot⁻¹-up-to∘rot-up-to (suc i) {A = A} (x₀ ∷ []) rewrite rot⁻¹-up-to∘rot-up-to i {A = A} [] = ≡.refl
+rot⁻¹-up-to∘rot-up-to (suc i)         (x₀ ∷ x₁ ∷ xs) rewrite rot⁻¹-up-to∘rot-up-to i (x₀ ∷ xs) = ≡.refl
+
+-- ⟨0↔ i ⟩: Exchange elements at position 0 and i.
+⟨0↔_⟩ : ∀ {n} (i : Fin n) {a} {A : Set a} → Vec A n → Vec A n
+⟨0↔ zero  ⟩ = id
+⟨0↔ suc i ⟩ = rot⁻¹-up-to (inject₁ i) ∘ rot-up-to (suc i)
+
+⟨0↔zero⟩ : ∀ {n a} {A : Set a} → ⟨0↔ zero ⟩ ≗ id {A = Vec A (suc n)}
+⟨0↔zero⟩ _ = ≡.refl
+
+-- ⟨ i ↔ j ⟩: Exchange elements at position i and j.
+⟨_↔_⟩ : ∀ {n} (i j : Fin n) {a} {A : Set a} → Vec A n → Vec A n
+⟨ i ↔ j ⟩ = ⟨0↔ i ⟩ ∘ ⟨0↔ j ⟩ ∘ ⟨0↔ i ⟩
+
+⟨0↔⟩-spec : ∀ {n a} {A : Set a} (i : Fin (suc n)) → ⟨0↔ i ⟩ ≗ ⟨ zero ↔ i ⟩ {A = A}
+⟨0↔⟩-spec _ _ = ≡.refl
+
+⟨_↔_⟩′ : ∀ {n} (i j : Fin n) {a} {A : Set a} → Vec A n → Vec A n
+⟨ zero  ↔ j     ⟩′ = ⟨0↔ j ⟩
+⟨ i     ↔ zero  ⟩′ = ⟨0↔ i ⟩
+⟨ suc i ↔ suc j ⟩′ = map-tail ⟨ i ↔ j ⟩′
+
+⟨↔⟩′-comm : ∀ {n a} {A : Set a} (i j : Fin n) → ⟨ i ↔ j ⟩′ ≗ ⟨ j ↔ i ⟩′ {A = A}
+⟨↔⟩′-comm zero    zero    _ = ≡.refl
+⟨↔⟩′-comm zero    (suc _) _ = ≡.refl
+⟨↔⟩′-comm (suc _) zero    _ = ≡.refl
+⟨↔⟩′-comm (suc i) (suc j) (x ∷ xs) rewrite ⟨↔⟩′-comm i j xs = ≡.refl
+
+⟨↔+1⟩-spec : ∀ {n} (i : Fin n) {a} {A : Set a} → ⟨ inject₁ i ↔+1⟩ ≗ ⟨ inject₁ i ↔ suc i ⟩′ {A = A}
+⟨↔+1⟩-spec zero    xs       rewrite map-tail-id (0↔1 xs) = ≡.refl
+⟨↔+1⟩-spec (suc i) (x ∷ xs) rewrite ⟨↔+1⟩-spec i xs = ≡.refl
+
+⟨0↔_⟩′ : ∀ {n} (i : Fin n) {a} {A : Set a} → Vec A n → Vec A n
+⟨0↔_⟩′ {zero}  i xs = xs
+⟨0↔_⟩′ {suc n} i xs = lookup i xs ∷ tail (xs [ i ]≔ head xs)
