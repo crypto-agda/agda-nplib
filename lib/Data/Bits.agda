@@ -13,7 +13,7 @@ open import Data.Maybe.NP
 import Data.Fin as Fin
 open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise) renaming (_+_ to _+ᶠ_)
 import Data.Vec.NP as V
-open V hiding (_⊛_; rewire; rewireTbl) renaming (map to vmap)
+open V hiding (_⊛_; rewire; rewireTbl; sum) renaming (map to vmap)
 open import Data.Vec.N-ary.NP
 open import Data.Unit using (⊤)
 open import Data.Empty using (⊥; ⊥-elim)
@@ -139,7 +139,6 @@ open M public
 
 allBitsL : ∀ n → L.List (Bits n)
 allBitsL _ = replicateM rawIApplicative (toList (0b ∷ 1b ∷ []))
-
   where open RawMonad L.monad
 
 allBits : ∀ n → Vec (Bits n) (2^ n)
@@ -147,15 +146,34 @@ allBits zero    = [] ∷ []
 allBits (suc n) = vmap 0∷_ bs ++ vmap 1∷_ bs
   where bs = allBits n
 
+module Search {i} {I : Set i} (`1 : I) (`2*_ : I → I)
+              {a} {A : I → Set a} (_·_ : ∀ {m} → A m → A m → A (`2* m)) where
+
+  `2^_ : ℕ → I
+  `2^_ = fold `1 `2*_
+
+  search : ∀ {n} → (Bits n → A `1) → A (`2^ n)
+  search {zero}  f = f []
+  search {suc n} f = search (f ∘ 0∷_) · search (f ∘ 1∷_)
+
+search′ : ∀ {n a} {A : ℕ → Set a} → (∀ {m} → A m → A m → A (2* m)) → (Bits n → A 1) → A (2^ n)
+search′ {n} {a} {A} op f = Search.search 1 2*_ {a} {A} (λ {m} → op {m}) f
+
 search : ∀ {n a} {A : Set a} → (A → A → A) → (Bits n → A) → A
-search {zero}  _   f = f []
-search {suc n} _·_ f = search _·_ (f ∘ 0∷_) · search _·_ (f ∘ 1∷_)
+search {n} {a} {A} _·_ f = search′ {n} {a} {const A} _·_ f
 
 #⟨_⟩ᶠ : ∀ {n} → (Bits n → Bool) → Fin (suc (2^ n))
 #⟨ pred ⟩ᶠ = countᶠ pred (allBits _)
 
+sum : ∀ {n} → (Bits n → ℕ) → ℕ
+sum = search _+_
+
+sum-const : ∀ n x → sum {n} (const x) ≡ ⟨2^ n * x ⟩
+sum-const zero    _ = refl
+sum-const (suc n) x = cong₂ _+_ (sum-const n x) (sum-const n x)
+
 #⟨_⟩ : ∀ {n} → (Bits n → Bool) → ℕ
-#⟨ pred ⟩ = search _+_ (λ x → if pred x then 1 else 0)
+#⟨ pred ⟩ = sum (λ x → if pred x then 1 else 0)
 
 #⟨⟩-spec : ∀ {n} (pred : Bits n → Bool) → #⟨ pred ⟩ ≡ Fin.toℕ #⟨ pred ⟩ᶠ
 #⟨⟩-spec {zero}  pred with pred []
