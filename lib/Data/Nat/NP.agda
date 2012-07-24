@@ -221,6 +221,13 @@ b ^ suc n = b * b ^ n
 2^-spec zero = ≡.refl
 2^-spec (suc n) rewrite 2^-spec n | 2*-spec (2 ^ n) = ≡.refl
 
+1≤2^ : ∀ n → 2^ n ≥ 1
+1+≤2^ : ∀ n → 2^ n ≥ 1 + n
+1+≤2^ zero    = s≤s z≤n
+1+≤2^ (suc n) = (1≤2^ n) +-mono (1+≤2^ n)
+
+1≤2^ n  = ℕ≤.trans (s≤s z≤n) (1+≤2^ n)
+
 -- https://en.wikipedia.org/wiki/Hyper_operator
 _↑⟨_⟩_ : ℕ → ℕ → ℕ → ℕ
 a ↑⟨ suc n             ⟩ (suc b) = a ↑⟨ n ⟩ (a ↑⟨ suc n ⟩ b)
