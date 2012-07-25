@@ -25,7 +25,7 @@ open ≡
 open import Algebra.FunctionProperties
 import Data.List as L
 
-open import Data.Bool.NP public using (_xor_)
+open import Data.Bool.NP public using (_xor_; not; true; false; if_then_else_)
 open V public using ([]; _∷_; head; tail; replicate; RewireTbl)
 
 Bit : Set

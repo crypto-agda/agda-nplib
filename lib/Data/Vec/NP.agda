@@ -10,6 +10,9 @@ open import Function
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡
 
+vuncurry : ∀ {n a b} {A : Set a} {B : Set b} (f : A → Vec A n → B) → Vec A (1 + n) → B
+vuncurry f (x ∷ xs) = f x xs
+
 countᶠ : ∀ {n a} {A : Set a} → (A → Bool) → Vec A n → Fin (suc n)
 countᶠ pred = foldr (Fin ∘ suc) (λ x → if pred x then suc else inject₁) zero
 

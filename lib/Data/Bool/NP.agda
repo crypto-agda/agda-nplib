@@ -221,3 +221,20 @@ toℕ b = if b then 1 else 0
 toℕ≤1 : ∀ b → toℕ b ≤ 1
 toℕ≤1 true  = s≤s z≤n
 toℕ≤1 false = z≤n
+
+xor-not-not : ∀ x y → (not x) xor (not y) ≡ x xor y
+xor-not-not true  y = ≡.refl
+xor-not-not false y = B.not-involutive y
+
+not-inj : ∀ {x y} → not x ≡ not y → x ≡ y
+not-inj {true} {true} _ = ≡.refl
+not-inj {true} {false} ()
+not-inj {false} {true} ()
+not-inj {false} {false} _ = ≡.refl
+
+xor-inj₁ : ∀ x {y z} → x xor y ≡ x xor z → y ≡ z
+xor-inj₁ true  = not-inj
+xor-inj₁ false = id
+
+xor-inj₂ : ∀ x {y z} → y xor x ≡ z xor x → y ≡ z
+xor-inj₂ x {y} {z} rewrite Xor°.+-comm y x | Xor°.+-comm z x = xor-inj₁ x
