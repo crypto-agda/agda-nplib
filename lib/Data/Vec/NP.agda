@@ -1,14 +1,37 @@
 module Data.Vec.NP where
 
-open import Data.Vec public
+open import Data.Vec public hiding (_⊛_; zipWith; zip; map)
 open import Data.Nat using (ℕ; suc; zero; _+_)
 open import Data.Fin renaming (_+_ to _+ᶠ_)
 open import Data.Fin.Props
 open import Data.Bool
-open import Data.Product hiding (map)
+open import Data.Product hiding (map; zip)
 open import Function
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡
+
+module waiting-for-a-fix-in-the-stdlib where
+
+    infixl 4 _⊛_
+
+    _⊛_ : ∀ {a b n} {A : Set a} {B : Set b} →
+          Vec (A → B) n → Vec A n → Vec B n
+    _⊛_ {n = zero}  fs xs = []
+    _⊛_ {n = suc n} fs xs = head fs (head xs) ∷ (tail fs ⊛ tail xs)
+
+    map : ∀ {a b n} {A : Set a} {B : Set b} →
+          (A → B) → Vec A n → Vec B n
+    map f xs = replicate f ⊛ xs
+
+    zipWith : ∀ {a b c n} {A : Set a} {B : Set b} {C : Set c} →
+              (A → B → C) → Vec A n → Vec B n → Vec C n
+    zipWith _⊕_ xs ys = replicate _⊕_ ⊛ xs ⊛ ys
+
+    zip : ∀ {a b n} {A : Set a} {B : Set b} →
+          Vec A n → Vec B n → Vec (A × B) n
+    zip = zipWith _,_
+
+open waiting-for-a-fix-in-the-stdlib public
 
 vuncurry : ∀ {n a b} {A : Set a} {B : Set b} (f : A → Vec A n → B) → Vec A (1 + n) → B
 vuncurry f (x ∷ xs) = f x xs
@@ -108,6 +131,22 @@ take-drop-lem m .(ys ++ zs) | ys , zs , refl = refl
 take-them-all : ∀ n {a} {A : Set a} (xs : Vec A (n + 0)) → take n xs ++ [] ≡ xs
 take-them-all n xs with splitAt n xs
 take-them-all n .(ys ++ []) | ys , [] , refl = refl
+
+drop′ : ∀ {a} {A : Set a} m {n} → Vec A (m + n) → Vec A n
+drop′ zero    = id
+drop′ (suc m) = drop′ m ∘ tail
+
+drop′-spec : ∀ {a} {A : Set a} m {n} → drop′ {A = A} m {n} ≗ drop m {n}
+drop′-spec zero xs = refl
+drop′-spec (suc m) (x ∷ xs) rewrite drop′-spec m xs | drop-∷ m x xs = refl
+
+take′ : ∀ {a} {A : Set a} m {n} → Vec A (m + n) → Vec A m
+take′ zero    _  = []
+take′ (suc m) xs = head xs ∷ take′ m (tail xs)
+
+take′-spec : ∀ {a} {A : Set a} m {n} → take′ {A = A} m {n} ≗ take m {n}
+take′-spec zero xs = refl
+take′-spec (suc m) (x ∷ xs) rewrite take′-spec m xs | take-∷ m x xs = refl
 
 rewire : ∀ {a i o} {A : Set a} → (Fin o → Fin i) → Vec A i → Vec A o
 rewire f v = tabulate (flip lookup v ∘ f)
