@@ -26,7 +26,7 @@ syntax ⟦Π⟧ Aᵣ (λ xᵣ → f) = ⟨ xᵣ ∶ Aᵣ ⟩⟦→⟧ f
 ⟦Π⟧e Aᵣ Bᵣ = λ f₁ f₂ → ∀ x₁ x₂ (xᵣ : Aᵣ x₁ x₂) → Bᵣ xᵣ (f₁ x₁) (f₂ x₂)
 
 ⟦∀⟧ : ∀ {a₁ a₂ aᵣ} {A₁ : Set a₁} {A₂ : Set a₂} (Aᵣ : A₁ → A₂ → Set aᵣ)
-         {b₁ b₂ bᵣ} {B₁ : ∀ A₁ → Set b₁} {B₂ : ∀ A₂ → Set b₂} (Bᵣ : ∀ {x₁ x₂} (xᵣ : Aᵣ x₁ x₂) → B₁ x₁ → B₂ x₂ → Set bᵣ)
+         {b₁ b₂ bᵣ} {B₁ : A₁ → Set b₁} {B₂ : A₂ → Set b₂} (Bᵣ : ∀ {x₁ x₂} (xᵣ : Aᵣ x₁ x₂) → B₁ x₁ → B₂ x₂ → Set bᵣ)
          (f₁ : {x : A₁} → B₁ x) (f₂ : {x : A₂} → B₂ x) → Set _
 ⟦∀⟧ Aᵣ Bᵣ = λ f₁ f₂ → ∀ {x₁ x₂} (xᵣ : Aᵣ x₁ x₂) → Bᵣ xᵣ (f₁ {x₁}) (f₂ {x₂})
 
