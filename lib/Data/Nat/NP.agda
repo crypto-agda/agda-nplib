@@ -487,6 +487,10 @@ ack zero n          = suc n
 ack (suc m) zero    = ack m (suc zero)
 ack (suc m) (suc n) = ack m (ack (suc m) n)
 
+≤⇒∃ : ∀ {m n} → m ≤ n → ∃ λ k → m + k ≡ n
+≤⇒∃ z≤n      = _ , ≡.refl
+≤⇒∃ (s≤s pf) = _ , ≡.cong suc (proj₂ (≤⇒∃ pf))
+
 module ack-Props where
   lem∸ : ∀ {m n} → m ≤ n → m + (n ∸ m) ≡ n
   lem∸ z≤n = ≡.refl

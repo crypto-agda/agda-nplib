@@ -169,11 +169,33 @@ module Search {i} {I : Set i} (`1 : I) (`2*_ : I → I)
   search {zero}  f = f []
   search {suc n} f = search (f ∘ 0∷_) · search (f ∘ 1∷_)
 
-search′ : ∀ {n a} {A : ℕ → Set a} → (∀ {m} → A m → A m → A (2* m)) → (Bits n → A 1) → A (2^ n)
-search′ {n} {a} {A} op f = Search.search 1 2*_ {a} {A} (λ {m} → op {m}) f
+  -- search-ext
+  search-≗ : ∀ {n} (f g : Bits n → A `1) → f ≗ g → search f ≡ search g
+  search-≗ {zero}  f g f≗g = f≗g []
+  search-≗ {suc n} f g f≗g
+    rewrite search-≗ (f ∘ 0∷_) (g ∘ 0∷_) (f≗g ∘ 0∷_)
+          | search-≗ (f ∘ 1∷_) (g ∘ 1∷_) (f≗g ∘ 1∷_) = refl
+
+  module Comm (·-comm : ∀ {m} (x y : A m) → x · y ≡ y · x) where
+
+    {- This pad bit vector allows to specify which bit do we negate in the vector. -}
+    search-comm : ∀ {n} (pad : Bits n) (f : Bits n → A `1) → search f ≡ search (f ∘ _⊕_ pad)
+    search-comm {zero} pad f = refl
+    search-comm {suc n} (b ∷ pad) f
+      rewrite search-comm pad (f ∘ 0∷_)
+            | search-comm pad (f ∘ 1∷_)
+      with b
+    ... | true  = ·-comm (search (f ∘ 0∷_ ∘ _⊕_ pad)) _
+    ... | false = refl
+  open Comm public
+
+open Search 1 2*_ renaming (search to search′; search-≗ to search′-≗; search-comm to search′-comm)
 
 search : ∀ {n a} {A : Set a} → (A → A → A) → (Bits n → A) → A
-search {n} {a} {A} _·_ f = search′ {n} {a} {const A} _·_ f
+search {A = A} _·_ f = search′ {A = const A} _·_ f
+
+search-≗ : ∀ {n a} {A : Set a} (_·_ : A → A → A) (f g : Bits n → A) → f ≗ g → search _·_ f ≡ search _·_ g
+search-≗ _·_ f g f≗g = search′-≗ _·_ f g f≗g
 
 #⟨_⟩ᶠ : ∀ {n} → (Bits n → Bool) → Fin (suc (2^ n))
 #⟨ pred ⟩ᶠ = countᶠ pred (allBits _)
@@ -181,12 +203,31 @@ search {n} {a} {A} _·_ f = search′ {n} {a} {const A} _·_ f
 sum : ∀ {n} → (Bits n → ℕ) → ℕ
 sum = search _+_
 
+sum-≗ : ∀ {n} (f g : Bits n → ℕ) → f ≗ g → sum f ≡ sum g
+sum-≗ = search-≗ _+_
+
+sum-comm : ∀ {n} (pad : Bits n) (f : Bits n → ℕ) → sum f ≡ sum (f ∘ _⊕_ pad)
+sum-comm = search′-comm _+_ ℕ°.+-comm
+
 sum-const : ∀ n x → sum {n} (const x) ≡ ⟨2^ n * x ⟩
 sum-const zero    _ = refl
 sum-const (suc n) x = cong₂ _+_ (sum-const n x) (sum-const n x)
 
 #⟨_⟩ : ∀ {n} → (Bits n → Bool) → ℕ
 #⟨ pred ⟩ = sum (Bool.toℕ ∘ pred)
+
+-- #-ext
+#-≗ : ∀ {n} (f g : Bits n → Bool) → f ≗ g → #⟨ f ⟩ ≡ #⟨ g ⟩
+#-≗ f g f≗g = sum-≗ (Bool.toℕ ∘ f) (Bool.toℕ ∘ g) (λ x → ≡.cong Bool.toℕ (f≗g x))
+
+#-comm : ∀ {n} (pad : Bits n) (f : Bits n → Bool) → #⟨ f ⟩ ≡ #⟨ f ∘ _⊕_ pad ⟩
+#-comm pad f = sum-comm pad (Bool.toℕ ∘ f)
+
+#-⊕ : ∀ {c} (bs : Bits c) (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ _⊕_ bs ⟩
+#-⊕ = #-comm
+
+#-const : ∀ n b → #⟨ (λ (_ : Bits n) → b) ⟩ ≡ ⟨2^ n * Bool.toℕ b ⟩
+#-const n b = sum-const n (Bool.toℕ b)
 
 #⟨⟩-spec : ∀ {n} (pred : Bits n → Bool) → #⟨ pred ⟩ ≡ Fin.toℕ #⟨ pred ⟩ᶠ
 #⟨⟩-spec {zero}  pred with pred []
@@ -462,15 +503,6 @@ _|∧|_ f g x = f x ∧ g x
 #-bound zero    f = Bool.toℕ≤1 (f [])
 #-bound (suc c) f = #-bound c (f ∘ 0∷_) +-mono #-bound c (f ∘ 1∷_)
 
-#-⊕ : ∀ {c} (bs : Bits c) (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ _⊕_ bs ⟩
-#-⊕ [] f = ≡.refl
-#-⊕ (b ∷ bs) f
-  rewrite #-⊕ bs (f ∘ 0∷_)
-        | #-⊕ bs (f ∘ 1∷_)
-  with b
-... | false = refl
-... | true  = ℕ°.+-comm #⟨ f ∘ 0∷_ ∘ _⊕_ bs ⟩ _
-
 #-∘vnot : ∀ c (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ vnot ⟩
 #-∘vnot _ f = #-⊕ 1ⁿ f
 
@@ -490,6 +522,15 @@ _|∧|_ f g x = f x ∧ g x
 #-not∘ (suc c) f
   rewrite #-not∘ c (f ∘ 0∷_)
         | #-not∘ c (f ∘ 1∷_) = factor-+-∸ (#-bound c (not ∘ f ∘ 0∷_)) (#-bound c (not ∘ f ∘ 1∷_))
+
+#-not∘′ : ∀ c (f : Bits c → Bit) → #⟨ not ∘ f ⟩ ≡ 2^ c ∸ #⟨ f ⟩
+#-not∘′ c f = #⟨ not ∘ f ⟩
+           ≡⟨ #-not∘ c (not ∘ f) ⟩
+             2^ c ∸ #⟨ not ∘ not ∘ f ⟩
+           ≡⟨ ≡.cong (λ g → 2^ c ∸ g) (≗-cong-# (not ∘ not ∘ f) f (not-involutive ∘ f)) ⟩
+             2^ c ∸ #⟨ f ⟩
+           ∎
+  where open ≡-Reasoning
 
 |de-morgan| : ∀ {n} (f g : Bits n → Bit) → f |∨| g ≗ not ∘ ((not ∘ f) |∧| (not ∘ g))
 |de-morgan| f g x with f x
