@@ -20,6 +20,9 @@ _≡≡_ refl refl = refl
 _≟≡_ : ∀ {a} {A : Set a} {i j : A} → Decidable {A = i ≡ j} _≡_
 _≟≡_ refl refl = yes refl
 
+_≗₂_ : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c} (f g : A → B → C) → Set _
+f ≗₂ g = ∀ x y → f x y ≡ g x y
+
 injective : ∀ {a} {A : Set a} → InjectiveRel A _≡_
 injective refl refl = refl
 
