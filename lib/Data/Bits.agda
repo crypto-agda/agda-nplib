@@ -454,13 +454,8 @@ countᵇ b = if b then 1 else 0
 #⟨==_⟩ {suc n} (true ∷ xs)  rewrite #never≡0 n | #⟨== xs ⟩ = refl
 #⟨==_⟩ {suc n} (false ∷ xs) rewrite #never≡0 n | #⟨== xs ⟩ = refl
 
-≗-cong-search : ∀ {n a} {A : Set a} op {f g : Bits n → A} → f ≗ g → search op f ≡ search op g
-≗-cong-search {zero}  op f≗g = f≗g []
-≗-cong-search {suc n} op f≗g = cong₂ op (≗-cong-search op (f≗g ∘ 0∷_))
-                                        (≗-cong-search op (f≗g ∘ 1∷_))
-
 ≗-cong-# : ∀ {n} (f g : Bits n → Bit) → f ≗ g → #⟨ f ⟩ ≡ #⟨ g ⟩
-≗-cong-# f g f≗g = ≗-cong-search _+_ (cong countᵇ ∘ f≗g)
+≗-cong-# f g f≗g = search-≗ _+_ _ _ (cong countᵇ ∘ f≗g)
 
 #-+ : ∀ {n a b} (f : Bits (suc n) → Bit) → #⟨ f ∘ 0∷_ ⟩ ≡ a → #⟨ f ∘ 1∷_ ⟩ ≡ b → #⟨ f ⟩ ≡ a + b
 #-+ f f0 f1 rewrite f0 | f1 = refl
@@ -611,7 +606,7 @@ _|∧|_ f g x = f x ∧ g x
 ... | false = sym (not-involutive _)
 
 search-de-morgan : ∀ {n} op (f g : Bits n → Bit) → search op (f |∨| g) ≡ search op (not ∘ ((not ∘ f) |∧| (not ∘ g)))
-search-de-morgan op f g = ≗-cong-search op (|de-morgan| f g)
+search-de-morgan op f g = search-≗ op _ _ (|de-morgan| f g)
 
 search-hom :
   ∀ {n a b}
