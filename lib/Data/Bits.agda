@@ -14,7 +14,7 @@ open import Data.Maybe.NP
 import Data.Fin as Fin
 open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise) renaming (_+_ to _+ᶠ_)
 import Data.Vec.NP as V
-open V hiding (_⊛_; rewire; rewireTbl; sum) renaming (map to vmap)
+open V hiding (_⊛_; rewire; rewireTbl; sum) renaming (map to vmap; swap to vswap)
 open import Data.Vec.N-ary.NP
 open import Data.Unit using (⊤)
 open import Data.Empty using (⊥; ⊥-elim)
@@ -169,6 +169,9 @@ module Search {i} {I : Set i} (`1 : I) (`2*_ : I → I)
   search {zero}  f = f []
   search {suc n} f = search (f ∘ 0∷_) · search (f ∘ 1∷_)
 
+  searchBit : (Bit → A `1) → A (`2* `1)
+  searchBit f = f 0b · f 1b
+
   -- search-ext
   search-≗ : ∀ {n} (f g : Bits n → A `1) → f ≗ g → search f ≡ search g
   search-≗ {zero}  f g f≗g = f≗g []
@@ -189,13 +192,91 @@ module Search {i} {I : Set i} (`1 : I) (`2*_ : I → I)
     ... | false = refl
   open Comm public
 
-open Search 1 2*_ renaming (search to search′; search-≗ to search′-≗; search-comm to search′-comm)
+open Search 1 2*_ public using () renaming (search to search′; search-≗ to search′-≗; search-comm to search′-comm)
 
-search : ∀ {n a} {A : Set a} → (A → A → A) → (Bits n → A) → A
-search {A = A} _·_ f = search′ {A = const A} _·_ f
+module SimpleSearch {a} {A : Set a} (_·_ : A → A → A) where
 
-search-≗ : ∀ {n a} {A : Set a} (_·_ : A → A → A) (f g : Bits n → A) → f ≗ g → search _·_ f ≡ search _·_ g
-search-≗ _·_ f g f≗g = search′-≗ _·_ f g f≗g
+    open Search 1 2*_ {A = const A} _·_ public
+
+    search-·-ε≡ε : ∀ ε (ε·ε : ε · ε ≡ ε) n → search {n = n} (const ε) ≡ ε
+    search-·-ε≡ε ε ε·ε = go
+      where
+        go : ∀ n → search {n = n} (const ε) ≡ ε
+        go zero = refl
+        go (suc n) rewrite go n = ε·ε
+
+    searchBit-search : ∀ n (f : Bits (suc n) → A) → searchBit (λ b → search (f ∘ _∷_ b)) ≡ search f
+    searchBit-search n f = refl
+
+    search-≗₂ : ∀ {m n} (f g : Bits m → Bits n → A) → f ≗₂ g
+                  → search (search ∘ f) ≡ search (search ∘ g)
+    search-≗₂ f g f≗g = search-≗ (search ∘ f) (search ∘ g) (λ xs →
+                          search-≗ (f xs) (g xs) (λ ys →
+                            f≗g xs ys))
+
+    module Interchange (·-interchange : ∀ x y z t → (x · y) · (z · t) ≡ (x · z) · (y · t)) where
+
+        search-dist : ∀ {n} (f₀ f₁ : Bits n → A) → search (λ x → f₀ x · f₁ x) ≡ search f₀ · search f₁
+        search-dist {zero}  _ _ = refl
+        search-dist {suc n} f₀ f₁
+          rewrite search-dist (f₀ ∘ 0∷_) (f₁ ∘ 0∷_)
+                | search-dist (f₀ ∘ 1∷_) (f₁ ∘ 1∷_)
+                = ·-interchange _ _ _ _
+
+        search-searchBit : ∀ {n} (f : Bits (suc n) → A) →
+                             search (λ xs → searchBit (λ b → f (b ∷ xs))) ≡ search f
+        search-searchBit f = search-dist (f ∘ 0∷_) (f ∘ 1∷_)
+
+        search-+ : ∀ {m n} (f : Bits (m + n) → A) →
+                     search {m + n} f
+                   ≡ search {m} (λ xs → search {n} (λ ys → f (xs ++ ys)))
+        search-+ {zero} f = refl
+        search-+ {suc m} f rewrite search-+ {m} (f ∘ 0∷_)
+                                 | search-+ {m} (f ∘ 1∷_) = refl
+
+        search-search : ∀ {m n} (f : Bits (m + n) → A) →
+                          search {m} (λ xs → search {n} (λ ys → f (xs ++ ys)))
+                        ≡ search {n} (λ ys → search {m} (λ xs → f (xs ++ ys)))
+        search-search {zero} f = refl
+        search-search {suc m} {n} f
+          rewrite search-search {m} {n} (f ∘ 0∷_)
+                | search-search {m} {n} (f ∘ 1∷_)
+                | search-searchBit {n} (λ { (b ∷ ys) → search {m} (λ xs → f (b ∷ xs ++ ys)) })
+                = refl
+        {- -- It might also be done by using search-dist twice and commutativity of addition.
+           -- However, this also affect 'f' and makes this proof actually longer.
+           search-search {m} {n} f =
+                             search {m} (λ xs → search {n} (λ ys → f (xs ++ ys)))
+                           ≡⟨ {!!} ⟩
+                             search {m + n} f
+                           ≡⟨ {!!} ⟩
+                             search {n + m} (f ∘ vswap n)
+                           ≡⟨ {!!} ⟩
+                             search {n} (λ ys → search {m} (λ xs → f (vswap n (ys ++ xs))))
+                           ≡⟨ {!!} ⟩
+                             search {n} (λ ys → search {m} (λ xs → f (xs ++ ys)))
+                           ∎
+                           where open ≡-Reasoning
+         -}
+
+        search-swap : ∀ {m n} (f : Bits (m + n) → A) → search {n + m} (f ∘ vswap n) ≡ search {m + n} f
+        search-swap {m} {n} f =
+                     search {n + m} (f ∘ vswap n)
+                   ≡⟨ search-+ {n} {m} (f ∘ vswap n) ⟩
+                     search {n} (λ ys → search {m} (λ xs → f (vswap n (ys ++ xs))))
+                   ≡⟨ search-≗₂ {n} {m}
+                                (λ ys → f ∘ vswap n ∘ _++_ ys)
+                                (λ ys → f ∘ flip _++_ ys)
+                                (λ ys xs → cong f (swap-++ n ys xs)) ⟩
+                     search {n} (λ ys → search {m} (λ xs → f (xs ++ ys)))
+                   ≡⟨ sym (search-search {m} {n} f) ⟩
+                     search {m} (λ xs → search {n} (λ ys → f (xs ++ ys)))
+                   ≡⟨ sym (search-+ {m} {n} f) ⟩
+                     search {m + n} f
+                   ∎
+                        where open ≡-Reasoning
+
+open SimpleSearch public
 
 #⟨_⟩ᶠ : ∀ {n} → (Bits n → Bool) → Fin (suc (2^ n))
 #⟨ pred ⟩ᶠ = countᶠ pred (allBits _)
@@ -354,14 +435,6 @@ always : ∀ n → Bits n → Bit
 always _ _ = 1b
 never  : ∀ n → Bits n → Bit
 never _ _ = 0b
-
-search-·-ε≡ε : ∀ {a} {A : Set a} ε (_·_ : A → A → A)
-                 (ε·ε : ε · ε ≡ ε) n → search {n} _·_ (const ε) ≡ ε
-search-·-ε≡ε ε _·_ ε·ε = go
-  where
-    go : ∀ n → search {n} _·_ (const ε) ≡ ε
-    go zero = refl
-    go (suc n) rewrite go n = ε·ε
 
 #never≡0 : ∀ n → #⟨ never n ⟩ ≡ 0
 #never≡0 = search-·-ε≡ε _ _ refl
@@ -540,7 +613,7 @@ _|∧|_ f g x = f x ∧ g x
 search-de-morgan : ∀ {n} op (f g : Bits n → Bit) → search op (f |∨| g) ≡ search op (not ∘ ((not ∘ f) |∧| (not ∘ g)))
 search-de-morgan op f g = ≗-cong-search op (|de-morgan| f g)
 
-search-comm :
+search-hom :
   ∀ {n a b}
     {A : Set a} {B : Set b}
     (_+_ : A → A → A)
@@ -549,11 +622,11 @@ search-comm :
     (p : Bits n → A)
     (hom : ∀ x y → f (x + y) ≡ f x * f y)
     → f (search _+_ p) ≡ search _*_ (f ∘ p)
-search-comm {zero} _+_ _*_ f p hom = refl
-search-comm {suc n} _+_ _*_ f p hom =
+search-hom {zero} _+_ _*_ f p hom = refl
+search-hom {suc n} _+_ _*_ f p hom =
    trans (hom _ _)
-         (cong₂ _*_ (search-comm {n} _+_ _*_ f (p ∘ 0∷_) hom)
-                    (search-comm _+_ _*_ f (p ∘ 1∷_) hom))
+         (cong₂ _*_ (search-hom {n} _+_ _*_ f (p ∘ 0∷_) hom)
+                    (search-hom _+_ _*_ f (p ∘ 1∷_) hom))
 
 
 open Defs public
