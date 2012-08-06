@@ -5,8 +5,8 @@ open import Data.Nat using (ℕ; suc; zero; _+_)
 open import Data.Fin renaming (_+_ to _+ᶠ_)
 import Data.Fin.Props as F
 open import Data.Bool
-open import Data.Product hiding (map; zip)
-open import Function
+open import Data.Product hiding (map; zip; swap)
+open import Function.NP
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡
 
@@ -165,6 +165,12 @@ take′ (suc m) xs = head xs ∷ take′ m (tail xs)
 take′-spec : ∀ {a} {A : Set a} m {n} → take′ {A = A} m {n} ≗ take m {n}
 take′-spec zero xs = refl
 take′-spec (suc m) (x ∷ xs) rewrite take′-spec m xs | take-∷ m x xs = refl
+
+swap : ∀ m {n} {a} {A : Set a} → Vec A (m + n) → Vec A (n + m)
+swap m xs = drop m xs ++ take m xs
+
+swap-++ : ∀ m {n} {a} {A : Set a} (xs : Vec A m) (ys : Vec A n) → swap m (xs ++ ys) ≡ ys ++ xs
+swap-++ m xs ys rewrite drop-++ m xs ys | take-++ m xs ys = refl
 
 rewire : ∀ {a i o} {A : Set a} → (Fin o → Fin i) → Vec A i → Vec A o
 rewire f v = tabulate (flip lookup v ∘ f)
