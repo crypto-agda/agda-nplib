@@ -31,6 +31,13 @@ module waiting-for-a-fix-in-the-stdlib where
           Vec A n → Vec B n → Vec (A × B) n
     zip = zipWith _,_
 
+    tabulate-∘ : ∀ {n a b} {A : Set a} {B : Set b}
+                 (f : A → B) (g : Fin n → A) →
+                 tabulate (f ∘ g) ≡ map f (tabulate g)
+    tabulate-∘ {zero}  f g = refl
+    tabulate-∘ {suc n} f g =
+      ≡.cong (_∷_ (f (g zero))) (tabulate-∘ f (g ∘ suc))
+
 open waiting-for-a-fix-in-the-stdlib public
 
 -- Trying to get rid of the foldl in the definition of reverse and
