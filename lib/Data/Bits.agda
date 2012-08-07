@@ -69,6 +69,15 @@ _==_ : ∀ {n} (bs₀ bs₁ : Bits n) → Bool
 [] == [] = true
 (b₀ ∷ bs₀) == (b₁ ∷ bs₁) = (b₀ ==ᵇ b₁) ∧ bs₀ == bs₁
 
+==-comm : ∀ {n} (xs ys : Bits n) → xs == ys ≡ ys == xs
+==-comm [] [] = refl
+==-comm (x ∷ xs) (x₁ ∷ ys) rewrite Xor°.+-comm x x₁ | ==-comm xs ys = refl
+
+==-refl : ∀ {n} (xs : Bits n) → (xs == xs) ≡ 1b
+==-refl [] = refl
+==-refl (true ∷ xs) = ==-refl xs
+==-refl (false ∷ xs) = ==-refl xs
+
 infixr 5 _⊕_
 _⊕_ : ∀ {n} (bs₀ bs₁ : Bits n) → Bits n
 _⊕_ = zipWith _xor_
@@ -159,6 +168,17 @@ allBits zero    = [] ∷ []
 allBits (suc n) = vmap 0∷_ bs ++ vmap 1∷_ bs
   where bs = allBits n
 
+always : ∀ n → Bits n → Bit
+always _ _ = 1b
+never  : ∀ n → Bits n → Bit
+never _ _ = 0b
+
+_|∨|_ : ∀ {n} → (f g : Bits n → Bit) → Bits n → Bit
+_|∨|_ f g x = f x ∨ g x
+
+_|∧|_ : ∀ {n} → (f g : Bits n → Bit) → Bits n → Bit
+_|∧|_ f g x = f x ∧ g x
+
 module Search {i} {I : Set i} (`1 : I) (`2*_ : I → I)
               {a} {A : I → Set a} (_·_ : ∀ {m} → A m → A m → A (`2* m)) where
 
@@ -198,8 +218,8 @@ module SimpleSearch {a} {A : Set a} (_·_ : A → A → A) where
 
     open Search 1 2*_ {A = const A} _·_ public
 
-    search-·-ε≡ε : ∀ ε (ε·ε : ε · ε ≡ ε) n → search {n = n} (const ε) ≡ ε
-    search-·-ε≡ε ε ε·ε = go
+    search-constε≡ε : ∀ ε (ε·ε : ε · ε ≡ ε) n → search {n = n} (const ε) ≡ ε
+    search-constε≡ε ε ε·ε = go
       where
         go : ∀ n → search {n = n} (const ε) ≡ ε
         go zero = refl
@@ -276,39 +296,210 @@ module SimpleSearch {a} {A : Set a} (_·_ : A → A → A) where
                    ∎
                         where open ≡-Reasoning
 
-open SimpleSearch public
+module Sum where
+    open SimpleSearch _+_ using (module Comm; module Interchange; search-constε≡ε)
+    open SimpleSearch _+_ public using () renaming (search to sum; search-≗ to sum-≗; searchBit to sumBit)
+    open Comm ℕ°.+-comm public renaming (search-comm to sum-comm)
+    open Interchange +-interchange public renaming (
+        search-dist to sum-dist;
+        search-searchBit to sum-sumBit;
+        search-+ to sum-+;
+        search-search to sum-sum;
+        search-swap to sum-swap)
+
+    sum-const0≡0 : ∀ n → sum {n = n} (const 0) ≡ 0
+    sum-const0≡0 n = search-constε≡ε 0 refl n
+
+    sum-const : ∀ n x → sum {n} (const x) ≡ ⟨2^ n * x ⟩
+    sum-const zero    _ = refl
+    sum-const (suc n) x = cong₂ _+_ (sum-const n x) (sum-const n x)
 
 #⟨_⟩ᶠ : ∀ {n} → (Bits n → Bool) → Fin (suc (2^ n))
 #⟨ pred ⟩ᶠ = countᶠ pred (allBits _)
 
-sum : ∀ {n} → (Bits n → ℕ) → ℕ
-sum = search _+_
+module Count where
+    open Sum
 
-sum-≗ : ∀ {n} (f g : Bits n → ℕ) → f ≗ g → sum f ≡ sum g
-sum-≗ = search-≗ _+_
+    #⟨_⟩ : ∀ {n} → (Bits n → Bool) → ℕ
+    #⟨ pred ⟩ = sum (Bool.toℕ ∘ pred)
 
-sum-comm : ∀ {n} (pad : Bits n) (f : Bits n → ℕ) → sum f ≡ sum (f ∘ _⊕_ pad)
-sum-comm = search′-comm _+_ ℕ°.+-comm
+    -- #-ext
+    #-≗ : ∀ {n} (f g : Bits n → Bool) → f ≗ g → #⟨ f ⟩ ≡ #⟨ g ⟩
+    #-≗ f g f≗g = sum-≗ (Bool.toℕ ∘ f) (Bool.toℕ ∘ g) (λ x → ≡.cong Bool.toℕ (f≗g x))
 
-sum-const : ∀ n x → sum {n} (const x) ≡ ⟨2^ n * x ⟩
-sum-const zero    _ = refl
-sum-const (suc n) x = cong₂ _+_ (sum-const n x) (sum-const n x)
+    #-comm : ∀ {n} (pad : Bits n) (f : Bits n → Bool) → #⟨ f ⟩ ≡ #⟨ f ∘ _⊕_ pad ⟩
+    #-comm pad f = sum-comm pad (Bool.toℕ ∘ f)
 
-#⟨_⟩ : ∀ {n} → (Bits n → Bool) → ℕ
-#⟨ pred ⟩ = sum (Bool.toℕ ∘ pred)
+    #-⊕ : ∀ {c} (bs : Bits c) (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ _⊕_ bs ⟩
+    #-⊕ = #-comm
 
--- #-ext
-#-≗ : ∀ {n} (f g : Bits n → Bool) → f ≗ g → #⟨ f ⟩ ≡ #⟨ g ⟩
-#-≗ f g f≗g = sum-≗ (Bool.toℕ ∘ f) (Bool.toℕ ∘ g) (λ x → ≡.cong Bool.toℕ (f≗g x))
+    #-const : ∀ n b → #⟨ (λ (_ : Bits n) → b) ⟩ ≡ ⟨2^ n * Bool.toℕ b ⟩
+    #-const n b = sum-const n (Bool.toℕ b)
 
-#-comm : ∀ {n} (pad : Bits n) (f : Bits n → Bool) → #⟨ f ⟩ ≡ #⟨ f ∘ _⊕_ pad ⟩
-#-comm pad f = sum-comm pad (Bool.toℕ ∘ f)
+    #never≡0 : ∀ n → #⟨ never n ⟩ ≡ 0
+    #never≡0 = sum-const0≡0
 
-#-⊕ : ∀ {c} (bs : Bits c) (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ _⊕_ bs ⟩
-#-⊕ = #-comm
+    #always≡2^_ : ∀ n → #⟨ always n ⟩ ≡ 2^ n
+    #always≡2^ n = sum-const n 1
 
-#-const : ∀ n b → #⟨ (λ (_ : Bits n) → b) ⟩ ≡ ⟨2^ n * Bool.toℕ b ⟩
-#-const n b = sum-const n (Bool.toℕ b)
+    #-dist : ∀ {n} (f₀ f₁ : Bits n → Bit) → sum (λ x → Bool.toℕ (f₀ x) + Bool.toℕ (f₁ x)) ≡ #⟨ f₀ ⟩ + #⟨ f₁ ⟩
+    #-dist f₀ f₁ = sum-dist (Bool.toℕ ∘ f₀) (Bool.toℕ ∘ f₁)
+
+    #-+ : ∀ {m n} (f : Bits (m + n) → Bit) →
+                     #⟨ f ⟩ ≡ sum {m} (λ xs → #⟨ (λ ys → f (xs ++ ys)) ⟩ )
+    #-+ {m} {n} f = sum-+ {m} {n} (Bool.toℕ ∘ f)
+
+    #-# : ∀ {m n} (f : Bits (m + n) → Bit) →
+                          sum {m} (λ xs → #⟨ (λ ys → f (xs ++ ys)) ⟩)
+                        ≡ sum {n} (λ ys → #⟨ (λ (xs : Bits m) → f (xs ++ ys)) ⟩)
+    #-# {m} {n} f = sum-sum {m} {n} (Bool.toℕ ∘ f)
+
+    #-swap : ∀ {m n} (f : Bits (m + n) → Bit) → #⟨ f ∘ vswap n {m} ⟩ ≡ #⟨ f ⟩
+    #-swap {m} {n} f = sum-swap {m} {n} (Bool.toℕ ∘ f)
+
+    #⟨==_⟩ : ∀ {n} (xs : Bits n) → #⟨ _==_ xs ⟩ ≡ 1
+    #⟨== [] ⟩ = refl
+    #⟨==_⟩ {suc n} (true ∷ xs)  rewrite #never≡0 n | #⟨== xs ⟩ = refl
+    #⟨==_⟩ {suc n} (false ∷ xs) rewrite #never≡0 n | #⟨== xs ⟩ = refl
+
+    ≗-cong-# : ∀ {n} (f g : Bits n → Bit) → f ≗ g → #⟨ f ⟩ ≡ #⟨ g ⟩
+    ≗-cong-# f g f≗g = sum-≗ _ _ (cong Bool.toℕ ∘ f≗g)
+
+    -- #-+ : ∀ {n a b} (f : Bits (suc n) → Bit) → #⟨ f ∘ 0∷_ ⟩ ≡ a → #⟨ f ∘ 1∷_ ⟩ ≡ b → #⟨ f ⟩ ≡ a + b
+    -- #-+ f f0 f1 rewrite f0 | f1 = refl
+
+    #-take-drop : ∀ m n (f : Bits m → Bit) (g : Bits n → Bit)
+                    → #⟨ (f ∘ take m) |∧| (g ∘ drop m) ⟩ ≡ #⟨ f ⟩ * #⟨ g ⟩
+    #-take-drop zero n f g with f []
+    ... | true rewrite ℕ°.+-comm #⟨ g ⟩ 0 = refl
+    ... | false = #never≡0 n
+    #-take-drop (suc m) n f g
+      rewrite ≗-cong-# ((f ∘ take (suc m)) |∧| (g ∘ drop (suc m)) ∘ 0∷_)
+                       ((f ∘ 0∷_ ∘ take m) |∧| (g ∘ drop m))
+                       (λ x → cong₂ (λ x y → f x ∧ g y) (take-∷ m 0b x) (drop-∷ m 0b x))
+            | #-take-drop m n (f ∘ 0∷_) g
+            | ≗-cong-# ((f ∘ take (suc m)) |∧| (g ∘ drop (suc m)) ∘ 1∷_)
+                       ((f ∘ 1∷_ ∘ take m) |∧| (g ∘ drop m))
+                       (λ x → cong₂ (λ x y → f x ∧ g y) (take-∷ m 1b x) (drop-∷ m 1b x))
+            | #-take-drop m n (f ∘ 1∷_) g
+            = sym (proj₂ ℕ°.distrib #⟨ g ⟩ #⟨ f ∘ 0∷_ ⟩ #⟨ f ∘ 1∷_ ⟩)
+
+    #-drop-take : ∀ m n (f : Bits n → Bit) (g : Bits m → Bit)
+                    → #⟨ (f ∘ drop m) |∧| (g ∘ take m) ⟩ ≡ #⟨ f ⟩ * #⟨ g ⟩
+    #-drop-take m n f g =
+               #⟨ (f ∘ drop m) |∧| (g ∘ take m) ⟩
+             ≡⟨ ≗-cong-# ((f ∘ drop m) |∧| (g ∘ take m)) ((g ∘ take m) |∧| (f ∘ drop m)) (λ x → Bool°.+-comm (f (drop m x)) _) ⟩
+               #⟨ (g ∘ take m) |∧| (f ∘ drop m) ⟩
+             ≡⟨ #-take-drop m n g f ⟩
+               #⟨ g ⟩ * #⟨ f ⟩
+             ≡⟨ ℕ°.*-comm #⟨ g ⟩ _ ⟩
+               #⟨ f ⟩ * #⟨ g ⟩
+             ∎
+      where open ≡-Reasoning
+
+    #-take : ∀ m n (f : Bits m → Bit) → #⟨ f ∘ take m {n} ⟩ ≡ 2^ n * #⟨ f ⟩
+    #-take m n f = #⟨ f ∘ take m {n} ⟩
+                 ≡⟨ #-drop-take m n (always n) f ⟩
+                   #⟨ always n ⟩ * #⟨ f ⟩
+                 ≡⟨ cong (flip _*_ #⟨ f ⟩) (#always≡2^ n) ⟩
+                   2^ n * #⟨ f ⟩
+                 ∎
+      where open ≡-Reasoning
+
+    #-drop : ∀ m n (f : Bits m → Bit) → #⟨ f ∘ drop n ⟩ ≡ 2^ n * #⟨ f ⟩
+    #-drop m n f = #⟨ f ∘ drop n ⟩
+                 ≡⟨ #-take-drop n m (always n) f ⟩
+                   #⟨ always n ⟩ * #⟨ f ⟩
+                 ≡⟨ cong (flip _*_ #⟨ f ⟩) (#always≡2^ n) ⟩
+                   2^ n * #⟨ f ⟩
+                 ∎
+      where open ≡-Reasoning
+
+    #⟨_==⟩ : ∀ {n} (xs : Bits n) → #⟨ flip _==_ xs ⟩ ≡ 1
+    #⟨ xs ==⟩ = trans (≗-cong-# (flip _==_ xs) (_==_ xs) (flip ==-comm xs)) #⟨== xs ⟩
+
+    #⇒ : ∀ {n} (f g : Bits n → Bit) → (∀ x → T (f x) → T (g x)) → #⟨ f ⟩ ≤ #⟨ g ⟩
+    #⇒ {zero} f g f⇒g with f [] | g [] | f⇒g []
+    ... | true  | true  | _ = s≤s z≤n
+    ... | true  | false | p = ⊥-elim (p _)
+    ... | false | _     | _ = z≤n
+    #⇒ {suc n} f g f⇒g = #⇒ (f ∘ 0∷_) (g ∘ 0∷_) (f⇒g ∘ 0∷_)
+                    +-mono #⇒ (f ∘ 1∷_) (g ∘ 1∷_) (f⇒g ∘ 1∷_)
+
+    #-∧-∨ᵇ : ∀ x y → Bool.toℕ (x ∧ y) + Bool.toℕ (x ∨ y) ≡ Bool.toℕ x + Bool.toℕ y
+    #-∧-∨ᵇ true y rewrite ℕ°.+-comm (Bool.toℕ y) 1 = refl
+    #-∧-∨ᵇ false y = refl
+
+    #-∧-∨ : ∀ {n} (f g : Bits n → Bit) → #⟨ f |∧| g ⟩ + #⟨ f |∨| g ⟩ ≡ #⟨ f ⟩ + #⟨ g ⟩
+    #-∧-∨ {zero} f g = #-∧-∨ᵇ (f []) (g [])
+    #-∧-∨ {suc n} f g =
+      trans
+        (trans
+           (helper #⟨ (f ∘ 0∷_) |∧| (g ∘ 0∷_) ⟩
+                   #⟨ (f ∘ 1∷_) |∧| (g ∘ 1∷_) ⟩
+                   #⟨ (f ∘ 0∷_) |∨| (g ∘ 0∷_) ⟩
+                   #⟨ (f ∘ 1∷_) |∨| (g ∘ 1∷_) ⟩)
+           (cong₂ _+_ (#-∧-∨ (f ∘ 0∷_) (g ∘ 0∷_))
+                      (#-∧-∨ (f ∘ 1∷_) (g ∘ 1∷_))))
+        (helper #⟨ f ∘ 0∷_ ⟩ #⟨ g ∘ 0∷_ ⟩ #⟨ f ∘ 1∷_ ⟩ #⟨ g ∘ 1∷_ ⟩)
+        where open SemiringSolver
+              helper : ∀ x y z t → x + y + (z + t) ≡ x + z + (y + t)
+              helper = solve 4 (λ x y z t → x :+ y :+ (z :+ t) := x :+ z :+ (y :+ t)) refl
+
+    #∨' : ∀ {n} (f g : Bits n → Bit) → #⟨ f |∨| g ⟩ ≤ #⟨ f ⟩ + #⟨ g ⟩
+    #∨' {zero} f g with f []
+    ... | true  = s≤s z≤n
+    ... | false = ℕ≤.refl
+    #∨' {suc _} f g = ℕ≤.trans (#∨' (f ∘ 0∷_) (g ∘ 0∷_) +-mono
+                                 #∨' (f ∘ 1∷_) (g ∘ 1∷_))
+                        (ℕ≤.reflexive
+                          (helper #⟨ f ∘ 0∷_ ⟩ #⟨ g ∘ 0∷_ ⟩ #⟨ f ∘ 1∷_ ⟩ #⟨ g ∘ 1∷_ ⟩))
+        where open SemiringSolver
+              helper : ∀ x y z t → x + y + (z + t) ≡ x + z + (y + t)
+              helper = solve 4 (λ x y z t → x :+ y :+ (z :+ t) := x :+ z :+ (y :+ t)) refl
+
+    #∨ : ∀ {m n o} {f g : Bits o → Bit} → #⟨ f ⟩ ≤ m → #⟨ g ⟩ ≤ n → #⟨ (λ x → f x ∨ g x) ⟩ ≤ (m + n)
+    #∨ {m} {n} {o} {f} {g} pf pg = ℕ≤.trans (#∨' f g) (pf +-mono pg)
+
+    #∧ : ∀ {m n o} {f g : Bits o → Bit} → #⟨ f ⟩ ≤ m → #⟨ g ⟩ ≤ n → #⟨ f |∧| g ⟩ ≤ (m + n)
+    #∧ {f = f} {g} pf pg = ℕ≤.trans (#⇒ (f |∧| g) (f |∨| g) (λ x → ∧⇒∨ (f x) (g x))) (#∨ {f = f} pf pg)
+
+    #-bound : ∀ c (f : Bits c → Bit) → #⟨ f ⟩ ≤ 2^ c
+    #-bound zero    f = Bool.toℕ≤1 (f [])
+    #-bound (suc c) f = #-bound c (f ∘ 0∷_) +-mono #-bound c (f ∘ 1∷_)
+
+    #-∘vnot : ∀ c (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ vnot ⟩
+    #-∘vnot _ f = #-⊕ 1ⁿ f
+
+    #-∘xorᵢ : ∀ {c} (i : Fin c) (f : Bits c → Bit) b → #⟨ f ⟩ ≡ #⟨ f ∘ onᵢ (_xor_ b) i ⟩
+    #-∘xorᵢ i f b = pf
+      where pad = onᵢ (_xor_ b) i 0ⁿ
+            pf : #⟨ f ⟩ ≡ #⟨ f ∘ onᵢ (_xor_ b) i ⟩
+            pf rewrite #-⊕ pad f = ≗-cong-# (f ∘ _⊕_ pad) (f ∘ onᵢ (_xor_ b) i) (cong (_$_ f) ∘ sym ∘ onᵢ-xor-⊕ b i)
+
+    #-∘notᵢ : ∀ {c} (i : Fin c) (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ notᵢ i ⟩
+    #-∘notᵢ i f = #-∘xorᵢ i f true
+
+    #-not∘ : ∀ c (f : Bits c → Bit) → #⟨ f ⟩ ≡ 2^ c ∸ #⟨ not ∘ f ⟩
+    #-not∘ zero f with f []
+    ... | true  = ≡.refl
+    ... | false = ≡.refl
+    #-not∘ (suc c) f
+      rewrite #-not∘ c (f ∘ 0∷_)
+            | #-not∘ c (f ∘ 1∷_) = factor-+-∸ (#-bound c (not ∘ f ∘ 0∷_)) (#-bound c (not ∘ f ∘ 1∷_))
+
+    #-not∘′ : ∀ c (f : Bits c → Bit) → #⟨ not ∘ f ⟩ ≡ 2^ c ∸ #⟨ f ⟩
+    #-not∘′ c f = #⟨ not ∘ f ⟩
+               ≡⟨ #-not∘ c (not ∘ f) ⟩
+                 2^ c ∸ #⟨ not ∘ not ∘ f ⟩
+               ≡⟨ ≡.cong (λ g → 2^ c ∸ g) (≗-cong-# (not ∘ not ∘ f) f (not-involutive ∘ f)) ⟩
+                 2^ c ∸ #⟨ f ⟩
+               ∎
+      where open ≡-Reasoning
+
+open SimpleSearch public
+open Sum public
+open Count public
 
 #⟨⟩-spec : ∀ {n} (pred : Bits n → Bool) → #⟨ pred ⟩ ≡ Fin.toℕ #⟨ pred ⟩ᶠ
 #⟨⟩-spec {zero}  pred with pred []
@@ -328,6 +519,30 @@ find? = search (M?._∣_ _)
 
 findB : ∀ {n} → (Bits n → Bool) →? Bits n
 findB pred = find? (λ x → if pred x then just x else nothing)
+
+|de-morgan| : ∀ {n} (f g : Bits n → Bit) → f |∨| g ≗ not ∘ ((not ∘ f) |∧| (not ∘ g))
+|de-morgan| f g x with f x
+... | true = refl
+... | false = sym (not-involutive _)
+
+search-de-morgan : ∀ {n} op (f g : Bits n → Bit) →
+                   search op (f |∨| g) ≡ search op (not ∘ ((not ∘ f) |∧| (not ∘ g)))
+search-de-morgan op f g = search-≗ op _ _ (|de-morgan| f g)
+
+search-hom :
+  ∀ {n a b}
+    {A : Set a} {B : Set b}
+    (_+_ : A → A → A)
+    (_*_ : B → B → B)
+    (f : A → B)
+    (p : Bits n → A)
+    (hom : ∀ x y → f (x + y) ≡ f x * f y)
+    → f (search _+_ p) ≡ search _*_ (f ∘ p)
+search-hom {zero}  _   _   _ _ _   = refl
+search-hom {suc n} _+_ _*_ f p hom =
+   trans (hom _ _)
+         (cong₂ _*_ (search-hom _+_ _*_ f (p ∘ 0∷_) hom)
+                    (search-hom _+_ _*_ f (p ∘ 1∷_) hom))
 
 sucBCarry : ∀ {n} → Bits n → Bits (1 + n)
 sucBCarry [] = 0b ∷ []
@@ -430,198 +645,5 @@ toFin∘fromFin x = {!!}
 -- _ᴮ : (s : String) {pf : IsBitString s} → Bits (length s)
 -- _ᴮ =
 -}
-
-always : ∀ n → Bits n → Bit
-always _ _ = 1b
-never  : ∀ n → Bits n → Bit
-never _ _ = 0b
-
-#never≡0 : ∀ n → #⟨ never n ⟩ ≡ 0
-#never≡0 = search-·-ε≡ε _ _ refl
-
-#always≡2^_ : ∀ n → #⟨ always n ⟩ ≡ 2^ n
-#always≡2^ n = sum-const n 1
-
-==-comm : ∀ {n} (xs ys : Bits n) → xs == ys ≡ ys == xs
-==-comm [] [] = refl
-==-comm (x ∷ xs) (x₁ ∷ ys) rewrite Xor°.+-comm x x₁ | ==-comm xs ys = refl
-
-countᵇ : Bit → ℕ
-countᵇ b = if b then 1 else 0
-
-#⟨==_⟩ : ∀ {n} (xs : Bits n) → #⟨ _==_ xs ⟩ ≡ 1
-#⟨== [] ⟩ = refl
-#⟨==_⟩ {suc n} (true ∷ xs)  rewrite #never≡0 n | #⟨== xs ⟩ = refl
-#⟨==_⟩ {suc n} (false ∷ xs) rewrite #never≡0 n | #⟨== xs ⟩ = refl
-
-≗-cong-# : ∀ {n} (f g : Bits n → Bit) → f ≗ g → #⟨ f ⟩ ≡ #⟨ g ⟩
-≗-cong-# f g f≗g = search-≗ _+_ _ _ (cong countᵇ ∘ f≗g)
-
-#-+ : ∀ {n a b} (f : Bits (suc n) → Bit) → #⟨ f ∘ 0∷_ ⟩ ≡ a → #⟨ f ∘ 1∷_ ⟩ ≡ b → #⟨ f ⟩ ≡ a + b
-#-+ f f0 f1 rewrite f0 | f1 = refl
-
-==-refl : ∀ {n} (xs : Bits n) → (xs == xs) ≡ 1b
-==-refl [] = refl
-==-refl (true ∷ xs) = ==-refl xs
-==-refl (false ∷ xs) = ==-refl xs
-
-_|∨|_ : ∀ {n} → (f g : Bits n → Bit) → Bits n → Bit
-_|∨|_ f g x = f x ∨ g x
-
-_|∧|_ : ∀ {n} → (f g : Bits n → Bit) → Bits n → Bit
-_|∧|_ f g x = f x ∧ g x
-
-#-take-drop : ∀ m n (f : Bits m → Bit) (g : Bits n → Bit)
-                → #⟨ (f ∘ take m) |∧| (g ∘ drop m) ⟩ ≡ #⟨ f ⟩ * #⟨ g ⟩
-#-take-drop zero n f g with f []
-... | true rewrite ℕ°.+-comm #⟨ g ⟩ 0 = refl
-... | false = #never≡0 n
-#-take-drop (suc m) n f g = trans (#-+ {a = #⟨ f ∘ 0∷_ ⟩ * #⟨ g ⟩} ((f ∘ take (suc m)) |∧| (g ∘ drop (suc m)))
-                                  (trans (≗-cong-# ((f ∘ take (suc m)) |∧| (g ∘ drop (suc m)) ∘ 0∷_)
-                                                ((f ∘ 0∷_ ∘ take m) |∧| (g ∘ drop m))
-                                                (λ x → cong₂ (λ x y → f x ∧ g y) (take-∷ m 0b x) (drop-∷ m 0b x)))
-                                       (#-take-drop m n (f ∘ 0∷_) g))
-                                  (trans (≗-cong-# ((f ∘ take (suc m)) |∧| (g ∘ drop (suc m)) ∘ 1∷_)
-                                                ((f ∘ 1∷_ ∘ take m) |∧| (g ∘ drop m))
-                                                (λ x → cong₂ (λ x y → f x ∧ g y) (take-∷ m 1b x) (drop-∷ m 1b x)))
-                                       (#-take-drop m n (f ∘ 1∷_) g)))
-                           (sym (proj₂ ℕ°.distrib #⟨ g ⟩ #⟨ f ∘ 0∷_ ⟩ #⟨ f ∘ 1∷_ ⟩))
-
-#-drop-take : ∀ m n (f : Bits n → Bit) (g : Bits m → Bit)
-                → #⟨ (f ∘ drop m) |∧| (g ∘ take m) ⟩ ≡ #⟨ f ⟩ * #⟨ g ⟩
-#-drop-take m n f g =
-           #⟨ (f ∘ drop m) |∧| (g ∘ take m) ⟩
-         ≡⟨ ≗-cong-# ((f ∘ drop m) |∧| (g ∘ take m)) ((g ∘ take m) |∧| (f ∘ drop m)) (λ x → Bool°.+-comm (f (drop m x)) _) ⟩
-           #⟨ (g ∘ take m) |∧| (f ∘ drop m) ⟩
-         ≡⟨ #-take-drop m n g f ⟩
-           #⟨ g ⟩ * #⟨ f ⟩
-         ≡⟨ ℕ°.*-comm #⟨ g ⟩ _ ⟩
-           #⟨ f ⟩ * #⟨ g ⟩
-         ∎
-  where open ≡-Reasoning
-
-#-take : ∀ m n (f : Bits m → Bit) → #⟨ f ∘ take m {n} ⟩ ≡ 2^ n * #⟨ f ⟩
-#-take m n f = #⟨ f ∘ take m {n} ⟩
-             ≡⟨ #-drop-take m n (always n) f ⟩
-               #⟨ always n ⟩ * #⟨ f ⟩
-             ≡⟨ cong (flip _*_ #⟨ f ⟩) (#always≡2^ n) ⟩
-               2^ n * #⟨ f ⟩
-             ∎
-  where open ≡-Reasoning
-
-#-drop : ∀ m n (f : Bits m → Bit) → #⟨ f ∘ drop n ⟩ ≡ 2^ n * #⟨ f ⟩
-#-drop m n f = #⟨ f ∘ drop n ⟩
-             ≡⟨ #-take-drop n m (always n) f ⟩
-               #⟨ always n ⟩ * #⟨ f ⟩
-             ≡⟨ cong (flip _*_ #⟨ f ⟩) (#always≡2^ n) ⟩
-               2^ n * #⟨ f ⟩
-             ∎
-  where open ≡-Reasoning
-
-#⟨_==⟩ : ∀ {n} (xs : Bits n) → #⟨ flip _==_ xs ⟩ ≡ 1
-#⟨ xs ==⟩ = trans (≗-cong-# (flip _==_ xs) (_==_ xs) (flip ==-comm xs)) #⟨== xs ⟩
-
-#⇒ : ∀ {n} (f g : Bits n → Bit) → (∀ x → T (f x) → T (g x)) → #⟨ f ⟩ ≤ #⟨ g ⟩
-#⇒ {zero} f g f⇒g with f [] | g [] | f⇒g []
-... | true  | true  | _ = s≤s z≤n
-... | true  | false | p = ⊥-elim (p _)
-... | false | _     | _ = z≤n
-#⇒ {suc n} f g f⇒g = #⇒ (f ∘ 0∷_) (g ∘ 0∷_) (f⇒g ∘ 0∷_)
-                +-mono #⇒ (f ∘ 1∷_) (g ∘ 1∷_) (f⇒g ∘ 1∷_)
-
-#-∧-∨ᵇ : ∀ x y → countᵇ (x ∧ y) + countᵇ (x ∨ y) ≡ countᵇ x + countᵇ y
-#-∧-∨ᵇ true y rewrite ℕ°.+-comm (countᵇ y) 1 = refl
-#-∧-∨ᵇ false y = refl
-
-#-∧-∨ : ∀ {n} (f g : Bits n → Bit) → #⟨ f |∧| g ⟩ + #⟨ f |∨| g ⟩ ≡ #⟨ f ⟩ + #⟨ g ⟩
-#-∧-∨ {zero} f g = #-∧-∨ᵇ (f []) (g [])
-#-∧-∨ {suc n} f g =
-  trans
-    (trans
-       (helper #⟨ (f ∘ 0∷_) |∧| (g ∘ 0∷_) ⟩
-               #⟨ (f ∘ 1∷_) |∧| (g ∘ 1∷_) ⟩
-               #⟨ (f ∘ 0∷_) |∨| (g ∘ 0∷_) ⟩
-               #⟨ (f ∘ 1∷_) |∨| (g ∘ 1∷_) ⟩)
-       (cong₂ _+_ (#-∧-∨ (f ∘ 0∷_) (g ∘ 0∷_))
-                  (#-∧-∨ (f ∘ 1∷_) (g ∘ 1∷_))))
-    (helper #⟨ f ∘ 0∷_ ⟩ #⟨ g ∘ 0∷_ ⟩ #⟨ f ∘ 1∷_ ⟩ #⟨ g ∘ 1∷_ ⟩)
-    where open SemiringSolver
-          helper : ∀ x y z t → x + y + (z + t) ≡ x + z + (y + t)
-          helper = solve 4 (λ x y z t → x :+ y :+ (z :+ t) := x :+ z :+ (y :+ t)) refl
-
-#∨' : ∀ {n} (f g : Bits n → Bit) → #⟨ f |∨| g ⟩ ≤ #⟨ f ⟩ + #⟨ g ⟩
-#∨' {zero} f g with f []
-... | true  = s≤s z≤n
-... | false = ℕ≤.refl
-#∨' {suc _} f g = ℕ≤.trans (#∨' (f ∘ 0∷_) (g ∘ 0∷_) +-mono
-                             #∨' (f ∘ 1∷_) (g ∘ 1∷_))
-                    (ℕ≤.reflexive
-                      (helper #⟨ f ∘ 0∷_ ⟩ #⟨ g ∘ 0∷_ ⟩ #⟨ f ∘ 1∷_ ⟩ #⟨ g ∘ 1∷_ ⟩))
-    where open SemiringSolver
-          helper : ∀ x y z t → x + y + (z + t) ≡ x + z + (y + t)
-          helper = solve 4 (λ x y z t → x :+ y :+ (z :+ t) := x :+ z :+ (y :+ t)) refl
-
-#∨ : ∀ {m n o} {f g : Bits o → Bit} → #⟨ f ⟩ ≤ m → #⟨ g ⟩ ≤ n → #⟨ (λ x → f x ∨ g x) ⟩ ≤ (m + n)
-#∨ {m} {n} {o} {f} {g} pf pg = ℕ≤.trans (#∨' f g) (pf +-mono pg)
-
-#∧ : ∀ {m n o} {f g : Bits o → Bit} → #⟨ f ⟩ ≤ m → #⟨ g ⟩ ≤ n → #⟨ f |∧| g ⟩ ≤ (m + n)
-#∧ {f = f} {g} pf pg = ℕ≤.trans (#⇒ (f |∧| g) (f |∨| g) (λ x → ∧⇒∨ (f x) (g x))) (#∨ {f = f} pf pg)
-
-#-bound : ∀ c (f : Bits c → Bit) → #⟨ f ⟩ ≤ 2^ c
-#-bound zero    f = Bool.toℕ≤1 (f [])
-#-bound (suc c) f = #-bound c (f ∘ 0∷_) +-mono #-bound c (f ∘ 1∷_)
-
-#-∘vnot : ∀ c (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ vnot ⟩
-#-∘vnot _ f = #-⊕ 1ⁿ f
-
-#-∘xorᵢ : ∀ {c} (i : Fin c) (f : Bits c → Bit) b → #⟨ f ⟩ ≡ #⟨ f ∘ onᵢ (_xor_ b) i ⟩
-#-∘xorᵢ i f b = pf
-  where pad = onᵢ (_xor_ b) i 0ⁿ
-        pf : #⟨ f ⟩ ≡ #⟨ f ∘ onᵢ (_xor_ b) i ⟩
-        pf rewrite #-⊕ pad f = ≗-cong-# (f ∘ _⊕_ pad) (f ∘ onᵢ (_xor_ b) i) (cong (_$_ f) ∘ sym ∘ onᵢ-xor-⊕ b i)
-
-#-∘notᵢ : ∀ {c} (i : Fin c) (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ notᵢ i ⟩
-#-∘notᵢ i f = #-∘xorᵢ i f true
-
-#-not∘ : ∀ c (f : Bits c → Bit) → #⟨ f ⟩ ≡ 2^ c ∸ #⟨ not ∘ f ⟩
-#-not∘ zero f with f []
-... | true  = ≡.refl
-... | false = ≡.refl
-#-not∘ (suc c) f
-  rewrite #-not∘ c (f ∘ 0∷_)
-        | #-not∘ c (f ∘ 1∷_) = factor-+-∸ (#-bound c (not ∘ f ∘ 0∷_)) (#-bound c (not ∘ f ∘ 1∷_))
-
-#-not∘′ : ∀ c (f : Bits c → Bit) → #⟨ not ∘ f ⟩ ≡ 2^ c ∸ #⟨ f ⟩
-#-not∘′ c f = #⟨ not ∘ f ⟩
-           ≡⟨ #-not∘ c (not ∘ f) ⟩
-             2^ c ∸ #⟨ not ∘ not ∘ f ⟩
-           ≡⟨ ≡.cong (λ g → 2^ c ∸ g) (≗-cong-# (not ∘ not ∘ f) f (not-involutive ∘ f)) ⟩
-             2^ c ∸ #⟨ f ⟩
-           ∎
-  where open ≡-Reasoning
-
-|de-morgan| : ∀ {n} (f g : Bits n → Bit) → f |∨| g ≗ not ∘ ((not ∘ f) |∧| (not ∘ g))
-|de-morgan| f g x with f x
-... | true = refl
-... | false = sym (not-involutive _)
-
-search-de-morgan : ∀ {n} op (f g : Bits n → Bit) → search op (f |∨| g) ≡ search op (not ∘ ((not ∘ f) |∧| (not ∘ g)))
-search-de-morgan op f g = search-≗ op _ _ (|de-morgan| f g)
-
-search-hom :
-  ∀ {n a b}
-    {A : Set a} {B : Set b}
-    (_+_ : A → A → A)
-    (_*_ : B → B → B)
-    (f : A → B)
-    (p : Bits n → A)
-    (hom : ∀ x y → f (x + y) ≡ f x * f y)
-    → f (search _+_ p) ≡ search _*_ (f ∘ p)
-search-hom {zero} _+_ _*_ f p hom = refl
-search-hom {suc n} _+_ _*_ f p hom =
-   trans (hom _ _)
-         (cong₂ _*_ (search-hom {n} _+_ _*_ f (p ∘ 0∷_) hom)
-                    (search-hom _+_ _*_ f (p ∘ 1∷_) hom))
-
 
 open Defs public
