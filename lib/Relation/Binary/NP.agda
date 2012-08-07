@@ -61,7 +61,13 @@ module Equivalence-Reasoning
 module Preorder-Reasoning
          {p₁ p₂ p₃} (P : Preorder p₁ p₂ p₃) where
   open Preorder P
-  open Equivalence-Reasoning isEquivalence public renaming (_≈⟨_⟩_ to _∼⟨_⟩_)
+  open Trans-Reasoning _∼_ trans public hiding (finally) renaming (_≈⟨_⟩_ to _∼⟨_⟩_)
+  open Equivalence-Reasoning isEquivalence public renaming (_∎ to _☐)
+
+  infix  2 _∎
+
+  _∎ : ∀ x → x ∼ x
+  _ ∎ = refl
 
 module Setoid-Reasoning {a ℓ} (s : Setoid a ℓ) where
-  open Preorder-Reasoning (Setoid.preorder s) public renaming (_∼⟨_⟩_ to _≈⟨_⟩_)
+  open Equivalence-Reasoning (Setoid.isEquivalence s) public
