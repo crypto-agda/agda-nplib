@@ -298,7 +298,8 @@ module SimpleSearch {a} {A : Set a} (_·_ : A → A → A) where
 
 module Sum where
     open SimpleSearch _+_ using (module Comm; module Interchange; search-constε≡ε)
-    open SimpleSearch _+_ public using () renaming (search to sum; search-≗ to sum-≗; searchBit to sumBit)
+    open SimpleSearch _+_ public using () renaming (search to sum; search-≗ to sum-≗; searchBit to sumBit;
+                                                    search-≗₂ to sum-≗₂)
     open Comm ℕ°.+-comm public renaming (search-comm to sum-comm)
     open Interchange +-interchange public renaming (
         search-dist to sum-dist;
