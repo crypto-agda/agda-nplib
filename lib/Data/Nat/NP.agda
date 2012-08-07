@@ -2,6 +2,7 @@
 module Data.Nat.NP where
 
 import Algebra
+open import Algebra.FunctionProperties.NP
 open import Data.Nat public hiding (module GeneralisedArithmetic; module ≤-Reasoning; fold)
 open import Data.Nat.Properties as Props
 open import Data.Nat.Logical
@@ -50,6 +51,10 @@ assoc-comm : ∀ x y z → x + (y + z) ≡ y + (x + z)
 assoc-comm x y z rewrite ≡.sym (ℕ°.+-assoc x y z)
                        | ℕ°.+-comm x y
                        | ℕ°.+-assoc y x z = ≡.refl
+
++-interchange : Interchange _≡_ _+_ _+_
++-interchange = InterchangeFromAssocCommCong.∙-interchange _≡_ ≡.isEquivalence
+                                                           _+_ ℕ°.+-assoc ℕ°.+-comm (λ z → ≡.cong (flip _+_ z))
 
 2*′_ : ℕ → ℕ
 2*′_ = fold 0 (suc ∘′ suc)
