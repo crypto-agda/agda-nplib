@@ -47,15 +47,21 @@ module Trans-Reasoning {a ℓ} {A : Set a} (_≈_ : Rel A ℓ) (trans : Transiti
 
   syntax finally x y x≈y = x ≈⟨ x≈y ⟩∎ y ∎
 
-module Preorder-Reasoning
-         {p₁ p₂ p₃} (P : Preorder p₁ p₂ p₃) where
-  open Preorder P
-  open Trans-Reasoning _∼_ trans public hiding (finally) renaming (_≈⟨_⟩_ to _∼⟨_⟩_)
+module Equivalence-Reasoning
+         {a ℓ} {A : Set a} {_≈_ : Rel A ℓ}
+         (E : IsEquivalence _≈_) where
+  open IsEquivalence E
+  open Trans-Reasoning _≈_ trans public hiding (finally)
 
   infix  2 _∎
 
-  _∎ : ∀ x → x ∼ x
+  _∎ : ∀ x → x ≈ x
   _ ∎ = refl
+
+module Preorder-Reasoning
+         {p₁ p₂ p₃} (P : Preorder p₁ p₂ p₃) where
+  open Preorder P
+  open Equivalence-Reasoning isEquivalence public renaming (_≈⟨_⟩_ to _∼⟨_⟩_)
 
 module Setoid-Reasoning {a ℓ} (s : Setoid a ℓ) where
   open Preorder-Reasoning (Setoid.preorder s) public renaming (_∼⟨_⟩_ to _≈⟨_⟩_)
