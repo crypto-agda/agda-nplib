@@ -368,13 +368,21 @@ module OperationSyntax where
 module PermutationSyntax-Props where
     open PermutationSyntax
     open PermutationSemantics
-    open PermutationProperties
+    -- open PermutationProperties
 
     ⊕-dist-0↔1 : ∀ {n} (pad : Bits n) xs → 0↔1 pad ⊕ 0↔1 xs ≡ 0↔1 (pad ⊕ xs)
     ⊕-dist-0↔1 _           []          = refl
     ⊕-dist-0↔1 (_ ∷ [])    (_ ∷ [])    = refl
     ⊕-dist-0↔1 (_ ∷ _ ∷ _) (_ ∷ _ ∷ _) = refl
 
+    -- TODO make use of ⊛-dist-∙
+    ⊕-dist-∙ : ∀ {n} (pad : Bits n) π xs → π ∙ pad ⊕ π ∙ xs ≡ π ∙ (pad ⊕ xs)
+    ⊕-dist-∙ fs      `id        xs = refl
+    ⊕-dist-∙ fs      `0↔1       xs = ⊕-dist-0↔1 fs xs
+    ⊕-dist-∙ []       (`tl π)   [] = refl
+    ⊕-dist-∙ (f ∷ fs) (`tl π)   (x ∷ xs) rewrite ⊕-dist-∙ fs π xs = refl
+    ⊕-dist-∙ fs       (π₀ `⁏ π₁) xs rewrite ⊕-dist-∙ (π₀ ∙ fs) π₁ (π₀ ∙ xs)
+                                         | ⊕-dist-∙ fs π₀ xs = refl
     {-
  -- ⊛-dist-∙ : ∀ {n a} {A : Set a} (fs : Vec (A → A) n) π xs → π ∙ fs ⊛ π ∙ xs ≡ π ∙ (fs ⊛ xs)
     ⊕-dist-∙ : ∀ {n} (pad : Bits n) π xs → π ∙ pad ⊕ π ∙ xs ≡ π ∙ (pad ⊕ xs)
