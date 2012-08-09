@@ -1,11 +1,17 @@
 {-# OPTIONS --universe-polymorphism #-}
 module Data.List.NP where
 
+open import Category.Monad
+open import Category.Applicative.NP
 open import Data.List  public
 open import Data.Bool  using (Bool; not; if_then_else_)
 open import Data.Nat   using (ℕ; zero; suc)
 open import Data.Maybe using (Maybe; just; nothing)
 open import Function   using (_∘_)
+
+module Monad {ℓ} where
+  open RawMonad (monad {ℓ}) public
+  open RawApplicative rawIApplicative public using (replicateM)
 
 -- Move this
 Eq : ∀ {a} → Set a → Set a
