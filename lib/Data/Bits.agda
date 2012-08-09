@@ -318,17 +318,6 @@ module OperationSyntax where
     open PermutationSyntax using (Perm; `id; `0↔1; `tl; _`⁏_)
     module P = PermutationSemantics
 
-    toPerm : Op → Perm
-    toPerm `id     = `id
-    toPerm `0↔1    = `0↔1
-    toPerm `not    = `id -- Important
-    toPerm (`tl f) = `tl (toPerm f)
-    toPerm (f `⁏ g) = toPerm f `⁏ toPerm g
-
-    infixr 9 _∙′_
-    _∙′_ : Op → ∀ {n} → Endo (Bits n)
-    f ∙′ xs = toPerm f P.∙ xs
-
     `⟨0↔1+_⟩ : ∀ {n} (i : Fin n) → Op
     `⟨0↔1+ zero  ⟩ = `0↔1
     `⟨0↔1+ suc i ⟩ = `0↔1 `⁏ `tl `⟨0↔1+ i ⟩ `⁏ `0↔1
@@ -376,17 +365,6 @@ module OperationSyntax where
     ⊕-dist-0↔1 (_ ∷ [])    (_ ∷ [])    = refl
     ⊕-dist-0↔1 (_ ∷ _ ∷ _) (_ ∷ _ ∷ _) = refl
 
-    almost-⊕-dist-∙ : ∀ {n} (pad : Bits n) f xs → f ∙′ pad ⊕ f ∙ xs ≡ f ∙ (pad ⊕ xs)
-    almost-⊕-dist-∙ pad           `id     xs = refl
-    almost-⊕-dist-∙ pad           `0↔1    xs = ⊕-dist-0↔1 pad xs
-    almost-⊕-dist-∙ []            `not    [] = refl
-    almost-⊕-dist-∙ (true  ∷ pad) `not    (x ∷ xs) = refl
-    almost-⊕-dist-∙ (false ∷ pad) `not    (x ∷ xs) = refl
-    almost-⊕-dist-∙ []            (`tl f) [] = refl
-    almost-⊕-dist-∙ (p ∷ pad)     (`tl f) (x ∷ xs) rewrite almost-⊕-dist-∙ pad f xs = refl
-    almost-⊕-dist-∙ pad           (f `⁏ g) xs rewrite almost-⊕-dist-∙ (f ∙′ pad) g (f ∙ xs)
-                                                   | almost-⊕-dist-∙ pad f xs = refl
-
 module PermutationSyntax-Props where
     open PermutationSyntax
     open PermutationSemantics
@@ -397,6 +375,7 @@ module PermutationSyntax-Props where
     ⊕-dist-0↔1 (_ ∷ [])    (_ ∷ [])    = refl
     ⊕-dist-0↔1 (_ ∷ _ ∷ _) (_ ∷ _ ∷ _) = refl
 
+    {-
  -- ⊛-dist-∙ : ∀ {n a} {A : Set a} (fs : Vec (A → A) n) π xs → π ∙ fs ⊛ π ∙ xs ≡ π ∙ (fs ⊛ xs)
     ⊕-dist-∙ : ∀ {n} (pad : Bits n) π xs → π ∙ pad ⊕ π ∙ xs ≡ π ∙ (pad ⊕ xs)
     ⊕-dist-∙ pad π xs = π ∙ pad ⊕ π ∙ xs
@@ -410,7 +389,7 @@ module PermutationSyntax-Props where
                         π ∙ (pad ⊕ xs)
                       ∎ where open ≡-Reasoning
      -- rans {!⊛-dist-∙ (vmap _xor_ (op ∙ pad)) op xs!} (⊛-dist-∙ (vmap _xor_ pad) op xs)
-
+-}
 module SimpleSearch {a} {A : Set a} (_∙_ : A → A → A) where
 
     open Search 1 2*_ {A = const A} _∙_ public
