@@ -402,12 +402,10 @@ module SimpleSearch {a} {A : Set a} (_∙_ : A → A → A) where
 
     open Search 1 2*_ {A = const A} _∙_ public
 
-    search-constε≡ε : ∀ ε (ε∙ε : ε ∙ ε ≡ ε) n → search {n = n} (const ε) ≡ ε
-    search-constε≡ε ε ε∙ε = go
-      where
-        go : ∀ n → search {n = n} (const ε) ≡ ε
-        go zero = refl
-        go (suc n) rewrite go n = ε∙ε
+    module SearchUnit ε (ε∙ε : ε ∙ ε ≡ ε) where
+        search-constε≡ε : ∀ n → search {n = n} (const ε) ≡ ε
+        search-constε≡ε zero = refl
+        search-constε≡ε (suc n) rewrite search-constε≡ε n = ε∙ε
 
     searchBit-search : ∀ n (f : Bits (suc n) → A) → searchBit (λ b → search (f ∘ _∷_ b)) ≡ search f
     searchBit-search n f = refl
@@ -501,20 +499,19 @@ module SimpleSearch {a} {A : Set a} (_∙_ : A → A → A) where
         search-op f (g `⁏ h) rewrite search-op (f ∘ op h) g = search-op f h
 
 module Sum where
-    open SimpleSearch _+_ using (module Comm; module SearchInterchange; search-constε≡ε; module Op)
+    open SimpleSearch _+_ using (module Comm; module SearchInterchange; module SearchUnit; module Op)
     open SimpleSearch _+_ public using () renaming (search to sum; search-≗ to sum-≗; searchBit to sumBit;
                                                     search-≗₂ to sum-≗₂;
                                                     search-+ to sum-+)
     open Comm ℕ°.+-comm public renaming (search-comm to sum-comm)
+    open SearchUnit 0 refl public renaming
+       (search-constε≡ε to sum-const0≡0)
     open SearchInterchange +-interchange public renaming (
         search-dist to sum-dist;
         search-searchBit to sum-sumBit;
         search-search to sum-sum;
         search-swap to sum-swap)
     open Op ℕ°.+-comm +-interchange public renaming (search-op to sum-op)
-
-    sum-const0≡0 : ∀ n → sum {n = n} (const 0) ≡ 0
-    sum-const0≡0 n = search-constε≡ε 0 refl n
 
     sum-const : ∀ n x → sum {n} (const x) ≡ ⟨2^ n * x ⟩
     sum-const zero    _ = refl
