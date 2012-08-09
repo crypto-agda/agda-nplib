@@ -2,7 +2,7 @@ module Data.Bits where
 
 -- cleanup
 import Level
-open import Category.Applicative
+open import Category.Applicative.NP
 open import Category.Monad
 open import Data.Nat.NP hiding (_==_)
 open import Data.Nat.Properties
@@ -14,7 +14,7 @@ open import Data.Maybe.NP
 import Data.Fin as Fin
 open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise) renaming (_+_ to _+ᶠ_)
 import Data.Vec.NP as V
-open V hiding (_⊛_; rewire; rewireTbl; sum) renaming (map to vmap; swap to vswap)
+open V hiding (rewire; rewireTbl; sum) renaming (map to vmap; swap to vswap)
 open import Data.Vec.N-ary.NP
 open import Data.Unit using (⊤)
 open import Data.Empty using (⊥; ⊥-elim)
@@ -22,8 +22,8 @@ open import Data.Product using (_×_; _,_; uncurry; proj₁; proj₂)
 open import Function.NP hiding (_→⟨_⟩_)
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡
-open import Algebra.FunctionProperties
-import Data.List as L
+open import Algebra.FunctionProperties.NP
+import Data.List.NP as L
 
 open import Data.Bool.NP public using (_xor_; not; true; false; if_then_else_)
 open V public using ([]; _∷_; head; tail; replicate; RewireTbl)
@@ -149,19 +149,9 @@ lsb₂ = reverse ∘ msb 2 ∘ reverse
 #0 : ∀ {n} → Bits n → Fin (suc n)
 #0 = #1 ∘ vmap not
 
-private
- module M {a} {A : Set a} {M : Set a → Set a} (appl : RawApplicative M) where
-  open RawApplicative appl
-
-  replicateM : ∀ {n} → M A → M (Vec A n)
-  replicateM {n = zero}  _ = pure []
-  replicateM {n = suc n} x = pure _∷_ ⊛ x ⊛ replicateM x
-
-open M public
-
 allBitsL : ∀ n → L.List (Bits n)
-allBitsL _ = replicateM rawIApplicative (toList (0b ∷ 1b ∷ []))
-  where open RawMonad L.monad
+allBitsL _ = replicateM (toList (0b ∷ 1b ∷ []))
+  where open L.Monad
 
 allBits : ∀ n → Vec (Bits n) (2^ n)
 allBits zero    = [] ∷ []
@@ -180,17 +170,17 @@ _|∧|_ : ∀ {n} → (f g : Bits n → Bit) → Bits n → Bit
 _|∧|_ f g x = f x ∧ g x
 
 module Search {i} {I : Set i} (`1 : I) (`2*_ : I → I)
-              {a} {A : I → Set a} (_·_ : ∀ {m} → A m → A m → A (`2* m)) where
+              {a} {A : I → Set a} (_∙_ : ∀ {m} → A m → A m → A (`2* m)) where
 
   `2^_ : ℕ → I
   `2^_ = fold `1 `2*_
 
   search : ∀ {n} → (Bits n → A `1) → A (`2^ n)
   search {zero}  f = f []
-  search {suc n} f = search (f ∘ 0∷_) · search (f ∘ 1∷_)
+  search {suc n} f = search (f ∘ 0∷_) ∙ search (f ∘ 1∷_)
 
   searchBit : (Bit → A `1) → A (`2* `1)
-  searchBit f = f 0b · f 1b
+  searchBit f = f 0b ∙ f 1b
 
   -- search-ext
   search-≗ : ∀ {n} (f g : Bits n → A `1) → f ≗ g → search f ≡ search g
@@ -199,7 +189,7 @@ module Search {i} {I : Set i} (`1 : I) (`2*_ : I → I)
     rewrite search-≗ (f ∘ 0∷_) (g ∘ 0∷_) (f≗g ∘ 0∷_)
           | search-≗ (f ∘ 1∷_) (g ∘ 1∷_) (f≗g ∘ 1∷_) = refl
 
-  module Comm (·-comm : ∀ {m} (x y : A m) → x · y ≡ y · x) where
+  module Comm (∙-comm : ∀ {m} (x y : A m) → x ∙ y ≡ y ∙ x) where
 
     {- This pad bit vector allows to specify which bit do we negate in the vector. -}
     search-comm : ∀ {n} (pad : Bits n) (f : Bits n → A `1) → search f ≡ search (f ∘ _⊕_ pad)
@@ -208,22 +198,135 @@ module Search {i} {I : Set i} (`1 : I) (`2*_ : I → I)
       rewrite search-comm pad (f ∘ 0∷_)
             | search-comm pad (f ∘ 1∷_)
       with b
-    ... | true  = ·-comm (search (f ∘ 0∷_ ∘ _⊕_ pad)) _
+    ... | true  = ∙-comm (search (f ∘ 0∷_ ∘ _⊕_ pad)) _
     ... | false = refl
   open Comm public
 
 open Search 1 2*_ public using () renaming (search to search′; search-≗ to search′-≗; search-comm to search′-comm)
 
-module SimpleSearch {a} {A : Set a} (_·_ : A → A → A) where
+module OperationSyntax where
+    infixr 1 _`⁏_
+    data Op : Set where
+      `id `0↔1 `not : Op
+      `tl : Op → Op
+      _`⁏_ : Op → Op → Op
 
-    open Search 1 2*_ {A = const A} _·_ public
+    infixr 9 _∙_
+    _∙_ : Op → ∀ {n} → Endo (Bits n)
+    `id   ∙ xs       = xs
+    `0↔1  ∙ xs       = 0↔1 xs
+    `not  ∙ []       = []
+    `not  ∙ (x ∷ xs) = not x ∷ xs
+    `tl f ∙ []       = []
+    `tl f ∙ (x ∷ xs) = x ∷ f ∙ xs
+    (f `⁏ g) ∙ xs = g ∙ f ∙ xs
 
-    search-constε≡ε : ∀ ε (ε·ε : ε · ε ≡ ε) n → search {n = n} (const ε) ≡ ε
-    search-constε≡ε ε ε·ε = go
+    open PermutationSyntax using (Perm; `id; `0↔1; `tl; _`⁏_)
+    module P = PermutationSemantics
+
+    toPerm : Op → Perm
+    toPerm `id     = `id
+    toPerm `0↔1    = `0↔1
+    toPerm `not    = `id -- Important
+    toPerm (`tl f) = `tl (toPerm f)
+    toPerm (f `⁏ g) = toPerm f `⁏ toPerm g
+
+    infixr 9 _∙′_
+    _∙′_ : Op → ∀ {n} → Endo (Bits n)
+    f ∙′ xs = toPerm f P.∙ xs
+
+    `⟨0↔1+_⟩ : ∀ {n} (i : Fin n) → Op
+    `⟨0↔1+ zero  ⟩ = `0↔1
+    `⟨0↔1+ suc i ⟩ = `0↔1 `⁏ `tl `⟨0↔1+ i ⟩ `⁏ `0↔1
+
+    `⟨0↔1+_⟩-spec : ∀ {n} (i : Fin n) xs → `⟨0↔1+ i ⟩ ∙ xs ≡ ⟨0↔1+ i ⟩ xs
+    `⟨0↔1+ zero  ⟩-spec xs = refl
+    `⟨0↔1+ suc i ⟩-spec (x ∷ _ ∷ xs) rewrite `⟨0↔1+ i ⟩-spec (x ∷ xs) = refl
+
+    `⟨0↔_⟩ : ∀ {n} (i : Fin n) → Op
+    `⟨0↔ zero  ⟩ = `id
+    `⟨0↔ suc i ⟩ = `⟨0↔1+ i ⟩
+
+    `⟨0↔_⟩-spec : ∀ {n} (i : Fin n) xs → `⟨0↔ i ⟩ ∙ xs ≡ ⟨0↔ i ⟩ xs
+    `⟨0↔ zero  ⟩-spec xs = refl
+    `⟨0↔ suc i ⟩-spec xs = `⟨0↔1+ i ⟩-spec xs
+
+    `⟨_↔_⟩ : ∀ {n} (i j : Fin n) → Op
+    `⟨ zero  ↔ j     ⟩ = `⟨0↔ j ⟩
+    `⟨ i     ↔ zero  ⟩ = `⟨0↔ i ⟩
+    `⟨ suc i ↔ suc j ⟩ = `tl `⟨ i ↔ j ⟩
+
+    `⟨_↔_⟩-spec : ∀ {n} (i j : Fin n) xs → `⟨ i ↔ j ⟩ ∙ xs ≡ ⟨ i ↔ j ⟩ xs
+    `⟨_↔_⟩-spec zero    j       xs = `⟨0↔   j ⟩-spec xs
+    `⟨_↔_⟩-spec (suc i) zero    xs = `⟨0↔1+ i ⟩-spec xs
+    `⟨_↔_⟩-spec (suc i) (suc j) (x ∷ xs) rewrite `⟨ i ↔ j ⟩-spec xs = refl
+
+    `xor-head : Bit → Op
+    `xor-head b = if b then `not else `id
+
+    `xor-head-spec : ∀ b {n} x (xs : Bits n) → `xor-head b ∙ (x ∷ xs) ≡ (b xor x) ∷ xs
+    `xor-head-spec true x xs  = refl
+    `xor-head-spec false x xs = refl
+
+    `⟨_⊕⟩ : ∀ {n} → Bits n → Op
+    `⟨ []     ⊕⟩ = `id
+    `⟨ b ∷ xs ⊕⟩ = `xor-head b `⁏ `tl `⟨ xs ⊕⟩
+
+    `⟨_⊕⟩-spec : ∀ {n} (xs ys : Bits n) → `⟨ xs ⊕⟩ ∙ ys ≡ xs ⊕ ys
+    `⟨ []         ⊕⟩-spec []       = refl
+    `⟨ true  ∷ xs ⊕⟩-spec (y ∷ ys) rewrite `⟨ xs ⊕⟩-spec ys = refl
+    `⟨ false ∷ xs ⊕⟩-spec (y ∷ ys) rewrite `⟨ xs ⊕⟩-spec ys = refl
+
+    ⊕-dist-0↔1 : ∀ {n} (pad : Bits n) x → 0↔1 pad ⊕ 0↔1 x ≡ 0↔1 (pad ⊕ x)
+    ⊕-dist-0↔1 _           []          = refl
+    ⊕-dist-0↔1 (_ ∷ [])    (_ ∷ [])    = refl
+    ⊕-dist-0↔1 (_ ∷ _ ∷ _) (_ ∷ _ ∷ _) = refl
+
+    almost-⊕-dist-∙ : ∀ {n} (pad : Bits n) f xs → f ∙′ pad ⊕ f ∙ xs ≡ f ∙ (pad ⊕ xs)
+    almost-⊕-dist-∙ pad           `id     xs = refl
+    almost-⊕-dist-∙ pad           `0↔1    xs = ⊕-dist-0↔1 pad xs
+    almost-⊕-dist-∙ []            `not    [] = refl
+    almost-⊕-dist-∙ (true  ∷ pad) `not    (x ∷ xs) = refl
+    almost-⊕-dist-∙ (false ∷ pad) `not    (x ∷ xs) = refl
+    almost-⊕-dist-∙ []            (`tl f) [] = refl
+    almost-⊕-dist-∙ (p ∷ pad)     (`tl f) (x ∷ xs) rewrite almost-⊕-dist-∙ pad f xs = refl
+    almost-⊕-dist-∙ pad           (f `⁏ g) xs rewrite almost-⊕-dist-∙ (f ∙′ pad) g (f ∙ xs)
+                                                   | almost-⊕-dist-∙ pad f xs = refl
+
+module PermutationSyntax-Props where
+    open PermutationSyntax
+    open PermutationSemantics
+    open PermutationProperties
+
+    ⊕-dist-0↔1 : ∀ {n} (pad : Bits n) xs → 0↔1 pad ⊕ 0↔1 xs ≡ 0↔1 (pad ⊕ xs)
+    ⊕-dist-0↔1 _           []          = refl
+    ⊕-dist-0↔1 (_ ∷ [])    (_ ∷ [])    = refl
+    ⊕-dist-0↔1 (_ ∷ _ ∷ _) (_ ∷ _ ∷ _) = refl
+
+ -- ⊛-dist-∙ : ∀ {n a} {A : Set a} (fs : Vec (A → A) n) π xs → π ∙ fs ⊛ π ∙ xs ≡ π ∙ (fs ⊛ xs)
+    ⊕-dist-∙ : ∀ {n} (pad : Bits n) π xs → π ∙ pad ⊕ π ∙ xs ≡ π ∙ (pad ⊕ xs)
+    ⊕-dist-∙ pad π xs = π ∙ pad ⊕ π ∙ xs
+                      ≡⟨ refl ⟩
+                        vmap _xor_ (π ∙ pad) ⊛ π ∙ xs
+                      ≡⟨ {!!} ⟩
+                        π ∙ vmap _xor_ pad ⊛ π ∙ xs
+                      ≡⟨ ⊛-dist-∙ _ (vmap _xor_ pad) π xs ⟩
+                        π ∙ (vmap _xor_ pad ⊛ xs)
+                      ≡⟨ refl ⟩
+                        π ∙ (pad ⊕ xs)
+                      ∎ where open ≡-Reasoning
+     -- rans {!⊛-dist-∙ (vmap _xor_ (op ∙ pad)) op xs!} (⊛-dist-∙ (vmap _xor_ pad) op xs)
+
+module SimpleSearch {a} {A : Set a} (_∙_ : A → A → A) where
+
+    open Search 1 2*_ {A = const A} _∙_ public
+
+    search-constε≡ε : ∀ ε (ε∙ε : ε ∙ ε ≡ ε) n → search {n = n} (const ε) ≡ ε
+    search-constε≡ε ε ε∙ε = go
       where
         go : ∀ n → search {n = n} (const ε) ≡ ε
         go zero = refl
-        go (suc n) rewrite go n = ε·ε
+        go (suc n) rewrite go n = ε∙ε
 
     searchBit-search : ∀ n (f : Bits (suc n) → A) → searchBit (λ b → search (f ∘ _∷_ b)) ≡ search f
     searchBit-search n f = refl
@@ -234,14 +337,14 @@ module SimpleSearch {a} {A : Set a} (_·_ : A → A → A) where
                           search-≗ (f xs) (g xs) (λ ys →
                             f≗g xs ys))
 
-    module Interchange (·-interchange : ∀ x y z t → (x · y) · (z · t) ≡ (x · z) · (y · t)) where
+    module SearchInterchange (∙-interchange : Interchange _≡_ _∙_ _∙_) where
 
-        search-dist : ∀ {n} (f₀ f₁ : Bits n → A) → search (λ x → f₀ x · f₁ x) ≡ search f₀ · search f₁
+        search-dist : ∀ {n} (f₀ f₁ : Bits n → A) → search (λ x → f₀ x ∙ f₁ x) ≡ search f₀ ∙ search f₁
         search-dist {zero}  _ _ = refl
         search-dist {suc n} f₀ f₁
           rewrite search-dist (f₀ ∘ 0∷_) (f₁ ∘ 0∷_)
                 | search-dist (f₀ ∘ 1∷_) (f₁ ∘ 1∷_)
-                = ·-interchange _ _ _ _
+                = ∙-interchange _ _ _ _
 
         search-searchBit : ∀ {n} (f : Bits (suc n) → A) →
                              search (λ xs → searchBit (λ b → f (b ∷ xs))) ≡ search f
@@ -296,17 +399,36 @@ module SimpleSearch {a} {A : Set a} (_·_ : A → A → A) where
                    ∎
                         where open ≡-Reasoning
 
+        search-0↔1 : ∀ {n} (f : Bits n → A) → search {n} (f ∘ 0↔1) ≡ search {n} f
+        search-0↔1 {zero}        _ = refl
+        search-0↔1 {suc zero}    _ = refl
+        search-0↔1 {suc (suc n)} _ = ∙-interchange _ _ _ _
+
+    module Op (∙-comm : Commutative _≡_ _∙_)
+              (∙-interchange : Interchange _≡_ _∙_ _∙_) where
+        open SearchInterchange ∙-interchange using (search-0↔1)
+        open OperationSyntax renaming (_∙_ to op)
+        search-op : ∀ {n} (f : Bits n → A) (g : Op) → search {n} (f ∘ op g) ≡ search {n} f
+        search-op f `id = refl
+        search-op f `0↔1 = search-0↔1 f
+        search-op {zero} f `not = refl
+        search-op {suc n} f `not = ∙-comm _ _
+        search-op {zero} f (`tl g) = refl
+        search-op {suc n} f (`tl g) rewrite search-op (f ∘ 0∷_) g | search-op (f ∘ 1∷_) g = refl
+        search-op f (g `⁏ h) rewrite search-op (f ∘ op h) g = search-op f h
+
 module Sum where
-    open SimpleSearch _+_ using (module Comm; module Interchange; search-constε≡ε)
+    open SimpleSearch _+_ using (module Comm; module SearchInterchange; search-constε≡ε; module Op)
     open SimpleSearch _+_ public using () renaming (search to sum; search-≗ to sum-≗; searchBit to sumBit;
                                                     search-≗₂ to sum-≗₂)
     open Comm ℕ°.+-comm public renaming (search-comm to sum-comm)
-    open Interchange +-interchange public renaming (
+    open SearchInterchange +-interchange public renaming (
         search-dist to sum-dist;
         search-searchBit to sum-sumBit;
         search-+ to sum-+;
         search-search to sum-sum;
         search-swap to sum-swap)
+    open Op ℕ°.+-comm +-interchange public renaming (search-op to sum-op)
 
     sum-const0≡0 : ∀ n → sum {n = n} (const 0) ≡ 0
     sum-const0≡0 n = search-constε≡ε 0 refl n
@@ -320,6 +442,7 @@ module Sum where
 
 module Count where
     open Sum
+    open OperationSyntax renaming (_∙_ to op)
 
     #⟨_⟩ : ∀ {n} → (Bits n → Bool) → ℕ
     #⟨ pred ⟩ = sum (Bool.toℕ ∘ pred)
@@ -330,6 +453,9 @@ module Count where
 
     #-comm : ∀ {n} (pad : Bits n) (f : Bits n → Bool) → #⟨ f ⟩ ≡ #⟨ f ∘ _⊕_ pad ⟩
     #-comm pad f = sum-comm pad (Bool.toℕ ∘ f)
+
+    #-op : ∀ {n} (f : Bits n → Bit) (g : Op) → #⟨ f ∘ op g ⟩ ≡ #⟨ f ⟩
+    #-op f = sum-op (Bool.toℕ ∘ f)
 
     #-⊕ : ∀ {c} (bs : Bits c) (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ _⊕_ bs ⟩
     #-⊕ = #-comm
