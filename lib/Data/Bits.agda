@@ -209,7 +209,16 @@ module OperationSyntax where
     data Op : Set where
       `id `0↔1 `not : Op
       `tl : Op → Op
+      `if0 : Op → Op
       _`⁏_ : Op → Op → Op
+
+    {-
+       id   ε          id
+       0↔1  swp-inners interchange
+       not  swap       comm
+       if0  first      ...
+       if1  second     ...
+     -}
 
     infixr 9 _∙_
     _∙_ : Op → ∀ {n} → Endo (Bits n)
@@ -219,7 +228,92 @@ module OperationSyntax where
     `not  ∙ (x ∷ xs) = not x ∷ xs
     `tl f ∙ []       = []
     `tl f ∙ (x ∷ xs) = x ∷ f ∙ xs
+    `if0 f ∙ []           = []
+    `if0 f ∙ (false ∷ xs) = false ∷ f ∙ xs
+    `if0 f ∙ (true  ∷ xs) = true  ∷ xs
     (f `⁏ g) ∙ xs = g ∙ f ∙ xs
+
+    `if1 : Op → Op
+    `if1 f = `not `⁏ `if0 f `⁏ `not
+
+    --   (a ∙ b) ∙ (c ∙ d)
+    -- ≡ right swap
+    --   (a ∙ b) ∙ (d ∙ c)
+    -- ≡ interchange
+    --   (a ∙ d) ∙ (b ∙ c)
+    -- ≡ right swap
+    --   (a ∙ d) ∙ (c ∙ b)
+    swp-seconds : Op
+    swp-seconds = `if1 `not `⁏ `0↔1 `⁏ `if1 `not
+
+    on-extremes : Op → Op
+    on-extremes f = swp-seconds `⁏ `if0 f `⁏ swp-seconds
+
+    on-firsts : Op → Op
+    on-firsts f = `0↔1 `⁏ `if0 f `⁏ `0↔1
+
+    0↔1∷_ : ∀ {n} → Bits n → Op
+    0↔1∷ [] = `not
+    0↔1∷ (true {-1-} ∷ p) = on-extremes (0↔1∷ p)
+    0↔1∷ (false{-0-} ∷ p) = on-firsts   (0↔1∷ p)
+
+    0↔_ : ∀ {n} → Bits n → Op
+    0↔ [] = `id
+    0↔ (false{-0-} ∷ p) = `if0 (0↔ p)
+    0↔ (true{-1-}  ∷ p) = 0↔1∷ p
+
+    ⟨0↔_⟩-sem : ∀ {n} (p : Bits n) → Bits n → Bits n
+    ⟨0↔ p ⟩-sem xs = if 0ⁿ == xs then p else if p == xs then 0ⁿ else xs
+
+    if∷ : ∀ {n} a x (xs ys : Bits n) → (if a then (x ∷ xs) else (x ∷ ys)) ≡ x ∷ (if a then xs else ys)
+    if∷ true x xs ys = refl
+    if∷ false x xs ys = refl
+
+    if-not∷ : ∀ {n} a (xs ys : Bits n) → (if a then (false ∷ xs) else (true ∷ ys)) ≡ (not a) ∷ (if a then xs else ys)
+    if-not∷ true xs ys = refl
+    if-not∷ false xs ys = refl
+
+    if∷′ : ∀ {n} a (xs ys : Bits n) → (if a then (true ∷ xs) else (false ∷ ys)) ≡ a ∷ (if a then xs else ys)
+    if∷′ true xs ys = refl
+    if∷′ false xs ys = refl
+
+    ⟨0↔1∷_⟩-spec : ∀ {n} (p : Bits n) xs → 0↔1∷ p ∙ xs ≡ ⟨0↔ (1∷ p) ⟩-sem xs
+    ⟨0↔1∷_⟩-spec [] (true ∷ []) = refl
+    ⟨0↔1∷_⟩-spec [] (false ∷ []) = refl
+    ⟨0↔1∷_⟩-spec (true ∷ ps) (true ∷ true ∷ xs)
+       rewrite ⟨0↔1∷_⟩-spec ps (1∷ xs)
+         with ps == xs
+    ... | true = refl
+    ... | false = refl
+    ⟨0↔1∷_⟩-spec (true ∷ ps) (true ∷ false ∷ xs) = refl
+    ⟨0↔1∷_⟩-spec (true ∷ ps) (false ∷ true ∷ xs) = refl
+    ⟨0↔1∷_⟩-spec (true ∷ ps) (false ∷ false ∷ xs)
+       rewrite ⟨0↔1∷_⟩-spec ps (0∷ xs)
+         with 0ⁿ == xs
+    ... | true = refl
+    ... | false = refl
+    ⟨0↔1∷_⟩-spec (false ∷ ps) (true ∷ true ∷ xs) = refl
+    ⟨0↔1∷_⟩-spec (false ∷ ps) (true ∷ false ∷ xs)
+       rewrite ⟨0↔1∷_⟩-spec ps (1∷ xs)
+         with ps == xs
+    ... | true = refl
+    ... | false = refl
+    ⟨0↔1∷_⟩-spec (false ∷ ps) (false ∷ true ∷ xs) = refl
+    ⟨0↔1∷_⟩-spec (false ∷ ps) (false ∷ false ∷ xs)
+       rewrite ⟨0↔1∷_⟩-spec ps (0∷ xs)
+         with 0ⁿ == xs
+    ... | true = refl
+    ... | false = refl
+
+    ⟨0↔_⟩-spec : ∀ {n} (p : Bits n) xs → 0↔ p ∙ xs ≡ ⟨0↔ p ⟩-sem xs
+    ⟨0↔_⟩-spec [] [] = refl
+    ⟨0↔_⟩-spec (false ∷ ps) (true ∷ xs) = refl
+    ⟨0↔_⟩-spec (false ∷ ps) (false ∷ xs)
+       rewrite ⟨0↔ ps ⟩-spec xs
+             | if∷ (ps == xs) 0b 0ⁿ xs
+             | if∷ (0ⁿ == xs) 0b ps (if ps == xs then 0ⁿ else xs)
+        = refl
+    ⟨0↔_⟩-spec (true ∷ p) xs = ⟨0↔1∷ p ⟩-spec xs
 
     open PermutationSyntax using (Perm; `id; `0↔1; `tl; _`⁏_)
     module P = PermutationSemantics
@@ -415,6 +509,8 @@ module SimpleSearch {a} {A : Set a} (_∙_ : A → A → A) where
         search-op {suc n} f `not = ∙-comm _ _
         search-op {zero} f (`tl g) = refl
         search-op {suc n} f (`tl g) rewrite search-op (f ∘ 0∷_) g | search-op (f ∘ 1∷_) g = refl
+        search-op {zero} f (`if0 g) = refl
+        search-op {suc n} f (`if0 g) rewrite search-op (f ∘ 0∷_) g = refl
         search-op f (g `⁏ h) rewrite search-op (f ∘ op h) g = search-op f h
 
 module Sum where
