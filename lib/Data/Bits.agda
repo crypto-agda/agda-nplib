@@ -431,6 +431,13 @@ module SimpleSearch {a} {A : Set a} (_∙_ : A → A → A) where
                           search-≗ (f xs) (g xs) (λ ys →
                             f≗g xs ys))
 
+    search-+ : ∀ {m n} (f : Bits (m + n) → A) →
+                 search {m + n} f
+               ≡ search {m} (λ xs → search {n} (λ ys → f (xs ++ ys)))
+    search-+ {zero} f = refl
+    search-+ {suc m} f rewrite search-+ {m} (f ∘ 0∷_)
+                             | search-+ {m} (f ∘ 1∷_) = refl
+
     module SearchInterchange (∙-interchange : Interchange _≡_ _∙_ _∙_) where
 
         search-dist : ∀ {n} (f₀ f₁ : Bits n → A) → search (λ x → f₀ x ∙ f₁ x) ≡ search f₀ ∙ search f₁
@@ -443,13 +450,6 @@ module SimpleSearch {a} {A : Set a} (_∙_ : A → A → A) where
         search-searchBit : ∀ {n} (f : Bits (suc n) → A) →
                              search (λ xs → searchBit (λ b → f (b ∷ xs))) ≡ search f
         search-searchBit f = search-dist (f ∘ 0∷_) (f ∘ 1∷_)
-
-        search-+ : ∀ {m n} (f : Bits (m + n) → A) →
-                     search {m + n} f
-                   ≡ search {m} (λ xs → search {n} (λ ys → f (xs ++ ys)))
-        search-+ {zero} f = refl
-        search-+ {suc m} f rewrite search-+ {m} (f ∘ 0∷_)
-                                 | search-+ {m} (f ∘ 1∷_) = refl
 
         search-search : ∀ {m n} (f : Bits (m + n) → A) →
                           search {m} (λ xs → search {n} (λ ys → f (xs ++ ys)))
@@ -516,12 +516,12 @@ module SimpleSearch {a} {A : Set a} (_∙_ : A → A → A) where
 module Sum where
     open SimpleSearch _+_ using (module Comm; module SearchInterchange; search-constε≡ε; module Op)
     open SimpleSearch _+_ public using () renaming (search to sum; search-≗ to sum-≗; searchBit to sumBit;
-                                                    search-≗₂ to sum-≗₂)
+                                                    search-≗₂ to sum-≗₂;
+                                                    search-+ to sum-+)
     open Comm ℕ°.+-comm public renaming (search-comm to sum-comm)
     open SearchInterchange +-interchange public renaming (
         search-dist to sum-dist;
         search-searchBit to sum-sumBit;
-        search-+ to sum-+;
         search-search to sum-sum;
         search-swap to sum-swap)
     open Op ℕ°.+-comm +-interchange public renaming (search-op to sum-op)
