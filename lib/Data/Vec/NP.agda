@@ -1,5 +1,6 @@
 module Data.Vec.NP where
 
+import Level as L
 open import Category.Applicative
 open import Data.Vec public hiding (_⊛_; zipWith; zip; map; applicative)
 open import Data.Nat using (ℕ; suc; zero; _+_)
@@ -10,6 +11,7 @@ open import Data.Product hiding (map; zip; swap)
 open import Function.NP
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡
+open import Function.Bijection.SyntaxKit
 
 module waiting-for-a-fix-in-the-stdlib where
 
@@ -205,6 +207,11 @@ onᵢ f (suc i) (x ∷ xs) = x ∷ onᵢ f i xs
 0↔1 (x₀ ∷ x₁ ∷ xs) = x₁ ∷ x₀ ∷ xs
 0↔1 xs = xs
 
+⊛-dist-0↔1 : ∀ {n a} {A : Set a} (fs : Vec (Endo A) n) xs → 0↔1 fs ⊛ 0↔1 xs ≡ 0↔1 (fs ⊛ xs)
+⊛-dist-0↔1 _           []          = refl
+⊛-dist-0↔1 (_ ∷ [])    (_ ∷ [])    = refl
+⊛-dist-0↔1 (_ ∷ _ ∷ _) (_ ∷ _ ∷ _) = refl
+
 map-tail : ∀ {m n a} {A : Set a} → (Vec A m → Vec A n) → Vec A (suc m) → Vec A (suc n)
 map-tail f (x ∷ xs) = x ∷ f xs
 
@@ -262,7 +269,7 @@ module ⟨↔⟩ {a} (A : Set a) where
     0↔1²-cancel (x ∷ x₁ ∷ xs) = refl
 
     ⟨0↔1+_⟩²-cancel : ∀ {n} (i : Fin n) → ⟨0↔1+ i ⟩ ² ≗ id {A = Vec A (1 + n)}
-    ⟨0↔1+ zero  ⟩²-cancel xs = 0↔1²-cancel xs 
+    ⟨0↔1+ zero  ⟩²-cancel xs = 0↔1²-cancel xs
     ⟨0↔1+ suc i ⟩²-cancel xs
       rewrite 0↔1²-cancel (map-tail ⟨0↔1+ i ⟩ (0↔1 xs))
             | map-tail∘map-tail ⟨0↔1+ i ⟩ ⟨0↔1+ i ⟩ (0↔1 xs)
@@ -329,14 +336,14 @@ module PermutationSyntax where
     infixr 1 _`⁏_
     data Perm : Set where
       `id `0↔1 : Perm
-      `tl : Perm → Perm
       _`⁏_ : Perm → Perm → Perm
+      `tl : Perm → Perm
 
     _⁻¹ : Endo Perm
     `id ⁻¹ = `id
+    (f₀ `⁏ f₁) ⁻¹ = f₁ ⁻¹ `⁏ f₀ ⁻¹
     `0↔1 ⁻¹ = `0↔1
-    `tl π ⁻¹ = `tl (π ⁻¹)
-    (π₀ `⁏ π₁) ⁻¹ = π₁ ⁻¹ `⁏ π₀ ⁻¹
+    (`tl f) ⁻¹ = `tl (f ⁻¹)
 
     `⟨0↔1+_⟩ : ∀ {n} (i : Fin n) → Perm
     `⟨0↔1+ zero  ⟩ = `0↔1
@@ -353,81 +360,198 @@ module PermutationSyntax where
 
 module PermutationSemantics {a} {A : Set a} where
     open PermutationSyntax
-    open ⟨↔⟩ A hiding (⟨_↔_⟩)
 
     infixr 9 _∙_
     _∙_ : Perm → ∀ {n} → Endo (Vec A n)
-    `id   ∙ xs       = xs
-    `0↔1  ∙ xs       = 0↔1 xs
-    `tl π ∙ []       = []
-    `tl π ∙ (x ∷ xs) = x ∷ π ∙ xs
-    (π `⁏ π₁) ∙ xs = π₁ ∙ π ∙ xs
-
-    _≗π_ : Perm → Perm → Set _
-    π₀ ≗π π₁ = ∀ {n} (xs : Vec A n) → π₀ ∙ xs ≡ π₁ ∙ xs
-
-    _⁻¹-inverse : ∀ π → (π `⁏ π ⁻¹) ≗π `id
-    (`id ⁻¹-inverse) xs = refl
-    (`0↔1 ⁻¹-inverse) xs = 0↔1²-cancel xs
-    (`tl π ⁻¹-inverse) [] = refl
-    (`tl π ⁻¹-inverse) (x ∷ xs) rewrite (π ⁻¹-inverse) xs = refl
-    ((π₀ `⁏ π₁) ⁻¹-inverse) xs rewrite (π₁ ⁻¹-inverse) (π₀ ∙ xs) | (π₀ ⁻¹-inverse) xs = refl
-
-    _⁻¹-involutive : ∀ π → (π ⁻¹) ⁻¹ ≡ π
-    `id ⁻¹-involutive = refl
-    `0↔1 ⁻¹-involutive = refl
-    `tl π ⁻¹-involutive rewrite π ⁻¹-involutive = refl
-    (π₀ `⁏ π₁) ⁻¹-involutive rewrite π₀ ⁻¹-involutive | π₁ ⁻¹-involutive = refl
-
-    _⁻¹-inverse′ : ∀ π → (π ⁻¹ `⁏ π) ≗π `id
-    (π ⁻¹-inverse′) xs with ((π ⁻¹) ⁻¹-inverse) xs
-    ... | p rewrite π ⁻¹-involutive = p
+    `id     ∙ xs       = xs
+    (f `⁏ g) ∙ xs       = g ∙ f ∙ xs
+    `0↔1    ∙ xs       = 0↔1 xs
+    (`tl f) ∙ []       = []
+    (`tl f) ∙ (x ∷ xs) = x ∷ f ∙ xs
 
     `⟨0↔1+_⟩-spec : ∀ {n} (i : Fin n) (xs : Vec A (suc n)) → `⟨0↔1+ i ⟩ ∙ xs ≡ ⟨0↔1+ i ⟩ xs
     `⟨0↔1+ zero  ⟩-spec xs = refl
-    `⟨0↔1+ suc i ⟩-spec (x ∷ _ ∷ xs) rewrite `⟨0↔1+ i ⟩-spec (x ∷ xs) = refl
+    `⟨0↔1+ suc i ⟩-spec (x ∷ y ∷ xs) rewrite `⟨0↔1+ i ⟩-spec (x ∷ xs) = refl
 
     `⟨0↔_⟩-spec : ∀ {n} (i : Fin n) (xs : Vec A n) → `⟨0↔ i ⟩ ∙ xs ≡ ⟨0↔ i ⟩ xs
     `⟨0↔ zero  ⟩-spec xs = refl
     `⟨0↔ suc i ⟩-spec xs = `⟨0↔1+ i ⟩-spec xs
 
+    _≗′_ : Perm → Perm → Set _
+    f ≗′ g = ∀ {n} (xs : Vec A n) → f ∙ xs ≡ g ∙ xs
+
+    open ⟨↔⟩ A hiding (⟨_↔_⟩)
+
+    _⁻¹-inverse : ∀ f → (f `⁏ f ⁻¹) ≗′ `id
+    (`id ⁻¹-inverse) xs = refl
+    ((f `⁏ g) ⁻¹-inverse) xs
+      rewrite (g ⁻¹-inverse) (f ∙ xs)
+            | (f ⁻¹-inverse) xs = refl
+    (`0↔1 ⁻¹-inverse) xs = 0↔1²-cancel xs
+    ((`tl f) ⁻¹-inverse) [] = refl
+    ((`tl f) ⁻¹-inverse) (x ∷ xs)
+      rewrite (f ⁻¹-inverse) xs = refl
+
+    _⁻¹-involutive : ∀ f → (f ⁻¹) ⁻¹ ≗′ f
+    (`id ⁻¹-involutive) _ = refl
+    ((f `⁏ g) ⁻¹-involutive) x
+      rewrite (f ⁻¹-involutive) x
+            | (g ⁻¹-involutive) (f ∙ x) = refl
+    (`0↔1 ⁻¹-involutive) _ = refl
+    ((`tl f) ⁻¹-involutive) [] = refl
+    ((`tl f) ⁻¹-involutive) (x ∷ xs)
+      rewrite (f ⁻¹-involutive) xs
+            = refl
+
+    _⁻¹-inverse′ : ∀ f → (f ⁻¹ `⁏ f) ≗′ `id
+    (f ⁻¹-inverse′) xs with ((f ⁻¹) ⁻¹-inverse) xs
+    ... | p rewrite (f ⁻¹-involutive) (f ⁻¹ ∙ xs) = p
+
     `⟨_↔_⟩-spec : ∀ {n} (i j : Fin n) (xs : Vec A n) → `⟨ i ↔ j ⟩ ∙ xs ≡ ⟨ i ↔ j ⟩ xs
     `⟨_↔_⟩-spec zero    j       xs = `⟨0↔   j ⟩-spec xs
     `⟨_↔_⟩-spec (suc i) zero    xs = `⟨0↔1+ i ⟩-spec xs
-    `⟨_↔_⟩-spec (suc i) (suc j) (x ∷ xs) rewrite `⟨ i ↔ j ⟩-spec xs = refl
+    `⟨_↔_⟩-spec (suc i) (suc j) (x ∷ xs)
+       rewrite `⟨ i ↔ j ⟩-spec xs = refl
 
-    ∙-replicate : ∀ n (x : A) π → π ∙ replicate {n = n} x ≡ replicate x
+module PermutationProperties {a : L.Level} where
+    open PermutationSyntax
+    open PermutationSemantics
+
+    ⊛-dist-∙ : ∀ {n} {A : Set a} (fs : Vec (Endo A) n) (f : Perm) xs → (f ∙ fs ⊛ f ∙ xs) ≡ f ∙ (fs ⊛ xs)
+    ⊛-dist-∙ _       `id        _  = refl
+    ⊛-dist-∙ fs      `0↔1       xs = ⊛-dist-0↔1 fs xs
+    ⊛-dist-∙ []       (`tl _)   [] = refl
+    ⊛-dist-∙ (_ ∷ fs) (`tl f)   (_ ∷ xs) rewrite ⊛-dist-∙ fs f xs = refl
+    ⊛-dist-∙ fs       (f `⁏ g)   xs rewrite ⊛-dist-∙ (f ∙ fs) g (f ∙ xs)
+                                         | ⊛-dist-∙ fs f xs = refl
+
+    ∙-replicate : ∀ n {A : Set a} (x : A) f → f ∙ replicate {n = n} x ≡ replicate x
     ∙-replicate n x `id = refl
     ∙-replicate zero x `0↔1 = refl
     ∙-replicate (suc zero) x `0↔1 = refl
     ∙-replicate (suc (suc n)) x `0↔1 = refl
-    ∙-replicate zero x (`tl π) = refl
-    ∙-replicate (suc n) x (`tl π) rewrite ∙-replicate n x π = refl
-    ∙-replicate n x (π `⁏ π₁) rewrite ∙-replicate n x π | ∙-replicate n x π₁ = refl
-
-    ⊛-dist-0↔1 : ∀ {n} (fs : Vec (Endo A) n) xs → 0↔1 fs ⊛ 0↔1 xs ≡ 0↔1 (fs ⊛ xs)
-    ⊛-dist-0↔1 _           []          = refl
-    ⊛-dist-0↔1 (_ ∷ [])    (_ ∷ [])    = refl
-    ⊛-dist-0↔1 (_ ∷ _ ∷ _) (_ ∷ _ ∷ _) = refl
-
-module PermutationProperties {a} (A : Set a) where
-    open PermutationSyntax
-    open PermutationSemantics
-
-    ⊛-dist-∙ : ∀ {n} (fs : Vec (Endo A) n) π xs → π ∙ fs ⊛ π ∙ xs ≡ π ∙ (fs ⊛ xs)
-    ⊛-dist-∙ fs      `id        xs = refl
-    ⊛-dist-∙ fs      `0↔1       xs = ⊛-dist-0↔1 fs xs
-    ⊛-dist-∙ []       (`tl π)   [] = refl
-    ⊛-dist-∙ (f ∷ fs) (`tl π)   (x ∷ xs) rewrite ⊛-dist-∙ fs π xs = refl
-    ⊛-dist-∙ fs       (π₀ `⁏ π₁) xs rewrite ⊛-dist-∙ (π₀ ∙ fs) π₁ (π₀ ∙ xs)
-                                         | ⊛-dist-∙ fs π₀ xs = refl
+    ∙-replicate zero x (`tl _) = refl
+    ∙-replicate (suc n) x (`tl f) rewrite ∙-replicate n x f = refl
+    ∙-replicate n x (f `⁏ g) rewrite ∙-replicate n x f | ∙-replicate n x g = refl
 
     private
-        lem : ∀ {n} (fs : Vec (Endo A) n) π xs → fs ⊛ π ∙ xs ≡ π ∙ (π ⁻¹ ∙ fs ⊛ xs)
-        lem fs π xs rewrite sym (⊛-dist-∙ (π ⁻¹ ∙ fs) π xs) | (π ⁻¹-inverse′) fs = refl
+        lem : ∀ {n} {A : Set a} (fs : Vec (Endo A) n) f xs → fs ⊛ f ∙ xs ≡ f ∙ (f ⁻¹ ∙ fs ⊛ xs)
+        lem fs f xs rewrite sym (⊛-dist-∙ (f ⁻¹ ∙ fs) f xs) | (f ⁻¹-inverse′) fs = refl
 
-    ∙-map : ∀ {n} (f : Endo A) π (xs : Vec A n) → map f (π ∙ xs) ≡ π ∙ map f xs
-    ∙-map {n} f π xs rewrite sym (⊛-dist-∙ (replicate f) π xs) | ∙-replicate n f π = refl
+    ∙-map : ∀ {n} {A : Set a} (f : Endo A) g (xs : Vec A n) → map f (g ∙ xs) ≡ g ∙ map f xs
+    ∙-map {n} f g xs rewrite sym (⊛-dist-∙ (replicate f) g xs) | ∙-replicate n f g = refl
+
+module BijectionSyntax {a b} (A : Set a) (Bijᴬ : Set b) where
+    infixr 1 _`⁏_
+    data Bij : Set (a L.⊔ b) where
+      `id `0↔1 : Bij
+      _`⁏_ : Bij → Bij → Bij
+      _`∷_ : Bijᴬ → (A → Bij) → Bij
+
+module BijectionLib where
+    open BijectionSyntax
+    mapBij : ∀ {a bᴬ} {A : Set a} {Bijᴬ : Set bᴬ}
+               {b bᴮ} {B : Set b} {Bijᴮ : Set bᴮ}
+             → (B → A)
+             → (Bijᴬ → Bijᴮ)
+             → Bij A Bijᴬ → Bij B Bijᴮ
+    mapBij fᴮᴬ f `id = `id
+    mapBij fᴮᴬ f `0↔1 = `0↔1
+    mapBij fᴮᴬ f (`g `⁏ `h) = mapBij fᴮᴬ f `g `⁏ mapBij fᴮᴬ f `h
+    mapBij fᴮᴬ f (`fᴬ `∷ `g) = f `fᴬ `∷ λ x → mapBij fᴮᴬ f (`g (fᴮᴬ x))
+
+module BijectionSemantics {a b} {A : Set a} (bijKitᴬ : BijKit b A) where
+    open BijKit bijKitᴬ renaming (Bij to Bijᴬ; eval to evalᴬ; _⁻¹ to _⁻¹ᴬ;
+                                  idBij to idᴬ; _≗Bij_ to _≗ᴬ_;
+                                  _⁻¹-inverse to _⁻¹-inverseᴬ;
+                                  _⁻¹-involutive to _⁻¹-involutiveᴬ;
+                                  id-spec to idᴬ-spec)
+    open BijectionSyntax A Bijᴬ
+
+    _⁻¹ : Endo Bij
+    `id ⁻¹ = `id
+    (f₀ `⁏ f₁) ⁻¹ = f₁ ⁻¹ `⁏ f₀ ⁻¹
+    `0↔1 ⁻¹ = `0↔1
+    (fᴬ `∷ f) ⁻¹ = fᴬ⁻¹ `∷ λ x → (f (evalᴬ fᴬ⁻¹ x))⁻¹ where fᴬ⁻¹ = fᴬ ⁻¹ᴬ
+
+    infixr 9 _∙_
+    _∙_ : Bij → ∀ {n} → Endo (Vec A n)
+    `id ∙ xs             = xs
+    (f `⁏ g)   ∙ xs       = g ∙ f ∙ xs
+    `0↔1      ∙ xs       = 0↔1 xs
+    (fᴬ `∷ f) ∙ []       = []
+    (fᴬ `∷ f) ∙ (x ∷ xs) = evalᴬ fᴬ x ∷ f x ∙ xs
+
+    _≗′_ : Bij → Bij → Set _
+    f ≗′ g = ∀ {n} (xs : Vec A n) → f ∙ xs ≡ g ∙ xs
+
+    _⁻¹-inverse : ∀ f → (f `⁏ f ⁻¹) ≗′ `id
+    (`id ⁻¹-inverse) xs = refl
+    ((f `⁏ g) ⁻¹-inverse) xs
+      rewrite (g ⁻¹-inverse) (f ∙ xs)
+            | (f ⁻¹-inverse) xs = refl
+    (`0↔1 ⁻¹-inverse) xs = ⟨↔⟩.0↔1²-cancel _ xs
+    ((fᴬ `∷ f) ⁻¹-inverse) [] = refl
+    ((fᴬ `∷ f) ⁻¹-inverse) (x ∷ xs)
+      rewrite (fᴬ ⁻¹-inverseᴬ) x | (f x ⁻¹-inverse) xs = refl
+
+    _⁻¹-involutive : ∀ f → (f ⁻¹) ⁻¹ ≗′ f
+    (`id ⁻¹-involutive) _ = refl
+    ((f `⁏ g) ⁻¹-involutive) x
+      rewrite (f ⁻¹-involutive) x
+            | (g ⁻¹-involutive) (f ∙ x) = refl
+    (`0↔1 ⁻¹-involutive) _ = refl
+    ((fᴬ `∷ f) ⁻¹-involutive) [] = refl
+    ((fᴬ `∷ f) ⁻¹-involutive) (x ∷ xs)
+      rewrite (fᴬ ⁻¹-involutiveᴬ) x
+            | (fᴬ ⁻¹-inverseᴬ) x
+            | (f x ⁻¹-involutive) xs
+            = refl
+
+    Vec-bijKit : ∀ n → BijKit _ (Vec A n)
+    Vec-bijKit n = mk Bij (λ f xs → _∙_ f {n} xs) _⁻¹ `id _`⁏_ (λ _ → refl) (λ _ _ _ → refl)
+                (λ f x → _⁻¹-inverse f x) (λ f x → _⁻¹-involutive f x)
+
+    module VecBijKit n = BijKit (Vec-bijKit n)
+
+    `tl : Endo Bij
+    `tl f = idᴬ `∷ const f
+
+    module P where
+        open PermutationSyntax public
+        open PermutationSemantics {A = A} public
+    open P using (Perm; `id; `0↔1; _`⁏_)
+    fromPerm : Perm → Bij
+    fromPerm `id = `id
+    fromPerm `0↔1 = `0↔1
+    fromPerm (π₀ `⁏ π₁) = fromPerm π₀ `⁏ fromPerm π₁
+    fromPerm (P.`tl π) = `tl (fromPerm π)
+
+    fromPerm-spec : ∀ π {n} (xs : Vec A n) → π P.∙ xs ≡ fromPerm π ∙ xs
+    fromPerm-spec `id xs = refl
+    fromPerm-spec `0↔1 xs = refl
+    fromPerm-spec (π `⁏ π₁) xs rewrite fromPerm-spec π xs | fromPerm-spec π₁ (fromPerm π ∙ xs) = refl
+    fromPerm-spec (P.`tl π) [] = refl
+    fromPerm-spec (P.`tl π) (x ∷ xs) rewrite idᴬ-spec x | fromPerm-spec π xs = refl
+
+    module Unused where
+        `⟨0↔1+_⟩ : ∀ {n} (i : Fin n) → Bij
+        `⟨0↔1+ i ⟩ = fromPerm P.`⟨0↔1+ i ⟩
+
+        `⟨0↔1+_⟩-spec : ∀ {n} (i : Fin n) (xs : Vec A (suc n)) → `⟨0↔1+ i ⟩ ∙ xs ≡ ⟨0↔1+ i ⟩ xs
+        `⟨0↔1+ i ⟩-spec xs rewrite sym (P.`⟨0↔1+ i ⟩-spec xs) | fromPerm-spec P.`⟨0↔1+ i ⟩ xs = refl
+
+        `⟨0↔_⟩ : ∀ {n} (i : Fin n) → Bij
+        `⟨0↔ i ⟩ = fromPerm P.`⟨0↔ i ⟩
+
+        `⟨0↔_⟩-spec : ∀ {n} (i : Fin n) (xs : Vec A n) → `⟨0↔ i ⟩ ∙ xs ≡ ⟨0↔ i ⟩ xs
+        `⟨0↔ i ⟩-spec xs rewrite sym (P.`⟨0↔ i ⟩-spec xs) | fromPerm-spec P.`⟨0↔ i ⟩ xs = refl
+
+    `⟨_↔_⟩ : ∀ {n} (i j : Fin n) → Bij
+    `⟨ i ↔ j ⟩ = fromPerm P.`⟨ i ↔ j ⟩
+
+    `⟨_↔_⟩-spec : ∀ {n} (i j : Fin n) (xs : Vec A n) → `⟨ i ↔ j ⟩ ∙ xs ≡ ⟨ i ↔ j ⟩ xs
+    `⟨ i ↔ j ⟩-spec xs rewrite sym (P.`⟨ i ↔ j ⟩-spec xs) | fromPerm-spec P.`⟨ i ↔ j ⟩ xs = refl
 
 private
   module Unused where
