@@ -57,6 +57,11 @@ module Alternative-Reverse where
     rev-+ zero    = id
     rev-+ (suc x) = rev-+ x ∘ suc
 
+    rev-app : ∀ {a} {A : Set a} {m n} →
+              Vec A n → Vec A m → Vec A (rev-+ n m)
+    rev-app []       = id
+    rev-app (x ∷ xs) = rev-app xs ∘ _∷_ x
+
     rev-aux : ∀ {a} {A : Set a} {m} n →
               Vec A (rev-+ n zero) →
               (∀ {m} → A → Vec A (rev-+ n m) → Vec A (rev-+ n (suc m))) →
