@@ -24,6 +24,7 @@ import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡
 open import Algebra.FunctionProperties.NP
 import Data.List.NP as L
+open import Function.Bijection.SyntaxKit
 
 open import Data.Bool.NP public using (_xor_; not; true; false; if_then_else_)
 open V public using ([]; _∷_; head; tail; replicate; RewireTbl)
@@ -205,12 +206,10 @@ module Search {i} {I : Set i} (`1 : I) (`2*_ : I → I)
 open Search 1 2*_ public using () renaming (search to search′; search-≗ to search′-≗; search-comm to search′-comm)
 
 module OperationSyntax where
-    infixr 1 _`⁏_
-    data Op : Set where
-      `id `0↔1 `not : Op
-      `tl : Op → Op
-      `if0 : Op → Op
-      _`⁏_ : Op → Op → Op
+    module BitBij = BoolBijection
+    open BitBij public using (`id) renaming (BoolBij to BitBij; bool-bijKit to bitBijKit; `not to `notᴮ)
+    open BijectionSyntax Bit BitBij public
+    open BijectionSemantics bitBijKit public
 
     {-
        id   ε          id
@@ -219,22 +218,25 @@ module OperationSyntax where
        if0  first      ...
        if1  second     ...
      -}
+    `not : Bij
+    `not = BitBij.`not `∷ const `id
 
-    infixr 9 _∙_
-    _∙_ : Op → ∀ {n} → Endo (Bits n)
-    `id   ∙ xs       = xs
-    `0↔1  ∙ xs       = 0↔1 xs
-    `not  ∙ []       = []
-    `not  ∙ (x ∷ xs) = not x ∷ xs
-    `tl f ∙ []       = []
-    `tl f ∙ (x ∷ xs) = x ∷ f ∙ xs
-    `if0 f ∙ []           = []
-    `if0 f ∙ (false ∷ xs) = false ∷ f ∙ xs
-    `if0 f ∙ (true  ∷ xs) = true  ∷ xs
-    (f `⁏ g) ∙ xs = g ∙ f ∙ xs
+    `xor : Bit → Bij
+    `xor b = BitBij.`xor b `∷ const `id
 
-    `if1 : Op → Op
-    `if1 f = `not `⁏ `if0 f `⁏ `not
+    `if : Bij → Bij → Bij
+    `if f g = BitBij.`id `∷ cond f g
+
+    `if0 : Bij → Bij
+    `if0 f = `if `id f
+
+    `if1 : Bij → Bij
+    `if1 f = `if f `id
+
+    -- law: `if0 f `⁏ `if1 g ≡ `if1 g `; `if0 f
+
+    on-firsts : Bij → Bij
+    on-firsts f = `0↔1 `⁏ `if0 f `⁏ `0↔1
 
     --   (a ∙ b) ∙ (c ∙ d)
     -- ≡ right swap
@@ -243,21 +245,38 @@ module OperationSyntax where
     --   (a ∙ d) ∙ (b ∙ c)
     -- ≡ right swap
     --   (a ∙ d) ∙ (c ∙ b)
-    swp-seconds : Op
+    swp-seconds : Bij
     swp-seconds = `if1 `not `⁏ `0↔1 `⁏ `if1 `not
 
-    on-extremes : Op → Op
-    on-extremes f = swp-seconds `⁏ `if0 f `⁏ swp-seconds
+    on-extremes : Bij → Bij
+    -- on-extremes f = swp-seconds `⁏ `if0 f `⁏ swp-seconds
 
-    on-firsts : Op → Op
-    on-firsts f = `0↔1 `⁏ `if0 f `⁏ `0↔1
+    -- (a ∙ b) ∙ (c ∙ d)
+    -- ≡ right swap ≡ if1 not
+    -- (a ∙ b) ∙ (d ∙ c)
+    -- ≡ interchange ≡ 0↔1
+    -- (a ∙ d) ∙ (b ∙ c)
+    -- ≡ left f ≡ if0 f
+    -- (A ∙ D) ∙ (b ∙ c)
+    --     where A ∙ D = f (a ∙ d)
+    -- ≡ interchange ≡ 0↔1
+    -- (A ∙ b) ∙ (D ∙ c)
+    -- ≡ right swap ≡ if1 not
+    -- (A ∙ b) ∙ (c ∙ D)
+    on-extremes f = `if1 `not `⁏ `0↔1 `⁏ `if0 f `⁏ `0↔1 `⁏ `if1 `not
 
-    0↔1∷_ : ∀ {n} → Bits n → Op
+    map-inner : Bij → Bij
+    map-inner f = `if1 `not `⁏ `0↔1 `⁏ `if1 f `⁏ `0↔1 `⁏ `if1 `not
+
+    map-outer : Bij → Bij → Bij
+    map-outer f g = `if g f
+
+    0↔1∷_ : ∀ {n} → Bits n → Bij
     0↔1∷ [] = `not
     0↔1∷ (true {-1-} ∷ p) = on-extremes (0↔1∷ p)
     0↔1∷ (false{-0-} ∷ p) = on-firsts   (0↔1∷ p)
 
-    0↔_ : ∀ {n} → Bits n → Op
+    0↔_ : ∀ {n} → Bits n → Bij
     0↔ [] = `id
     0↔ (false{-0-} ∷ p) = `if0 (0↔ p)
     0↔ (true{-1-}  ∷ p) = 0↔1∷ p
@@ -315,10 +334,13 @@ module OperationSyntax where
         = refl
     ⟨0↔_⟩-spec (true ∷ p) xs = ⟨0↔1∷ p ⟩-spec xs
 
-    open PermutationSyntax using (Perm; `id; `0↔1; `tl; _`⁏_)
-    module P = PermutationSemantics
+    private
+        module P where
+           open PermutationSyntax public
+           open PermutationSemantics public
+    open P using (Perm; `id; `0↔1; _`⁏_)
 
-    `⟨0↔1+_⟩ : ∀ {n} (i : Fin n) → Op
+    `⟨0↔1+_⟩ : ∀ {n} (i : Fin n) → Bij
     `⟨0↔1+ zero  ⟩ = `0↔1
     `⟨0↔1+ suc i ⟩ = `0↔1 `⁏ `tl `⟨0↔1+ i ⟩ `⁏ `0↔1
 
@@ -326,7 +348,7 @@ module OperationSyntax where
     `⟨0↔1+ zero  ⟩-spec xs = refl
     `⟨0↔1+ suc i ⟩-spec (x ∷ _ ∷ xs) rewrite `⟨0↔1+ i ⟩-spec (x ∷ xs) = refl
 
-    `⟨0↔_⟩ : ∀ {n} (i : Fin n) → Op
+    `⟨0↔_⟩ : ∀ {n} (i : Fin n) → Bij
     `⟨0↔ zero  ⟩ = `id
     `⟨0↔ suc i ⟩ = `⟨0↔1+ i ⟩
 
@@ -334,7 +356,8 @@ module OperationSyntax where
     `⟨0↔ zero  ⟩-spec xs = refl
     `⟨0↔ suc i ⟩-spec xs = `⟨0↔1+ i ⟩-spec xs
 
-    `⟨_↔_⟩ : ∀ {n} (i j : Fin n) → Op
+    {-
+    `⟨_↔_⟩ : ∀ {n} (i j : Fin n) → Bij
     `⟨ zero  ↔ j     ⟩ = `⟨0↔ j ⟩
     `⟨ i     ↔ zero  ⟩ = `⟨0↔ i ⟩
     `⟨ suc i ↔ suc j ⟩ = `tl `⟨ i ↔ j ⟩
@@ -343,15 +366,16 @@ module OperationSyntax where
     `⟨_↔_⟩-spec zero    j       xs = `⟨0↔   j ⟩-spec xs
     `⟨_↔_⟩-spec (suc i) zero    xs = `⟨0↔1+ i ⟩-spec xs
     `⟨_↔_⟩-spec (suc i) (suc j) (x ∷ xs) rewrite `⟨ i ↔ j ⟩-spec xs = refl
+    -}
 
-    `xor-head : Bit → Op
+    `xor-head : Bit → Bij
     `xor-head b = if b then `not else `id
 
     `xor-head-spec : ∀ b {n} x (xs : Bits n) → `xor-head b ∙ (x ∷ xs) ≡ (b xor x) ∷ xs
     `xor-head-spec true x xs  = refl
     `xor-head-spec false x xs = refl
 
-    `⟨_⊕⟩ : ∀ {n} → Bits n → Op
+    `⟨_⊕⟩ : ∀ {n} → Bits n → Bij
     `⟨ []     ⊕⟩ = `id
     `⟨ b ∷ xs ⊕⟩ = `xor-head b `⁏ `tl `⟨ xs ⊕⟩
 
@@ -483,23 +507,25 @@ module SimpleSearch {a} {A : Set a} (_∙_ : A → A → A) where
         search-0↔1 {suc zero}    _ = refl
         search-0↔1 {suc (suc n)} _ = ∙-interchange _ _ _ _
 
-    module Op (∙-comm : Commutative _≡_ _∙_)
+    module Bij (∙-comm : Commutative _≡_ _∙_)
               (∙-interchange : Interchange _≡_ _∙_ _∙_) where
         open SearchInterchange ∙-interchange using (search-0↔1)
-        open OperationSyntax renaming (_∙_ to op)
-        search-op : ∀ {n} (f : Bits n → A) (g : Op) → search {n} (f ∘ op g) ≡ search {n} f
-        search-op f `id = refl
-        search-op f `0↔1 = search-0↔1 f
-        search-op {zero} f `not = refl
-        search-op {suc n} f `not = ∙-comm _ _
-        search-op {zero} f (`tl g) = refl
-        search-op {suc n} f (`tl g) rewrite search-op (f ∘ 0∷_) g | search-op (f ∘ 1∷_) g = refl
-        search-op {zero} f (`if0 g) = refl
-        search-op {suc n} f (`if0 g) rewrite search-op (f ∘ 0∷_) g = refl
-        search-op f (g `⁏ h) rewrite search-op (f ∘ op h) g = search-op f h
+        open OperationSyntax hiding (_∙_)
+        search-bij : ∀ {n} (f : Bits n → A) (g : Bij) → search {n} (f ∘ eval g) ≡ search {n} f
+        search-bij f `id     = refl
+        search-bij f `0↔1    = search-0↔1 f
+        search-bij f (g `⁏ h)
+          rewrite search-bij (f ∘ eval h) g = search-bij f h
+        search-bij {zero}  f (_     `∷ _) = refl
+        search-bij {suc n} f (`id   `∷ g)
+          rewrite search-bij (f ∘ 0∷_) (g 0b)
+                | search-bij (f ∘ 1∷_) (g 1b) = refl
+        search-bij {suc n} f (`notᴮ `∷ g)
+          rewrite search-bij (f ∘ 0∷_) (g 1b)
+                | search-bij (f ∘ 1∷_) (g 0b) = ∙-comm _ _
 
 module Sum where
-    open SimpleSearch _+_ using (module Comm; module SearchInterchange; module SearchUnit; module Op)
+    open SimpleSearch _+_ using (module Comm; module SearchInterchange; module SearchUnit; module Bij)
     open SimpleSearch _+_ public using () renaming (search to sum; search-≗ to sum-≗; searchBit to sumBit;
                                                     search-≗₂ to sum-≗₂;
                                                     search-+ to sum-+)
@@ -511,7 +537,7 @@ module Sum where
         search-searchBit to sum-sumBit;
         search-search to sum-sum;
         search-swap to sum-swap)
-    open Op ℕ°.+-comm +-interchange public renaming (search-op to sum-op)
+    open Bij ℕ°.+-comm +-interchange public renaming (search-bij to sum-bij)
 
     sum-const : ∀ n x → sum {n} (const x) ≡ ⟨2^ n * x ⟩
     sum-const zero    _ = refl
@@ -522,7 +548,7 @@ module Sum where
 
 module Count where
     open Sum
-    open OperationSyntax renaming (_∙_ to op)
+    open OperationSyntax
 
     #⟨_⟩ : ∀ {n} → (Bits n → Bool) → ℕ
     #⟨ pred ⟩ = sum (Bool.toℕ ∘ pred)
@@ -534,8 +560,8 @@ module Count where
     #-comm : ∀ {n} (pad : Bits n) (f : Bits n → Bool) → #⟨ f ⟩ ≡ #⟨ f ∘ _⊕_ pad ⟩
     #-comm pad f = sum-comm pad (Bool.toℕ ∘ f)
 
-    #-op : ∀ {n} (f : Bits n → Bit) (g : Op) → #⟨ f ∘ op g ⟩ ≡ #⟨ f ⟩
-    #-op f = sum-op (Bool.toℕ ∘ f)
+    #-bij : ∀ {n} (f : Bits n → Bit) (g : Bij) → #⟨ f ∘ eval g ⟩ ≡ #⟨ f ⟩
+    #-bij f = sum-bij (Bool.toℕ ∘ f)
 
     #-⊕ : ∀ {c} (bs : Bits c) (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ _⊕_ bs ⟩
     #-⊕ = #-comm
@@ -780,10 +806,10 @@ module ReversedBits where
   sucRB (0b ∷ xs) = 1b ∷ xs
   sucRB (1b ∷ xs) = 0b ∷ sucRB xs
 
-toFin : ∀ {n} → Bits n → Fin (2 ^ n)
+toFin : ∀ {n} → Bits n → Fin (2^ n)
 toFin         []        = zero
 toFin         (0b ∷ xs) = inject+ _ (toFin xs)
-toFin {suc n} (1b ∷ xs) = raise (2 ^ n) (inject+ 0 (toFin xs))
+toFin {suc n} (1b ∷ xs) = raise (2^ n) (toFin xs)
 
 {-
 toℕ : ∀ {n} → Bits n → ℕ
@@ -793,48 +819,58 @@ toℕ = Fin.toℕ ∘ toFin
 toℕ : ∀ {n} → Bits n → ℕ
 toℕ         []        = zero
 toℕ         (0b ∷ xs) = toℕ xs
-toℕ {suc n} (1b ∷ xs) = 2 ^ n + toℕ xs
+toℕ {suc n} (1b ∷ xs) = 2^ n + toℕ xs
+
+toℕ-bound : ∀ {n} (xs : Bits n) → toℕ xs < 2^ n 
+toℕ-bound         [] = s≤s z≤n
+toℕ-bound {suc n} (1b ∷ xs) rewrite +-assoc-comm 1 (2^ n) (toℕ xs) = ℕ≤.refl {2^ n} +-mono toℕ-bound xs
+toℕ-bound {suc n} (0b ∷ xs) = ≤-steps (2^ n) (toℕ-bound xs)
+
+toℕ-inj : ∀ {n} (x y : Bits n) → toℕ x ≡ toℕ y → x ≡ y
+toℕ-inj         []        []        _ = refl
+toℕ-inj         (0b ∷ xs) (0b ∷ ys) p = cong 0∷_ (toℕ-inj xs ys p)
+toℕ-inj {suc n} (1b ∷ xs) (1b ∷ ys) p = cong 1∷_ (toℕ-inj xs ys (cancel-+-left (2^ n) p))
+toℕ-inj {suc n} (0b ∷ xs) (1b ∷ ys) p rewrite ℕ°.+-comm (2^ n) (toℕ ys) = ⊥-elim (<→≢ (≤-steps (toℕ ys) (toℕ-bound xs)) p)
+toℕ-inj {suc n} (1b ∷ xs) (0b ∷ ys) p rewrite ℕ°.+-comm (2^ n) (toℕ xs) = ⊥-elim (<→≢ (≤-steps (toℕ xs) (toℕ-bound ys)) (≡.sym p))
 
 fromℕ : ∀ {n} → ℕ → Bits n
 fromℕ = fold 0ⁿ sucB
 
-fromFin : ∀ {n} → Fin (2 ^ n) → Bits n
+fromFin : ∀ {n} → Fin (2^ n) → Bits n
 fromFin = fromℕ ∘ Fin.toℕ
 
-lookupTbl : ∀ {n a} {A : Set a} → Bits n → Vec A (2 ^ n) → A
+lookupTbl : ∀ {n a} {A : Set a} → Bits n → Vec A (2^ n) → A
 lookupTbl         []         (x ∷ []) = x
 lookupTbl         (0b ∷ key) tbl      = lookupTbl key (take _ tbl)
-lookupTbl {suc n} (1b ∷ key) tbl      = lookupTbl key (take (2 ^ n) (drop (2 ^ n) tbl))
+lookupTbl {suc n} (1b ∷ key) tbl      = lookupTbl key (drop (2^ n) tbl)
 
-funFromTbl : ∀ {n a} {A : Set a} → Vec A (2 ^ n) → (Bits n → A)
+funFromTbl : ∀ {n a} {A : Set a} → Vec A (2^ n) → (Bits n → A)
 funFromTbl = flip lookupTbl
 
-tblFromFun : ∀ {n a} {A : Set a} → (Bits n → A) → Vec A (2 ^ n)
+tblFromFun : ∀ {n a} {A : Set a} → (Bits n → A) → Vec A (2^ n)
 -- tblFromFun f = tabulate (f ∘ fromFin)
 tblFromFun {zero} f = f [] ∷ []
-tblFromFun {suc n} f = tblFromFun {n} (f ∘ 0∷_) ++ tblFromFun {n} (f ∘ 1∷_) ++ []
+tblFromFun {suc n} f = tblFromFun {n} (f ∘ 0∷_) ++ tblFromFun {n} (f ∘ 1∷_)
 
 funFromTbl∘tblFromFun : ∀ {n a} {A : Set a} (fun : Bits n → A) → funFromTbl (tblFromFun fun) ≗ fun
 funFromTbl∘tblFromFun {zero} f [] = refl
 funFromTbl∘tblFromFun {suc n} f (0b ∷ xs)
-  rewrite take-++ (2 ^ n) (tblFromFun {n} (f ∘ 0∷_)) (tblFromFun {n} (f ∘ 1∷_) ++ []) =
+  rewrite take-++ (2^ n) (tblFromFun {n} (f ∘ 0∷_)) (tblFromFun {n} (f ∘ 1∷_)) =
     funFromTbl∘tblFromFun {n} (f ∘ 0∷_) xs
 funFromTbl∘tblFromFun {suc n} f (1b ∷ xs)
-  rewrite drop-++ (2 ^ n) (tblFromFun {n} (f ∘ 0∷_)) (tblFromFun {n} (f ∘ 1∷_) ++ [])
-        | take-++ (2 ^ n) (tblFromFun {n} (f ∘ 1∷_)) [] =
+  rewrite drop-++ (2^ n) (tblFromFun {n} (f ∘ 0∷_)) (tblFromFun {n} (f ∘ 1∷_))
+        | take-++ (2^ n) (tblFromFun {n} (f ∘ 1∷_)) [] =
     funFromTbl∘tblFromFun {n} (f ∘ 1∷_) xs
 
-tblFromFun∘funFromTbl : ∀ {n a} {A : Set a} (tbl : Vec A (2 ^ n)) → tblFromFun {n} (funFromTbl tbl) ≡ tbl
+tblFromFun∘funFromTbl : ∀ {n a} {A : Set a} (tbl : Vec A (2^ n)) → tblFromFun {n} (funFromTbl tbl) ≡ tbl
 tblFromFun∘funFromTbl {zero} (x ∷ []) = refl
 tblFromFun∘funFromTbl {suc n} tbl
   rewrite tblFromFun∘funFromTbl {n} (take _ tbl)
-        | tblFromFun∘funFromTbl {n} (take (2 ^ n) (drop (2 ^ n) tbl))
-        | take-them-all (2 ^ n) (drop (2 ^ n) tbl)
-        | take-drop-lem (2 ^ n) tbl
-   = refl
+        | tblFromFun∘funFromTbl {n} (drop (2^ n) tbl)
+        = take-drop-lem (2^ n) tbl
 
 {-
-sucB-lem : ∀ {n} x → toℕ {2 ^ n} (sucB x) [mod 2 ^ n ] ≡ (suc (toℕ x)) [mod 2 ^ n ]
+sucB-lem : ∀ {n} x → toℕ {2^ n} (sucB x) [mod 2 ^ n ] ≡ (suc (toℕ x)) [mod 2 ^ n ]
 sucB-lem x = {!!}
 
 -- sucB-lem : ∀ {n} x → (sucB (fromℕ x)) [mod 2 ^ n ] ≡ fromℕ ((suc x) [mod 2 ^ n ])
@@ -843,10 +879,10 @@ toℕ∘fromℕ : ∀ {n} x → toℕ (fromℕ {n} x) ≡ x
 toℕ∘fromℕ zero = {!!}
 toℕ∘fromℕ (suc x) = {!toℕ∘fromℕ x!}
 
-toℕ∘fromFin : ∀ {n} (x : Fin (2 ^ n)) → toℕ (fromFin x) ≡ Fin.toℕ x
+toℕ∘fromFin : ∀ {n} (x : Fin (2^ n)) → toℕ (fromFin x) ≡ Fin.toℕ x
 toℕ∘fromFin x = {!!}
 
-toFin∘fromFin : ∀ {n} (x : Fin (2 ^ n)) → toFin (fromFin x) ≡ x
+toFin∘fromFin : ∀ {n} (x : Fin (2^ n)) → toFin (fromFin x) ≡ x
 toFin∘fromFin x = {!!}
 
 -- _ᴮ : (s : String) {pf : IsBitString s} → Bits (length s)
