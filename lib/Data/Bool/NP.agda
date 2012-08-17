@@ -19,6 +19,9 @@ open E.Equivalence using (to; from)
 open import Function.Equality using (_⟨$⟩_)
 open ≡ using (_≡_)
 
+cond : ∀ {a} {A : Set a} → A → A → Bool → A
+cond x y b = if b then x else y
+
 module Xor° = Algebra.CommutativeRing B.commutativeRing-xor-∧
 module Bool° = Algebra.CommutativeSemiring B.commutativeSemiring-∧-∨
 
