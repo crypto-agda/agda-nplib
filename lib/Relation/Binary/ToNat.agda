@@ -74,6 +74,11 @@ open IsTotalOrder isTotalOrder
 ⊓-≤ x y | inj₁ p rewrite ⊓-spec p = p
 ⊓-≤ x y | inj₂ p rewrite ⊓-comm x y | ⊓-spec p = refl
 
+≤-⊔ : ∀ x y → x ≤ (y ⊔ x)
+≤-⊔ x y with total x y
+≤-⊔ x y | inj₁ p rewrite ⊔-comm y x | ⊔-spec p = p
+≤-⊔ x y | inj₂ p rewrite ⊔-spec p = refl
+
 ≤-<_,_> : ∀ {x y z} → x ≤ y → x ≤ z → x ≤ (y ⊓ z)
 ≤-<_,_> {x} {y} {z} x≤y y≤z with total y z
 ... | inj₁ p rewrite ⊓-spec p = x≤y
