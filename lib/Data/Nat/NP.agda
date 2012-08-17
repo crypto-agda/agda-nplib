@@ -8,6 +8,7 @@ open import Data.Nat.Properties as Props
 open import Data.Nat.Logical
 open import Data.Bool
 open import Data.Product using (proj₁; proj₂; ∃; _,_)
+open import Data.Sum renaming (map to ⊎-map)
 open import Data.Empty using (⊥-elim)
 open import Function.NP
 open import Relation.Nullary
@@ -883,14 +884,35 @@ suc _  <= zero   = false
 suc m  <= suc n  = m <= n
 
 module <= where
-  sound : ∀ m n → T (m <= n) → m ≤ n
+  ℛ : ℕ → ℕ → Set
+  ℛ x y = T (x <= y)
+
+  sound : ∀ m n → ℛ m n → m ≤ n
   sound zero    _       _  = z≤n
   sound (suc m) (suc n) p  = s≤s (sound m n p)
   sound (suc m) zero    ()
 
-  complete : ∀ {m n} → m ≤ n → T (m <= n)
+  complete : ∀ {m n} → m ≤ n → ℛ m n
   complete z≤n       = _
   complete (s≤s m≤n) = complete m≤n
+
+  isTotalOrder : IsTotalOrder _≡_ ℛ
+  isTotalOrder = record { isPartialOrder = isPartialOrder; total = λ x y → ⊎-map complete complete (ℕ≤.total x y) }
+   where
+    reflexive : ∀ {i j} → i ≡ j → ℛ i j
+    reflexive {i} ≡.refl = complete (ℕ≤.refl {i})
+    trans : Transitive ℛ
+    trans {x} {y} {z} p q = complete (ℕ≤.trans (sound x y p) (sound y z q))
+    isPreorder : IsPreorder _≡_ ℛ
+    isPreorder = record { isEquivalence = ≡.isEquivalence
+                        ; reflexive = reflexive
+                        ; trans = λ {x} {y} {z} → trans {x} {y} {z} }
+    antisym : Antisymmetric _≡_ ℛ
+    antisym {x} {y} p q = ℕ≤.antisym (sound x y p) (sound y x q)
+    isPartialOrder : IsPartialOrder _≡_ ℛ
+    isPartialOrder = record { isPreorder = isPreorder; antisym = antisym }
+
+  open IsTotalOrder isTotalOrder public
 
 ¬≤ : ∀ {m n} → ¬(m < n) → n ≤ m
 ¬≤ {m} {n} p with ℕcmp.compare m n
