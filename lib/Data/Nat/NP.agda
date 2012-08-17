@@ -47,8 +47,8 @@ zero   == suc _  = false
 suc _  == zero   = false
 suc m  == suc n  = m == n
 
-assoc-comm : ∀ x y z → x + (y + z) ≡ y + (x + z)
-assoc-comm x y z rewrite ≡.sym (ℕ°.+-assoc x y z)
++-assoc-comm : ∀ x y z → x + (y + z) ≡ y + (x + z)
++-assoc-comm x y z rewrite ≡.sym (ℕ°.+-assoc x y z)
                        | ℕ°.+-comm x y
                        | ℕ°.+-assoc y x z = ≡.refl
 
@@ -61,7 +61,7 @@ assoc-comm x y z rewrite ≡.sym (ℕ°.+-assoc x y z)
 
 2*′-spec : ∀ n → 2*′ n ≡ 2* n
 2*′-spec zero = ≡.refl
-2*′-spec (suc n) rewrite 2*′-spec n | assoc-comm 1 n n = ≡.refl
+2*′-spec (suc n) rewrite 2*′-spec n | +-assoc-comm 1 n n = ≡.refl
 
 dist : ℕ → ℕ → ℕ
 dist zero    y       = y
@@ -92,8 +92,8 @@ dist-x+ (suc x) y z = dist-x+ x y z
 dist-2* : ∀ x y → dist (2* x) (2* y) ≡ 2* dist x y
 dist-2* zero y = ≡.refl
 dist-2* (suc x) zero = ≡.refl
-dist-2* (suc x) (suc y) rewrite assoc-comm x 1 x
-                              | assoc-comm y 1 y = dist-2* x y
+dist-2* (suc x) (suc y) rewrite +-assoc-comm x 1 x
+                              | +-assoc-comm y 1 y = dist-2* x y
 
 dist-asym-def : ∀ {x y} → x ≤ y → x + dist x y ≡ y
 dist-asym-def z≤n = ≡.refl
@@ -102,11 +102,11 @@ dist-asym-def (s≤s pf) = ≡.cong suc (dist-asym-def pf)
 dist-sym-wlog : ∀ (f : ℕ → ℕ) → (∀ x k → dist (f x) (f (x + k)) ≡ f k) → ∀ x y → dist (f x) (f y) ≡ f (dist x y)
 dist-sym-wlog f pf x y with compare x y
 dist-sym-wlog f pf x .(suc (x + k)) | less .x k with pf x (suc k)
-... | q rewrite assoc-comm x 1 k | q | ≡.sym (assoc-comm x 1 k) | dist-x-x+y≡y x (suc k) = ≡.refl
+... | q rewrite +-assoc-comm x 1 k | q | ≡.sym (+-assoc-comm x 1 k) | dist-x-x+y≡y x (suc k) = ≡.refl
 dist-sym-wlog f pf .y y | equal .y with pf y 0
 ... | q rewrite ℕ°.+-comm y 0 | dist-refl y = q
 dist-sym-wlog f pf .(suc (y + k)) y | greater .y k with pf y (suc k)
-... | q rewrite assoc-comm 1 y k | dist-sym (y + suc k) y | dist-x-x+y≡y y (suc k) | dist-sym (f (y + suc k)) (f y) = q
+... | q rewrite +-assoc-comm 1 y k | dist-sym (y + suc k) y | dist-x-x+y≡y y (suc k) | dist-sym (f (y + suc k)) (f y) = q
 
 dist-x* : ∀ x y z → dist (x * y) (x * z) ≡ x * dist y z
 dist-x* x = dist-sym-wlog (_*_ x) pf
@@ -147,8 +147,8 @@ dist-2^* x = dist-sym-wlog (2^⟨ x ⟩*) pf
 2*-mono′ : ∀ {a b} → 2* a ≤ 2* b → a ≤ b
 2*-mono′ {zero} pf = z≤n
 2*-mono′ {suc a} {zero} ()
-2*-mono′ {suc a} {suc b} pf rewrite assoc-comm a 1 a
-                                  | assoc-comm b 1 b = s≤s (2*-mono′ (≤-pred (≤-pred pf)))
+2*-mono′ {suc a} {suc b} pf rewrite +-assoc-comm a 1 a
+                                  | +-assoc-comm b 1 b = s≤s (2*-mono′ (≤-pred (≤-pred pf)))
 
 2^*-mono′ : ∀ k {a b} → ⟨2^ k * a ⟩ ≤ ⟨2^ k * b ⟩ → a ≤ b
 2^*-mono′ zero    = id
