@@ -366,13 +366,16 @@ module PermutationSyntax where
 module PermutationSemantics {a} {A : Set a} where
     open PermutationSyntax
 
+    eval : Perm → ∀ {n} → Endo (Vec A n)
+    eval `id             = id
+    eval (f `⁏ g)        = eval g ∘ eval f
+    eval `0↔1            = 0↔1
+    eval (`tl f) {zero}  = id
+    eval (`tl f) {suc n} = λ xs → head xs ∷ eval f (tail xs)
+
     infixr 9 _∙_
     _∙_ : Perm → ∀ {n} → Endo (Vec A n)
-    `id     ∙ xs       = xs
-    (f `⁏ g) ∙ xs       = g ∙ f ∙ xs
-    `0↔1    ∙ xs       = 0↔1 xs
-    (`tl f) ∙ []       = []
-    (`tl f) ∙ (x ∷ xs) = x ∷ f ∙ xs
+    _∙_ = eval
 
     `⟨0↔1+_⟩-spec : ∀ {n} (i : Fin n) (xs : Vec A (suc n)) → `⟨0↔1+ i ⟩ ∙ xs ≡ ⟨0↔1+ i ⟩ xs
     `⟨0↔1+ zero  ⟩-spec xs = refl
@@ -479,13 +482,16 @@ module BijectionSemantics {a b} {A : Set a} (bijKitᴬ : BijKit b A) where
     `0↔1 ⁻¹ = `0↔1
     (fᴬ `∷ f) ⁻¹ = fᴬ⁻¹ `∷ λ x → (f (evalᴬ fᴬ⁻¹ x))⁻¹ where fᴬ⁻¹ = fᴬ ⁻¹ᴬ
 
+    eval : Bij → ∀ {n} → Endo (Vec A n)
+    eval `id               = id
+    eval (f `⁏ g)          = eval g ∘ eval f
+    eval `0↔1              = 0↔1
+    eval (fᴬ `∷ f) {zero}  = id
+    eval (fᴬ `∷ f) {suc n} = λ xs → evalᴬ fᴬ (head xs) ∷ eval (f (head xs)) (tail xs)
+
     infixr 9 _∙_
     _∙_ : Bij → ∀ {n} → Endo (Vec A n)
-    `id ∙ xs             = xs
-    (f `⁏ g)   ∙ xs       = g ∙ f ∙ xs
-    `0↔1      ∙ xs       = 0↔1 xs
-    (fᴬ `∷ f) ∙ []       = []
-    (fᴬ `∷ f) ∙ (x ∷ xs) = evalᴬ fᴬ x ∷ f x ∙ xs
+    _∙_ = eval
 
     _≗′_ : Bij → Bij → Set _
     f ≗′ g = ∀ {n} (xs : Vec A n) → f ∙ xs ≡ g ∙ xs
@@ -514,7 +520,7 @@ module BijectionSemantics {a b} {A : Set a} (bijKitᴬ : BijKit b A) where
             = refl
 
     Vec-bijKit : ∀ n → BijKit _ (Vec A n)
-    Vec-bijKit n = mk Bij (λ f xs → _∙_ f {n} xs) _⁻¹ `id _`⁏_ (λ _ → refl) (λ _ _ _ → refl)
+    Vec-bijKit n = mk Bij (λ f → eval f {n}) _⁻¹ `id _`⁏_ (λ _ → refl) (λ _ _ _ → refl)
                 (λ f x → _⁻¹-inverse f x) (λ f x → _⁻¹-involutive f x)
 
     module VecBijKit n = BijKit (Vec-bijKit n)
@@ -522,7 +528,8 @@ module BijectionSemantics {a b} {A : Set a} (bijKitᴬ : BijKit b A) where
     `tl : Endo Bij
     `tl f = idᴬ `∷ const f
 
-    module P where
+    private
+      module P where
         open PermutationSyntax public
         open PermutationSemantics {A = A} public
     open P using (Perm; `id; `0↔1; _`⁏_)
@@ -539,7 +546,8 @@ module BijectionSemantics {a b} {A : Set a} (bijKitᴬ : BijKit b A) where
     fromPerm-spec (P.`tl π) [] = refl
     fromPerm-spec (P.`tl π) (x ∷ xs) rewrite idᴬ-spec x | fromPerm-spec π xs = refl
 
-    module Unused where
+    private
+      module Unused where
         `⟨0↔1+_⟩ : ∀ {n} (i : Fin n) → Bij
         `⟨0↔1+ i ⟩ = fromPerm P.`⟨0↔1+ i ⟩
 
