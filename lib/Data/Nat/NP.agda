@@ -13,7 +13,7 @@ open import Function.NP
 open import Relation.Nullary
 open import Relation.Binary.NP
 import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_; _≗_; module ≡-Reasoning)
+open ≡ using (_≡_; _≢_; _≗_; module ≡-Reasoning)
 
 module ℕ°   = Algebra.CommutativeSemiring Props.commutativeSemiring
 module ℕcmp = StrictTotalOrder Props.strictTotalOrder
@@ -202,6 +202,13 @@ factor-+-∸ (s≤s {x} {b} x≤b) (s≤s {y} y≤b)   rewrite factor-+-∸ x≤
                                               | ℕ°.+-comm x (suc y)
                                               | n+k∸m (suc y) x≤b
                                               | ℕ°.+-comm x y = ≡.refl
+
+≤→≢1+ : ∀ {x y} → x ≤ y → x ≢ suc y
+≤→≢1+ z≤n     ()
+≤→≢1+ (s≤s p) q = ≤→≢1+ p (suc-injective q)
+
+<→≢ : ∀ {x y} → x < y → x ≢ y
+<→≢ (s≤s p) = ≤→≢1+ p
 
 {-
 post--ulate
