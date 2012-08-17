@@ -50,7 +50,8 @@ module BoolBijection where
     `id `not : BoolBij
 
   bool-bijKit : BijKit L.zero Bool
-  bool-bijKit = mk BoolBij eval id `id _⁏Bij_ (λ _ → refl) _⁏-spec_ _⁻¹-inverse (λ _ _ → refl) where
+  bool-bijKit = mk BoolBij eval id `id _⁏Bij_ (λ _ → refl) _⁏-spec_ _⁻¹-inverse (λ _ _ → refl)
+   module BBK where
     eval  : BoolBij → Endo Bool
     eval `id = id
     eval `not = not
@@ -70,6 +71,24 @@ module BoolBijection where
     (`not ⁻¹-inverse) = not-involutive
 
   module BoolBijKit = BijKit bool-bijKit
+
+  -- `xor can be seen as a fromBool function
+  `xor : Bool → BoolBij
+  `xor false = `id
+  `xor true  = `not
+
+  -- `not? can be seen as a toBool function
+  `not? : BoolBij → Bool
+  `not? `id  = false
+  `not? `not = true
+
+  `xor∘`not? : `xor ∘ `not? ≗ id
+  `xor∘`not? `id = refl
+  `xor∘`not? `not = refl
+
+  `not?∘`xor : `not? ∘ `xor ≗ id
+  `not?∘`xor true  = refl
+  `not?∘`xor false = refl
 
 module 1-Bijection {a} (A : Set a) where
     1-bij : BijKit L.zero A
