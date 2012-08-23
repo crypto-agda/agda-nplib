@@ -27,7 +27,7 @@ isPreorder : IsPreorder _≡_ _≤_
 isPreorder = record { isEquivalence = ≡.isEquivalence
                     ; reflexive = reflexive
                     ; trans = λ {x} {y} {z} → trans {x} {y} {z} }
-  where open ℕ.<=
+  where open ℕ.<= using (sound; complete)
         reflexive : ∀ {i j} → i ≡ j → i ≤ j
         reflexive {i} ≡.refl = complete (ℕ≤.refl {f i})
         trans : Transitive _≤_
