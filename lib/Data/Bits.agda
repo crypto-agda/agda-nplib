@@ -907,9 +907,9 @@ sucB-lem x = {!!}
 2ⁿ≰toℕ : ∀ {n} (xs : Bits n) → 2^ n ≰ toℕ xs
 2ⁿ≰toℕ xs p = ¬n≤x<n _ p (toℕ-bound xs)
 
-Tnot2ⁿ<=toℕ : ∀ {n} (xs : Bits n) → T (not (2^ n ℕ<= (toℕ xs)))
-Tnot2ⁿ<=toℕ {n} xs with (2^ n) ℕ<= (toℕ xs) | ≡.inspect (_ℕ<=_ (2^ n)) (toℕ xs)
-... | true  | [ p ] = 2ⁿ≰toℕ xs (ℕ<=.sound (2^ n) (toℕ xs) (≡→T p))
+Tnot2ⁿ<=toℕ : ∀ {n} (xs : Bits n) → T (not (2^ n <= (toℕ xs)))
+Tnot2ⁿ<=toℕ {n} xs with (2^ n) <= (toℕ xs) | ≡.inspect (_<=_ (2^ n)) (toℕ xs)
+... | true  | [ p ] = 2ⁿ≰toℕ xs (<=.sound (2^ n) (toℕ xs) (≡→T p))
 ... | false |   _   = _
 
 fromℕ∘toℕ : ∀ {n} (x : Bits n) → fromℕ (toℕ x) ≡ x
