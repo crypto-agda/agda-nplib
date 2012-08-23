@@ -179,6 +179,20 @@ open Data.Bool public
 ⟦false⟧′ {true} ()
 ⟦false⟧′ {false} _ = ⟦false⟧
 
+≡→T : ∀ {b} → b ≡ true → T b
+≡→T ≡.refl = _
+
+≡→Tnot : ∀ {b} → b ≡ false → T (not b)
+≡→Tnot ≡.refl = _
+
+T→≡ : ∀ {b} → T b → b ≡ true
+T→≡ {true}  _  = ≡.refl
+T→≡ {false} ()
+
+Tnot→≡ : ∀ {b} → T (not b) → b ≡ false
+Tnot→≡ {false} _  = ≡.refl
+Tnot→≡ {true}  ()
+
 T∧ : ∀ {b₁ b₂} → T b₁ → T b₂ → T (b₁ ∧ b₂)
 T∧ p q = _⟨$⟩_ (from B.T-∧) (p , q)
 
