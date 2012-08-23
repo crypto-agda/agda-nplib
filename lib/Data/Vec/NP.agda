@@ -115,6 +115,9 @@ filter pred (x ∷ xs) with pred x
 η′ {zero}  = λ _ → []
 η′ {suc n} = λ xs → head xs ∷ η (tail xs)
 
+shallow-η : ∀ {n a} {A : Set a} (xs : Vec A (1 + n)) → xs ≡ head xs ∷ tail xs
+shallow-η (x ∷ xs) = ≡.refl
+
 uncons : ∀ {n a} {A : Set a} → Vec A (1 + n) → (A × Vec A n)
 uncons (x ∷ xs) = x , xs
 
