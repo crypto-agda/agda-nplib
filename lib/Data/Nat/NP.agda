@@ -879,8 +879,42 @@ module <= where
 
   open IsTotalOrder isTotalOrder public
 
+<=-steps′ : ∀ {x} y → T (x <= (x + y))
+<=-steps′ {x} y = <=.complete (≤-steps′ {x} y)
+
+sucx∸y≤suc⟨x∸y⟩ : ∀ x y → suc x ∸ y ≤ suc (x ∸ y)
+sucx∸y≤suc⟨x∸y⟩ x zero = ℕ≤.refl
+sucx∸y≤suc⟨x∸y⟩ zero (suc y) rewrite 0∸n≡0 y = z≤n
+sucx∸y≤suc⟨x∸y⟩ (suc x) (suc y) = sucx∸y≤suc⟨x∸y⟩ x y
+
+x≤2y′→x∸y≤y : ∀ x y → x ≤ 2*′ y → x ∸ y ≤ y
+x≤2y′→x∸y≤y x zero p = p
+x≤2y′→x∸y≤y zero (suc y) p = z≤n
+x≤2y′→x∸y≤y (suc zero) (suc y) (s≤s p) rewrite 0∸n≡0 y = z≤n
+x≤2y′→x∸y≤y (suc (suc x)) (suc y) (s≤s (s≤s p))
+  = ℕ≤.trans (sucx∸y≤suc⟨x∸y⟩ x y) (s≤s (x≤2y′→x∸y≤y x y p))
+
+x<2y′→x∸y<y : ∀ x y → x < 2*′ y → x ∸ y < y
+x<2y′→x∸y<y x zero p = p
+x<2y′→x∸y<y zero (suc y) p = s≤s z≤n
+x<2y′→x∸y<y (suc zero) (suc y) (s≤s (s≤s p)) rewrite 0∸n≡0 y = s≤s z≤n
+x<2y′→x∸y<y (suc (suc x)) (suc y) (s≤s (s≤s p))
+  = ℕ≤.trans (s≤s (sucx∸y≤suc⟨x∸y⟩ x y)) (s≤s (x<2y′→x∸y<y x y p))
+
+x<2y→x∸y<y : ∀ x y → x < 2* y → x ∸ y < y
+x<2y→x∸y<y x y p rewrite ≡.sym (2*′-spec y) = x<2y′→x∸y<y x y p
+
+≰→< : ∀ x y → x ≰ y → y < x
+≰→< x y p with ℕcmp.compare (suc y) x
+≰→< x y p | tri< a ¬b ¬c = ℕ≤.trans (s≤s (≤-step ℕ≤.refl)) a
+≰→< x y p | tri≈ ¬a b ¬c = ℕ≤.reflexive b
+≰→< x y p | tri> ¬a ¬b c = ⊥-elim (p (≤-pred c))
+
 ¬≤ : ∀ {m n} → ¬(m < n) → n ≤ m
 ¬≤ {m} {n} p with ℕcmp.compare m n
 ... | tri< m<n _ _   = ⊥-elim (p m<n)
 ... | tri≈ _ eq _    = ℕ≤.reflexive (≡.sym eq)
 ... | tri> _ _ 1+n≤m = ≤-pred (Props.≤-steps 1 1+n≤m)
+
+not<=→< : ∀ x y → T (not (x <= y)) → T (suc y <= x)
+not<=→< x y p = <=.complete (≰→< x y (T'not'¬ p ∘ <=.complete))
