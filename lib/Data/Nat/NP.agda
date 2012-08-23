@@ -248,6 +248,12 @@ b ^ suc n = b * b ^ n
 2^-spec zero = ≡.refl
 2^-spec (suc n) rewrite 2^-spec n | 2*-spec (2 ^ n) = ≡.refl
 
+2^*-spec : ∀ m n → 2^⟨ m ⟩* n ≡ 2 ^ m * n
+2^*-spec zero    n rewrite ℕ°.+-comm n 0 = ≡.refl
+2^*-spec (suc m) n rewrite 2^*-spec m n
+                         | ℕ°.*-assoc 2 (2 ^ m) n
+                         | ℕ°.+-comm (2 ^ m * n) 0 = ≡.refl
+
 1≤2^ : ∀ n → 2^ n ≥ 1
 1+≤2^ : ∀ n → 2^ n ≥ 1 + n
 1+≤2^ zero    = s≤s z≤n
