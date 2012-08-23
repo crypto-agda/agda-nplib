@@ -219,24 +219,24 @@ module OperationSyntax where
        if0  first      ...
        if1  second     ...
      -}
-    `not : Bij
+    `not : ∀ {n} → Bij (1 + n)
     `not = BitBij.`not `∷ const `id
 
-    `xor : Bit → Bij
+    `xor : ∀ {n} → Bit → Bij (1 + n)
     `xor b = BitBij.`xor b `∷ const `id
 
-    `if : Bij → Bij → Bij
+    `if : ∀ {n} → Bij n → Bij n → Bij (1 + n)
     `if f g = BitBij.`id `∷ cond f g
 
-    `if0 : Bij → Bij
+    `if0 : ∀ {n} → Bij n → Bij (1 + n)
     `if0 f = `if `id f
 
-    `if1 : Bij → Bij
+    `if1 : ∀ {n} → Bij n → Bij (1 + n)
     `if1 f = `if f `id
 
     -- law: `if0 f `⁏ `if1 g ≡ `if1 g `; `if0 f
 
-    on-firsts : Bij → Bij
+    on-firsts : ∀ {n} → Bij (1 + n) → Bij (2 + n)
     on-firsts f = `0↔1 `⁏ `if0 f `⁏ `0↔1
 
     --   (a ∙ b) ∙ (c ∙ d)
@@ -246,10 +246,10 @@ module OperationSyntax where
     --   (a ∙ d) ∙ (b ∙ c)
     -- ≡ right swap
     --   (a ∙ d) ∙ (c ∙ b)
-    swp-seconds : Bij
+    swp-seconds : ∀ {n} → Bij (2 + n)
     swp-seconds = `if1 `not `⁏ `0↔1 `⁏ `if1 `not
 
-    on-extremes : Bij → Bij
+    on-extremes : ∀ {n} → Bij (1 + n) → Bij (2 + n)
     -- on-extremes f = swp-seconds `⁏ `if0 f `⁏ swp-seconds
 
     -- (a ∙ b) ∙ (c ∙ d)
@@ -266,18 +266,18 @@ module OperationSyntax where
     -- (A ∙ b) ∙ (c ∙ D)
     on-extremes f = `if1 `not `⁏ `0↔1 `⁏ `if0 f `⁏ `0↔1 `⁏ `if1 `not
 
-    map-inner : Bij → Bij
+    map-inner : ∀ {n} → Bij (1 + n) → Bij (2 + n)
     map-inner f = `if1 `not `⁏ `0↔1 `⁏ `if1 f `⁏ `0↔1 `⁏ `if1 `not
 
-    map-outer : Bij → Bij → Bij
+    map-outer : ∀ {n} → Bij n → Bij n → Bij (1 + n)
     map-outer f g = `if g f
 
-    0↔1∷_ : ∀ {n} → Bits n → Bij
+    0↔1∷_ : ∀ {n} → Bits n → Bij (1 + n)
     0↔1∷ [] = `not
     0↔1∷ (true {-1-} ∷ p) = on-extremes (0↔1∷ p)
     0↔1∷ (false{-0-} ∷ p) = on-firsts   (0↔1∷ p)
 
-    0↔_ : ∀ {n} → Bits n → Bij
+    0↔_ : ∀ {n} → Bits n → Bij n
     0↔ [] = `id
     0↔ (false{-0-} ∷ p) = `if0 (0↔ p)
     0↔ (true{-1-}  ∷ p) = 0↔1∷ p
@@ -341,7 +341,7 @@ module OperationSyntax where
            open PermutationSemantics public
     open P using (Perm; `id; `0↔1; _`⁏_)
 
-    `⟨0↔1+_⟩ : ∀ {n} (i : Fin n) → Bij
+    `⟨0↔1+_⟩ : ∀ {n} (i : Fin n) → Bij (1 + n)
     `⟨0↔1+ zero  ⟩ = `0↔1
     `⟨0↔1+ suc i ⟩ = `0↔1 `⁏ `tl `⟨0↔1+ i ⟩ `⁏ `0↔1
 
@@ -349,7 +349,7 @@ module OperationSyntax where
     `⟨0↔1+ zero  ⟩-spec xs = refl
     `⟨0↔1+ suc i ⟩-spec (x ∷ _ ∷ xs) rewrite `⟨0↔1+ i ⟩-spec (x ∷ xs) = refl
 
-    `⟨0↔_⟩ : ∀ {n} (i : Fin n) → Bij
+    `⟨0↔_⟩ : ∀ {n} (i : Fin n) → Bij n
     `⟨0↔ zero  ⟩ = `id
     `⟨0↔ suc i ⟩ = `⟨0↔1+ i ⟩
 
@@ -358,7 +358,7 @@ module OperationSyntax where
     `⟨0↔ suc i ⟩-spec xs = `⟨0↔1+ i ⟩-spec xs
 
     {-
-    `⟨_↔_⟩ : ∀ {n} (i j : Fin n) → Bij
+    `⟨_↔_⟩ : ∀ {n} (i j : Fin n) → Bij n
     `⟨ zero  ↔ j     ⟩ = `⟨0↔ j ⟩
     `⟨ i     ↔ zero  ⟩ = `⟨0↔ i ⟩
     `⟨ suc i ↔ suc j ⟩ = `tl `⟨ i ↔ j ⟩
@@ -369,14 +369,14 @@ module OperationSyntax where
     `⟨_↔_⟩-spec (suc i) (suc j) (x ∷ xs) rewrite `⟨ i ↔ j ⟩-spec xs = refl
     -}
 
-    `xor-head : Bit → Bij
+    `xor-head : ∀ {n} → Bit → Bij (1 + n)
     `xor-head b = if b then `not else `id
 
     `xor-head-spec : ∀ b {n} x (xs : Bits n) → `xor-head b ∙ (x ∷ xs) ≡ (b xor x) ∷ xs
     `xor-head-spec true x xs  = refl
     `xor-head-spec false x xs = refl
 
-    `⟨_⊕⟩ : ∀ {n} → Bits n → Bij
+    `⟨_⊕⟩ : ∀ {n} → Bits n → Bij n
     `⟨ []     ⊕⟩ = `id
     `⟨ b ∷ xs ⊕⟩ = `xor-head b `⁏ `tl `⟨ xs ⊕⟩
 
@@ -404,7 +404,6 @@ module PermutationSyntax-Props where
     ⊕-dist-∙ : ∀ {n} (pad : Bits n) π xs → π ∙ pad ⊕ π ∙ xs ≡ π ∙ (pad ⊕ xs)
     ⊕-dist-∙ fs      `id        xs = refl
     ⊕-dist-∙ fs      `0↔1       xs = ⊕-dist-0↔1 fs xs
-    ⊕-dist-∙ []       (`tl π)   [] = refl
     ⊕-dist-∙ (f ∷ fs) (`tl π)   (x ∷ xs) rewrite ⊕-dist-∙ fs π xs = refl
     ⊕-dist-∙ fs       (π₀ `⁏ π₁) xs rewrite ⊕-dist-∙ (π₀ ∙ fs) π₁ (π₀ ∙ xs)
                                          | ⊕-dist-∙ fs π₀ xs = refl
@@ -518,7 +517,6 @@ module SimpleSearch {a} {A : Set a} (_∙_ : A → A → A) where
           rewrite search-bij f (h ∘ eval g)
                 | search-bij g h
                 = refl
-        search-bij {zero}  (_     `∷ _) _ = refl
         search-bij {suc n} (`id   `∷ f) g
           rewrite search-bij (f 0b) (g ∘ 0∷_)
                 | search-bij (f 1b) (g ∘ 1∷_)
@@ -909,8 +907,8 @@ sucB-lem x = {!!}
 
 Tnot2ⁿ<=toℕ : ∀ {n} (xs : Bits n) → T (not (2^ n <= (toℕ xs)))
 Tnot2ⁿ<=toℕ {n} xs with (2^ n) <= (toℕ xs) | ≡.inspect (_<=_ (2^ n)) (toℕ xs)
-... | true  | [ p ] = 2ⁿ≰toℕ xs (<=.sound (2^ n) (toℕ xs) (≡→T p))
-... | false |   _   = _
+... | true  | ≡.[ p ] = 2ⁿ≰toℕ xs (<=.sound (2^ n) (toℕ xs) (≡→T p))
+... | false |     _   = _
 
 fromℕ∘toℕ : ∀ {n} (x : Bits n) → fromℕ (toℕ x) ≡ x
 fromℕ∘toℕ [] = ≡.refl
@@ -925,13 +923,13 @@ fromℕ∘toℕ (false ∷ xs)
         | fromℕ∘toℕ xs
         = ≡.refl
 
-toℕ∘fromℕ : ∀ {n} x → x ℕ< 2^ n → toℕ {n} (fromℕ x) ≡ x
+toℕ∘fromℕ : ∀ {n} x → x < 2^ n → toℕ {n} (fromℕ x) ≡ x
 toℕ∘fromℕ {zero} .0 (s≤s z≤n) = ≡.refl
-toℕ∘fromℕ {suc n} x x<2ⁿ with 2^ n ℕ<= x | ≡.inspect (_ℕ<=_ (2^ n)) x
-... | true  | [ p ] rewrite toℕ∘fromℕ {n} (x ∸ 2^ n) (x<2y→x∸y<y x (2^ n) x<2ⁿ) = m+n∸m≡n {2^ n} {x} (ℕ<=.sound (2^ n) x (≡→T p))
-... | false | [ p ] = toℕ∘fromℕ {n} x (ℕ<=.sound (suc x) (2^ n) (not<=→< (2^ n) x (≡→Tnot p)))
+toℕ∘fromℕ {suc n} x x<2ⁿ with 2^ n <= x | ≡.inspect (_<=_ (2^ n)) x
+... | true  | ≡.[ p ] rewrite toℕ∘fromℕ {n} (x ∸ 2^ n) (x<2y→x∸y<y x (2^ n) x<2ⁿ) = m+n∸m≡n {2^ n} {x} (<=.sound (2^ n) x (≡→T p))
+... | false | ≡.[ p ] = toℕ∘fromℕ {n} x (<=.sound (suc x) (2^ n) (not<=→< (2^ n) x (≡→Tnot p)))
 
-fromℕ-inj : ∀ {n} {x y : ℕ} → x ℕ< 2^ n → y ℕ< 2^ n → fromℕ {n} x ≡ fromℕ y → x ≡ y
+fromℕ-inj : ∀ {n} {x y : ℕ} → x < 2^ n → y < 2^ n → fromℕ {n} x ≡ fromℕ y → x ≡ y
 fromℕ-inj {n} {x} {y} x< y< fx≡fy
   = x
   ≡⟨ ≡.sym (toℕ∘fromℕ {n} x x<) ⟩
