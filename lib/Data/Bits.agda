@@ -900,20 +900,46 @@ tblFromFun∘funFromTbl {suc n} tbl
 sucB-lem : ∀ {n} x → toℕ {2^ n} (sucB x) [mod 2 ^ n ] ≡ (suc (toℕ x)) [mod 2 ^ n ]
 sucB-lem x = {!!}
 
--- sucB-lem : ∀ {n} x → (sucB (fromℕ x)) [mod 2 ^ n ] ≡ fromℕ ((suc x) [mod 2 ^ n ])
-
-toℕ∘fromℕ : ∀ {n} x → toℕ (fromℕ {n} x) ≡ x
-toℕ∘fromℕ zero = {!!}
-toℕ∘fromℕ (suc x) = {!toℕ∘fromℕ x!}
-
-toℕ∘fromFin : ∀ {n} (x : Fin (2^ n)) → toℕ (fromFin x) ≡ Fin.toℕ x
-toℕ∘fromFin x = {!!}
-
-toFin∘fromFin : ∀ {n} (x : Fin (2^ n)) → toFin (fromFin x) ≡ x
-toFin∘fromFin x = {!!}
-
 -- _ᴮ : (s : String) {pf : IsBitString s} → Bits (length s)
 -- _ᴮ =
 -}
+
+2ⁿ≰toℕ : ∀ {n} (xs : Bits n) → 2^ n ≰ toℕ xs
+2ⁿ≰toℕ xs p = ¬n≤x<n _ p (toℕ-bound xs)
+
+Tnot2ⁿ<=toℕ : ∀ {n} (xs : Bits n) → T (not (2^ n ℕ<= (toℕ xs)))
+Tnot2ⁿ<=toℕ {n} xs with (2^ n) ℕ<= (toℕ xs) | ≡.inspect (_ℕ<=_ (2^ n)) (toℕ xs)
+... | true  | [ p ] = 2ⁿ≰toℕ xs (ℕ<=.sound (2^ n) (toℕ xs) (≡→T p))
+... | false |   _   = _
+
+fromℕ∘toℕ : ∀ {n} (x : Bits n) → fromℕ (toℕ x) ≡ x
+fromℕ∘toℕ [] = ≡.refl
+fromℕ∘toℕ {suc n} (true ∷ xs)
+  rewrite T→≡ (<=-steps′ {2^ n} (toℕ xs))
+        | ℕ°.+-comm (2^ n) (toℕ xs)
+        | m+n∸n≡m (toℕ xs) (2^ n)
+        | fromℕ∘toℕ xs
+        = ≡.refl
+fromℕ∘toℕ (false ∷ xs)
+  rewrite Tnot→≡ (Tnot2ⁿ<=toℕ xs)
+        | fromℕ∘toℕ xs
+        = ≡.refl
+
+toℕ∘fromℕ : ∀ {n} x → x ℕ< 2^ n → toℕ {n} (fromℕ x) ≡ x
+toℕ∘fromℕ {zero} .0 (s≤s z≤n) = ≡.refl
+toℕ∘fromℕ {suc n} x x<2ⁿ with 2^ n ℕ<= x | ≡.inspect (_ℕ<=_ (2^ n)) x
+... | true  | [ p ] rewrite toℕ∘fromℕ {n} (x ∸ 2^ n) (x<2y→x∸y<y x (2^ n) x<2ⁿ) = m+n∸m≡n {2^ n} {x} (ℕ<=.sound (2^ n) x (≡→T p))
+... | false | [ p ] = toℕ∘fromℕ {n} x (ℕ<=.sound (suc x) (2^ n) (not<=→< (2^ n) x (≡→Tnot p)))
+
+fromℕ-inj : ∀ {n} {x y : ℕ} → x ℕ< 2^ n → y ℕ< 2^ n → fromℕ {n} x ≡ fromℕ y → x ≡ y
+fromℕ-inj {n} {x} {y} x< y< fx≡fy
+  = x
+  ≡⟨ ≡.sym (toℕ∘fromℕ {n} x x<) ⟩
+    toℕ (fromℕ {n} x)
+  ≡⟨ ≡.cong toℕ fx≡fy ⟩
+    toℕ (fromℕ {n} y)
+  ≡⟨ toℕ∘fromℕ {n} y y< ⟩
+    y
+  ∎ where open ≡-Reasoning
 
 open Defs public
