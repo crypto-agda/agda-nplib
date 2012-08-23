@@ -9,7 +9,7 @@ open import Data.Nat.Logical
 open import Data.Bool
 open import Data.Product using (proj₁; proj₂; ∃; _,_)
 open import Data.Sum renaming (map to ⊎-map)
-open import Data.Empty using (⊥-elim)
+open import Data.Empty using (⊥-elim; ⊥)
 open import Function.NP
 open import Relation.Nullary
 open import Relation.Binary.NP
@@ -32,6 +32,20 @@ module ≤-Reasoning where
 
 suc-injective : ∀ {n m : ℕ} → (suc n ∶ ℕ) ≡ suc m → n ≡ m
 suc-injective = ≡.cong pred
+
++-≤-inj : ∀ x {y z} → x + y ≤ x + z → y ≤ z
++-≤-inj zero    p       = p
++-≤-inj (suc x) (s≤s p) = +-≤-inj x p
+
+sucx≰x : ∀ x → suc x ≰ x
+sucx≰x zero    = λ()
+sucx≰x (suc x) = sucx≰x x ∘ ≤-pred
+
+¬n≤x<n : ∀ n {x} → n ≤ x → x < n → ⊥
+¬n≤x<n n p q = sucx≰x _ (ℕ≤.trans q p)
+
+¬n+≤y<n : ∀ n {x y} → n + x ≤ y → y < n → ⊥
+¬n+≤y<n n p q = sucx≰x _ (ℕ≤.trans q (ℕ≤.trans (ℕ≤.trans (ℕ≤.reflexive (ℕ°.+-comm 0 n)) ((ℕ≤.refl {n}) +-mono z≤n)) p))
 
 fold : ∀ {a} {A : Set a} → A → Endo A → ℕ → A
 fold x f n = nest n f x
