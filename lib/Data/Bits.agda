@@ -20,6 +20,7 @@ open import Data.Unit using (⊤)
 open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Product using (_×_; _,_; uncurry; proj₁; proj₂)
 open import Function.NP hiding (_→⟨_⟩_)
+open import Relation.Nullary
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡
 open import Algebra.FunctionProperties.NP
@@ -826,15 +827,38 @@ toℕ-bound         [] = s≤s z≤n
 toℕ-bound {suc n} (1b ∷ xs) rewrite +-assoc-comm 1 (2^ n) (toℕ xs) = ℕ≤.refl {2^ n} +-mono toℕ-bound xs
 toℕ-bound {suc n} (0b ∷ xs) = ≤-steps (2^ n) (toℕ-bound xs)
 
+toℕ≤2ⁿ+ : ∀ {n} (x : Bits n) {y} → toℕ {n} x ≤ 2^ n + y
+toℕ≤2ⁿ+ {n} x {y} = ℕ≤.trans (≤-steps y (≤-pred (≤-steps 1 (toℕ-bound x))))
+                             (ℕ≤.reflexive (ℕ°.+-comm y (2^ n)))
+
+2ⁿ+≰toℕ : ∀ {n x} (y : Bits n) → 2^ n + x ≰ toℕ {n} y
+2ⁿ+≰toℕ {n} {x} y p = ¬n+≤y<n (2^ n) p (toℕ-bound y)
+
 toℕ-inj : ∀ {n} (x y : Bits n) → toℕ x ≡ toℕ y → x ≡ y
 toℕ-inj         []        []        _ = refl
 toℕ-inj         (0b ∷ xs) (0b ∷ ys) p = cong 0∷_ (toℕ-inj xs ys p)
 toℕ-inj {suc n} (1b ∷ xs) (1b ∷ ys) p = cong 1∷_ (toℕ-inj xs ys (cancel-+-left (2^ n) p))
-toℕ-inj {suc n} (0b ∷ xs) (1b ∷ ys) p rewrite ℕ°.+-comm (2^ n) (toℕ ys) = ⊥-elim (<→≢ (≤-steps (toℕ ys) (toℕ-bound xs)) p)
-toℕ-inj {suc n} (1b ∷ xs) (0b ∷ ys) p rewrite ℕ°.+-comm (2^ n) (toℕ xs) = ⊥-elim (<→≢ (≤-steps (toℕ xs) (toℕ-bound ys)) (≡.sym p))
+toℕ-inj {suc n} (0b ∷ xs) (1b ∷ ys) p = ⊥-elim (2ⁿ+≰toℕ xs (ℕ≤.reflexive (≡.sym p)))
+toℕ-inj {suc n} (1b ∷ xs) (0b ∷ ys) p = ⊥-elim (2ⁿ+≰toℕ ys (ℕ≤.reflexive p))
+
+data _≤ᴮ_ : ∀ {n} (p q : Bits n) → Set where
+  []    : [] ≤ᴮ []
+  there : ∀ {n} {p q : Bits n} b → p ≤ᴮ q → (b ∷ p) ≤ᴮ (b ∷ q)
+  0-1   : ∀ {n} (p q : Bits n) → 0∷ p ≤ᴮ 1∷ q
+
+toℕ-≤-inj : ∀ {n} (x y : Bits n) → toℕ x ≤ toℕ y → x ≤ᴮ y
+toℕ-≤-inj     [] [] p = []
+toℕ-≤-inj         (0b ∷ xs) (0b ∷ ys) p = there 0b (toℕ-≤-inj xs ys p)
+toℕ-≤-inj         (0b ∷ xs) (1b ∷ ys) p = 0-1 _ _
+toℕ-≤-inj {suc n} (1b ∷ xs) (0b ∷ ys) p = ⊥-elim (2ⁿ+≰toℕ ys p)
+toℕ-≤-inj {suc n} (1b ∷ xs) (1b ∷ ys) p = there 1b (toℕ-≤-inj xs ys (+-≤-inj (2^ n) p))
 
 fromℕ : ∀ {n} → ℕ → Bits n
-fromℕ = fold 0ⁿ sucB
+fromℕ {zero}  _ = []
+fromℕ {suc n} x = if 2^ n <= x then 1∷ fromℕ (x ∸ 2^ n) else 0∷ fromℕ x
+
+fromℕ′ : ∀ {n} → ℕ → Bits n
+fromℕ′ = fold 0ⁿ sucB
 
 fromFin : ∀ {n} → Fin (2^ n) → Bits n
 fromFin = fromℕ ∘ Fin.toℕ
