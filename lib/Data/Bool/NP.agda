@@ -255,3 +255,19 @@ xor-inj₁ false = id
 
 xor-inj₂ : ∀ x {y z} → y xor x ≡ z xor x → y ≡ z
 xor-inj₂ x {y} {z} rewrite Xor°.+-comm y x | Xor°.+-comm z x = xor-inj₁ x
+
+data So : Bool → Set where
+  oh! : So true
+
+So→T : ∀ {b} → So b → T b
+So→T oh! = _
+
+T→So : ∀ {b} → T b → So b
+T→So {true}  _  = oh!
+T→So {false} ()
+
+So→≡ : ∀ {b} → So b → b ≡ true
+So→≡ oh! = ≡.refl
+
+≡→So : ∀ {b} → b ≡ true → So b
+≡→So ≡.refl = oh!
