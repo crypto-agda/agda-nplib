@@ -414,7 +414,7 @@ module PermutationSyntax-Props where
     ⊕-dist-∙ pad π xs = π ∙ pad ⊕ π ∙ xs
                       ≡⟨ refl ⟩
                         vmap _xor_ (π ∙ pad) ⊛ π ∙ xs
-                      ≡⟨ {!!} ⟩
+                      ≡⟨ TODO ⟩
                         π ∙ vmap _xor_ pad ⊛ π ∙ xs
                       ≡⟨ ⊛-dist-∙ _ (vmap _xor_ pad) π xs ⟩
                         π ∙ (vmap _xor_ pad ⊛ xs)
@@ -500,8 +500,7 @@ module SimpleSearch {a} {A : Set a} (_∙_ : A → A → A) where
                      search {m} (λ xs → search {n} (λ ys → f (xs ++ ys)))
                    ≡⟨ sym (search-+ {m} {n} f) ⟩
                      search {m + n} f
-                   ∎
-                        where open ≡-Reasoning
+                   ∎ where open ≡-Reasoning
 
         search-0↔1 : ∀ {n} (f : Bits n → A) → search {n} (f ∘ 0↔1) ≡ search {n} f
         search-0↔1 {zero}        _ = refl
@@ -512,18 +511,22 @@ module SimpleSearch {a} {A : Set a} (_∙_ : A → A → A) where
               (∙-interchange : Interchange _≡_ _∙_ _∙_) where
         open SearchInterchange ∙-interchange using (search-0↔1)
         open OperationSyntax hiding (_∙_)
-        search-bij : ∀ {n} (f : Bits n → A) (g : Bij) → search {n} (f ∘ eval g) ≡ search {n} f
-        search-bij f `id     = refl
-        search-bij f `0↔1    = search-0↔1 f
-        search-bij f (g `⁏ h)
-          rewrite search-bij (f ∘ eval h) g = search-bij f h
-        search-bij {zero}  f (_     `∷ _) = refl
-        search-bij {suc n} f (`id   `∷ g)
-          rewrite search-bij (f ∘ 0∷_) (g 0b)
-                | search-bij (f ∘ 1∷_) (g 1b) = refl
-        search-bij {suc n} f (`notᴮ `∷ g)
-          rewrite search-bij (f ∘ 0∷_) (g 1b)
-                | search-bij (f ∘ 1∷_) (g 0b) = ∙-comm _ _
+        search-bij : ∀ {n} f (g : Bits n → A) → search (g ∘ eval f) ≡ search g
+        search-bij `id     _ = refl
+        search-bij `0↔1    f = search-0↔1 f
+        search-bij (f `⁏ g) h
+          rewrite search-bij f (h ∘ eval g)
+                | search-bij g h
+                = refl
+        search-bij {zero}  (_     `∷ _) _ = refl
+        search-bij {suc n} (`id   `∷ f) g
+          rewrite search-bij (f 0b) (g ∘ 0∷_)
+                | search-bij (f 1b) (g ∘ 1∷_)
+                = refl
+        search-bij {suc n} (`notᴮ `∷ f) g
+          rewrite search-bij (f 1b) (g ∘ 0∷_)
+                | search-bij (f 0b) (g ∘ 1∷_)
+                = ∙-comm _ _
 
 module Sum where
     open SimpleSearch _+_ using (module Comm; module SearchInterchange; module SearchUnit; module Bij)
@@ -561,8 +564,8 @@ module Count where
     #-comm : ∀ {n} (pad : Bits n) (f : Bits n → Bool) → #⟨ f ⟩ ≡ #⟨ f ∘ _⊕_ pad ⟩
     #-comm pad f = sum-comm pad (Bool.toℕ ∘ f)
 
-    #-bij : ∀ {n} (f : Bits n → Bit) (g : Bij) → #⟨ f ∘ eval g ⟩ ≡ #⟨ f ⟩
-    #-bij f = sum-bij (Bool.toℕ ∘ f)
+    #-bij : ∀ {n} f (g : Bits n → Bit) → #⟨ g ∘ eval f ⟩ ≡ #⟨ g ⟩
+    #-bij f g = sum-bij f (Bool.toℕ ∘ g)
 
     #-⊕ : ∀ {c} (bs : Bits c) (f : Bits c → Bit) → #⟨ f ⟩ ≡ #⟨ f ∘ _⊕_ bs ⟩
     #-⊕ = #-comm
