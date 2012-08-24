@@ -79,3 +79,21 @@ _$⟨_⟩_ f n = nest n f
 -- arguments, simply comment this definition, very few code rely on it.
 … : ∀ {a} {A : Set a} ⦃ x : A ⦄ → A
 … ⦃ x ⦄ = x
+
+module Combinators where
+    S : ∀ {A B C : Set} →
+          (A → B → C) →
+          (A → B) →
+          (A → C)
+    S = _ˢ_
+
+    K : ∀ {A B : Set} → A → B → A
+    K = const
+
+    -- B ≗ _∘_
+    B : ∀ {A B C : Set} → (B → C) → (A → B) → A → C
+    B = S (K S) K
+
+    -- C ≗ flip
+    C : ∀ {A B C : Set} → (A → B → C) → B → A → C
+    C = S (S (K (S (K S) K)) S) (K K)
