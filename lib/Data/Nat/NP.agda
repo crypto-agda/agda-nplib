@@ -225,9 +225,22 @@ factor-+-∸ (s≤s {x} {b} x≤b) (s≤s {y} y≤b)   rewrite factor-+-∸ x≤
 <→≢ : ∀ {x y} → x < y → x ≢ y
 <→≢ (s≤s p) = ≤→≢1+ p
 
+-- Triangular inequality
+dist-sum : ∀ x y z → dist x z ≤ dist x y + dist y z
+dist-sum zero    zero    z       = ℕ≤.refl
+dist-sum zero    (suc y) zero    = z≤n
+dist-sum zero    (suc y) (suc z) = s≤s (dist-sum zero y z)
+dist-sum (suc x) zero    zero    = s≤s (ℕ≤.reflexive (ℕ°.+-comm 0 x))
+dist-sum (suc x) (suc y) zero
+  rewrite ℕ°.+-comm (dist x y) (suc y)
+        | dist-sym x y = s≤s (dist-sum zero y x)
+dist-sum (suc x) zero    (suc z) = ℕ≤.trans (dist-sum x zero z)
+                                  (ℕ≤.trans (ℕ≤.reflexive (≡.cong₂ _+_ (dist-sym x 0) ≡.refl))
+                                            (≤-step (ℕ≤.refl {x} +-mono ≤-step ℕ≤.refl)))
+dist-sum (suc x) (suc y) (suc z) = dist-sum x y z
+
 {-
 post--ulate
-  dist-sum   : ∀ x y z → dist x y + dist y z ≤ dist x z
   dist-≤     : ∀ x y → dist x y ≤ x
   dist-mono₁ : ∀ x y z t → x ≤ y → dist z t ≤ dist (x + z) (y + t)
 -}
