@@ -4,7 +4,7 @@ module Data.Bits where
 import Level
 open import Category.Applicative.NP
 open import Category.Monad
-open import Data.Nat.NP hiding (_==_)
+open import Data.Nat.NP hiding (_==_) renaming (_<=_ to _ℕ<=_)
 open import Data.Nat.Properties
 open import Data.Nat.DivMod
 import Data.Bool.NP as Bool
@@ -79,6 +79,12 @@ _==_ : ∀ {n} (bs₀ bs₁ : Bits n) → Bool
 ==-refl [] = refl
 ==-refl (true ∷ xs) = ==-refl xs
 ==-refl (false ∷ xs) = ==-refl xs
+
+_<=_ : ∀ {n} (xs ys : Bits n) → Bool
+[]        <= []        = 1b
+(1b ∷ xs) <= (0b ∷ ys) = 0b
+(0b ∷ xs) <= (1b ∷ ys) = 1b
+(_  ∷ xs) <= (_  ∷ ys) = xs <= ys
 
 infixr 5 _⊕_
 _⊕_ : ∀ {n} (bs₀ bs₁ : Bits n) → Bits n
@@ -847,6 +853,19 @@ data _≤ᴮ_ : ∀ {n} (p q : Bits n) → Set where
   there : ∀ {n} {p q : Bits n} b → p ≤ᴮ q → (b ∷ p) ≤ᴮ (b ∷ q)
   0-1   : ∀ {n} (p q : Bits n) → 0∷ p ≤ᴮ 1∷ q
 
+≤ᴮ→<= : ∀ {n} {p q : Bits n} → p ≤ᴮ q → T (p <= q)
+≤ᴮ→<= [] = _
+≤ᴮ→<= (there 0b pf) = ≤ᴮ→<= pf
+≤ᴮ→<= (there 1b pf) = ≤ᴮ→<= pf
+≤ᴮ→<= (0-1 p q) = _
+
+<=→≤ᴮ : ∀ {n} (p q : Bits n) → T (p <= q) → p ≤ᴮ q
+<=→≤ᴮ [] [] _ = []
+<=→≤ᴮ (1b ∷ p) (0b ∷ q) ()
+<=→≤ᴮ (0b ∷ p) (1b ∷ q) _  = 0-1 p q
+<=→≤ᴮ (0b ∷ p) (0b ∷ q) pf = there 0b (<=→≤ᴮ p q pf)
+<=→≤ᴮ (1b ∷ p) (1b ∷ q) pf = there 1b (<=→≤ᴮ p q pf)
+
 toℕ-≤-inj : ∀ {n} (x y : Bits n) → toℕ x ≤ toℕ y → x ≤ᴮ y
 toℕ-≤-inj     [] [] p = []
 toℕ-≤-inj         (0b ∷ xs) (0b ∷ ys) p = there 0b (toℕ-≤-inj xs ys p)
@@ -856,7 +875,7 @@ toℕ-≤-inj {suc n} (1b ∷ xs) (1b ∷ ys) p = there 1b (toℕ-≤-inj xs ys 
 
 fromℕ : ∀ {n} → ℕ → Bits n
 fromℕ {zero}  _ = []
-fromℕ {suc n} x = if 2^ n <= x then 1∷ fromℕ (x ∸ 2^ n) else 0∷ fromℕ x
+fromℕ {suc n} x = if 2^ n ℕ<= x then 1∷ fromℕ (x ∸ 2^ n) else 0∷ fromℕ x
 
 fromℕ′ : ∀ {n} → ℕ → Bits n
 fromℕ′ = fold 0ⁿ sucB
@@ -905,8 +924,8 @@ sucB-lem x = {!!}
 2ⁿ≰toℕ : ∀ {n} (xs : Bits n) → 2^ n ≰ toℕ xs
 2ⁿ≰toℕ xs p = ¬n≤x<n _ p (toℕ-bound xs)
 
-Tnot2ⁿ<=toℕ : ∀ {n} (xs : Bits n) → T (not (2^ n <= (toℕ xs)))
-Tnot2ⁿ<=toℕ {n} xs with (2^ n) <= (toℕ xs) | ≡.inspect (_<=_ (2^ n)) (toℕ xs)
+Tnot2ⁿ<=toℕ : ∀ {n} (xs : Bits n) → T (not (2^ n ℕ<= (toℕ xs)))
+Tnot2ⁿ<=toℕ {n} xs with (2^ n) ℕ<= (toℕ xs) | ≡.inspect (_ℕ<=_ (2^ n)) (toℕ xs)
 ... | true  | ≡.[ p ] = 2ⁿ≰toℕ xs (<=.sound (2^ n) (toℕ xs) (≡→T p))
 ... | false |     _   = _
 
@@ -925,7 +944,7 @@ fromℕ∘toℕ (false ∷ xs)
 
 toℕ∘fromℕ : ∀ {n} x → x < 2^ n → toℕ {n} (fromℕ x) ≡ x
 toℕ∘fromℕ {zero} .0 (s≤s z≤n) = ≡.refl
-toℕ∘fromℕ {suc n} x x<2ⁿ with 2^ n <= x | ≡.inspect (_<=_ (2^ n)) x
+toℕ∘fromℕ {suc n} x x<2ⁿ with 2^ n ℕ<= x | ≡.inspect (_ℕ<=_ (2^ n)) x
 ... | true  | ≡.[ p ] rewrite toℕ∘fromℕ {n} (x ∸ 2^ n) (x<2y→x∸y<y x (2^ n) x<2ⁿ) = m+n∸m≡n {2^ n} {x} (<=.sound (2^ n) x (≡→T p))
 ... | false | ≡.[ p ] = toℕ∘fromℕ {n} x (<=.sound (suc x) (2^ n) (not<=→< (2^ n) x (≡→Tnot p)))
 
