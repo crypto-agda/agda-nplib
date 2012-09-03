@@ -50,6 +50,10 @@ sucx≰x (suc x) = sucx≰x x ∘ ≤-pred
 fold : ∀ {a} {A : Set a} → A → Endo A → ℕ → A
 fold x f n = nest n f x
 
++-inj-over-∸ : ∀ x y z → (x + y) ∸ (x + z) ≡ y ∸ z
++-inj-over-∸ zero y z = ≡.refl
++-inj-over-∸ (suc x) y z = +-inj-over-∸ x y z
+
 2*_ : ℕ → ℕ
 2* x = x + x
 
@@ -151,6 +155,11 @@ dist-2^* : ∀ x y z → dist ⟨2^ x * y ⟩ ⟨2^ x * z ⟩ ≡ ⟨2^ x * dist
 dist-2^* x = dist-sym-wlog (2^⟨ x ⟩*) pf
   where pf : ∀ a k → dist ⟨2^ x * a ⟩ ⟨2^ x * (a + k) ⟩ ≡ ⟨2^ x * k ⟩
         pf a k rewrite 2^*-distrib x a k = dist-x-x+y≡y ⟨2^ x * a ⟩ ⟨2^ x * k ⟩
+
+dist-bounded : ∀ {x y f} → x ≤ f → y ≤ f → dist x y ≤ f
+dist-bounded z≤n       y≤f = y≤f
+dist-bounded (s≤s x≤f) z≤n = s≤s x≤f
+dist-bounded (s≤s x≤f) (s≤s y≤f) = ≤-step (dist-bounded x≤f y≤f)
 
 2*-mono : ∀ {a b} → a ≤ b → 2* a ≤ 2* b
 2*-mono pf = pf +-mono pf

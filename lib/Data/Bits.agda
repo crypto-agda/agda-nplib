@@ -177,6 +177,16 @@ _|∨|_ f g x = f x ∨ g x
 _|∧|_ : ∀ {n} → (f g : Bits n → Bit) → Bits n → Bit
 _|∧|_ f g x = f x ∧ g x
 
+|not| : ∀ {n} (f : Bits n → Bit) → Bits n → Bit
+|not| f = not ∘ f
+
+|∧|-comm : ∀ {n} (f g : Bits n → Bit) → f |∧| g ≗ g |∧| f
+|∧|-comm f g x with f x | g x
+... | 0b | 0b = refl
+... | 0b | 1b = refl
+... | 1b | 0b = refl
+... | 1b | 1b = refl
+
 module Search {i} {I : Set i} (`1 : I) (`2*_ : I → I)
               {a} {A : I → Set a} (_∙_ : ∀ {m} → A m → A m → A (`2* m)) where
 
@@ -671,6 +681,36 @@ module Count where
     #-∧-∨ᵇ true y rewrite ℕ°.+-comm (Bool.toℕ y) 1 = refl
     #-∧-∨ᵇ false y = refl
 
+    #-lem : ∀ {n} → (f g : Bits n → Bit) → #⟨ f ⟩ ≡ #⟨ g |∧| f ⟩ + #⟨ |not| g |∧| f ⟩
+    #-lem {zero} f g with g []
+    ... | 0b = refl
+    ... | 1b = ℕ°.+-comm 0 #⟨ f ⟩
+    #-lem {suc n} f g 
+      rewrite #-lem (f ∘ 0∷_) (g ∘ 0∷_)
+            | #-lem (f ∘ 1∷_) (g ∘ 1∷_)
+            = +-interchange #⟨ (g ∘ 0∷_) |∧| (f ∘ 0∷_) ⟩
+                #⟨ |not| (g ∘ 0∷_) |∧| (f ∘ 0∷_) ⟩ 
+                #⟨ (g ∘ 1∷_) |∧| (f ∘ 1∷_) ⟩
+                #⟨ |not| (g ∘ 1∷_) |∧| (f ∘ 1∷_) ⟩
+
+
+    #-∧-snd : ∀ {n} (f g : Bits n → Bit) → #⟨ f |∧| g ⟩ ≤ #⟨ g ⟩
+    #-∧-snd {zero} f g with f [] | g []
+    ... | 0b | 0b = z≤n
+    ... | 0b | 1b = z≤n
+    ... | 1b | _ = ℕ≤.reflexive refl
+    #-∧-snd {suc n} f g = #-∧-snd (f ∘ 0∷_) (g ∘ 0∷_) 
+                   +-mono #-∧-snd (f ∘ 1∷_) (g ∘ 1∷_)
+
+    #-∧-fst : ∀ {n} (f g : Bits n → Bit) → #⟨ f |∧| g ⟩ ≤ #⟨ f ⟩
+    #-∧-fst f g = 
+              #⟨ f |∧| g ⟩ 
+            ≡⟨ #-≗ (f |∧| g) (g |∧| f) (|∧|-comm f g) ⟩ 
+              #⟨ g |∧| f ⟩ 
+            ≤⟨ #-∧-snd g f ⟩ 
+              #⟨ f ⟩ ∎
+      where open ≤-Reasoning
+
     #-∧-∨ : ∀ {n} (f g : Bits n → Bit) → #⟨ f |∧| g ⟩ + #⟨ f |∨| g ⟩ ≡ #⟨ f ⟩ + #⟨ g ⟩
     #-∧-∨ {zero} f g = #-∧-∨ᵇ (f []) (g [])
     #-∧-∨ {suc n} f g =
@@ -737,6 +777,32 @@ module Count where
                  2^ c ∸ #⟨ f ⟩
                ∎
       where open ≡-Reasoning
+
+
+    difference-lemma : ∀ {n}(A B F : Bits n → Bit) 
+      → #⟨ |not| F |∧| A ⟩ ≡ #⟨ |not| F |∧| B ⟩
+      → dist #⟨ A ⟩ #⟨ B ⟩ ≤ #⟨ F ⟩
+    difference-lemma A B F A∧¬F≡B∧¬F = 
+       dist #⟨ A ⟩ #⟨ B ⟩ 
+         ≡⟨ cong₂ dist (#-lem A F) (#-lem B F) ⟩
+       dist (#⟨ F |∧| A ⟩ + #⟨ |not| F |∧| A ⟩)
+            (#⟨ F |∧| B ⟩ + #⟨ |not| F |∧| B ⟩)
+         ≡⟨ cong₂ dist (ℕ°.+-comm #⟨ F |∧| A ⟩ #⟨ |not| F |∧| A ⟩) 
+                       (ℕ°.+-comm #⟨ F |∧| B ⟩ #⟨ |not| F |∧| B ⟩) ⟩
+       dist (#⟨ |not| F |∧| A ⟩ + #⟨ F |∧| A ⟩)
+            (#⟨ |not| F |∧| B ⟩ + #⟨ F |∧| B ⟩)
+         ≡⟨ cong₂ dist (refl {x = #⟨ |not| F |∧| A ⟩ 
+                              + #⟨ F |∧| A ⟩})
+                       (cong₂ _+_ (sym A∧¬F≡B∧¬F)
+                             (refl {x = #⟨ F |∧| B ⟩})) ⟩
+       dist (#⟨ |not| F |∧| A ⟩ + #⟨ F |∧| A ⟩)
+            (#⟨ |not| F |∧| A ⟩ + #⟨ F |∧| B ⟩)
+         ≡⟨ dist-x+ #⟨ |not| F |∧| A ⟩ #⟨ F |∧| A ⟩ #⟨ F |∧| B ⟩ ⟩
+       dist #⟨ F |∧| A ⟩ #⟨ F |∧| B ⟩
+         ≤⟨ dist-bounded {#⟨ F |∧| A ⟩} {#⟨ F |∧| B ⟩} {#⟨ F ⟩} 
+            (#-∧-fst F A) (#-∧-fst F B) ⟩ 
+       #⟨ F ⟩ ∎
+     where open ≤-Reasoning
 
 open SimpleSearch public
 open Sum public
