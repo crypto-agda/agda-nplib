@@ -12,7 +12,7 @@ open import Relation.Binary.Logical
 open import Function using (type-signature;_$_;flip;id)
 open import Data.Empty using (⊥)
 open import Data.Unit using (⊤)
-open import Data.Nat using (ℕ; zero; suc)
+open import Data.Nat using (ℕ; zero; suc; _+_)
 
 module M? ℓ where
   open Cat.RawMonadPlus (monadPlus {ℓ}) public
@@ -35,6 +35,14 @@ join? (just x) = x
 Maybe^ : ℕ → Set → Set
 Maybe^ zero    = id
 Maybe^ (suc n) = Maybe ∘ Maybe^ n
+
+just^ : ∀ {A} n → A → Maybe^ n A
+just^ zero x = x
+just^ (suc n) x = just (just^ n x)
+
+Maybe^-∘-+ : ∀ m n A → Maybe^ m (Maybe^ n A) ≡ Maybe^ (m + n) A
+Maybe^-∘-+ zero    _ _ = ≡.refl
+Maybe^-∘-+ (suc m) _ _ = ≡.cong Maybe (Maybe^-∘-+ m _ _)
 
 just-injective : ∀ {a} {A : Set a} {x y : A}
                  → (just x ∶ Maybe A) ≡ just y → x ≡ y
