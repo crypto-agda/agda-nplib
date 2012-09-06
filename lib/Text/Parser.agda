@@ -58,6 +58,17 @@ infixl 4 _⊛_ _*>_ _<*_
 _⊛_ : ∀ {A B} → Parser (A → B) → Parser A → Parser B
 _⊛_ pf pa = pf >>= λ f → pa >>= λ a → pure (f a)
 
+⟪_·_⟫ : ∀ {A B} → (A → B) → Parser A → Parser B
+⟪ f · x ⟫ = map f x
+
+⟪_·_·_⟫ : ∀ {A B C} →
+            (A → B → C) → Parser A → Parser B → Parser C
+⟪ f · x · y ⟫ = map f x ⊛ y
+
+⟪_·_·_·_⟫ : ∀ {A B C D} → (A → B → C → D)
+            → Parser A → Parser B → Parser C → Parser D
+⟪ f · x · y · z ⟫ = map f x ⊛ y ⊛ z
+
 _*>_ : ∀ {A B} → Parser A → Parser B → Parser B
 p₁ *> p₂ = p₁ >>= const p₂
 
