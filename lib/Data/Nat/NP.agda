@@ -51,8 +51,7 @@ fold : ∀ {a} {A : Set a} → A → Endo A → ℕ → A
 fold x f n = nest n f x
 
 +-inj-over-∸ : ∀ x y z → (x + y) ∸ (x + z) ≡ y ∸ z
-+-inj-over-∸ zero y z = ≡.refl
-+-inj-over-∸ (suc x) y z = +-inj-over-∸ x y z
++-inj-over-∸ = [i+j]∸[i+k]≡j∸k 
 
 2*_ : ℕ → ℕ
 2* x = x + x
@@ -247,6 +246,23 @@ dist-sum (suc x) zero    (suc z) = ℕ≤.trans (dist-sum x zero z)
                                   (ℕ≤.trans (ℕ≤.reflexive (≡.cong₂ _+_ (dist-sym x 0) ≡.refl))
                                             (≤-step (ℕ≤.refl {x} +-mono ≤-step ℕ≤.refl)))
 dist-sum (suc x) (suc y) (suc z) = dist-sum x y z
+
+∸-assoc-+ : ∀ x y z → x ∸ y ∸ z ≡ x ∸ (y + z)
+∸-assoc-+ x       zero    z       = ≡.refl
+∸-assoc-+ zero    (suc y) zero    = ≡.refl
+∸-assoc-+ zero    (suc y) (suc z) = ≡.refl
+∸-assoc-+ (suc x) (suc y) z       = ∸-assoc-+ x y z
+
+_∸-tone_ : ∀ {x y t u} → x ≤ y → t ≤ u → t ∸ y ≤ u ∸ x
+_∸-tone_ {y = y} z≤n t≤u = ℕ≤.trans (n∸m≤n y _) t≤u
+s≤s x≤y ∸-tone z≤n = z≤n
+s≤s x≤y ∸-tone s≤s t≤u = x≤y ∸-tone t≤u
+
+∸-mono : ∀ k {x y} → x ≤ y → x ∸ k ≤ y ∸ k
+∸-mono k = _∸-tone_ (ℕ≤.refl {k})
+
+∸-anti : ∀ k {x y} → x ≤ y → k ∸ y ≤ k ∸ x
+∸-anti k x≤y = _∸-tone_ x≤y (ℕ≤.refl {k})
 
 {-
 post--ulate
