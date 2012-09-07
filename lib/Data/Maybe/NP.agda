@@ -14,9 +14,6 @@ open import Data.Empty using (⊥)
 open import Data.Unit using (⊤)
 open import Data.Nat using (ℕ; zero; suc; _+_)
 
-module M? ℓ where
-  open Cat.RawMonadPlus (monadPlus {ℓ}) public
-
 Π? : ∀ {a b} (A : Set a) (B : A → Set b) → Set _
 Π? A B = (x : A) → Maybe (B x)
 
@@ -31,6 +28,20 @@ map? f = maybe (just ∘′ f) nothing
 join? : ∀ {a} {A : Set a} → Maybe (Maybe A) → Maybe A
 join? nothing  = nothing
 join? (just x) = x
+
+module M? ℓ where
+  open Cat.RawMonadPlus (monadPlus {ℓ}) public
+
+  ⟪_·_⟫ : ∀ {A B : Set ℓ} → (A → B) → Maybe A → Maybe B
+  ⟪ f · x ⟫ = map? f x
+
+  ⟪_·_·_⟫ : ∀ {A B C : Set ℓ} →
+              (A → B → C) → Maybe A → Maybe B → Maybe C
+  ⟪ f · x · y ⟫ = map? f x ⊛ y
+
+  ⟪_·_·_·_⟫ : ∀ {A B C D : Set ℓ} → (A → B → C → D)
+              → Maybe A → Maybe B → Maybe C → Maybe D
+  ⟪ f · x · y · z ⟫ = map? f x ⊛ y ⊛ z
 
 Maybe^ : ℕ → Set → Set
 Maybe^ zero    = id
