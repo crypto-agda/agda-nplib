@@ -30,5 +30,5 @@ record PrEnv : Set where
 
 open PrEnv
 
-paren : (PrEnv → PrEnv) → PrEnv → ShowS → ShowS
-paren f Δ = if ⌊ level (f Δ) ≤? level Δ ⌋ then id else parenBase
+paren : PrEnv → PrEnv → ShowS → ShowS
+paren Γ Δ = if ⌊ level Γ ≤? level Δ ⌋ then id else parenBase
