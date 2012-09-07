@@ -133,3 +133,18 @@ manyOneOf cs = manySat (λ c → c `elem` cs)
 
 manyNoneOf : List Char → Parser (List Char)
 manyNoneOf cs = manySat (λ c → c `notElem` cs)
+
+lookSat : (List Char → Bool) → Parser ⊤
+lookSat p xs = if p xs then just (_ , xs) else nothing
+
+lookSatHead : (Char → Bool) → Parser ⊤
+lookSatHead pᶜ = lookSat p
+    where p : List Char → Bool
+          p (x ∷ xs) = pᶜ x
+          p []       = false
+
+lookHeadNoneOf : List Char → Parser ⊤
+lookHeadNoneOf cs = lookSatHead (λ c → c `notElem` cs)
+
+lookHeadSomeOf : List Char → Parser ⊤
+lookHeadSomeOf cs = lookSatHead (λ c → c `elem` cs)
