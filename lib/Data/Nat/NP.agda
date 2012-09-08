@@ -258,8 +258,8 @@ _∸-tone_ {y = y} z≤n t≤u = ℕ≤.trans (n∸m≤n y _) t≤u
 s≤s x≤y ∸-tone z≤n = z≤n
 s≤s x≤y ∸-tone s≤s t≤u = x≤y ∸-tone t≤u
 
-∸-mono : ∀ k {x y} → x ≤ y → x ∸ k ≤ y ∸ k
-∸-mono k = _∸-tone_ (ℕ≤.refl {k})
+∸-mono' : ∀ k {x y} → x ≤ y → x ∸ k ≤ y ∸ k
+∸-mono' k = _∸-tone_ (ℕ≤.refl {k})
 
 ∸-anti : ∀ k {x y} → x ≤ y → k ∸ y ≤ k ∸ x
 ∸-anti k x≤y = _∸-tone_ x≤y (ℕ≤.refl {k})
