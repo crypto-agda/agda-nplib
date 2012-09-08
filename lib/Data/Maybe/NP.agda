@@ -3,7 +3,7 @@ module Data.Maybe.NP where
 
 open import Function
 import Level as L
-open L using (_⊔_; lift)
+open L using (_⊔_; lift; Lift)
 open import Data.Maybe public
 open import Category.Applicative
 import      Category.Monad as Cat
@@ -70,9 +70,26 @@ applicative = record { pure = just ; _⊛_  = _⊛_ }
     just f  ⊛ just x = just (f x)
     _       ⊛ _      = nothing
 
+_≡JAll_ : ∀ {a} {A : Set a} (x y : Maybe A) → Set a
+x ≡JAll y = All (λ y' → All (_≡_ y') y) x
+
+_≡JAny_ : ∀ {a} {A : Set a} (x y : Maybe A) → Set a
+x ≡JAny y = Any (λ y' → Any (_≡_ y') y) x
+
+≡JAll-refl : ∀ {a} {A : Set a} {x : Maybe A} → x ≡JAll x
+≡JAll-refl {x = just x}  = just (just ≡.refl)
+≡JAll-refl {x = nothing} = nothing
+
 just? : ∀ {a} {A : Set a} → Maybe A → Set
 just? nothing  = ⊥
 just? (just _) = ⊤
+
+just?→IsJust : ∀ {A : Set} {x : Maybe A} → just? x → IsJust x
+just?→IsJust {x = just _}  p = just _
+just?→IsJust {x = nothing} ()
+
+Any→just? : ∀ {A : Set} {P : A → Set} {x} → Any P x → just? x
+Any→just? (just _) = _
 
 data ⟦Maybe⟧ {a b r} {A : Set a} {B : Set b} (_∼_ : A → B → Set r) : Maybe A → Maybe B → Set (a ⊔ b ⊔ r) where
   ⟦just⟧ : ∀ {x₁ x₂} → (xᵣ : x₁ ∼ x₂) → ⟦Maybe⟧ _∼_ (just x₁) (just x₂)
@@ -82,6 +99,115 @@ data ⟦Maybe⟧ {a b r} {A : Set a} {B : Set b} (_∼_ : A → B → Set r) : M
                      (maybe {a} {b}) (maybe {a} {b})
 ⟦maybe⟧ _ _ justᵣ nothingᵣ (⟦just⟧ xᵣ) = justᵣ xᵣ
 ⟦maybe⟧ _ _ justᵣ nothingᵣ ⟦nothing⟧   = nothingᵣ
+
+Any-join? : ∀ {A : Set} {P : A → Set} {x} → Any (Any P) x → Any P (join? x)
+Any-join? (just p) = p
+
+All-join? : ∀ {A : Set} {P : A → Set} {x} → All (All P) x → All P (join? x)
+All-join? (just p) = p
+All-join? nothing  = nothing
+
+Any-join?′ : ∀ {A : Set} {P : A → Set} {x} → Any P (join? x) → Any (Any P) x
+Any-join?′ {x = just x}  p = just p
+Any-join?′ {x = nothing} ()
+
+All-join?′ : ∀ {A : Set} {P : A → Set} {x} → All P (join? x) → All (All P) x
+All-join?′ {x = just x}  p       = just p
+All-join?′ {x = nothing} nothing = nothing
+
+Any→IsJust : ∀ {A : Set} {P : A → Set} {x} → Any P x → IsJust x
+Any→IsJust (just _) = just _
+
+just≡→just? : ∀ {a} {A : Set a} {x} {y : A} → x ≡ just y → just? x
+just≡→just? ≡.refl = _
+
+just?-join? : ∀ {A : Set} {x : Maybe (Maybe A)} → just? (join? x) → just? x
+just?-join? = Any→just? ∘ Any-join?′ ∘ just?→IsJust
+
+Any-just?-join? : ∀ {A : Set} (x : Maybe (Maybe A)) → just? (join? x) → Any just? x
+Any-just?-join? (just (just _)) _ = just _
+Any-just?-join? (just nothing)  ()
+Any-just?-join? nothing         ()
+
+just?-map? : ∀ {a b} {A : Set a} {B : Set b} (f : A → B)
+               (x : Maybe A) → just? (map? f x) → just? x
+just?-map? f (just x) pf = _
+just?-map? f nothing  ()
+
+infix 4 _≗?_
+
+_≗?_ : ∀ {a b} {A : Set a} {B : Set b} →
+         (f g : A →? B) → Set _
+(f ≗? g) = ∀ x → f x ≡JAll g x
+
+_∘?_ : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c}
+       → B →? C → A →? B → A →? C
+f ∘? g = join? ∘ map? f ∘ g
+
+∘?-just : ∀ {a b} {A : Set a} {B : Set b} →
+            (f : A →? B) → f ∘? just ≗? f
+∘?-just f x = ≡JAll-refl
+
+just-∘? : ∀ {a b} {A : Set a} {B : Set b} →
+            (f : A →? B) → just ∘? f ≗? f
+just-∘? f x with f x
+just-∘? f x | just _  = just (just ≡.refl)
+just-∘? f x | nothing = nothing
+
+∘?-assoc : ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : Set d}
+             (f : C →? D) (g : B →? C) (h : A →? B)
+             → (f ∘? g) ∘? h ≗ f ∘? (g ∘? h)
+∘?-assoc f g h x with h x
+∘?-assoc f g h x | just _  = ≡.refl
+∘?-assoc f g h x | nothing = ≡.refl
+
+T[_] : ∀ {a b} {A : Set a} {B : Set b} (f? : A →? B) → Set (a L.⊔ b)
+T[_] {A = A} {B} f? = (x : A) → .{pf : just? (f? x)} → B
+
+F[_] : ∀ {a b} {A : Set a} {B : Set b} (f? : A →? B) → T[ f? ]
+F[ f? ] x {pf} with f? x
+F[ f? ] x      | just r  = r
+F[ f? ] x {()} | nothing
+
+T'[_] : ∀ {a b} {A : Set a} {B : Set b} (f? : A →? B) → Set (a L.⊔ b)
+T'[_] {A = A} {B} f? = (x : A) → IsJust (f? x) → B
+
+F'[_] : ∀ {a b} {A : Set a} {B : Set b} (f? : A →? B) → T'[ f? ]
+F'[ f? ] x pf with f? x
+F'[ f? ] x (just {y} _) | .(just y) = y
+
+-- F[ f? ] ⟶ F'[ f? ]
+
+module F[] where
+    _[≗]_ : ∀ {a b} {A : Set a} {B : Set b}
+              {f? g? : A →? B}
+              (f : T[ f? ]) (g : T[ g? ]) → Set _
+    f [≗] g = ∀ x {pf1} {pf2} → f x {pf1} ≡ g x {pf2}
+
+    [id] : ∀ {a} {A : Set a} → T[ just {A = A} ]
+    [id] = F[ just ]
+
+    {- might actually be wrong
+    []-just-≡ : ∀ {a b} {A : Set a} {B : Set b} {f? : A →? B} (f : T[ f? ]) {x} (pf : just? (f? x)) → just (f x {pf}) ≡ f? x
+    []-just-≡ {f? = f?} f {x} pf = {!!}
+    -}
+
+    _[∘]_ : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c}
+              {f? : B →? C} {g? : A →? B}
+            → T[ f? ] → T[ g? ] → T[ f? ∘? g? ]
+    _[∘]_ {f? = f?} {g?} f g x {pf} with g? x
+    _[∘]_ f g x {pf} | just y  = f y {pf}
+    _[∘]_ f g x {()} | nothing
+
+    {-
+    [id]-[∘] : ∀ {a b} {A : Set a} {B : Set b}
+                 {f? : A →? B} (f : T[ f? ]) → (F[ just ] [∘] f) [≗] f
+    [id]-[∘] {f? = f?} f x {pf1} {pf2} = just-injective {!(≡.sym (≡.trans ([]-just-≡ f pf2) ?))!}
+    -}
+
+    [∘]-[id] : ∀ {a b} {A : Set a} {B : Set b}
+                 {f? : A →? B} (f : T[ f? ]) → (f [∘] [id]) [≗] f
+    [∘]-[id] {f? = f?} f x {pf1} {pf2} = ≡.refl
 
 _⟦→?⟧_ : ∀ {a b c d} → (⟦Set⟧ {a} {b} c ⟦→⟧ ⟦Set⟧ {a} {b} d ⟦→⟧ ⟦Set⟧ _) _→?_ _→?_
 Aᵣ ⟦→?⟧ Bᵣ = Aᵣ ⟦→⟧ ⟦Maybe⟧ Bᵣ
@@ -134,12 +260,6 @@ IsNothing'≡nothing (just (lift ()))
 
 ≡nothing'IsNothing : ∀ {a} {A : Set a} {x : Maybe A} → x ≡ nothing → IsNothing x
 ≡nothing'IsNothing ≡.refl = nothing
-
-_≡JAll_ : ∀ {a} {A : Set a} (x y : Maybe A) → Set a
-x ≡JAll y = All (λ y' → All (_≡_ y') y) x
-
-_≡JAny_ : ∀ {a} {A : Set a} (x y : Maybe A) → Set a
-x ≡JAny y = Any (λ y' → Any (_≡_ y') y) x
 
 module MonadLemmas where
 

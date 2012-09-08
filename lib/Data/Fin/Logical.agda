@@ -2,7 +2,6 @@
 module Data.Fin.Logical where
 
 open import Function
-open import Level
 open import Data.Fin
 open import Data.Nat.Logical
 open import Relation.Binary
