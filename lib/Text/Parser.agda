@@ -4,6 +4,9 @@ open import Data.Unit
 open import Data.Char renaming (_==_ to _==ᶜ_)
 open import Data.String as String
 open import Data.List as L using (List; []; _∷_; null; filter)
+open import Data.Vec using (Vec; []; _∷_)
+import Data.BoundedVec as BV
+open BV using (BoundedVec)
 open import Data.Product.NP hiding (map)
 open import Data.Bool
 open import Function
@@ -78,22 +81,27 @@ p₁ <* p₂ = p₁ >>= λ x → p₂ *> pure x
 choices : ∀ {A} → List (Parser A) → Parser A
 choices = L.foldr _⟨|⟩_ empty
 
-{-
-mutual
-  many : ∀ {A} → Parser A → Parser (List A)
-  many p = some p ⟨|⟩ pure []
+vec : ∀ {A} n → Parser A → Parser (Vec A n)
+vec zero    p = pure []
+vec (suc n) p = ⟪ _∷_ · p · vec n p ⟫
 
-  some : ∀ {A} → Parser A → Parser (List A)
-  some p = pure _∷_ ⊛ p ⊛ many p
--}
+-- These are producing bounded vectors mainly for termination
+-- reasons.
+manyBV : ∀ {A} n → Parser A → Parser (BoundedVec A n)
+someBV : ∀ {A} n → Parser A → Parser (BoundedVec A (suc n))
 
-mutual
-  many : ∀ {A} → Parser A → ℕ → Parser (List A)
-  many _ 0       = empty
-  many p (suc n) = some p n ⟨|⟩ pure []
+manyBV 0       _ = empty
+manyBV (suc n) p = someBV n p ⟨|⟩ pure BV.[]
 
-  some : ∀ {A} → Parser A → ℕ → Parser (List A)
-  some p n = pure _∷_ ⊛ p ⊛ many p n
+someBV n p = ⟪ BV._∷_ · p · manyBV n p ⟫
+
+many : ∀ {A} n → Parser A → Parser (List A)
+some : ∀ {A} n → Parser A → Parser (List A)
+
+many 0       _ = empty
+many (suc n) p = some n p ⟨|⟩ pure []
+
+some n p = ⟪ _∷_ · p · many n p ⟫
 
 manySat : (Char → Bool) → Parser (List Char)
 manySat p []       = pure [] []
