@@ -4,7 +4,12 @@ open import Function
 open import Data.Fin public
 open import Data.Nat.NP using (ℕ; zero; suc; _<=_; module ℕ°) renaming (_+_ to _+ℕ_)
 open import Data.Bool
+import Data.Vec.NP as Vec
+open Vec using (Vec; []; _∷_; _∷ʳ_; allFin; lookup; rot₁) renaming (map to vmap)
+import Data.Vec.Properties as Vec
+open import Data.Maybe.NP
 open import Data.Sum as Sum
+open import Relation.Binary.PropositionalEquality as ≡
 
 _+′_ : ∀ {m n} (x : Fin m) (y : Fin n) → Fin (m +ℕ n)
 _+′_ {suc m} {n} zero y rewrite ℕ°.+-comm (suc m) n = inject+ _ y
@@ -32,10 +37,13 @@ cmp (suc m) n (suc x) with cmp m n x
 cmp (suc m) n (suc .(inject+ n x)) | bound x = bound (suc x)
 cmp (suc m) n (suc .(raise m x))   | free x  = free x
 
+max : ∀ n → Fin (suc n)
+max = fromℕ
+
 -- reverse x = n ∸ (1 + x)
 reverse : ∀ {n} → Fin n → Fin n
-reverse zero    = fromℕ _
-reverse (suc x) = inject₁ (reverse x)
+reverse {suc n} zero    = fromℕ n
+reverse {suc n} (suc x) = inject₁ (reverse {n} x)
 
 open import Data.Nat
 open import Data.Nat.Properties
@@ -65,3 +73,100 @@ toℕ-ℕ-lem {suc n} (suc x) = toℕ-ℕ-lem x
 reverse-old-lem : ∀ {n} (x : Fin n) → toℕ (reverse-old x) ≡ n ∸ suc (toℕ x)
 reverse-old-lem {zero} ()
 reverse-old-lem {suc n} x rewrite inject≤-lemma (n ℕ- x) (n∸m≤n (toℕ x) (suc n)) = toℕ-ℕ-lem x
+
+data FinView {n} : Fin (suc n) → Set where
+  `fromℕ   : FinView (fromℕ n)
+  `inject₁ : ∀ x → FinView (inject₁ x)
+
+sucFinView : ∀ {n} {i : Fin (suc n)} → FinView i → FinView (suc i)
+sucFinView `fromℕ = `fromℕ
+sucFinView (`inject₁ x) = `inject₁ (suc x)
+
+finView : ∀ {n} → (i : Fin (suc n)) → FinView i
+finView {zero}  zero    = `fromℕ
+finView {suc n} zero    = `inject₁ zero
+finView {suc n} (suc i) = sucFinView (finView i)
+finView {zero}  (suc ())
+
+module Modulo where
+  modq : ∀ {q} → Fin (suc q) → Maybe (Fin q)
+  modq {zero}  _       = nothing
+  modq {suc q} zero    = just zero
+  modq {suc q} (suc x) = map? suc (modq x)
+
+  modq′ : ∀ {q} → Fin (suc q) → Fin (suc q)
+  modq′ {zero}  _       = zero
+  modq′ {suc q} zero    = suc zero
+  modq′ {suc q} (suc x) = lift 1 suc (modq′ x)
+
+  modqq : ∀ {q} → Fin q → Fin q
+  modqq {zero}  x = x
+  modqq {suc q} x = modq′ x
+
+  -- Maybe (Fin n) ≅ Fin (suc n)
+
+  modq′′ : ∀ {q} → Fin (suc q) → Maybe (Fin q)
+  modq′′ x with modq′ x
+  ... | zero  = nothing
+  ... | suc y = just y
+
+  zero∃ : ∀ {q} → Fin q → Fin q
+  zero∃ {zero}  ()
+  zero∃ {suc q} _  = zero
+
+  sucmod : ∀ {q} → Fin q → Fin q
+  sucmod x with modq (suc x)
+  ... | nothing = zero∃ x
+  ... | just y  = y
+
+  modq-fromℕ : ∀ q → modq (fromℕ q) ≡ nothing
+  modq-fromℕ zero = refl
+  modq-fromℕ (suc q) rewrite modq-fromℕ q = refl
+
+  modq-inject₁ : ∀ {q} (i : Fin q) → modq (inject₁ i) ≡ just i
+  modq-inject₁ zero = refl
+  modq-inject₁ (suc i) rewrite modq-inject₁ i = refl
+
+  sucmod-fromℕ : ∀ q → sucmod (fromℕ q) ≡ zero
+  sucmod-fromℕ q rewrite modq-fromℕ q = refl
+
+  sucmod-inject₁ : ∀ {n} (i : Fin n) → sucmod (inject₁ i) ≡ suc i
+  sucmod-inject₁ i rewrite modq-inject₁ i = refl
+
+  lem-inject₁ : ∀ {n a} {A : Set a} (i : Fin n) (xs : Vec A n) x → lookup (inject₁ i) (xs ∷ʳ x) ≡ lookup i xs
+  lem-inject₁ zero    (x₀ ∷ xs) x₁ = refl
+  lem-inject₁ (suc i) (x₀ ∷ xs) x₁ = lem-inject₁ i xs x₁
+
+  lem-fromℕ : ∀ {n a} {A : Set a} (xs : Vec A n) x → lookup (fromℕ n) (xs ∷ʳ x) ≡ x
+  lem-fromℕ {zero}  []       x = refl
+  lem-fromℕ {suc n} (_ ∷ xs) x = lem-fromℕ xs x
+
+  lookup-sucmod : ∀ {n a} {A : Set a} (i : Fin (suc n)) (x : A) xs
+                 → lookup i (xs ∷ʳ x) ≡ lookup (sucmod i) (x ∷ xs)
+  lookup-sucmod i x xs with finView i
+  lookup-sucmod {n} .(fromℕ n) x xs | `fromℕ rewrite sucmod-fromℕ n = lem-fromℕ xs x
+  lookup-sucmod .(inject₁ x) x₁ xs | `inject₁ x rewrite sucmod-inject₁ x = lem-inject₁ x xs x₁
+
+  lookup-map : ∀ {n a b} {A : Set a} {B : Set b} (f : A → B) i (xs : Vec A n)
+               → lookup i (vmap f xs) ≡ f (lookup i xs)
+  lookup-map f zero    (x ∷ xs) = refl
+  lookup-map f (suc i) (x ∷ xs) = lookup-map f i xs
+
+  vec≗⇒≡ : ∀ {n a} {A : Set a} (xs ys : Vec A n) → flip lookup xs ≗ flip lookup ys → xs ≡ ys
+  vec≗⇒≡ []       []       _ = refl
+  vec≗⇒≡ (x ∷ xs) (y ∷ ys) p rewrite vec≗⇒≡ xs ys (p ∘ suc) | p zero = refl
+
+  lookup-sucmod-rot₁ : ∀ {n a} {A : Set a} (i : Fin n) (xs : Vec A n)
+                 → lookup i (rot₁ xs) ≡ lookup (sucmod i) xs
+  lookup-sucmod-rot₁ {zero} () xs
+  lookup-sucmod-rot₁ {suc n} i (x ∷ xs) = lookup-sucmod i x xs
+
+  lookup-rot₁-allFin : ∀ {n} i → lookup i (rot₁ (allFin n)) ≡ lookup i (vmap sucmod (allFin n))
+  lookup-rot₁-allFin {n} i rewrite lookup-sucmod-rot₁ i (allFin _)
+                                 | Vec.lookup-allFin (sucmod i)
+                                 | lookup-map sucmod i (allFin n)
+                                 | Vec.lookup∘tabulate id i
+                                 = refl
+
+  rot₁-map-sucmod : ∀ n → rot₁ (allFin n) ≡ vmap sucmod (allFin n)
+  rot₁-map-sucmod _ = vec≗⇒≡ _ _ lookup-rot₁-allFin
