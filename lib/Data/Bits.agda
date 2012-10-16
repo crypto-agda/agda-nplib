@@ -218,14 +218,13 @@ module PermutationSyntax-Props where
      -- rans {!⊛-dist-∙ (vmap _xor_ (op ∙ pad)) op xs!} (⊛-dist-∙ (vmap _xor_ pad) op xs)
 -}
 
-
+view∷ : ∀ {n a b} {A : Set a} {B : Set b} → (A → Vec A n → B) → Vec A (suc n) → B
+view∷ f (x ∷ xs) = f x xs
 
 sucBCarry : ∀ {n} → Bits n → Bits (1 + n)
-sucBCarry [] = 0b ∷ []
+sucBCarry []        = 0b ∷ []
 sucBCarry (0b ∷ xs) = 0b ∷ sucBCarry xs
-sucBCarry (1b ∷ xs) with sucBCarry xs
-... | 0b ∷ bs = 0b ∷ 1b ∷ bs
-... | 1b ∷ bs = 1b ∷ 0b ∷ bs
+sucBCarry (1b ∷ xs) = view∷ (λ x xs → x ∷ not x ∷ xs) (sucBCarry xs)
 
 sucB : ∀ {n} → Bits n → Bits n
 sucB = tail ∘ sucBCarry
