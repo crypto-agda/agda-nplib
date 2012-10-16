@@ -3,7 +3,7 @@ module Data.Vec.NP where
 import Level as L
 open import Category.Applicative
 open import Data.Vec public hiding (_⊛_; zipWith; zip; map; applicative)
-open import Data.Nat using (ℕ; suc; zero; _+_)
+open import Data.Nat.NP using (ℕ; suc; zero; _+_; module ℕ°)
 open import Data.Fin renaming (_+_ to _+ᶠ_)
 import Data.Fin.Props as F
 open import Data.Bool
@@ -46,6 +46,18 @@ module waiting-for-a-fix-in-the-stdlib where
     tabulate-∘ {zero}  f g = refl
     tabulate-∘ {suc n} f g =
       ≡.cong (_∷_ (f (g zero))) (tabulate-∘ f (g ∘ suc))
+
+    -- map is functorial.
+
+    map-id : ∀ {a n} {A : Set a} → map id ≗ id {A = Vec A n}
+    map-id []       = refl
+    map-id (x ∷ xs) = ≡.cong (_∷_ x) (map-id xs)
+
+    map-∘ : ∀ {a b c n} {A : Set a} {B : Set b} {C : Set c}
+            (f : B → C) (g : A → B) →
+            _≗_ {A = Vec A n} (map (f ∘ g)) (map f ∘ map g)
+    map-∘ f g []       = refl
+    map-∘ f g (x ∷ xs) = ≡.cong (_∷_ (f (g x))) (map-∘ f g xs)
 
 open waiting-for-a-fix-in-the-stdlib public
 
@@ -560,6 +572,33 @@ module BijectionSemantics {a b} {A : Set a} (bijKitᴬ : BijKit b A) where
 
     `⟨_↔_⟩-spec : ∀ {n} (i j : Fin n) (xs : Vec A n) → `⟨ i ↔ j ⟩ ∙ xs ≡ ⟨ i ↔ j ⟩ xs
     `⟨ i ↔ j ⟩-spec xs rewrite sym (P.`⟨ i ↔ j ⟩-spec xs) | fromPerm-spec P.`⟨ i ↔ j ⟩ xs = refl
+
+sum-∷ʳ : ∀ {n} x (xs : Vec ℕ n) → sum (xs ∷ʳ x) ≡ sum xs + x
+sum-∷ʳ x [] = ℕ°.+-comm x 0
+sum-∷ʳ x (x₁ ∷ xs) rewrite sum-∷ʳ x xs | ℕ°.+-assoc x₁ (sum xs) x = refl
+
+rot₁ : ∀ {n a} {A : Set a} → Vec A n → Vec A n
+rot₁ []       = []
+rot₁ (x ∷ xs) = xs ∷ʳ x
+
+rot : ∀ {n a} {A : Set a} → ℕ → Vec A n → Vec A n
+rot zero    xs = xs
+rot (suc n) xs = rot n (rot₁ xs)
+
+sum-rot₁ : ∀ {n} (xs : Vec ℕ n) → sum xs ≡ sum (rot₁ xs)
+sum-rot₁ [] = refl
+sum-rot₁ (x ∷ xs) rewrite sum-∷ʳ x xs = ℕ°.+-comm x _
+
+map-∷ʳ : ∀ {n a} {A : Set a} (f : A → ℕ) x (xs : Vec A n) → map f (xs ∷ʳ x) ≡ map f xs ∷ʳ f x
+map-∷ʳ f x [] = refl
+map-∷ʳ f x (x₁ ∷ xs) rewrite map-∷ʳ f x xs = refl
+
+sum-map-rot₁ : ∀ {n a} {A : Set a} (f : A → ℕ) (xs : Vec A n) → sum (map f (rot₁ xs)) ≡ sum (map f xs)
+sum-map-rot₁ f [] = refl
+sum-map-rot₁ f (x ∷ xs) rewrite ℕ°.+-comm (f x) (sum (map f xs))
+                              | ≡.sym (sum-∷ʳ (f x) (map f xs))
+                              | ≡.sym (map-∷ʳ f x xs)
+                              = refl
 
 private
   module Unused where
