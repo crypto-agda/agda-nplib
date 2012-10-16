@@ -28,7 +28,7 @@ module Search {i} {I : Set i} (`1 : I) (`2*_ : I → I)
   search-≗ {zero}  f g f≗g = f≗g []
   search-≗ {suc n} f g f≗g
     rewrite search-≗ (f ∘ 0∷_) (g ∘ 0∷_) (f≗g ∘ 0∷_)
-            | search-≗ (f ∘ 1∷_) (g ∘ 1∷_) (f≗g ∘ 1∷_) = refl
+          | search-≗ (f ∘ 1∷_) (g ∘ 1∷_) (f≗g ∘ 1∷_) = refl
 
   module Comm (∙-comm : ∀ {m} (x y : A m) → x ∙ y ≡ y ∙ x) where
 
