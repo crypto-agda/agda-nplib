@@ -58,6 +58,12 @@ i →ᵇ o = Bits i → Bits o
 _!_ : ∀ {a n} {A : Set a} → Vec A n → Fin n → A
 _!_ = flip lookup
 
+[0→_,1→_] : ∀ {a} {A : Set a} → A → A → Bit → A
+[0→ e₀ ,1→ e₁ ] b = if b then e₁ else e₀
+
+case_0→_1→_ : ∀ {a} {A : Set a} → Bit → A → A → A
+case b 0→ e₀ 1→ e₁ = if b then e₁ else e₀
+
 _==ᵇ_ : (b₀ b₁ : Bit) → Bool
 b₀ ==ᵇ b₁ = not (b₀ xor b₁)
 
