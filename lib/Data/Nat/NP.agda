@@ -200,6 +200,11 @@ dist-bounded (s≤s x≤f) (s≤s y≤f) = ≤-step (dist-bounded x≤f y≤f)
 2^-inj zero    = id
 2^-inj (suc k) = 2^-inj k ∘ 2*-inj
 
+cancel-*-left : ∀ i j {k} → suc k * i ≡ suc k * j → i ≡ j
+cancel-*-left i j {k}
+  rewrite ℕ°.*-comm (suc k) i
+        | ℕ°.*-comm (suc k) j = cancel-*-right i j {k}
+
 2ⁿ*0≡0 : ∀ n → ⟨2^ n * 0 ⟩ ≡ 0
 2ⁿ*0≡0 zero    = ≡.refl
 2ⁿ*0≡0 (suc n) = ≡.cong₂ _+_ (2ⁿ*0≡0 n) (2ⁿ*0≡0 n)
