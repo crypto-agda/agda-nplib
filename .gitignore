@@ -1,4 +1,5 @@
 \#*\#
 *~
 *.agdai
+.*.vim
 lib/html/
