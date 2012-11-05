@@ -3,7 +3,7 @@ module Data.Vec.NP where
 import Level as L
 open import Category.Applicative
 open import Data.Vec public hiding (_⊛_; zipWith; zip; map; applicative)
-open import Data.Nat.NP using (ℕ; suc; zero; _+_; module ℕ°)
+open import Data.Nat.NP using (ℕ; suc; zero; _+_; _*_; module ℕ°)
 open import Data.Fin renaming (_+_ to _+ᶠ_)
 import Data.Fin.Props as F
 open import Data.Bool
@@ -58,6 +58,10 @@ module waiting-for-a-fix-in-the-stdlib where
             _≗_ {A = Vec A n} (map (f ∘ g)) (map f ∘ map g)
     map-∘ f g []       = refl
     map-∘ f g (x ∷ xs) = ≡.cong (_∷_ (f (g x))) (map-∘ f g xs)
+
+    map-ext : ∀ {a b} {A : Set a} {B : Set b} {f g : A → B} {n} → f ≗ g → map f ≗ map {n = n} g
+    map-ext f≗g [] = refl
+    map-ext f≗g (x ∷ xs) rewrite f≗g x | map-ext f≗g xs = refl
 
 open waiting-for-a-fix-in-the-stdlib public
 
@@ -584,6 +588,10 @@ rot₁ (x ∷ xs) = xs ∷ʳ x
 rot : ∀ {n a} {A : Set a} → ℕ → Vec A n → Vec A n
 rot zero    xs = xs
 rot (suc n) xs = rot n (rot₁ xs)
+
+sum-distribˡ : ∀ {A : Set} {n} f k (xs : Vec A n) → sum (map (λ x → k * f x) xs) ≡ k * sum (map f xs)
+sum-distribˡ f k [] = ℕ°.*-comm 0 k
+sum-distribˡ f k (x ∷ xs) rewrite sum-distribˡ f k xs = sym (proj₁ ℕ°.distrib k _ _)
 
 sum-rot₁ : ∀ {n} (xs : Vec ℕ n) → sum xs ≡ sum (rot₁ xs)
 sum-rot₁ [] = refl
