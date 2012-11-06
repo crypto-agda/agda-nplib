@@ -3,8 +3,9 @@ module Data.Vec.NP where
 import Level as L
 open import Category.Applicative
 open import Data.Vec public hiding (_⊛_; zipWith; zip; map; applicative)
-open import Data.Nat.NP using (ℕ; suc; zero; _+_; _*_; module ℕ° ; +-interchange)
-open import Data.Fin renaming (_+_ to _+ᶠ_)
+open import Data.Nat.NP using (ℕ; suc; zero; _+_; _*_; module ℕ° ; +-interchange ; _≤_)
+open import Data.Nat.Properties using (_+-mono_)
+open import Data.Fin hiding (_≤_) renaming (_+_ to _+ᶠ_) 
 import Data.Fin.Props as F
 open import Data.Bool
 open import Data.Product hiding (map; zip; swap)
@@ -596,6 +597,10 @@ sum-distribˡ f k (x ∷ xs) rewrite sum-distribˡ f k xs = sym (proj₁ ℕ°.d
 sum-linear : ∀ {A : Set} {n} f g (xs : Vec A n) → sum (map (λ x → f x + g x) xs) ≡ sum (map f xs) + sum (map g xs)
 sum-linear f g [] = refl
 sum-linear f g (x ∷ xs) rewrite sum-linear f g xs = +-interchange (f x) (g x) (sum (map f xs)) (sum (map g xs))
+
+sum-mono : ∀ {A : Set} {n} f g (mono : ∀ x → f x ≤ g x)(xs : Vec A n) → sum (map f xs) ≤ sum (map g xs)
+sum-mono f g f≤°g [] = Data.Nat.NP.z≤n
+sum-mono f g f≤°g (x ∷ xs) = f≤°g x +-mono sum-mono f g f≤°g xs
 
 sum-rot₁ : ∀ {n} (xs : Vec ℕ n) → sum xs ≡ sum (rot₁ xs)
 sum-rot₁ [] = refl
