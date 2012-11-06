@@ -1,3 +1,4 @@
+open import Type
 open import Data.Maybe.NP as Maybe
 open import Data.Nat
 open import Data.Unit
@@ -18,7 +19,7 @@ module Text.Parser.Partial where
 open M? L.zero using () renaming (_=<<_ to _=<<?_; _⊛_ to _⊛?_; join to join?)
 open M⊥ L.zero using () renaming (_=<<_ to _=<<⊥_; _⊛_ to _⊛⊥_; _>>=_ to _>>=⊥_; _<$>_ to map⊥)
 
-Parser⊥ : Set → Set
+Parser⊥ : ★ → ★
 Parser⊥ A = List Char → (Maybe (A × List Char))⊥
 
 pure : ∀ {A} → A → Parser⊥ A

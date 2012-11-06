@@ -1,5 +1,6 @@
 module Text.Printer where
 
+open import Data.Type
 open import Data.String
 open import Data.Nat
 open import Data.Nat.Show
@@ -8,10 +9,10 @@ open import Function
 open import Relation.Nullary
 open import Relation.Nullary.Decidable
 
-ShowS : Set
+ShowS : ★
 ShowS = String → String
 
-Pr : Set → Set
+Pr : ★ → ★
 Pr A = A → ShowS
 
 `_ : String → ShowS
@@ -20,7 +21,7 @@ Pr A = A → ShowS
 parenBase : ShowS → ShowS
 parenBase doc = ` "(" ∘ doc ∘ ` ")"
 
-record PrEnv : Set where
+record PrEnv : ★ where
   constructor mk
   field
     level : ℕ

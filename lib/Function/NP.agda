@@ -1,6 +1,7 @@
 {-# OPTIONS --universe-polymorphism #-}
 module Function.NP where
 
+open import Type
 open import Function       public
 open import Data.Nat       using (ℕ; zero; suc; _+_; _*_; fold)
 open import Data.Bool      using (Bool)
@@ -17,11 +18,11 @@ id-app = rawIApplicative
 _→⟨_⟩_ : ∀ {a b} (A : Set a) (n : ℕ) (B : Set b) → Set (N-ary-level a b n)
 A →⟨ n ⟩ B = N-ary n A B
 
-_→⟨_⟩₀_ : ∀ (A : Set) (n : ℕ) (B : Set) → Set
+_→⟨_⟩₀_ : ∀ (A : ★) (n : ℕ) (B : ★) → ★
 A →⟨ zero  ⟩₀ B = B
 A →⟨ suc n ⟩₀ B = A → A →⟨ n ⟩₀ B
 
-_→⟨_⟩₁_ : ∀ (A : Set) (n : ℕ) (B : Set₁) → Set₁
+_→⟨_⟩₁_ : ∀ (A : ★) (n : ℕ) (B : ★₁) → ★₁
 A →⟨ zero  ⟩₁ B = B
 A →⟨ suc n ⟩₁ B = A → A →⟨ n ⟩₁ B
 
@@ -81,19 +82,19 @@ _$⟨_⟩_ f n = nest n f
 … ⦃ x ⦄ = x
 
 module Combinators where
-    S : ∀ {A B C : Set} →
+    S : ∀ {A B C : ★} →
           (A → B → C) →
           (A → B) →
           (A → C)
     S = _ˢ_
 
-    K : ∀ {A B : Set} → A → B → A
+    K : ∀ {A B : ★} → A → B → A
     K = const
 
     -- B ≗ _∘_
-    B : ∀ {A B C : Set} → (B → C) → (A → B) → A → C
+    B : ∀ {A B C : ★} → (B → C) → (A → B) → A → C
     B = S (K S) K
 
     -- C ≗ flip
-    C : ∀ {A B C : Set} → (A → B → C) → B → A → C
+    C : ∀ {A B C : ★} → (A → B → C) → B → A → C
     C = S (S (K (S (K S) K)) S) (K K)

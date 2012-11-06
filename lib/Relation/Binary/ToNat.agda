@@ -1,3 +1,4 @@
+open import Type
 import Data.Nat.NP as ℕ
 open ℕ using (ℕ; zero; suc; module ℕ≤)
 open import Data.Bool
@@ -14,7 +15,7 @@ module Relation.Binary.ToNat {a} {A : Set a} (f : A → ℕ) (f-inj : ∀ {x y} 
 _<=_ : A → A → Bool
 _<=_ = ℕ._<=_ on f 
 
-_≤_ : A → A → Set
+_≤_ : A → A → ★
 x ≤ y = T (x <= y)
 
 _⊓_ : A → A → A

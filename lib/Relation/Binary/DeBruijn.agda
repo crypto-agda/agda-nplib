@@ -113,10 +113,10 @@ module ImportProps where
   -- Import 0 k₂ α
 
 {-
-Bijℕ : Set
+Bijℕ : ★
 Bijℕ = ∃[ n ](Vec (Maybe (Fin n)) n)
 
-Bijℕ : Set
+Bijℕ : ★
 Bijℕ = List (Maybe ℕ)
 -}
 

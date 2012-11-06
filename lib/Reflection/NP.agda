@@ -1,5 +1,6 @@
 module Reflection.NP where
 
+open import Type
 import Level as L
 open L using (Level; _⊔_)
 open import Data.Nat using (ℕ; zero; suc) renaming (_⊔_ to _⊔ℕ_)
@@ -10,7 +11,7 @@ open import Data.Product
 open import Reflection public
 open import Function
 
-Args : Set
+Args : ★
 Args = List (Arg Term)
 
 private
@@ -21,15 +22,15 @@ _==_ : Name → Name → Bool
 _==_ = primQNameEquality
 
 private
-  _→⟨_⟩_ : ∀ (A : Set) (n : ℕ) (B : Set) → Set
+  _→⟨_⟩_ : ∀ (A : ★) (n : ℕ) (B : ★) → ★
   A →⟨ zero  ⟩ B = B
   A →⟨ suc n ⟩ B = A → A →⟨ n ⟩ B
 
-  when : ∀ {A : Set} → Bool → Maybe A → Maybe A
+  when : ∀ {A : ★} → Bool → Maybe A → Maybe A
   when true  x = x
   when false _ = nothing
 
-  mapMaybe : ∀ {A B : Set} → (A → B) → Maybe A → Maybe B
+  mapMaybe : ∀ {A B : ★} → (A → B) → Maybe A → Maybe B
   mapMaybe f (just x) = just (f x)
   mapMaybe f nothing  = nothing
 
@@ -45,7 +46,7 @@ argᵛʳ = arg visible relevant
 argʰʳ : ∀{A} → A → Arg A
 argʰʳ = arg hidden relevant
 
-Flags : Set
+Flags : ★
 Flags = List (Visibility × Relevance)
 
 app` : (Args → Term) → (fs : Flags) → Term →⟨ length fs ⟩ Term
@@ -63,7 +64,7 @@ def` x = app` (def x)
 var` : ℕ → (fs : Flags) → Term →⟨ length fs ⟩ Term
 var` x = app` (var x)
 
-coe : ∀ {A : Set} {z : A} n → (Term →⟨ length (replicate n z) ⟩ Term) → Term →⟨ n ⟩ Term
+coe : ∀ {A : ★} {z : A} n → (Term →⟨ length (replicate n z) ⟩ Term) → Term →⟨ n ⟩ Term
 coe zero    t = t
 coe (suc n) f = λ t → coe n (f t)
 
@@ -82,18 +83,18 @@ sort₀ = lit 0
 sort₁ : Sort
 sort₁ = lit 1
 
-`Set₀ : Term
-`Set₀ = sort sort₀
+`★₀ : Term
+`★₀ = sort sort₀
 
 el₀ : Term → Type
 el₀ = el sort₀
 
--- Builds a type variable (of type Set₀)
+-- Builds a type variable (of type ★₀)
 ``var₀ : ℕ → Args → Type
 ``var₀ n args = el₀ (var n args)
 
-``Set₀ : Type
-``Set₀ = el sort₁ `Set₀
+``★₀ : Type
+``★₀ = el sort₁ `★₀
 
 unEl : Type → Term
 unEl (el _ tm) = tm
@@ -193,7 +194,7 @@ module Ex where
     f : ℕ → ℕ → ℕ
     g : {x y : ℕ} → ℕ
     h : {x y : ℕ} {{z : ℕ}} (t u : ℕ) {v : ℕ} → ℕ
-  H : Set
+  H : ★
   H = {x y : ℕ} {{z : ℕ}} (t u : ℕ) {v : ℕ} → ℕ
   postulate
     h₂ : H

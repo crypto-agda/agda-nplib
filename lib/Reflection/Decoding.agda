@@ -1,3 +1,4 @@
+open import Type
 open import Reflection.NP
 open import Data.Maybe
 open import Data.Nat
@@ -16,7 +17,7 @@ module Reflection.Decoding where
 module M? = Cat.RawMonad (Data.Maybe.monad {zero})
 open M? using () renaming (_⊛_ to _⊛?_)
 
-D : Set → Set
+D : ★ → ★
 D A = Term → Maybe A
 
 pureD : ∀ {A} → A → D A
@@ -50,10 +51,10 @@ infixl 4 _⊛D_
 _⊛D_ : ∀ {A B} → D (A → B) → D A → D B
 _⊛D_ df da = df >>= λ f → da >>= λ a → pureD (f a)
 
-ArgSpec : Set
+ArgSpec : ★
 ArgSpec = Implicit? × Relevant?
 
-ArgSpecs : Set
+ArgSpecs : ★
 ArgSpecs = List ArgSpec
 
 deArg : ArgSpec → Arg Term → Maybe Term

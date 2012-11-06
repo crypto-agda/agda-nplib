@@ -1,5 +1,6 @@
 module Data.Atom where
 
+open import Type
 open import Data.Nat.NP as Nat
 open import Data.Bool
 open import Data.List
@@ -7,7 +8,7 @@ open import Function
 open import Relation.Binary.PropositionalEquality
 
 module Internals where
-  Atom : Set
+  Atom : ★
   Atom = ℕ
 
   _==ᴬ_ : (x y : Atom) → Bool
@@ -24,7 +25,7 @@ module Internals where
   injᴬ = id
 
 abstract
-  Atom : Set
+  Atom : ★
   Atom = Internals.Atom
 
   _==ᴬ_ : (x y : Atom) → Bool

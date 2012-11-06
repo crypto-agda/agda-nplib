@@ -39,16 +39,16 @@ module ≗-Reasoning {a b} {A : Set a} {B : Set b} where
   open Setoid-Reasoning (A →-setoid B) public renaming (_≈⟨_⟩_ to _≗⟨_⟩_)
 
 data ⟦≡⟧ {a₁ a₂ aᵣ}
-         {A₁ A₂} (Aᵣ : ⟦Set⟧ {a₁} {a₂} aᵣ A₁ A₂)
+         {A₁ A₂} (Aᵣ : ⟦★⟧ {a₁} {a₂} aᵣ A₁ A₂)
          {x₁ x₂} (xᵣ : Aᵣ x₁ x₂)
-       : (Aᵣ ⟦→⟧ ⟦Set⟧ aᵣ) (_≡_ x₁) (_≡_ x₂) where
-    -- : ∀ {y₁ y₂} (yᵣ : Aᵣ y₁ y₂) → x₁ ≡ y₁ → x₂ ≡ y₂ → Set
+       : (Aᵣ ⟦→⟧ ⟦★⟧ aᵣ) (_≡_ x₁) (_≡_ x₂) where
+    -- : ∀ {y₁ y₂} (yᵣ : Aᵣ y₁ y₂) → x₁ ≡ y₁ → x₂ ≡ y₂ → ★
   ⟦refl⟧ : ⟦≡⟧ Aᵣ xᵣ xᵣ refl refl
 
 -- Double checking level 0 with a direct ⟦_⟧ encoding
 private
-  ⟦≡⟧′ : (∀⟨ Aᵣ ∶ ⟦Set₀⟧ ⟩⟦→⟧ Aᵣ ⟦→⟧ Aᵣ ⟦→⟧ ⟦Set₀⟧) _≡_ _≡_
+  ⟦≡⟧′ : (∀⟨ Aᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ Aᵣ ⟦→⟧ Aᵣ ⟦→⟧ ⟦★₀⟧) _≡_ _≡_
   ⟦≡⟧′ = ⟦≡⟧
 
-  ⟦refl⟧′ : (∀⟨ Aᵣ ∶ ⟦Set₀⟧ ⟩⟦→⟧ ∀⟨ xᵣ ∶ Aᵣ ⟩⟦→⟧ ⟦≡⟧ Aᵣ xᵣ xᵣ) refl refl
+  ⟦refl⟧′ : (∀⟨ Aᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ ∀⟨ xᵣ ∶ Aᵣ ⟩⟦→⟧ ⟦≡⟧ Aᵣ xᵣ xᵣ) refl refl
   ⟦refl⟧′ _ _ = ⟦refl⟧

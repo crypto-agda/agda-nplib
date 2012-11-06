@@ -1,6 +1,7 @@
 {-# OPTIONS --universe-polymorphism #-}
 module Data.Nat.NP where
 
+open import Type
 import Algebra
 open import Algebra.FunctionProperties.NP
 open import Data.Nat public hiding (module GeneralisedArithmetic; module ≤-Reasoning; fold)
@@ -391,13 +392,13 @@ module ↑-Props where
 
 module InflModule where
   -- Inflationary functions
-  Infl< : (f : ℕ → ℕ) → Set
+  Infl< : (f : ℕ → ℕ) → ★
   Infl< f = ∀ {x} → x < f x
 
-  Infl : (f : ℕ → ℕ) → Set
+  Infl : (f : ℕ → ℕ) → ★
   Infl f = Infl< (suc ∘ f)
 
-  InflT< : (f : Endo (Endo ℕ)) → Set
+  InflT< : (f : Endo (Endo ℕ)) → ★
   InflT< f = ∀ {g} → Infl< g → Infl< (f g)
 
 {-
@@ -457,7 +458,7 @@ module fold-Props where
   fold-^ m (suc n) rewrite fold-^ m n = ?
 -}
 
-  cong-fold : ∀ {A : Set} {f g : Endo A} (f≗g : f ≗ g) {z} → fold z f ≗ fold z g
+  cong-fold : ∀ {A : ★} {f g : Endo A} (f≗g : f ≗ g) {z} → fold z f ≗ fold z g
   cong-fold eq zero = ≡.refl
   cong-fold eq {z} (suc x) rewrite cong-fold eq {z} x = eq _
 
@@ -613,12 +614,12 @@ module ack-Props where
    ∎
      where open ≤-Reasoning
 
-  Mon : (f : ℕ → ℕ) → Set
+  Mon : (f : ℕ → ℕ) → ★
   Mon f = ∀ {x y} → x ≤ y → f x ≤ f y
   open InflModule
 
 
-  ℕ-ind : ∀ (P : ℕ → Set) → P zero → (∀ {n} → P n → P (suc n)) → ∀ {n} → P n
+  ℕ-ind : ∀ (P : ℕ → ★) → P zero → (∀ {n} → P n → P (suc n)) → ∀ {n} → P n
   ℕ-ind P P0 PS {zero} = P0
   ℕ-ind P P0 PS {suc n} = PS (ℕ-ind P P0 PS)
 
@@ -635,7 +636,7 @@ module ack-Props where
     where open ≤-Reasoning
   fold-mon fmon finfl< (s≤s m≤n) = fmon (fold-mon fmon finfl< m≤n)
 
-  MonT : Endo (Endo ℕ) → Set
+  MonT : Endo (Endo ℕ) → ★
   MonT g = ∀ {f} → Mon f → Infl< f → Mon (g f)
 
   fold-mon' : ∀ {f g} → Mon f → Infl< f → MonT g → InflT< g → ∀ {n} → Mon (fold f g n)
@@ -857,7 +858,7 @@ module GeneralisedArithmetic {a} {A : Set a} (0# : A) (1+ : A → A) where
   -- hyperop a n b = fold exp
 
 module == where
-  _≈_ : (m n : ℕ) → Set
+  _≈_ : (m n : ℕ) → ★
   m ≈ n = T (m == n)
 
   subst : ∀ {ℓ} → Substitutive _≈_ ℓ
@@ -889,7 +890,7 @@ module == where
   open Setoid setoid public hiding (refl; sym; trans; _≈_)
 
 {-
-data _`≤?`_↝_ : (m n : ℕ) → Dec (m ≤ n) → Set where
+data _`≤?`_↝_ : (m n : ℕ) → Dec (m ≤ n) → ★ where
   z≤?n     : ∀ {n} → zero `≤?` n ↝ yes z≤n
   s≤?z     : ∀ {m} → suc m `≤?` zero ↝ no λ()
   s≤?s-yes : ∀ {m n m≤n} → m `≤?` n ↝ yes m≤n → suc m `≤?` suc n ↝ yes (s≤s m≤n)
@@ -909,7 +910,7 @@ suc _  <= zero   = false
 suc m  <= suc n  = m <= n
 
 module <= where
-  ℛ : ℕ → ℕ → Set
+  ℛ : ℕ → ℕ → ★
   ℛ x y = T (x <= y)
 
   sound : ∀ m n → ℛ m n → m ≤ n
