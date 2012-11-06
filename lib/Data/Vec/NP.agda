@@ -3,7 +3,7 @@ module Data.Vec.NP where
 import Level as L
 open import Category.Applicative
 open import Data.Vec public hiding (_⊛_; zipWith; zip; map; applicative)
-open import Data.Nat.NP using (ℕ; suc; zero; _+_; _*_; module ℕ°)
+open import Data.Nat.NP using (ℕ; suc; zero; _+_; _*_; module ℕ° ; +-interchange)
 open import Data.Fin renaming (_+_ to _+ᶠ_)
 import Data.Fin.Props as F
 open import Data.Bool
@@ -592,6 +592,10 @@ rot (suc n) xs = rot n (rot₁ xs)
 sum-distribˡ : ∀ {A : Set} {n} f k (xs : Vec A n) → sum (map (λ x → k * f x) xs) ≡ k * sum (map f xs)
 sum-distribˡ f k [] = ℕ°.*-comm 0 k
 sum-distribˡ f k (x ∷ xs) rewrite sum-distribˡ f k xs = sym (proj₁ ℕ°.distrib k _ _)
+
+sum-linear : ∀ {A : Set} {n} f g (xs : Vec A n) → sum (map (λ x → f x + g x) xs) ≡ sum (map f xs) + sum (map g xs)
+sum-linear f g [] = refl
+sum-linear f g (x ∷ xs) rewrite sum-linear f g xs = +-interchange (f x) (g x) (sum (map f xs)) (sum (map g xs))
 
 sum-rot₁ : ∀ {n} (xs : Vec ℕ n) → sum xs ≡ sum (rot₁ xs)
 sum-rot₁ [] = refl

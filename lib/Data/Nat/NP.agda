@@ -41,6 +41,23 @@ sucx≰x : ∀ x → suc x ≰ x
 sucx≰x zero    = λ()
 sucx≰x (suc x) = sucx≰x x ∘ ≤-pred
 
+a⊓b≡a : ∀ {a b} → a ≤ b → a ⊓ b ≡ a
+a⊓b≡a z≤n = ≡.refl
+a⊓b≡a (s≤s a≤b) rewrite a⊓b≡a a≤b = ≡.refl
+
+total-≤ : ∀ a b → a ≤ b ⊎ b ≤ a
+total-≤ zero b = inj₁ z≤n
+total-≤ (suc a) zero = inj₂ z≤n
+total-≤ (suc a) (suc b) with total-≤ a b
+... | inj₁ p = inj₁ (s≤s p)
+... | inj₂ p = inj₂ (s≤s p)
+
+a≡a⊓b+a∸b : ∀ a b → a ≡ a ⊓ b + (a ∸ b)
+a≡a⊓b+a∸b zero zero = ≡.refl
+a≡a⊓b+a∸b zero (suc b) = ≡.refl
+a≡a⊓b+a∸b (suc a) zero = ≡.refl
+a≡a⊓b+a∸b (suc a) (suc b) rewrite ≡.sym (a≡a⊓b+a∸b a b) = ≡.refl
+
 ¬n≤x<n : ∀ n {x} → n ≤ x → x < n → ⊥
 ¬n≤x<n n p q = sucx≰x _ (ℕ≤.trans q p)
 
