@@ -1,6 +1,7 @@
 module Data.Fin.NP where
 
 open import Function
+open import Data.Empty
 open import Data.Fin public
 open import Data.Nat.NP using (ℕ; zero; suc; _<=_; module ℕ°) renaming (_+_ to _+ℕ_)
 open import Data.Bool
@@ -10,6 +11,9 @@ import Data.Vec.Properties as Vec
 open import Data.Maybe.NP
 open import Data.Sum as Sum
 open import Relation.Binary.PropositionalEquality as ≡
+
+suc-injective : ∀ {m}{i j : Fin m} → Fin.suc i ≡ suc j → i ≡ j
+suc-injective refl = refl
 
 _+′_ : ∀ {m n} (x : Fin m) (y : Fin n) → Fin (m +ℕ n)
 _+′_ {suc m} {n} zero y rewrite ℕ°.+-comm (suc m) n = inject+ _ y
@@ -94,6 +98,24 @@ module Modulo where
   modq {suc q} zero    = just zero
   modq {suc q} (suc x) = map? suc (modq x)
 
+  modq-inj : ∀ {q} (i j : Fin (suc q)) → modq i ≡ modq j → i ≡ j
+  modq-inj {zero} zero zero eq = refl
+  modq-inj {zero} zero (suc ()) eq
+  modq-inj {zero} (suc ()) zero eq
+  modq-inj {zero} (suc ()) (suc ()) eq
+  modq-inj {suc q} zero zero eq = refl
+  modq-inj {suc q} zero (suc j) eq with modq j
+  modq-inj {suc q} zero (suc j) () | nothing
+  modq-inj {suc q} zero (suc j) () | just j'
+  modq-inj {suc q} (suc i) zero eq with modq i
+  modq-inj {suc q} (suc i) zero () | just x
+  modq-inj {suc q} (suc i) zero () | nothing
+  modq-inj {suc q} (suc i) (suc j) eq with modq i | modq j | modq-inj i j
+  modq-inj {suc q} (suc i) (suc j) eq | just x | just x₁ | p = cong suc (p (cong just (suc-injective (just-injective eq))))
+  modq-inj {suc q} (suc i) (suc j) () | just x | nothing | p
+  modq-inj {suc q} (suc i) (suc j) () | nothing | just x | p
+  modq-inj {suc q} (suc i) (suc j) eq | nothing | nothing | p = cong suc (p refl)
+
   modq′ : ∀ {q} → Fin (suc q) → Fin (suc q)
   modq′ {zero}  _       = zero
   modq′ {suc q} zero    = suc zero
@@ -118,6 +140,20 @@ module Modulo where
   sucmod x with modq (suc x)
   ... | nothing = zero∃ x
   ... | just y  = y
+
+  modq-suc : ∀ {q} (i j : Fin q) → modq (suc i) ≢ just (zero∃ j)
+  modq-suc {zero} () () eq
+  modq-suc {suc q} i j eq with modq i
+  modq-suc {suc q} i j () | just x
+  modq-suc {suc q} i j () | nothing
+
+
+  sucmod-inj : ∀ {q}(i j : Fin q) → sucmod i ≡ sucmod j → i ≡ j
+  sucmod-inj {q} i j eq with modq (suc i) | modq (suc j) | modq-inj (suc i) (suc j) | modq-suc i j | modq-suc j i
+  sucmod-inj i j eq | just x | just x₁ | p | _ | _ = suc-injective (p (cong just eq))
+  sucmod-inj i j eq | just x | nothing | p | ni | nj = ⊥-elim (ni (cong Maybe.just eq))
+  sucmod-inj i j eq | nothing | just x | p | ni | nj = ⊥-elim (nj (cong Maybe.just (sym eq)))
+  sucmod-inj i j eq | nothing | nothing | p | _ | _ = suc-injective (p refl)
 
   modq-fromℕ : ∀ q → modq (fromℕ q) ≡ nothing
   modq-fromℕ zero = refl
