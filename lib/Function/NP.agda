@@ -77,7 +77,7 @@ _$⟨_⟩_ : ∀ {a} {A : Set a} → Endo A → ℕ → Endo A
 _$⟨_⟩_ f n = nest n f
 
 -- If you run a version of Agda without the support of instance
--- arguments, simply comment this definition, very few code rely on it.
+-- arguments, simply comment this definition, very little code rely on it.
 … : ∀ {a} {A : Set a} ⦃ x : A ⦄ → A
 … ⦃ x ⦄ = x
 

@@ -598,9 +598,9 @@ sum-linear : ∀ {A : Set} {n} f g (xs : Vec A n) → sum (map (λ x → f x + g
 sum-linear f g [] = refl
 sum-linear f g (x ∷ xs) rewrite sum-linear f g xs = +-interchange (f x) (g x) (sum (map f xs)) (sum (map g xs))
 
-sum-mono : ∀ {A : Set} {n} f g (mono : ∀ x → f x ≤ g x)(xs : Vec A n) → sum (map f xs) ≤ sum (map g xs)
-sum-mono f g f≤°g [] = Data.Nat.NP.z≤n
-sum-mono f g f≤°g (x ∷ xs) = f≤°g x +-mono sum-mono f g f≤°g xs
+sum-mono : ∀ {A : Set} {n f g} (mono : ∀ x → f x ≤ g x)(xs : Vec A n) → sum (map f xs) ≤ sum (map g xs)
+sum-mono f≤°g [] = Data.Nat.NP.z≤n
+sum-mono f≤°g (x ∷ xs) = f≤°g x +-mono sum-mono f≤°g xs
 
 sum-rot₁ : ∀ {n} (xs : Vec ℕ n) → sum xs ≡ sum (rot₁ xs)
 sum-rot₁ [] = refl
