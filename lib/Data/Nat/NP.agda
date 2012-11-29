@@ -20,6 +20,8 @@ open ≡ using (_≡_; _≢_; _≗_; module ≡-Reasoning)
 module ℕ°   = Algebra.CommutativeSemiring Props.commutativeSemiring
 module ℕcmp = StrictTotalOrder Props.strictTotalOrder
 module ℕ≤   = DecTotalOrder    decTotalOrder
+module ℕ+   = Algebra.CommutativeMonoid ℕ°.+-commutativeMonoid
+module ℕ+′  = Algebra.Monoid ℕ°.+-monoid
 module ⊔°   = Algebra.CommutativeSemiringWithoutOne ⊔-⊓-0-commutativeSemiringWithoutOne
 
 module ≤-Reasoning where
