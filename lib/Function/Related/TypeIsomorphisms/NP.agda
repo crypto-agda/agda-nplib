@@ -83,10 +83,10 @@ Fin∘suc↔Maybe∘Fin {n}
         to (suc n) = just n
 
 Lift↔id : ∀ {a} {A : Set a} → Lift {a} {a} A ↔ A
-Lift↔id = λ {a} {A} → record { to = →-to-⟶ lower
-                             ; from = →-to-⟶ lift
-                             ; inverse-of = record { left-inverse-of = λ { (lift x) → ≡.refl }
-                                                   ; right-inverse-of = λ _ → ≡.refl } }
+Lift↔id = record { to = →-to-⟶ lower
+                 ; from = →-to-⟶ lift
+                 ; inverse-of = record { left-inverse-of = λ { (lift x) → ≡.refl }
+                                       ; right-inverse-of = λ _ → ≡.refl } }
 
 Maybe⊥↔⊤ : Maybe ⊥ ↔ ⊤
 Maybe⊥↔⊤ = (proj₂ CMon.identity ⊤ ∘ id ⊎-cong (sym (Lift↔id {A = ⊥}))) ∘ Maybe↔⊤⊎
