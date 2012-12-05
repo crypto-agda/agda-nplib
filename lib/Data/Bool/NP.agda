@@ -8,9 +8,8 @@ import Data.Bool.Properties as B
 open import Data.Unit using (⊤)
 open import Data.Product
 open import Data.Sum
-open import Data.Indexed using (_⟨_⟩°_)
 open import Data.Nat using (ℕ; _≤_; z≤n; s≤s; _⊓_; _⊔_; _∸_)
-open import Function
+open import Function.NP
 open import Relation.Binary.NP
 open import Relation.Binary.Logical
 open import Relation.Nullary
