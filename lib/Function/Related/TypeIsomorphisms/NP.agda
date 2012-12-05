@@ -7,7 +7,7 @@ open import Type
 import Function as F
 open import Data.Fin using (Fin; zero; suc)
 open import Data.Vec using (Vec; []; _∷_)
-open import Data.Nat using (ℕ; zero; suc)
+open import Data.Nat using (ℕ; zero; suc; _+_)
 open import Data.Maybe.NP
 open import Data.Product
 --open import Data.Product.N-ary
@@ -15,13 +15,20 @@ open import Data.Sum renaming (map to map⊎)
 open import Data.Unit
 open import Data.Empty
 open import Function.Equality using (_⟨$⟩_)
-open import Function.Related
+open import Function.Related as FR
 open import Function.Related.TypeIsomorphisms public
 open import Function.Inverse using (_↔_; _∘_; sym; id; module Inverse)
 open import Relation.Binary.Product.Pointwise
 open import Relation.Binary.Sum
 import Relation.Binary.PropositionalEquality as ≡
 open ≡ using (→-to-⟶)
+
+module ×-CMon = CommutativeMonoid (×-CommutativeMonoid FR.bijection L.zero)
+module ⊎-CMon = CommutativeMonoid (⊎-CommutativeMonoid FR.bijection L.zero)
+module ×⊎°    = CommutativeSemiring (×⊎-CommutativeSemiring FR.bijection L.zero)
+
+swap-iso : ∀ {A B} → (A × B) ↔ (B × A)
+swap-iso = ×-CMon.comm _ _
 
 Maybe↔⊤⊎ : ∀ {a} {A : Set a} → Maybe A ↔ (⊤ ⊎ A)
 Maybe↔⊤⊎
@@ -83,14 +90,25 @@ Fin∘suc↔Maybe∘Fin {n}
         to (suc n) = just n
 
 Lift↔id : ∀ {a} {A : Set a} → Lift {a} {a} A ↔ A
-Lift↔id = λ {a} {A} → record { to = →-to-⟶ lower
-                             ; from = →-to-⟶ lift
-                             ; inverse-of = record { left-inverse-of = λ { (lift x) → ≡.refl }
-                                                   ; right-inverse-of = λ _ → ≡.refl } }
+Lift↔id = record { to = →-to-⟶ lower
+                 ; from = →-to-⟶ lift
+                 ; inverse-of = record { left-inverse-of = λ { (lift x) → ≡.refl }
+                                       ; right-inverse-of = λ _ → ≡.refl } }
+
+⊤×A↔A : ∀ {A : ★} → (⊤ × A) ↔ A
+⊤×A↔A = proj₁ ×-CMon.identity _ ∘ sym Lift↔id ×-cong id
+
+A×⊤↔A : ∀ {A : ★} → (A × ⊤) ↔ A
+A×⊤↔A = proj₂ ×-CMon.identity _ ∘ id ×-cong sym Lift↔id
+
+⊥⊎A↔A : ∀ {A : ★} → (⊥ ⊎ A) ↔ A
+⊥⊎A↔A = proj₁ ⊎-CMon.identity _ ∘ sym Lift↔id ⊎-cong id
+
+A⊎⊥↔A : ∀ {A : ★} → (A ⊎ ⊥) ↔ A
+A⊎⊥↔A = proj₂ ⊎-CMon.identity _ ∘ id ⊎-cong sym Lift↔id
 
 Maybe⊥↔⊤ : Maybe ⊥ ↔ ⊤
-Maybe⊥↔⊤ = (proj₂ CMon.identity ⊤ ∘ id ⊎-cong (sym (Lift↔id {A = ⊥}))) ∘ Maybe↔⊤⊎
-  where module CMon = CommutativeMonoid (⊎-CommutativeMonoid bijection L.zero)
+Maybe⊥↔⊤ = A⊎⊥↔A ∘ Maybe↔⊤⊎
 
 Maybe^⊥↔Fin : ∀ n → Maybe^ n ⊥ ↔ Fin n
 Maybe^⊥↔Fin zero    = sym Fin0↔⊥
@@ -98,6 +116,18 @@ Maybe^⊥↔Fin (suc n) = sym Fin∘suc↔Maybe∘Fin ∘ Maybe-cong (Maybe^⊥�
 
 Maybe^⊤↔Fin1+ : ∀ n → Maybe^ n ⊤ ↔ Fin (suc n)
 Maybe^⊤↔Fin1+ n = Maybe^⊥↔Fin (suc n) ∘ sym (Maybe∘Maybe^↔Maybe^∘Maybe n) ∘ Maybe^-cong n (sym Maybe⊥↔⊤)
+
+Maybe-⊎ : ∀ {A B : ★} → (Maybe A ⊎ B) ↔ Maybe (A ⊎ B)
+Maybe-⊎ = sym Maybe↔⊤⊎ ∘ ⊎-CMon.assoc ⊤ _ _ ∘ (Maybe↔⊤⊎ ⊎-cong id)
+
+Maybe^-⊎-+ : ∀ {A} m n → (Maybe^ m ⊥ ⊎ Maybe^ n A) ↔ Maybe^ (m + n) A
+Maybe^-⊎-+ zero    n = ⊥⊎A↔A
+Maybe^-⊎-+ (suc m) n = Maybe-cong (Maybe^-⊎-+ m n) ∘ Maybe-⊎
+
+Fin-⊎-+ : ∀ m n → (Fin m ⊎ Fin n) ↔ Fin (m + n)
+Fin-⊎-+ m n = Maybe^⊥↔Fin (m + n)
+            ∘ Maybe^-⊎-+ m n
+            ∘ sym (Maybe^⊥↔Fin m ⊎-cong Maybe^⊥↔Fin n)
 
 Fin∘suc↔⊤⊎Fin : ∀ {n} → Fin (suc n) ↔ (⊤ ⊎ Fin n)
 Fin∘suc↔⊤⊎Fin = Maybe↔⊤⊎ ∘ Fin∘suc↔Maybe∘Fin
