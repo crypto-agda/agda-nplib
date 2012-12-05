@@ -81,6 +81,13 @@ _$⟨_⟩_ f n = nest n f
 … : ∀ {a} {A : Set a} ⦃ x : A ⦄ → A
 … ⦃ x ⦄ = x
 
+_⟨_⟩°_ : ∀ {i a b c} {Ix : Set i} {A : Set a} {B : A → Set b} {C : (x : A) → B x → Set c}
+         → (f  : Ix → A)
+         → (op : (x : A) (y : B x) → C x y)
+         → (g  : (i : Ix) → B (f i))
+         → (i : Ix) → C (f i) (g i)
+(f ⟨ _∙_ ⟩° g) x = f x ∙ g x
+
 module Combinators where
     S : ∀ {A B C : ★} →
           (A → B → C) →

@@ -1,13 +1,11 @@
-{-# OPTIONS --universe-polymorphism #-}
-
-open import Level      using (_⊔_; suc; Level)
-open import Function   using (id; const; _∘_; _∘′_; _ˢ_)
-open import Data.Sum   using (_⊎_; inj₁; inj₂)
-open import Data.Bool  using (Bool; true; false)
-open import Data.Unit  using (⊤)
-open import Data.List  using (List; []; _∷_)
-open import Data.Maybe using (Maybe; nothing; just)
-open import Data.Empty using (⊥)
+open import Level           using (_⊔_; suc; Level)
+open import Function.NP     using (id; const; _∘_; _∘′_; _ˢ_; _⟨_⟩°_)
+open import Data.Sum        using (_⊎_; inj₁; inj₂)
+open import Data.Bool       using (Bool; true; false)
+open import Data.Unit       using (⊤)
+open import Data.List       using (List; []; _∷_)
+open import Data.Maybe      using (Maybe; nothing; just)
+open import Data.Empty      using (⊥)
 open import Data.Product.NP using (∃; _,_; _×_)
 
 module Data.Indexed {i} {Ix : Set i} where
@@ -80,7 +78,8 @@ _|⊛|_ = _ˢ_
 |liftA2| : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c}
            → (A → B → C)
            → ((Ix → A) → (Ix → B) → (Ix → C))
-|liftA2| f x y = |pure| f |⊛| x |⊛| y
+|liftA2| f x y = x ⟨ f ⟩° y
+-- |liftA2| f x y = |pure| f |⊛| x |⊛| y
 
 |List| : ∀ {a} → |Set| a → |Set| a
 |List| = |liftA| List
@@ -131,9 +130,7 @@ _|⊎|_ = |liftA2| _⊎_
 |⊥| = |pure| ⊥
 
 |¬| : ∀ {ℓ} → |Set| ℓ → |Set| _
--- Agda was accepting it previously
--- |¬| F = F |→| |⊥|
-|¬| F = λ i → (F |→| |⊥|) i
+|¬| F = F |→| |⊥|
 
 -- This is the type of |map| functions, the fmap function on Ix-indexed
 -- functors.

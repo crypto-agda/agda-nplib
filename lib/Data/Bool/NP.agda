@@ -3,11 +3,13 @@ module Data.Bool.NP where
 
 open import Data.Bool using (Bool; true; false; T; if_then_else_; not)
 import Algebra
+open import Algebra.FunctionProperties using (Op₁; Op₂)
 import Data.Bool.Properties as B
 open import Data.Unit using (⊤)
 open import Data.Product
 open import Data.Sum
-open import Data.Nat using (ℕ; _≤_; z≤n; s≤s)
+open import Data.Indexed using (_⟨_⟩°_)
+open import Data.Nat using (ℕ; _≤_; z≤n; s≤s; _⊓_; _⊔_; _∸_)
 open import Function
 open import Relation.Binary.NP
 open import Relation.Binary.Logical
@@ -239,6 +241,22 @@ toℕ≤1 : ∀ b → toℕ b ≤ 1
 toℕ≤1 true  = s≤s z≤n
 toℕ≤1 false = z≤n
 
+toℕ-⊓ : ∀ a b → toℕ a ⊓ toℕ b ≡ toℕ (a ∧ b)
+toℕ-⊓ true true = ≡.refl
+toℕ-⊓ true false = ≡.refl
+toℕ-⊓ false b = ≡.refl
+
+toℕ-⊔ : ∀ a b → toℕ a ⊔ toℕ b ≡ toℕ (a ∨ b)
+toℕ-⊔ true true = ≡.refl
+toℕ-⊔ true false = ≡.refl
+toℕ-⊔ false b = ≡.refl
+
+toℕ-∸ : ∀ a b → toℕ a ∸ toℕ b ≡ toℕ (a ∧ not b)
+toℕ-∸ true true = ≡.refl
+toℕ-∸ true false = ≡.refl
+toℕ-∸ false true = ≡.refl
+toℕ-∸ false false = ≡.refl
+
 xor-not-not : ∀ x y → (not x) xor (not y) ≡ x xor y
 xor-not-not true  y = ≡.refl
 xor-not-not false y = B.not-involutive y
@@ -255,6 +273,22 @@ xor-inj₁ false = id
 
 xor-inj₂ : ∀ x {y z} → y xor x ≡ z xor x → y ≡ z
 xor-inj₂ x {y} {z} rewrite Xor°.+-comm y x | Xor°.+-comm z x = xor-inj₁ x
+
+module Indexed {a} {A : Set a} where
+    _∧°_ : Op₂ (A → Bool)
+    x ∧° y = x ⟨ _∧_ ⟩° y
+
+    _∨°_ : Op₂ (A → Bool)
+    x ∨° y = x ⟨ _∨_ ⟩° y
+
+    _xor°_ : Op₂ (A → Bool)
+    x xor° y = x ⟨ _xor_ ⟩° y
+
+    _==°_ : Op₂ (A → Bool)
+    x ==° y = x ⟨ _==_ ⟩° y
+
+    not° : Op₁ (A → Bool)
+    not° f = not ∘ f
 
 data So : Bool → Set where
   oh! : So true

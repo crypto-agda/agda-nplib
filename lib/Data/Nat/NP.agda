@@ -40,13 +40,28 @@ suc-injective = ≡.cong pred
 +-≤-inj zero    p       = p
 +-≤-inj (suc x) (s≤s p) = +-≤-inj x p
 
+infixl 6 _+°_
+infixl 7 _*°_ _⊓°_
+infixl 6 _∸°_ _⊔°_
+
+_+°_ : ∀ {a} {A : Set a} (f g : A → ℕ) → A → ℕ
+(f +° g) x = f x + g x
+
+_∸°_ : ∀ {a} {A : Set a} (f g : A → ℕ) → A → ℕ
+(f ∸° g) x = f x ∸ g x
+
+_*°_ : ∀ {a} {A : Set a} (f g : A → ℕ) → A → ℕ
+(f *° g) x = f x * g x
+
+_⊔°_ : ∀ {a} {A : Set a} (f g : A → ℕ) → A → ℕ
+(f ⊔° g) x = f x ⊔ g x
+
+_⊓°_ : ∀ {a} {A : Set a} (f g : A → ℕ) → A → ℕ
+(f ⊓° g) x = f x ⊓ g x
+
 sucx≰x : ∀ x → suc x ≰ x
 sucx≰x zero    = λ()
 sucx≰x (suc x) = sucx≰x x ∘ ≤-pred
-
-a⊓b≡a : ∀ {a b} → a ≤ b → a ⊓ b ≡ a
-a⊓b≡a z≤n = ≡.refl
-a⊓b≡a (s≤s a≤b) rewrite a⊓b≡a a≤b = ≡.refl
 
 total-≤ : ∀ a b → a ≤ b ⊎ b ≤ a
 total-≤ zero b = inj₁ z≤n
@@ -93,6 +108,23 @@ suc m  == suc n  = m == n
 +-interchange : Interchange _≡_ _+_ _+_
 +-interchange = InterchangeFromAssocCommCong.∙-interchange _≡_ ≡.isEquivalence
                                                            _+_ ℕ°.+-assoc ℕ°.+-comm (λ z → ≡.cong (flip _+_ z))
+
+a+b≡a⊔b+a⊓b : ∀ a b → a + b ≡ a ⊔ b + a ⊓ b
+a+b≡a⊔b+a⊓b zero    b       rewrite ℕ°.+-comm b 0 = ≡.refl
+a+b≡a⊔b+a⊓b (suc a) zero    = ≡.refl
+a+b≡a⊔b+a⊓b (suc a) (suc b) rewrite +-assoc-comm a 1 b
+                                  | +-assoc-comm (a ⊔ b) 1 (a ⊓ b)
+                                  | a+b≡a⊔b+a⊓b a b
+                                  = ≡.refl
+
+a⊓b≡a : ∀ {a b} → a ≤ b → a ⊓ b ≡ a
+a⊓b≡a z≤n = ≡.refl
+a⊓b≡a (s≤s a≤b) rewrite a⊓b≡a a≤b = ≡.refl
+
+⊔≤+ : ∀ a b → a ⊔ b ≤ a + b
+⊔≤+ zero b          = ℕ≤.refl
+⊔≤+ (suc a) zero    = s≤s (ℕ≤.reflexive (ℕ°.+-comm 0 a))
+⊔≤+ (suc a) (suc b) = s≤s (ℕ≤.trans (⊔≤+ a b) (ℕ≤.trans (≤-step ℕ≤.refl) (ℕ≤.reflexive (+-assoc-comm 1 a b))))
 
 2*′_ : ℕ → ℕ
 2*′_ = fold 0 (suc ∘′ suc)
