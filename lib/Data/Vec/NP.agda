@@ -48,6 +48,10 @@ module waiting-for-a-fix-in-the-stdlib where
     tabulate-∘ {suc n} f g =
       ≡.cong (_∷_ (f (g zero))) (tabulate-∘ f (g ∘ suc))
 
+    tabulate-ext : ∀ {n a}{A : Set a}{f g : Fin n → A} → f ≗ g → tabulate f ≡ tabulate g
+    tabulate-ext {zero} f≗g = refl
+    tabulate-ext {suc n} f≗g rewrite f≗g zero | tabulate-ext (f≗g ∘ suc) = refl
+
     -- map is functorial.
 
     map-id : ∀ {a n} {A : Set a} → map id ≗ id {A = Vec A n}
