@@ -147,13 +147,12 @@ module Modulo where
   modq-suc {suc q} i j () | just x
   modq-suc {suc q} i j () | nothing
 
-
-  sucmod-inj : ∀ {q}(i j : Fin q) → sucmod i ≡ sucmod j → i ≡ j
-  sucmod-inj {q} i j eq with modq (suc i) | modq (suc j) | modq-inj (suc i) (suc j) | modq-suc i j | modq-suc j i
-  sucmod-inj i j eq | just x | just x₁ | p | _ | _ = suc-injective (p (cong just eq))
-  sucmod-inj i j eq | just x | nothing | p | ni | nj = ⊥-elim (ni (cong Maybe.just eq))
-  sucmod-inj i j eq | nothing | just x | p | ni | nj = ⊥-elim (nj (cong Maybe.just (sym eq)))
-  sucmod-inj i j eq | nothing | nothing | p | _ | _ = suc-injective (p refl)
+  sucmod-inj : ∀ {q}{i j : Fin q} → sucmod i ≡ sucmod j → i ≡ j
+  sucmod-inj {i = i} {j} eq with modq (suc i) | modq (suc j) | modq-inj (suc i) (suc j) | modq-suc i j | modq-suc j i
+  sucmod-inj eq | just _  | just _  | p | _ | _ = suc-injective (p (cong just eq))
+  sucmod-inj eq | nothing | nothing | p | _ | _ = suc-injective (p refl)
+  sucmod-inj eq | just _  | nothing | _ | p | _ = ⊥-elim (p (cong Maybe.just eq))
+  sucmod-inj eq | nothing | just _  | _ | _ | p = ⊥-elim (p (cong Maybe.just (sym eq)))
 
   modq-fromℕ : ∀ q → modq (fromℕ q) ≡ nothing
   modq-fromℕ zero = refl
@@ -192,17 +191,28 @@ module Modulo where
   vec≗⇒≡ []       []       _ = refl
   vec≗⇒≡ (x ∷ xs) (y ∷ ys) p rewrite vec≗⇒≡ xs ys (p ∘ suc) | p zero = refl
 
-  lookup-sucmod-rot₁ : ∀ {n a} {A : Set a} (i : Fin n) (xs : Vec A n)
-                 → lookup i (rot₁ xs) ≡ lookup (sucmod i) xs
-  lookup-sucmod-rot₁ {zero} () xs
-  lookup-sucmod-rot₁ {suc n} i (x ∷ xs) = lookup-sucmod i x xs
+  -- most likely this is subsumed by the StableUnderInjection parts
+  private
+     module Unused where
+        lookup-sucmod-rot₁ : ∀ {n a} {A : Set a} (i : Fin n) (xs : Vec A n)
+                       → lookup i (rot₁ xs) ≡ lookup (sucmod i) xs
+        lookup-sucmod-rot₁ {zero} () xs
+        lookup-sucmod-rot₁ {suc n} i (x ∷ xs) = lookup-sucmod i x xs
 
-  lookup-rot₁-allFin : ∀ {n} i → lookup i (rot₁ (allFin n)) ≡ lookup i (vmap sucmod (allFin n))
-  lookup-rot₁-allFin {n} i rewrite lookup-sucmod-rot₁ i (allFin _)
-                                 | Vec.lookup-allFin (sucmod i)
-                                 | lookup-map sucmod i (allFin n)
-                                 | Vec.lookup∘tabulate id i
-                                 = refl
+        lookup-rot₁-allFin : ∀ {n} i → lookup i (rot₁ (allFin n)) ≡ lookup i (vmap sucmod (allFin n))
+        lookup-rot₁-allFin {n} i rewrite lookup-sucmod-rot₁ i (allFin _)
+                                       | Vec.lookup-allFin (sucmod i)
+                                       | lookup-map sucmod i (allFin n)
+                                       | Vec.lookup∘tabulate id i
+                                       = refl
 
-  rot₁-map-sucmod : ∀ n → rot₁ (allFin n) ≡ vmap sucmod (allFin n)
-  rot₁-map-sucmod _ = vec≗⇒≡ _ _ lookup-rot₁-allFin
+        rot₁-map-sucmod : ∀ n → rot₁ (allFin n) ≡ vmap sucmod (allFin n)
+        rot₁-map-sucmod _ = vec≗⇒≡ _ _ lookup-rot₁-allFin
+
+  {-
+
+  -- -}
+  -- -}
+  -- -}
+  -- -}
+  -- -}
