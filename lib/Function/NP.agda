@@ -2,14 +2,19 @@
 module Function.NP where
 
 open import Type
+open import Algebra
+open import Algebra.Structures
 open import Function       public
 open import Data.Nat       using (ℕ; zero; suc; _+_; _*_; fold)
 open import Data.Bool      using (Bool)
+open import Data.Product
 open import Data.Vec.N-ary using (N-ary; N-ary-level)
 import Category.Monad.Identity as Id
 open import Category.Monad renaming (module RawMonad to Monad; RawMonad to Monad)
 open import Category.Applicative renaming (module RawApplicative to Applicative; RawApplicative to Applicative)
-open import Relation.Binary.PropositionalEquality.NP
+open import Relation.Binary
+import Relation.Binary.PropositionalEquality.NP as ≡
+open ≡ using (_≡_; _≗_)
 
 id-app : ∀ {f} → Applicative {f} id
 id-app = rawIApplicative
@@ -40,31 +45,31 @@ nest (suc n) f x = f (nest n f x)
 
 module nest-Properties {a} {A : Set a} (f : Endo A) where
   nest₀ : nest 0 f ≡ id
-  nest₀ = refl
+  nest₀ = ≡.refl
   nest₁ : nest 1 f ≡ f
-  nest₁ = refl
+  nest₁ = ≡.refl
   nest₂ : nest 2 f ≡ f ∘ f
-  nest₂ = refl
+  nest₂ = ≡.refl
   nest₃ : nest 3 f ≡ f ∘ f ∘ f
-  nest₃ = refl
+  nest₃ = ≡.refl
 
   nest-+ : ∀ m n → nest (m + n) f ≡ nest m f ∘ nest n f
-  nest-+ zero    n = refl
-  nest-+ (suc m) n = cong (_∘_ f) (nest-+ m n)
+  nest-+ zero    n = ≡.refl
+  nest-+ (suc m) n = ≡.cong (_∘_ f) (nest-+ m n)
 
   nest-+' : ∀ m n → nest (m + n) f ≗ nest m f ∘ nest n f
-  nest-+' m n x = cong (flip _$_ x) (nest-+ m n)
+  nest-+' m n x = ≡.cong (flip _$_ x) (nest-+ m n)
 
   nest-* : ∀ m n → nest (m * n) f ≗ nest m (nest n f)
-  nest-* zero n x = refl
+  nest-* zero n x = ≡.refl
   nest-* (suc m) n x =
-    nest (suc m * n) f x             ≡⟨ refl ⟩
+    nest (suc m * n) f x             ≡⟨ ≡.refl ⟩
     nest (n + m * n) f x             ≡⟨ nest-+' n (m * n) x ⟩
-    (nest n f ∘ nest (m * n) f) x    ≡⟨ cong (nest n f) (nest-* m n x) ⟩
-    (nest n f ∘ nest m (nest n f)) x ≡⟨ refl ⟩
-    nest n f (nest m (nest n f) x)   ≡⟨ refl ⟩
+    (nest n f ∘ nest (m * n) f) x    ≡⟨ ≡.cong (nest n f) (nest-* m n x) ⟩
+    (nest n f ∘ nest m (nest n f)) x ≡⟨ ≡.refl ⟩
+    nest n f (nest m (nest n f) x)   ≡⟨ ≡.refl ⟩
     nest (suc m) (nest n f) x ∎
-   where open ≡-Reasoning
+   where open ≡.≡-Reasoning
 
 {- WRONG
 module more-nest-Properties {a} {A : Set a} where
@@ -105,3 +110,25 @@ module Combinators where
     -- C ≗ flip
     C : ∀ {A B C : ★} → (A → B → C) → B → A → C
     C = S (S (K (S (K S) K)) S) (K K)
+
+module EndoMonoid-≈ {a ℓ} {A : Set a}
+                    {_≈_ : Endo A → Endo A → Set ℓ}
+                    (isEquivalence : IsEquivalence _≈_)
+                    (∘-cong : _∘′_ Preserves₂ _≈_ ⟶ _≈_ ⟶ _≈_)
+                   where
+  private
+    module ≈ = IsEquivalence isEquivalence
+    isSemigroup : IsSemigroup _≈_ _∘′_
+    isSemigroup = record { isEquivalence = isEquivalence; assoc = λ _ _ _ → ≈.refl; ∙-cong = ∘-cong }
+
+  monoid : Monoid a ℓ
+  monoid = record { Carrier = Endo A; _≈_ = _≈_; _∙_ = _∘′_; ε = id
+                  ; isMonoid = record { isSemigroup = isSemigroup
+                                      ; identity = (λ _ → ≈.refl) , (λ _ → ≈.refl) } }
+
+  open Monoid monoid public
+
+module EndoMonoid-≡ {a} (A : Set a) = EndoMonoid-≈ {A = A} ≡.isEquivalence (≡.cong₂ _∘′_)
+
+module EndoMonoid-≗ {a} (A : Set a) = EndoMonoid-≈ (Setoid.isEquivalence (A ≡.→-setoid A))
+                                                   (λ {f} {g} {h} {i} p q x → ≡.trans (p (h x)) (≡.cong g (q x)))

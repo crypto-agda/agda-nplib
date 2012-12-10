@@ -310,3 +310,102 @@ module FunctorLemmas where
   <$>-assoc : ∀ {A B C : Set} {f : A → B} {g : C → A} (x : Maybe C) → f ∘ g <$> x ≡ f <$> (g <$> x)
   <$>-assoc (just _) = ≡.refl
   <$>-assoc nothing  = ≡.refl
+
+module MonoidFromSemigroup {c ℓ} (sg   : Semigroup c ℓ)
+                                 {_≈?_ : let open Semigroup sg
+                                         in Maybe Carrier → Maybe Carrier → Set ℓ}
+                                 (isEquivalence : IsEquivalence _≈?_)
+                                 (just-cong : let open Semigroup sg in
+                                              just Preserves _≈_ ⟶ _≈?_)
+                                 (just-inj  : let open Semigroup sg in
+                                              (_≈?_ on just) ⇒ _≈_)
+                                 (just≉nothing : ∀ {x} → ¬(just x ≈? nothing)) where
+  private
+    module SG = Semigroup sg
+    open SG using (_≈_) renaming (Carrier to A; _∙_ to op)
+    module ≈  = IsEquivalence SG.isEquivalence
+    module ≈? = IsEquivalence isEquivalence
+    _∙_ : Op₂ (Maybe A)
+    just x  ∙ just y  = just (op x y)
+    just x  ∙ nothing = just x
+    nothing ∙ y?      = y?
+
+    ε : Maybe A
+    ε = nothing
+
+    assoc : Associative _≈?_ _∙_
+    assoc (just x) (just y) (just z) = just-cong (SG.assoc x y z)
+    assoc (just _) (just _) nothing  = ≈?.refl
+    assoc (just _) nothing  _        = ≈?.refl
+    assoc nothing  _        _        = ≈?.refl
+
+    right-identity : RightIdentity _≈?_ ε _∙_
+    right-identity (just _) = ≈?.refl
+    right-identity nothing  = ≈?.refl
+
+    ∙-cong : _∙_ Preserves₂ _≈?_ ⟶ _≈?_ ⟶ _≈?_
+    ∙-cong {just _}{just _}{just _}{just _}   p q
+      = just-cong (SG.∙-cong (just-inj p) (just-inj q))
+    ∙-cong {just _}{just _}{just _}{nothing}  p q = ⊥-elim (just≉nothing q)
+    ∙-cong {just _}{just _}{nothing}{just _}  p q = ⊥-elim (just≉nothing (≈?.sym q))
+    ∙-cong {just _}{just _}{nothing}{nothing} p q = p
+    ∙-cong {nothing} {nothing} p q = q
+    ∙-cong {just _}  {nothing} p q = ⊥-elim (just≉nothing p)
+    ∙-cong {nothing} {just _}  p q = ⊥-elim (just≉nothing (≈?.sym p))
+
+  monoid : Monoid c ℓ
+  monoid = record { Carrier = Maybe A
+                  ; _≈_ = _≈?_
+                  ; _∙_ = _∙_
+                  ; ε = ε
+                  ; isMonoid
+                    = record { isSemigroup
+                               = record { isEquivalence = isEquivalence
+                                        ; assoc = assoc; ∙-cong = ∙-cong }
+                             ; identity = (λ _ → ≈?.refl) , right-identity } }
+
+  open Monoid monoid public
+
+module Monoid-≡ {a} {A : Set a} {op : Op₂ A} (isSg : IsSemigroup _≡_ op)
+  = MonoidFromSemigroup (record { isSemigroup = isSg })
+                        ≡.isEquivalence (≡.cong just) just-injective
+
+module First-≈ {a ℓ} {A : Set a} {_≈_ : Maybe A → Maybe A → Set ℓ}
+               (isEquivalence : IsEquivalence _≈_)
+               (just≉nothing : ∀ {x} → ¬(just x ≈ nothing)) where
+  private
+    module ≈ = IsEquivalence isEquivalence
+    _∙_ : Op₂ (Maybe A)
+    x ∙ y = maybe just y x
+
+    ε : Maybe A
+    ε = nothing
+
+    assoc : Associative _≈_ _∙_
+    assoc (just _) _ _ = ≈.refl
+    assoc nothing  _ _ = ≈.refl
+
+    right-identity : RightIdentity _≈_ ε _∙_
+    right-identity (just _) = ≈.refl
+    right-identity nothing  = ≈.refl
+
+    ∙-cong : _∙_ Preserves₂ _≈_ ⟶ _≈_ ⟶ _≈_
+    ∙-cong {just _} {just _}   p q = p
+    ∙-cong {nothing} {nothing} p q = q
+    ∙-cong {just _} {nothing}  p q = ⊥-elim (just≉nothing p)
+    ∙-cong {nothing} {just _}  p q = ⊥-elim (just≉nothing (≈.sym p))
+
+  monoid : Monoid a ℓ
+  monoid = record { Carrier = Maybe A
+                  ; _≈_ = _≈_
+                  ; _∙_ = _∙_
+                  ; ε = ε
+                  ; isMonoid
+                    = record { isSemigroup
+                               = record { isEquivalence = isEquivalence
+                                        ; assoc = assoc; ∙-cong = ∙-cong }
+                             ; identity = (λ _ → ≈.refl) , right-identity } }
+
+  open Monoid monoid public
+
+module First {a} (A : Set a) = First-≈ {A = A} ≡.isEquivalence (λ())
