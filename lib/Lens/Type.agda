@@ -4,10 +4,12 @@ module Lens.Type where
 open import Level
 open import Function.NP
 open import Type
+open import Category
 open import Category.Functor
 open import Category.Applicative
 open import Data.Product using (_×_; _,_)
 open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
+open import Relation.Binary.PropositionalEquality using (_≗_; _≡_; refl)
 
 Simple : ∀ {f s a} (F : (S T : Set s) (A B : Set a) → Set f)
                    (S : Set s) (A : Set a) → Set f
@@ -38,6 +40,17 @@ record Context (A B T : ★) : ★ where
 ContextRawFunctor : ∀ {A B} → RawFunctor (Context A B)
 ContextRawFunctor
   = record { _<$>_ = λ { f (s , g) → (f ∘ s) , g } }
+
+module ContextRawFunctorLaws {A B : ★} where
+    map = RawFunctor._<$>_ (ContextRawFunctor {A} {B})
+    private
+      F = Context A B
+
+    map-id : ∀ {T} → map id ≗ id {A = F T}
+    map-id _ = refl
+
+    map-∘ : ∀ {S T U} (f : T → U) (g : S → T) → map f ∘ map g ≗ map (f ∘ g)
+    map-∘ f g x = refl
 
 module ContextComonad {A : ★} where
   private
@@ -127,6 +140,14 @@ BazaarRawApplicative {A} {B} = record { pure = buy; _⊛_ = _⊛_ }
     map f (buy x)      = buy (f x)
     map f (trade mx x) = trade (map (_∘_ f) mx) x
 
+    map-id : ∀ {T} → map id ≗ id {A = F T}
+    map-id (buy x)                      = refl
+    map-id (trade m x) rewrite map-id m = refl
+
+    map-∘ : ∀ {S T U} (f : T → U) (g : S → T) → map f ∘ map g ≗ map (f ∘ g)
+    map-∘ f g (buy x) = refl
+    map-∘ f g (trade m x) rewrite map-∘ (_∘_ f) (_∘_ g) m = refl
+
     map₂ : ∀ {S T U} → (S → T → U) → F S → F T → F U
     map₂ f (buy x)      my = map (f x) my
     map₂ f (trade mx x) my = trade (map₂ (λ g y → flip f y ∘ g) mx my) x
@@ -138,6 +159,15 @@ BazaarRawApplicative {A} {B} = record { pure = buy; _⊛_ = _⊛_ }
     buy f      ⊛ mx = map f mx
     trade mf x ⊛ mx = trade (map flip mf ⊛ mx) x
     -}
+
+    identity : ∀ {T} (x : F T) → buy id ⊛ x ≡ x
+    identity = map-id
+
+    -- this one seems annoying
+    -- composition : ∀ {R S T} (u : F (S → T)) (v : F (R → S)) (w : F R) → buy _∘′_ ⊛ u ⊛ v ⊛ w ≡ u ⊛ (v ⊛ w)
+
+    homomorphism : ∀ {S T} (f : S → T) (x : S) → buy f ⊛ buy x ≡ buy (f x)
+    homomorphism _ _ = refl
 
 -- universe issue
 -- BazaarFunctor : ∀ {A B} → RawFunctor (Bazaar A B)
@@ -170,3 +200,34 @@ alongside l r f (s , s′) = case l (_,_ id) s of λ
                  { (bt′ , a′) → f (a , a′) <&> λ { (b , b′) → (bt b , bt′ b′) }
                  } }
                   where _<&>_ = flip (RawFunctor._<$>_ …)
+
+record Isomorphic (_↝_ : ★ → ★ → ★) : ★₁ where
+  constructor mk
+  field
+    category : Category _↝_
+    iso      : ∀ {S T A B F} {{F-fun : RawFunctor F}} → (S → A) → (B → T)
+                                                      → (A → F B) ↝ (S → F T)
+
+→Isomorphic : Isomorphic -→-
+→Isomorphic = mk →-cat (λ f g h s → g <$> (h (f s)))
+  where open RawFunctor {{...}}
+
+record Prismatic (_↝_ : ★ → ★ → ★) : ★₁ where
+  constructor mk
+  field
+    isomorphic : Isomorphic _↝_
+    prism      : ∀ {S T A B F} {{F-app : RawApplicative F}}
+                 → (B → T) → (S → T ⊎ A)
+                 → (A → F B) ↝ (S → F T)
+
+→Prismatic : Prismatic -→-
+→Prismatic = mk →Isomorphic (λ f seta h → [ pure , _<$>_ f ∘ h ] ∘ seta)
+  where open RawApplicative {{...}}
+
+record Indexable (_↝_ : ★ → ★ → ★) : ★₁ where
+  constructor mk
+  field
+    indexed : ∀ {I A B : ★} → ((I → A) → B) → A ↝ B
+
+→Indexable : Indexable -→-
+→Indexable = mk (λ f → f ∘ const)

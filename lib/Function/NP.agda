@@ -1,6 +1,7 @@
 {-# OPTIONS --universe-polymorphism #-}
 module Function.NP where
 
+import Level as L
 open import Type
 open import Algebra
 open import Algebra.Structures
@@ -19,6 +20,9 @@ open ≡ using (_≡_; _≗_)
 id-app : ∀ {f} → Applicative {f} id
 id-app = rawIApplicative
   where open Monad Id.IdentityMonad
+
+-→- : ∀ {a b} (A : Set a) (B : Set b) → Set (a L.⊔ b)
+-→- A B = A → B
 
 _→⟨_⟩_ : ∀ {a b} (A : Set a) (n : ℕ) (B : Set b) → Set (N-ary-level a b n)
 A →⟨ n ⟩ B = N-ary n A B
