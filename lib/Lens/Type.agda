@@ -53,6 +53,8 @@ module ContextComonad {A : ★} where
   extend f (s , g) = (f ∘ _,_ s) , g
   -- ComonadStore...
 
+{-
+-- This one is not an Endo functor because of predicativity
 record Bazaar (A B T : ★) : ★₁ where
   constructor mk
   field
@@ -62,10 +64,8 @@ bazaar : ∀ {A B T} {F : ★ → ★} {{F-app : RawApplicative F}}
          → (A → F B) → Bazaar A B T → F T
 bazaar afb baz = Bazaar.run baz afb
 
-{-
 sell : ∀ {A B} → A → Bazaar A B B
-sell x = {!!}
--}
+sell x = mk (λ f → f x)
 
 module BazaarApplicative {A B : ★} where
   module A = RawApplicative {{...}}
@@ -90,14 +90,57 @@ module BazaarComonad {A : ★} where
 
   extract : ∀ {T} → W T → T
   extract (mk m) = m {id} {{id-app}} id
+-}
 
-  -- duplicate : ∀ {T} → W T → W (W T)
-  -- duplicate (mk m) = 
+data Bazaar (A B T : ★) : ★ where
+  buy   : T → Bazaar A B T
+  trade : Bazaar A B (B → T) → A → Bazaar A B T
 
-  {-
-  extend : ∀ {T U} → (W T → U) → W T → W U
-  extend f m = {!!}
-  -}
+sell : ∀ {A B} → A → Bazaar A B B
+sell = trade (buy id)
+
+bazaar : ∀ {A B T} {F : ★ → ★} {{F-app : RawApplicative F}}
+         → (A → F B) → Bazaar A B T → F T
+bazaar afb (buy x)       = pure x                 where open RawApplicative {{...}}
+bazaar afb (trade baz x) = bazaar afb baz ⊛ afb x where open RawApplicative {{...}}
+
+private
+    -- While reading: http://twanvl.nl/blog/haskell/non-regular1
+    module BazaarMisc where
+        open import Data.List.NP as List
+        FunList = λ A B → Bazaar A A B
+
+        getB : ∀ {A B} → FunList A B → B
+        getB = bazaar id
+
+        getAs : ∀ {A B} → FunList A B → List A
+        getAs (buy _)       = []
+        getAs (trade baz x) = x ∷ getAs baz
+
+BazaarRawApplicative : ∀ {A B : ★} → RawApplicative _
+BazaarRawApplicative {A} {B} = record { pure = buy; _⊛_ = _⊛_ }
+  where
+    private
+      F = Bazaar A B
+
+    map : ∀ {S T} → (S → T) → F S → F T
+    map f (buy x)      = buy (f x)
+    map f (trade mx x) = trade (map (_∘_ f) mx) x
+
+    map₂ : ∀ {S T U} → (S → T → U) → F S → F T → F U
+    map₂ f (buy x)      my = map (f x) my
+    map₂ f (trade mx x) my = trade (map₂ (λ g y → flip f y ∘ g) mx my) x
+
+    infixl 4 _⊛_
+    _⊛_ : ∀ {S T} → F (S → T) → F S → F T
+    _⊛_ = map₂ id
+    {- -- does not termination check
+    buy f      ⊛ mx = map f mx
+    trade mf x ⊛ mx = trade (map flip mf ⊛ mx) x
+    -}
+
+-- universe issue
+-- BazaarFunctor : ∀ {A B} → RawFunctor (Bazaar A B)
 
 choosing : ∀ {F S S′ T T′ A B} {{_ : RawFunctor F}} →
              LensLike F S T A B →
@@ -119,7 +162,7 @@ inside ℓ f es = o <$> f i where
   o = λ ea e → set (ℓ (_,_ id) (es e)) (ea e)
 
 alongside : ∀ {S S′ T T′ A A′ B B′}
-            → LensLike (Context A B) S T A B
+            → LensLike (Context A  B)   S  T  A  B
             → LensLike (Context A′ B′)  S′ T′ A′ B′
             → Lens (S × S′) (T × T′) (A × A′) (B × B′)
 alongside l r f (s , s′) = case l (_,_ id) s of λ
