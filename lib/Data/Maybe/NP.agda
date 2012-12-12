@@ -5,12 +5,18 @@ open import Function
 import Level as L
 open L using (_⊔_; lift; Lift)
 open import Data.Maybe public
+open import Algebra
+open import Algebra.Structures
+open import Algebra.FunctionProperties
 open import Category.Applicative
 import      Category.Monad as Cat
 open import Relation.Binary.PropositionalEquality as ≡ using (_≡_;_≗_)
+open import Relation.Nullary
+open import Relation.Binary
 open import Relation.Binary.Logical
 open import Function using (type-signature;_$_;flip;id)
-open import Data.Empty using (⊥)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Product
 open import Data.Unit using (⊤)
 open import Data.Nat using (ℕ; zero; suc; _+_)
 
@@ -20,28 +26,39 @@ open import Data.Nat using (ℕ; zero; suc; _+_)
 _→?_ : ∀ {a b} → Set a → Set b → Set _
 A →? B = A → Maybe B
 
-map? : ∀ {a b} {A : Set a} {B : Set b} → (A → B) → Maybe A → Maybe B
-map? f = maybe (just ∘′ f) nothing
--- map? = M?._<$>_ _ <= not universe-polymorphic enough
-
--- more universe-polymorphic than M?.join
-join? : ∀ {a} {A : Set a} → Maybe (Maybe A) → Maybe A
-join? nothing  = nothing
-join? (just x) = x
-
 module M? ℓ where
   open Cat.RawMonadPlus (monadPlus {ℓ}) public
+  applicative = rawIApplicative
 
-  ⟪_·_⟫ : ∀ {A B : Set ℓ} → (A → B) → Maybe A → Maybe B
-  ⟪ f · x ⟫ = map? f x
+open M? public using (applicative)
 
-  ⟪_·_·_⟫ : ∀ {A B C : Set ℓ} →
-              (A → B → C) → Maybe A → Maybe B → Maybe C
-  ⟪ f · x · y ⟫ = map? f x ⊛ y
+infixl 4 _⊛?_
 
-  ⟪_·_·_·_⟫ : ∀ {A B C D : Set ℓ} → (A → B → C → D)
-              → Maybe A → Maybe B → Maybe C → Maybe D
-  ⟪ f · x · y · z ⟫ = map? f x ⊛ y ⊛ z
+-- More universe-polymorphic than M?._⊛_
+_⊛?_ : ∀ {a b}{A : Set a}{B : Set b} → Maybe (A → B) → Maybe A → Maybe B
+just f  ⊛? just x = just (f x)
+_       ⊛? _      = nothing
+
+-- More universe-polymorphic than M?._<$>_
+map? : ∀ {a b} {A : Set a} {B : Set b} → (A → B) → Maybe A → Maybe B
+map? f = maybe (just ∘′ f) nothing
+
+⟪_·_⟫? : ∀ {a b} {A : Set a} {B : Set b} → (A → B) → Maybe A → Maybe B
+⟪ f · x ⟫? = map? f x
+
+⟪_·_·_⟫? : ∀ {a b c}
+            {A : Set a} {B : Set b} {C : Set c} →
+            (A → B → C) → Maybe A → Maybe B → Maybe C
+⟪ f · x · y ⟫? = map? f x ⊛? y
+
+⟪_·_·_·_⟫? : ∀ {a b c d}
+               {A : Set a} {B : Set b} {C : Set c} {D : Set d}
+             → (A → B → C → D)
+             → Maybe A → Maybe B → Maybe C → Maybe D
+⟪ f · x · y · z ⟫? = map? f x ⊛? y ⊛? z
+
+join? : ∀ {a} {A : Set a} → Maybe (Maybe A) → Maybe A
+join? = M?.join _
 
 Maybe^ : ℕ → Set → Set
 Maybe^ zero    = id
@@ -62,13 +79,6 @@ just-injective ≡.refl = ≡.refl
 maybe-just-nothing : ∀ {a} {A : Set a} → maybe {A = A} just nothing ≗ id
 maybe-just-nothing (just _)  = ≡.refl
 maybe-just-nothing nothing   = ≡.refl
-
-applicative : ∀ {f} → RawApplicative {f} Maybe
-applicative = record { pure = just ; _⊛_  = _⊛_ }
-  where
-    _⊛_ : ∀ {a b}{A : Set a}{B : Set b} → Maybe (A → B) → Maybe A → Maybe B
-    just f  ⊛ just x = just (f x)
-    _       ⊛ _      = nothing
 
 _≡JAll_ : ∀ {a} {A : Set a} (x y : Maybe A) → Set a
 x ≡JAll y = All (λ y' → All (_≡_ y') y) x
@@ -310,3 +320,102 @@ module FunctorLemmas where
   <$>-assoc : ∀ {A B C : Set} {f : A → B} {g : C → A} (x : Maybe C) → f ∘ g <$> x ≡ f <$> (g <$> x)
   <$>-assoc (just _) = ≡.refl
   <$>-assoc nothing  = ≡.refl
+
+module MonoidFromSemigroup {c ℓ} (sg   : Semigroup c ℓ)
+                                 {_≈?_ : let open Semigroup sg
+                                         in Maybe Carrier → Maybe Carrier → Set ℓ}
+                                 (isEquivalence : IsEquivalence _≈?_)
+                                 (just-cong : let open Semigroup sg in
+                                              just Preserves _≈_ ⟶ _≈?_)
+                                 (just-inj  : let open Semigroup sg in
+                                              (_≈?_ on just) ⇒ _≈_)
+                                 (just≉nothing : ∀ {x} → ¬(just x ≈? nothing)) where
+  private
+    module SG = Semigroup sg
+    open SG using (_≈_) renaming (Carrier to A; _∙_ to op)
+    module ≈  = IsEquivalence SG.isEquivalence
+    module ≈? = IsEquivalence isEquivalence
+    _∙_ : Op₂ (Maybe A)
+    just x  ∙ just y  = just (op x y)
+    just x  ∙ nothing = just x
+    nothing ∙ y?      = y?
+
+    ε : Maybe A
+    ε = nothing
+
+    assoc : Associative _≈?_ _∙_
+    assoc (just x) (just y) (just z) = just-cong (SG.assoc x y z)
+    assoc (just _) (just _) nothing  = ≈?.refl
+    assoc (just _) nothing  _        = ≈?.refl
+    assoc nothing  _        _        = ≈?.refl
+
+    right-identity : RightIdentity _≈?_ ε _∙_
+    right-identity (just _) = ≈?.refl
+    right-identity nothing  = ≈?.refl
+
+    ∙-cong : _∙_ Preserves₂ _≈?_ ⟶ _≈?_ ⟶ _≈?_
+    ∙-cong {just _}{just _}{just _}{just _}   p q
+      = just-cong (SG.∙-cong (just-inj p) (just-inj q))
+    ∙-cong {just _}{just _}{just _}{nothing}  p q = ⊥-elim (just≉nothing q)
+    ∙-cong {just _}{just _}{nothing}{just _}  p q = ⊥-elim (just≉nothing (≈?.sym q))
+    ∙-cong {just _}{just _}{nothing}{nothing} p q = p
+    ∙-cong {nothing} {nothing} p q = q
+    ∙-cong {just _}  {nothing} p q = ⊥-elim (just≉nothing p)
+    ∙-cong {nothing} {just _}  p q = ⊥-elim (just≉nothing (≈?.sym p))
+
+  monoid : Monoid c ℓ
+  monoid = record { Carrier = Maybe A
+                  ; _≈_ = _≈?_
+                  ; _∙_ = _∙_
+                  ; ε = ε
+                  ; isMonoid
+                    = record { isSemigroup
+                               = record { isEquivalence = isEquivalence
+                                        ; assoc = assoc; ∙-cong = ∙-cong }
+                             ; identity = (λ _ → ≈?.refl) , right-identity } }
+
+  open Monoid monoid public
+
+module Monoid-≡ {a} {A : Set a} {op : Op₂ A} (isSg : IsSemigroup _≡_ op)
+  = MonoidFromSemigroup (record { isSemigroup = isSg })
+                        ≡.isEquivalence (≡.cong just) just-injective
+
+module First-≈ {a ℓ} {A : Set a} {_≈_ : Maybe A → Maybe A → Set ℓ}
+               (isEquivalence : IsEquivalence _≈_)
+               (just≉nothing : ∀ {x} → ¬(just x ≈ nothing)) where
+  private
+    module ≈ = IsEquivalence isEquivalence
+    _∙_ : Op₂ (Maybe A)
+    x ∙ y = maybe just y x
+
+    ε : Maybe A
+    ε = nothing
+
+    assoc : Associative _≈_ _∙_
+    assoc (just _) _ _ = ≈.refl
+    assoc nothing  _ _ = ≈.refl
+
+    right-identity : RightIdentity _≈_ ε _∙_
+    right-identity (just _) = ≈.refl
+    right-identity nothing  = ≈.refl
+
+    ∙-cong : _∙_ Preserves₂ _≈_ ⟶ _≈_ ⟶ _≈_
+    ∙-cong {just _} {just _}   p q = p
+    ∙-cong {nothing} {nothing} p q = q
+    ∙-cong {just _} {nothing}  p q = ⊥-elim (just≉nothing p)
+    ∙-cong {nothing} {just _}  p q = ⊥-elim (just≉nothing (≈.sym p))
+
+  monoid : Monoid a ℓ
+  monoid = record { Carrier = Maybe A
+                  ; _≈_ = _≈_
+                  ; _∙_ = _∙_
+                  ; ε = ε
+                  ; isMonoid
+                    = record { isSemigroup
+                               = record { isEquivalence = isEquivalence
+                                        ; assoc = assoc; ∙-cong = ∙-cong }
+                             ; identity = (λ _ → ≈.refl) , right-identity } }
+
+  open Monoid monoid public
+
+module First {a} (A : Set a) = First-≈ {A = A} ≡.isEquivalence (λ())

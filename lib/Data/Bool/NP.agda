@@ -172,6 +172,22 @@ module ⟦Bool⟧-Reasoning = Setoid-Reasoning ⟦Bool⟧-Props.setoid
 
 open Data.Bool public
 
+⟦not⟧ : (⟦Bool⟧ ⟦→⟧ ⟦Bool⟧) not not
+⟦not⟧ ⟦true⟧  = ⟦false⟧
+⟦not⟧ ⟦false⟧ = ⟦true⟧
+
+_⟦∧⟧_ : (⟦Bool⟧ ⟦→⟧ ⟦Bool⟧ ⟦→⟧ ⟦Bool⟧) _∧_ _∧_
+⟦true⟧  ⟦∧⟧ x = x
+⟦false⟧ ⟦∧⟧ _ = ⟦false⟧
+
+_⟦∨⟧_ : (⟦Bool⟧ ⟦→⟧ ⟦Bool⟧ ⟦→⟧ ⟦Bool⟧) _∨_ _∨_
+⟦true⟧  ⟦∨⟧ _ = ⟦true⟧
+⟦false⟧ ⟦∨⟧ x = x
+
+_⟦xor⟧_ : (⟦Bool⟧ ⟦→⟧ ⟦Bool⟧ ⟦→⟧ ⟦Bool⟧) _xor_ _xor_
+⟦true⟧  ⟦xor⟧ x = ⟦not⟧ x
+⟦false⟧ ⟦xor⟧ x = x
+
 ⟦true⟧′ : ∀ {b} → T b → ⟦Bool⟧ true b
 ⟦true⟧′ {true}  _ = ⟦true⟧
 ⟦true⟧′ {false} ()
