@@ -8,6 +8,11 @@ open import Relation.Binary.Bijection
 open import Relation.Binary.Logical
 open import Relation.Nullary
 
+private
+  module Dummy {a} {A : Set a} where
+    open IsEquivalence (isEquivalence {a} {A}) public hiding (refl; sym; trans)
+open Dummy public
+
 cong₃ : ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : Set d}
           (f : A → B → C → D) {a₁ a₂ b₁ b₂ c₁ c₂}
         → a₁ ≡ a₂ → b₁ ≡ b₂ → c₁ ≡ c₂ → f a₁ b₁ c₁ ≡ f a₂ b₂ c₂
