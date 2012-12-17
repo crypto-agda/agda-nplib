@@ -1,5 +1,6 @@
 module Data.Bits where
 
+open import Type hiding (★)
 -- cleanup
 import Level
 open import Data.Nat.NP hiding (_==_) renaming (_<=_ to _ℕ<=_)
@@ -24,7 +25,7 @@ import Data.List.NP as L
 open import Data.Bool.NP public using (_xor_; not; true; false; if_then_else_)
 open V public using ([]; _∷_; head; tail; replicate; RewireTbl)
 
-Bit : Set
+Bit : ★₀
 Bit = Bool
 
 module Defs where
@@ -35,10 +36,10 @@ module Patterns where
   pattern 1b = true
 open Patterns
 
-Bits : ℕ → Set
+Bits : ℕ → ★₀
 Bits = Vec Bit
 
-_→ᵇ_ : ℕ → ℕ → Set
+_→ᵇ_ : ℕ → ℕ → ★₀
 i →ᵇ o = Bits i → Bits o
 
 0ⁿ : ∀ {n} → Bits n
@@ -55,13 +56,13 @@ i →ᵇ o = Bits i → Bits o
 1∷_ : ∀ {n} → Bits n → Bits (suc n)
 1∷ xs = 1b ∷ xs
 
-_!_ : ∀ {a n} {A : Set a} → Vec A n → Fin n → A
+_!_ : ∀ {a n} {A : ★ a} → Vec A n → Fin n → A
 _!_ = flip lookup
 
-[0→_,1→_] : ∀ {a} {A : Set a} → A → A → Bit → A
+[0→_,1→_] : ∀ {a} {A : ★ a} → A → A → Bit → A
 [0→ e₀ ,1→ e₁ ] b = if b then e₁ else e₀
 
-case_0→_1→_ : ∀ {a} {A : Set a} → Bit → A → A → A
+case_0→_1→_ : ∀ {a} {A : ★ a} → Bit → A → A → A
 case b 0→ e₀ 1→ e₁ = if b then e₁ else e₀
 
 _==ᵇ_ : (b₀ b₁ : Bit) → Bool
@@ -209,7 +210,7 @@ module PermutationSyntax-Props where
     ⊕-dist-∙ fs       (π₀ `⁏ π₁) xs rewrite ⊕-dist-∙ (π₀ ∙ fs) π₁ (π₀ ∙ xs)
                                          | ⊕-dist-∙ fs π₀ xs = refl
     {-
- -- ⊛-dist-∙ : ∀ {n a} {A : Set a} (fs : Vec (A → A) n) π xs → π ∙ fs ⊛ π ∙ xs ≡ π ∙ (fs ⊛ xs)
+ -- ⊛-dist-∙ : ∀ {n a} {A : ★ a} (fs : Vec (A → A) n) π xs → π ∙ fs ⊛ π ∙ xs ≡ π ∙ (fs ⊛ xs)
     ⊕-dist-∙ : ∀ {n} (pad : Bits n) π xs → π ∙ pad ⊕ π ∙ xs ≡ π ∙ (pad ⊕ xs)
     ⊕-dist-∙ pad π xs = π ∙ pad ⊕ π ∙ xs
                       ≡⟨ refl ⟩
@@ -224,7 +225,7 @@ module PermutationSyntax-Props where
      -- rans {!⊛-dist-∙ (vmap _xor_ (op ∙ pad)) op xs!} (⊛-dist-∙ (vmap _xor_ pad) op xs)
 -}
 
-view∷ : ∀ {n a b} {A : Set a} {B : Set b} → (A → Vec A n → B) → Vec A (suc n) → B
+view∷ : ∀ {n a b} {A : ★ a} {B : ★ b} → (A → Vec A n → B) → Vec A (suc n) → B
 view∷ f (x ∷ xs) = f x xs
 
 sucBCarry : ∀ {n} → Bits n → Bits (1 + n)
@@ -235,10 +236,10 @@ sucBCarry (1b ∷ xs) = view∷ (λ x xs → x ∷ not x ∷ xs) (sucBCarry xs)
 sucB : ∀ {n} → Bits n → Bits n
 sucB = tail ∘ sucBCarry
 
-_[mod_] : ℕ → ℕ → Set
+_[mod_] : ℕ → ℕ → ★₀
 a [mod b ] = DivMod' a b
 
-proj : ∀ {a} {A : Set a} → A × A → Bit → A
+proj : ∀ {a} {A : ★ a} → A × A → Bit → A
 proj (x₀ , x₁) 0b = x₀
 proj (x₀ , x₁) 1b = x₁
 
@@ -288,7 +289,7 @@ toℕ-inj {suc n} (1b ∷ xs) (1b ∷ ys) p = cong 1∷_ (toℕ-inj xs ys (cance
 toℕ-inj {suc n} (0b ∷ xs) (1b ∷ ys) p = ⊥-elim (2ⁿ+≰toℕ xs (ℕ≤.reflexive (≡.sym p)))
 toℕ-inj {suc n} (1b ∷ xs) (0b ∷ ys) p = ⊥-elim (2ⁿ+≰toℕ ys (ℕ≤.reflexive p))
 
-data _≤ᴮ_ : ∀ {n} (p q : Bits n) → Set where
+data _≤ᴮ_ : ∀ {n} (p q : Bits n) → ★₀ where
   []    : [] ≤ᴮ []
   there : ∀ {n} {p q : Bits n} b → p ≤ᴮ q → (b ∷ p) ≤ᴮ (b ∷ q)
   0-1   : ∀ {n} (p q : Bits n) → 0∷ p ≤ᴮ 1∷ q
@@ -323,20 +324,20 @@ fromℕ′ = fold 0ⁿ sucB
 fromFin : ∀ {n} → Fin (2^ n) → Bits n
 fromFin = fromℕ ∘ Fin.toℕ
 
-lookupTbl : ∀ {n a} {A : Set a} → Bits n → Vec A (2^ n) → A
+lookupTbl : ∀ {n a} {A : ★ a} → Bits n → Vec A (2^ n) → A
 lookupTbl         []         (x ∷ []) = x
 lookupTbl         (0b ∷ key) tbl      = lookupTbl key (take _ tbl)
 lookupTbl {suc n} (1b ∷ key) tbl      = lookupTbl key (drop (2^ n) tbl)
 
-funFromTbl : ∀ {n a} {A : Set a} → Vec A (2^ n) → (Bits n → A)
+funFromTbl : ∀ {n a} {A : ★ a} → Vec A (2^ n) → (Bits n → A)
 funFromTbl = flip lookupTbl
 
-tblFromFun : ∀ {n a} {A : Set a} → (Bits n → A) → Vec A (2^ n)
+tblFromFun : ∀ {n a} {A : ★ a} → (Bits n → A) → Vec A (2^ n)
 -- tblFromFun f = tabulate (f ∘ fromFin)
 tblFromFun {zero} f = f [] ∷ []
 tblFromFun {suc n} f = tblFromFun {n} (f ∘ 0∷_) ++ tblFromFun {n} (f ∘ 1∷_)
 
-funFromTbl∘tblFromFun : ∀ {n a} {A : Set a} (fun : Bits n → A) → funFromTbl (tblFromFun fun) ≗ fun
+funFromTbl∘tblFromFun : ∀ {n a} {A : ★ a} (fun : Bits n → A) → funFromTbl (tblFromFun fun) ≗ fun
 funFromTbl∘tblFromFun {zero} f [] = refl
 funFromTbl∘tblFromFun {suc n} f (0b ∷ xs)
   rewrite take-++ (2^ n) (tblFromFun {n} (f ∘ 0∷_)) (tblFromFun {n} (f ∘ 1∷_)) =
@@ -346,7 +347,7 @@ funFromTbl∘tblFromFun {suc n} f (1b ∷ xs)
         | take-++ (2^ n) (tblFromFun {n} (f ∘ 1∷_)) [] =
     funFromTbl∘tblFromFun {n} (f ∘ 1∷_) xs
 
-tblFromFun∘funFromTbl : ∀ {n a} {A : Set a} (tbl : Vec A (2^ n)) → tblFromFun {n} (funFromTbl tbl) ≡ tbl
+tblFromFun∘funFromTbl : ∀ {n a} {A : ★ a} (tbl : Vec A (2^ n)) → tblFromFun {n} (funFromTbl tbl) ≡ tbl
 tblFromFun∘funFromTbl {zero} (x ∷ []) = refl
 tblFromFun∘funFromTbl {suc n} tbl
   rewrite tblFromFun∘funFromTbl {n} (take _ tbl)

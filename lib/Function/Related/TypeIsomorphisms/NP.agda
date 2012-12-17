@@ -4,7 +4,7 @@ import Level as L
 open import Algebra
 import Algebra.FunctionProperties as FP
 open L using (Lift; lower; lift)
-open import Type
+open import Type hiding (★)
 
 open import Data.Fin using (Fin; zero; suc)
 open import Data.Vec using (Vec; []; _∷_)
@@ -21,39 +21,25 @@ import Function.Equality as FE
 open FE using (_⟨$⟩_)
 open import Function.Related as FR
 open import Function.Related.TypeIsomorphisms public
-import Function.Inverse as Inv
-open Inv using (_↔_; _∘_; sym; id; module Inverse)
+import Function.Inverse.NP as Inv
+open Inv using (_↔_; _∘_; sym; id; inverses; module Inverse)
 open import Relation.Binary
 open import Relation.Binary.Product.Pointwise
 open import Relation.Binary.Sum
 import Relation.Binary.PropositionalEquality as ≡
-open ≡ using (→-to-⟶)
 
-
-Inv-isEquivalence : IsEquivalence (Inv.Inverse {f₁ = L.zero} {f₂ = L.zero})
-Inv-isEquivalence = record
-   { refl = Inv.id
-   ; sym = Inv.sym
-   ; trans = F.flip Inv._∘_ }
-
-SEToid : Set _
-SEToid = Setoid L.zero L.zero
-
-SEToid₁ : Setoid _ _
-SEToid₁ = record
-  { Carrier = Setoid L.zero L.zero
-  ; _≈_ = Inv.Inverse
-  ; isEquivalence = Inv-isEquivalence }
+private
+    Setoid₀ : ★ _
+    Setoid₀ = Setoid L.zero L.zero
 
 ⊎-ICommutativeMonoid : CommutativeMonoid _ _
 ⊎-ICommutativeMonoid = record {
-                         Carrier = SEToid ;
                          _≈_ = Inv.Inverse;
                          _∙_ = _⊎-setoid_;
                          ε = ≡.setoid ⊥;
                          isCommutativeMonoid = record
                             { isSemigroup = record
-                              { isEquivalence = Inv-isEquivalence
+                              { isEquivalence = Inv.isEquivalence
                               ; assoc = assoc
                               ; ∙-cong = _⊎-inverse_
                               }
@@ -123,7 +109,7 @@ SEToid₁ = record
       ; right-inverse-of = inv B A
       }
     } where
-      swap' : ∀ {A B : SEToid} → A ⊎-setoid B FE.⟶ B ⊎-setoid A
+      swap' : ∀ {A B} → A ⊎-setoid B FE.⟶ B ⊎-setoid A
       swap' {A} {B} = record
         { _⟨$⟩_ = [ inj₂ , inj₁ ]
         ; cong = cong
@@ -138,13 +124,12 @@ SEToid₁ = record
 
 ×-ICommutativeMonoid : CommutativeMonoid _ _
 ×-ICommutativeMonoid = record {
-                         Carrier = SEToid ;
                          _≈_ = Inv.Inverse;
                          _∙_ = _×-setoid_;
                          ε = ≡.setoid ⊤;
                          isCommutativeMonoid = record
                             { isSemigroup = record
-                              { isEquivalence = Inv-isEquivalence
+                              { isEquivalence = Inv.isEquivalence
                               ; assoc = assoc
                               ; ∙-cong = _×-inverse_
                               }
@@ -196,7 +181,7 @@ SEToid₁ = record
       ; right-inverse-of = inv B A
       }
     } where
-      swap' : ∀ {A B : SEToid} → A ×-setoid B FE.⟶ B ×-setoid A
+      swap' : ∀ {A B} → A ×-setoid B FE.⟶ B ×-setoid A
       swap' {A}{B} = record { _⟨$⟩_ = swap; cong = swap }
 
       inv : ∀ A B → ∀ x → Setoid._≈_ (A ×-setoid B) (swap' {B} {A} FE.∘ swap' {A} {B}⟨$⟩ x) x
@@ -204,8 +189,7 @@ SEToid₁ = record
 
 ×⊎-ICommutativeSemiring : CommutativeSemiring _ _
 ×⊎-ICommutativeSemiring = record
-  { Carrier = SEToid
-  ; _≈_ = Inv.Inverse
+  { _≈_ = Inv.Inverse
   ; _+_ = _⊎-setoid_
   ; _*_ = _×-setoid_
   ; 0# = ≡.setoid ⊥
@@ -251,7 +235,7 @@ SEToid₁ = record
 
       cong-from : _≈_ ((B ×-setoid A) ⊎-setoid (C ×-setoid A)) =[ _ ]⇒ _≈_ ((B ⊎-setoid C) ×-setoid A)
       cong-from (₁∼₂ ())
-      cong-from (₁∼₁ (B-rel , A-rel)) = (₁∼₁ B-rel , A-rel)
+      cong-from (₁∼₁ (B-rel , A-rel)) = ₁∼₁ B-rel , A-rel
       cong-from (₂∼₂ (C-rel , A-rel)) = ₂∼₂ C-rel , A-rel
 
   zeroˡ : LeftZero (≡.setoid ⊥) _×-setoid_
@@ -270,9 +254,9 @@ SEToid₁ = record
       }
     }
 
-module ×-CMon = CommutativeMonoid (×-CommutativeMonoid FR.bijection L.zero)
-module ⊎-CMon = CommutativeMonoid (⊎-CommutativeMonoid FR.bijection L.zero)
-module ×⊎°    = CommutativeSemiring (×⊎-CommutativeSemiring FR.bijection L.zero)
+module ×-CMon {a} = CommutativeMonoid (×-CommutativeMonoid FR.bijection a)
+module ⊎-CMon {a} = CommutativeMonoid (⊎-CommutativeMonoid FR.bijection a)
+module ×⊎° {a}    = CommutativeSemiring (×⊎-CommutativeSemiring FR.bijection a)
 
 module ×-ICMon = CommutativeMonoid ×-ICommutativeMonoid
 module ⊎-ICMon = CommutativeMonoid ⊎-ICommutativeMonoid
@@ -298,87 +282,83 @@ lift-⊎ {A}{B} = record
     cong (₁∼₁ x∼₁y) = ≡.cong inj₁ x∼₁y
     cong (₂∼₂ x∼₂y) = ≡.cong inj₂ x∼₂y
 
-swap-iso : ∀ {A B} → (A × B) ↔ (B × A)
+swap-iso : ∀ {ℓ} {A B : ★ ℓ} → (A × B) ↔ (B × A)
 swap-iso = ×-CMon.comm _ _
 
-Maybe↔⊤⊎ : ∀ {a} {A : Set a} → Maybe A ↔ (⊤ ⊎ A)
-Maybe↔⊤⊎
-  = record { to   = →-to-⟶ (maybe inj₂ (inj₁ _))
-           ; from = →-to-⟶ [ F.const nothing , just ]
-           ; inverse-of
-           = record { left-inverse-of = maybe (λ _ → ≡.refl) ≡.refl
-                    ; right-inverse-of = [ (λ _ → ≡.refl) , (λ _ → ≡.refl) ] } }
+Maybe↔Lift⊤⊎ : ∀ {ℓ a} {A : ★ a} → Maybe A ↔ (Lift {ℓ = ℓ} ⊤ ⊎ A)
+Maybe↔Lift⊤⊎
+  = inverses (maybe inj₂ (inj₁ _))
+             [ F.const nothing , just ]
+             (maybe (λ _ → ≡.refl) ≡.refl)
+             [ (λ _ → ≡.refl) , (λ _ → ≡.refl) ]
 
-Maybe-cong : ∀ {a b} {A : Set a} {B : Set b} → A ↔ B → Maybe A ↔ Maybe B 
+Maybe↔⊤⊎ : ∀ {a} {A : ★ a} → Maybe A ↔ (⊤ ⊎ A)
+Maybe↔⊤⊎
+  = inverses (maybe inj₂ (inj₁ _))
+             [ F.const nothing , just ]
+             (maybe (λ _ → ≡.refl) ≡.refl)
+             [ (λ _ → ≡.refl) , (λ _ → ≡.refl) ]
+
+Maybe-cong : ∀ {a b} {A : ★ a} {B : ★ b} → A ↔ B → Maybe A ↔ Maybe B 
 Maybe-cong A↔B = sym Maybe↔⊤⊎ ∘ id ⊎-cong A↔B ∘ Maybe↔⊤⊎
 
-Maybe∘Maybe^↔Maybe^∘Maybe : ∀ {A} n → Maybe (Maybe^ n A) ↔ Maybe^ n (Maybe A)
+Maybe∘Maybe^↔Maybe^∘Maybe : ∀ {a} {A : ★ a} n → Maybe (Maybe^ n A) ↔ Maybe^ n (Maybe A)
 Maybe∘Maybe^↔Maybe^∘Maybe zero    = id
 Maybe∘Maybe^↔Maybe^∘Maybe (suc n) = Maybe-cong (Maybe∘Maybe^↔Maybe^∘Maybe n)
 
-Maybe^-cong : ∀ {A B} n → A ↔ B → Maybe^ n A ↔ Maybe^ n B
+Maybe^-cong : ∀ {a b} {A : ★ a} {B : ★ b} n → A ↔ B → Maybe^ n A ↔ Maybe^ n B
 Maybe^-cong zero    = F.id
 Maybe^-cong (suc n) = Maybe-cong F.∘ Maybe^-cong n
 
-Vec0↔⊤ : ∀ {a} {A : Set a} → Vec A 0 ↔ ⊤
-Vec0↔⊤ = record { to         = →-to-⟶ _
-                ; from       = →-to-⟶ (F.const [])
-                ; inverse-of = record { left-inverse-of  = λ { [] → ≡.refl }
-                                      ; right-inverse-of = λ _ → ≡.refl } }
+Vec0↔Lift⊤ : ∀ {a ℓ} {A : ★ a} → Vec A 0 ↔ Lift {_} {ℓ} ⊤
+Vec0↔Lift⊤ = inverses _ (F.const []) (λ { [] → ≡.refl }) (λ _ → ≡.refl)
 
-Vec∘suc↔A×Vec : ∀ {a} {A : Set a} {n} → Vec A (suc n) ↔ (A × Vec A n)
+Vec0↔⊤ : ∀ {a} {A : ★ a} → Vec A 0 ↔ ⊤
+Vec0↔⊤ = inverses _ (F.const []) (λ { [] → ≡.refl }) (λ _ → ≡.refl)
+
+Vec∘suc↔A×Vec : ∀ {a} {A : ★ a} {n} → Vec A (suc n) ↔ (A × Vec A n)
 Vec∘suc↔A×Vec
-  = record { to         = →-to-⟶ (λ { (x ∷ xs) → x , xs })
-           ; from       = →-to-⟶ (uncurry _∷_)
-           ; inverse-of = record { left-inverse-of  = λ { (x ∷ xs) → ≡.refl }
-                                 ; right-inverse-of = λ _ → ≡.refl } }
+  = inverses (λ { (x ∷ xs) → x , xs }) (uncurry _∷_)
+             (λ { (x ∷ xs) → ≡.refl }) (λ _ → ≡.refl)
 
 infix 8 _^_
 
-_^_ : ★ → ℕ → ★
-A ^ 0     = ⊤
+_^_ : ∀ {a} → ★ a → ℕ → ★ a
+A ^ 0     = Lift ⊤
 A ^ suc n = A × A ^ n
 
-^↔Vec : ∀ {A} n → (A ^ n) ↔ Vec A n
-^↔Vec zero    = sym Vec0↔⊤
+^↔Vec : ∀ {a} {A : ★ a} n → (A ^ n) ↔ Vec A n
+^↔Vec zero    = sym Vec0↔Lift⊤
 ^↔Vec (suc n) = sym Vec∘suc↔A×Vec ∘ (id ×-cong (^↔Vec n))
 
 Fin0↔⊥ : Fin 0 ↔ ⊥
-Fin0↔⊥ = record { to   = →-to-⟶ λ()
-                ; from = →-to-⟶ λ()
-                ; inverse-of = record { left-inverse-of  = λ()
-                                      ; right-inverse-of = λ() } }
+Fin0↔⊥ = inverses (λ()) (λ()) (λ()) (λ())
 
 Fin∘suc↔Maybe∘Fin : ∀ {n} → Fin (suc n) ↔ Maybe (Fin n)
 Fin∘suc↔Maybe∘Fin {n}
-  = record { to   = →-to-⟶ to
-           ; from = →-to-⟶ (maybe suc zero)
-           ; inverse-of
-           = record { left-inverse-of = λ { zero → ≡.refl ; (suc n) → ≡.refl }
-                    ; right-inverse-of = maybe (λ _ → ≡.refl) ≡.refl } }
+  = inverses to (maybe suc zero)
+             (λ { zero → ≡.refl ; (suc n) → ≡.refl })
+             (maybe (λ _ → ≡.refl) ≡.refl)
   where to : Fin (suc n) → Maybe (Fin n)
         to zero = nothing
         to (suc n) = just n
 
-Lift↔id : ∀ {a} {A : Set a} → Lift {a} {a} A ↔ A
-Lift↔id = record { to = →-to-⟶ lower
-                 ; from = →-to-⟶ lift
-                 ; inverse-of = record { left-inverse-of = λ { (lift x) → ≡.refl }
-                                       ; right-inverse-of = λ _ → ≡.refl } }
+Lift↔id : ∀ {a} {A : ★ a} → Lift {a} {a} A ↔ A
+Lift↔id = inverses lower lift (λ { (lift x) → ≡.refl }) (λ _ → ≡.refl)
 
-⊤×A↔A : ∀ {A : ★} → (⊤ × A) ↔ A
+⊤×A↔A : ∀ {A : ★₀} → (⊤ × A) ↔ A
 ⊤×A↔A = proj₁ ×-CMon.identity _ ∘ sym Lift↔id ×-cong id
 
-A×⊤↔A : ∀ {A : ★} → (A × ⊤) ↔ A
+A×⊤↔A : ∀ {A : ★₀} → (A × ⊤) ↔ A
 A×⊤↔A = proj₂ ×-CMon.identity _ ∘ id ×-cong sym Lift↔id
 
-⊥⊎A↔A : ∀ {A : ★} → (⊥ ⊎ A) ↔ A
+⊥⊎A↔A : ∀ {A : ★₀} → (⊥ ⊎ A) ↔ A
 ⊥⊎A↔A = proj₁ ⊎-CMon.identity _ ∘ sym Lift↔id ⊎-cong id
 
-A⊎⊥↔A : ∀ {A : ★} → (A ⊎ ⊥) ↔ A
+A⊎⊥↔A : ∀ {A : ★₀} → (A ⊎ ⊥) ↔ A
 A⊎⊥↔A = proj₂ ⊎-CMon.identity _ ∘ id ⊎-cong sym Lift↔id
 
-⊥×A↔⊥ : ∀ {A : ★} → (⊥ × A) ↔ ⊥
+⊥×A↔⊥ : ∀ {A : ★₀} → (⊥ × A) ↔ ⊥
 ⊥×A↔⊥ = Lift↔id ∘ proj₁ ×⊎°.zero _ ∘ sym (Lift↔id ×-cong id)
 
 Maybe⊥↔⊤ : Maybe ⊥ ↔ ⊤
@@ -391,8 +371,8 @@ Maybe^⊥↔Fin (suc n) = sym Fin∘suc↔Maybe∘Fin ∘ Maybe-cong (Maybe^⊥�
 Maybe^⊤↔Fin1+ : ∀ n → Maybe^ n ⊤ ↔ Fin (suc n)
 Maybe^⊤↔Fin1+ n = Maybe^⊥↔Fin (suc n) ∘ sym (Maybe∘Maybe^↔Maybe^∘Maybe n) ∘ Maybe^-cong n (sym Maybe⊥↔⊤)
 
-Maybe-⊎ : ∀ {A B : ★} → (Maybe A ⊎ B) ↔ Maybe (A ⊎ B)
-Maybe-⊎ = sym Maybe↔⊤⊎ ∘ ⊎-CMon.assoc ⊤ _ _ ∘ (Maybe↔⊤⊎ ⊎-cong id)
+Maybe-⊎ : ∀ {a} {A B : ★ a} → (Maybe A ⊎ B) ↔ Maybe (A ⊎ B)
+Maybe-⊎ {a} = sym Maybe↔Lift⊤⊎ ∘ ⊎-CMon.assoc (Lift {_} {a} ⊤) _ _ ∘ (Maybe↔Lift⊤⊎ ⊎-cong id)
 
 Maybe^-⊎-+ : ∀ {A} m n → (Maybe^ m ⊥ ⊎ Maybe^ n A) ↔ Maybe^ (m + n) A
 Maybe^-⊎-+ zero    n = ⊥⊎A↔A

@@ -1,27 +1,28 @@
 module Category where
 
 open import Level
+open import Type hiding (★)
 open import Relation.Binary using (Rel)
 open import Relation.Binary.PropositionalEquality using (_≡_;refl;trans)
 import Function.NP as F
 open F using (-→-)
 
-record RawCategory {ℓ} (_↝_ : Rel (Set ℓ) ℓ) : Set (suc ℓ) where
+record RawCategory {ℓ} (_↝_ : Rel (★ ℓ) ℓ) : ★ (suc ℓ) where
   field
-    id  : ∀ {A : Set ℓ} → A ↝ A
-    _∘_ : ∀ {A B C : Set ℓ} → B ↝ C → A ↝ B → A ↝ C
+    id  : ∀ {A : ★ ℓ} → A ↝ A
+    _∘_ : ∀ {A B C : ★ ℓ} → B ↝ C → A ↝ B → A ↝ C
 
-record IsCategory {ℓ} {_↝_ : Rel (Set ℓ) ℓ}
-                  (cat : RawCategory _↝_) : Set (suc ℓ) where
+record IsCategory {ℓ} {_↝_ : Rel (★ ℓ) ℓ}
+                  (cat : RawCategory _↝_) : ★ (suc ℓ) where
   open RawCategory cat
   field
-    id-∘ : ∀ {A B : Set ℓ} {f : A ↝ B} → id ∘ f ≡ f
-    ∘-id : ∀ {A B : Set ℓ} {f : A ↝ B} → f ∘ id ≡ f
-    ∘-assoc : ∀ {A B C D : Set ℓ} {h : C ↝ D} {g : B ↝ C} {f : A ↝ B}
+    id-∘ : ∀ {A B : ★ ℓ} {f : A ↝ B} → id ∘ f ≡ f
+    ∘-id : ∀ {A B : ★ ℓ} {f : A ↝ B} → f ∘ id ≡ f
+    ∘-assoc : ∀ {A B C D : ★ ℓ} {h : C ↝ D} {g : B ↝ C} {f : A ↝ B}
               → h ∘ (g ∘ f) ≡ (h ∘ g) ∘ f
   open RawCategory cat public
 
-record Category {ℓ} (_↝_ : Rel (Set ℓ) ℓ) : Set (suc ℓ) where
+record Category {ℓ} (_↝_ : Rel (★ ℓ) ℓ) : ★ (suc ℓ) where
   field
     rawCat : RawCategory _↝_
     isCat  : IsCategory rawCat

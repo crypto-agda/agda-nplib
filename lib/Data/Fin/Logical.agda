@@ -10,7 +10,7 @@ open import Relation.Binary.Logical
 private
   module ⟦ℕ⟧s = Setoid ⟦ℕ⟧-setoid
 
-data ⟦Fin⟧ : (⟦ℕ⟧ ⟦→⟧ ⟦Set₀⟧) Fin Fin where
+data ⟦Fin⟧ : (⟦ℕ⟧ ⟦→⟧ ⟦★₀⟧) Fin Fin where
   ⟦zero⟧ : ∀ {n₁ n₂} {nᵣ : ⟦ℕ⟧ n₁ n₂} → ⟦Fin⟧ (suc nᵣ) zero zero
   ⟦suc⟧  : ∀ {n₁ n₂} {nᵣ : ⟦ℕ⟧ n₁ n₂} {x₁ x₂} (xᵣ : ⟦Fin⟧ nᵣ x₁ x₂) → ⟦Fin⟧ (suc nᵣ) (suc x₁) (suc x₂)
 

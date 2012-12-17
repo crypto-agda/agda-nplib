@@ -1,5 +1,6 @@
 module Data.Fin.NP where
 
+open import Type hiding (★)
 open import Function
 open import Data.Empty
 open import Data.Fin public
@@ -28,7 +29,7 @@ x == y = helper (compare x y) where
 swap : ∀ {i} (x y : Fin i) → Fin i → Fin i
 swap x y z = if x == z then y else if y == z then x else z
 
-data FinSum m n : Fin (m +ℕ n) → Set where
+data FinSum m n : Fin (m +ℕ n) → ★₀ where
   bound : (x : Fin m) → FinSum m n (inject+ n x)
   free  : (x : Fin n) → FinSum m n (raise m x)
 
@@ -78,7 +79,7 @@ reverse-old-lem : ∀ {n} (x : Fin n) → toℕ (reverse-old x) ≡ n ∸ suc (t
 reverse-old-lem {zero} ()
 reverse-old-lem {suc n} x rewrite inject≤-lemma (n ℕ- x) (n∸m≤n (toℕ x) (suc n)) = toℕ-ℕ-lem x
 
-data FinView {n} : Fin (suc n) → Set where
+data FinView {n} : Fin (suc n) → ★₀ where
   `fromℕ   : FinView (fromℕ n)
   `inject₁ : ∀ x → FinView (inject₁ x)
 
@@ -168,33 +169,33 @@ module Modulo where
   sucmod-inject₁ : ∀ {n} (i : Fin n) → sucmod (inject₁ i) ≡ suc i
   sucmod-inject₁ i rewrite modq-inject₁ i = refl
 
-  lem-inject₁ : ∀ {n a} {A : Set a} (i : Fin n) (xs : Vec A n) x → lookup (inject₁ i) (xs ∷ʳ x) ≡ lookup i xs
+  lem-inject₁ : ∀ {n a} {A : ★ a} (i : Fin n) (xs : Vec A n) x → lookup (inject₁ i) (xs ∷ʳ x) ≡ lookup i xs
   lem-inject₁ zero    (x₀ ∷ xs) x₁ = refl
   lem-inject₁ (suc i) (x₀ ∷ xs) x₁ = lem-inject₁ i xs x₁
 
-  lem-fromℕ : ∀ {n a} {A : Set a} (xs : Vec A n) x → lookup (fromℕ n) (xs ∷ʳ x) ≡ x
+  lem-fromℕ : ∀ {n a} {A : ★ a} (xs : Vec A n) x → lookup (fromℕ n) (xs ∷ʳ x) ≡ x
   lem-fromℕ {zero}  []       x = refl
   lem-fromℕ {suc n} (_ ∷ xs) x = lem-fromℕ xs x
 
-  lookup-sucmod : ∀ {n a} {A : Set a} (i : Fin (suc n)) (x : A) xs
+  lookup-sucmod : ∀ {n a} {A : ★ a} (i : Fin (suc n)) (x : A) xs
                  → lookup i (xs ∷ʳ x) ≡ lookup (sucmod i) (x ∷ xs)
   lookup-sucmod i x xs with finView i
   lookup-sucmod {n} .(fromℕ n) x xs | `fromℕ rewrite sucmod-fromℕ n = lem-fromℕ xs x
   lookup-sucmod .(inject₁ x) x₁ xs | `inject₁ x rewrite sucmod-inject₁ x = lem-inject₁ x xs x₁
 
-  lookup-map : ∀ {n a b} {A : Set a} {B : Set b} (f : A → B) i (xs : Vec A n)
+  lookup-map : ∀ {n a b} {A : ★ a} {B : ★ b} (f : A → B) i (xs : Vec A n)
                → lookup i (vmap f xs) ≡ f (lookup i xs)
   lookup-map f zero    (x ∷ xs) = refl
   lookup-map f (suc i) (x ∷ xs) = lookup-map f i xs
 
-  vec≗⇒≡ : ∀ {n a} {A : Set a} (xs ys : Vec A n) → flip lookup xs ≗ flip lookup ys → xs ≡ ys
+  vec≗⇒≡ : ∀ {n a} {A : ★ a} (xs ys : Vec A n) → flip lookup xs ≗ flip lookup ys → xs ≡ ys
   vec≗⇒≡ []       []       _ = refl
   vec≗⇒≡ (x ∷ xs) (y ∷ ys) p rewrite vec≗⇒≡ xs ys (p ∘ suc) | p zero = refl
 
   -- most likely this is subsumed by the StableUnderInjection parts
   private
      module Unused where
-        lookup-sucmod-rot₁ : ∀ {n a} {A : Set a} (i : Fin n) (xs : Vec A n)
+        lookup-sucmod-rot₁ : ∀ {n a} {A : ★ a} (i : Fin n) (xs : Vec A n)
                        → lookup i (rot₁ xs) ≡ lookup (sucmod i) xs
         lookup-sucmod-rot₁ {zero} () xs
         lookup-sucmod-rot₁ {suc n} i (x ∷ xs) = lookup-sucmod i x xs

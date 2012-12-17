@@ -1,6 +1,7 @@
 {-# OPTIONS --universe-polymorphism #-}
 module Data.Bool.NP where
 
+open import Type hiding (★)
 open import Data.Bool using (Bool; true; false; T; if_then_else_; not)
 import Algebra
 open import Algebra.FunctionProperties using (Op₁; Op₂)
@@ -20,8 +21,12 @@ open E.Equivalence using (to; from)
 open import Function.Equality using (_⟨$⟩_)
 open ≡ using (_≡_)
 
-cond : ∀ {a} {A : Set a} → A → A → Bool → A
+cond : ∀ {a} {A : ★ a} → A → A → Bool → A
 cond x y b = if b then x else y
+
+Cond : ∀ {ℓ} {A B : ★ ℓ} → A → B → (b : Bool) → cond A B b
+Cond x y true  = x
+Cond x y false = y
 
 module Xor° = Algebra.CommutativeRing B.commutativeRing-xor-∧
 module Bool° = Algebra.CommutativeSemiring B.commutativeSemiring-∧-∨
@@ -29,41 +34,41 @@ module Bool° = Algebra.CommutativeSemiring B.commutativeSemiring-∧-∨
 check : ∀ b → {pf : T b} → ⊤
 check = _
 
-If_then_else_ : ∀ {ℓ} {A B : Set ℓ} b → (T b → A) → (T (not b) → B) → if b then A else B
+If_then_else_ : ∀ {ℓ} {A B : ★ ℓ} b → (T b → A) → (T (not b) → B) → if b then A else B
 If_then_else_ true  x _ = x _
 If_then_else_ false _ x = x _
 
-If′_then_else_ : ∀ {ℓ} {A B : Set ℓ} b → A → B → if b then A else B
+If′_then_else_ : ∀ {ℓ} {A B : ★ ℓ} b → A → B → if b then A else B
 If′_then_else_ true  x _ = x
 If′_then_else_ false _ x = x
 
-If-map : ∀ {A B C D : Set} b (f : T b → A → C) (g : T (not b) → B → D) →
+If-map : ∀ {A B C D : ★₀} b (f : T b → A → C) (g : T (not b) → B → D) →
            if b then A else B → if b then C else D
 If-map true  f _ = f _
 If-map false _ f = f _
 
-If-elim : ∀ {A B : Set} {P : Bool → Set}
+If-elim : ∀ {A B : ★₀} {P : Bool → ★₀}
             b (f : T b → A → P true) (g : T (not b) → B → P false) → if b then A else B → P b
 If-elim true  f _ = f _
 If-elim false _ f = f _
 
-If-true : ∀ {A B : Set} {b} → T b → (if b then A else B) ≡ A
+If-true : ∀ {A B : ★₀} {b} → T b → (if b then A else B) ≡ A
 If-true {b = true}  _ = ≡.refl
 If-true {b = false} ()
 
-If-false : ∀ {A B : Set} {b} → T (not b) → (if b then A else B) ≡ B
+If-false : ∀ {A B : ★₀} {b} → T (not b) → (if b then A else B) ≡ B
 If-false {b = true}  ()
 If-false {b = false} _ = ≡.refl
 
-cong-if : ∀ {A B : Set} b {t₀ t₁} (f : A → B) → (if b then f t₀ else f t₁) ≡ f (if b then t₀ else t₁)
+cong-if : ∀ {A B : ★₀} b {t₀ t₁} (f : A → B) → (if b then f t₀ else f t₁) ≡ f (if b then t₀ else t₁)
 cong-if true  _ = ≡.refl
 cong-if false _ = ≡.refl
 
-if-not : ∀ {a} {A : Set a} b {t₀ t₁ : A} → (if b then t₀ else t₁) ≡ (if not b then t₁ else t₀)
+if-not : ∀ {a} {A : ★ a} b {t₀ t₁ : A} → (if b then t₀ else t₁) ≡ (if not b then t₁ else t₀)
 if-not true  = ≡.refl
 if-not false = ≡.refl
 
-data ⟦Bool⟧ : (b₁ b₂ : Bool) → Set where
+data ⟦Bool⟧ : (b₁ b₂ : Bool) → ★₀ where
   ⟦true⟧   : ⟦Bool⟧ true true
   ⟦false⟧  : ⟦Bool⟧ false false
 
@@ -111,13 +116,13 @@ module ⟦Bool⟧-Props where
   open DecSetoid decSetoid public
   open Equality equality public hiding (subst; isEquivalence; refl; reflexive; sym; trans)
 
-⟦if⟨_⟩_then_else_⟧ : ∀ {a₁ a₂ aᵣ} → (∀⟨ Aᵣ ∶ ⟦Set⟧ {a₁} {a₂} aᵣ ⟩⟦→⟧ ⟦Bool⟧ ⟦→⟧ Aᵣ ⟦→⟧ Aᵣ ⟦→⟧ Aᵣ) if_then_else_ if_then_else_
+⟦if⟨_⟩_then_else_⟧ : ∀ {a₁ a₂ aᵣ} → (∀⟨ Aᵣ ∶ ⟦★⟧ {a₁} {a₂} aᵣ ⟩⟦→⟧ ⟦Bool⟧ ⟦→⟧ Aᵣ ⟦→⟧ Aᵣ ⟦→⟧ Aᵣ) if_then_else_ if_then_else_
 ⟦if⟨_⟩_then_else_⟧ _ ⟦true⟧  xᵣ _ = xᵣ
 ⟦if⟨_⟩_then_else_⟧ _ ⟦false⟧ _ xᵣ = xᵣ
 
 ⟦If′⟨_,_⟩_then_else_⟧ : ∀ {ℓ₁ ℓ₂ ℓᵣ} →
-                       (∀⟨ Aᵣ ∶ ⟦Set⟧ {ℓ₁} {ℓ₂} ℓᵣ ⟩⟦→⟧ ∀⟨ Bᵣ ∶ ⟦Set⟧ {ℓ₁} {ℓ₂} ℓᵣ ⟩⟦→⟧
-                           ⟨ bᵣ ∶ ⟦Bool⟧ ⟩⟦→⟧ Aᵣ ⟦→⟧ Bᵣ ⟦→⟧ ⟦if⟨ ⟦Set⟧ _ ⟩ bᵣ then Aᵣ else Bᵣ ⟧)
+                       (∀⟨ Aᵣ ∶ ⟦★⟧ {ℓ₁} {ℓ₂} ℓᵣ ⟩⟦→⟧ ∀⟨ Bᵣ ∶ ⟦★⟧ {ℓ₁} {ℓ₂} ℓᵣ ⟩⟦→⟧
+                           ⟨ bᵣ ∶ ⟦Bool⟧ ⟩⟦→⟧ Aᵣ ⟦→⟧ Bᵣ ⟦→⟧ ⟦if⟨ ⟦★⟧ _ ⟩ bᵣ then Aᵣ else Bᵣ ⟧)
                        If′_then_else_ If′_then_else_
 ⟦If′⟨_,_⟩_then_else_⟧ _ _ ⟦true⟧  xᵣ _ = xᵣ
 ⟦If′⟨_,_⟩_then_else_⟧ _ _ ⟦false⟧ _ xᵣ = xᵣ
@@ -129,7 +134,7 @@ false == true = false
 false == false = true
 
 module == where
-  _≈_ : (x y : Bool) → Set
+  _≈_ : (x y : Bool) → ★₀
   x ≈ y = T (x == y)
 
   refl : Reflexive _≈_
@@ -289,7 +294,7 @@ xor-inj₁ false = id
 xor-inj₂ : ∀ x {y z} → y xor x ≡ z xor x → y ≡ z
 xor-inj₂ x {y} {z} rewrite Xor°.+-comm y x | Xor°.+-comm z x = xor-inj₁ x
 
-module Indexed {a} {A : Set a} where
+module Indexed {a} {A : ★ a} where
     _∧°_ : Op₂ (A → Bool)
     x ∧° y = x ⟨ _∧_ ⟩° y
 
@@ -305,7 +310,7 @@ module Indexed {a} {A : Set a} where
     not° : Op₁ (A → Bool)
     not° f = not ∘ f
 
-data So : Bool → Set where
+data So : Bool → ★₀ where
   oh! : So true
 
 So→T : ∀ {b} → So b → T b

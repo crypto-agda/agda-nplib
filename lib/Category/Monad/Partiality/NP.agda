@@ -1,6 +1,6 @@
-{-# OPTIONS --universe-polymorphism #-}
 module Category.Monad.Partiality.NP where
 
+open import Type hiding (★)
 open import Coinduction
 open import Data.Maybe hiding (monad)
 open import Data.Nat
@@ -8,13 +8,15 @@ open import Level as L
 import Category.Monad.Partiality as Pa
 import Category.Monad as Cat
 
-module Workaround where
-  open Pa.Workaround public
+module Workaround {a} where
+  open Pa.Workaround {a} public
 
-  never : {A : Set} → A ⊥P
+  never : ∀ {A} → A ⊥P
   never = later (♯ never)
 
-{- perdicativity/universes limitation…
+{- because universe levels _⊥P is not an endofunctor,
+   therefore _⊥P is not a proper monad.
+
   monad : ∀ {f} → Cat.RawMonad {f = f} _⊥P
   monad = record
     { return = now
@@ -27,15 +29,12 @@ open Pa public hiding (module Workaround)
 module M⊥ ℓ where
   open Cat.RawMonad (Pa.monad {ℓ}) public
 
-open M⊥ L.zero
+_∘⊥_ : ∀ {ℓ a} {A : ★ a} {B C : ★ ℓ} → (B → C ⊥) → (A → B ⊥) → (A → C ⊥)
+(f ∘⊥ g) x = f =<< g x where open M⊥ _
 
--- not univ poly yet
-_∘⊥_ : ∀ {A B C : Set} → (B → C ⊥) → (A → B ⊥) → (A → C ⊥)
-_∘⊥_ f g x = f =<< g x
-
-now? : ∀ {a} {A : Set a} → A ⊥ → Maybe A
+now? : ∀ {a} {A : ★ a} → A ⊥ → Maybe A
 now? (now x)   = just x
 now? (later _) = nothing
 
-run_for_steps? : ∀ {a} {A : Set a} → A ⊥ → ℕ → Maybe A
+run_for_steps? : ∀ {a} {A : ★ a} → A ⊥ → ℕ → Maybe A
 run x for n steps? = now? (run x for n steps)

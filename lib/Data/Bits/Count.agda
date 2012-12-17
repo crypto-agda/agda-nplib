@@ -1,6 +1,7 @@
 
 module Data.Bits.Count where
 
+open import Type hiding (★)
 open import Data.Bits
 open import Data.Bits.OperationSyntax
 import Data.Bits.Search as Search
@@ -278,7 +279,7 @@ difference-lemma A B F A∧¬F≡B∧¬F =
 ext-# : ∀ {c} {f g : Bits c → Bit} → f ≗ g → #⟨ f ⟩ᶠ ≡ #⟨ g ⟩ᶠ
 ext-# f≗g = ext-countᶠ f≗g (allBits _)
 
-find? : ∀ {n a} {A : Set a} → (Bits n →? A) →? A
+find? : ∀ {n a} {A : ★ a} → (Bits n →? A) →? A
 find? = search (M?._∣_ _)
 
 findB : ∀ {n} → (Bits n → Bool) →? Bits n

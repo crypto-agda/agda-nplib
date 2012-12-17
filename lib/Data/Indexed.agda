@@ -1,3 +1,4 @@
+open import Type            hiding (★)
 open import Level           using (_⊔_; suc; Level)
 open import Function.NP     using (id; const; _∘_; _∘′_; _ˢ_; _⟨_⟩°_)
 open import Data.Sum        using (_⊎_; inj₁; inj₂)
@@ -8,31 +9,31 @@ open import Data.Maybe      using (Maybe; nothing; just)
 open import Data.Empty      using (⊥)
 open import Data.Product.NP using (∃; _,_; _×_)
 
-module Data.Indexed {i} {Ix : Set i} where
+module Data.Indexed {i} {Ix : ★ i} where
 
-★° : ∀ ℓ → Set _
-★° ℓ = Ix → Set ℓ
+★° : ∀ ℓ → ★ _
+★° ℓ = Ix → ★ ℓ
 
-★₀° : Set _
-★₀° = Ix → Set
+★₀° : ★ _
+★₀° = Ix → ★
 
-★₁° : Set _
-★₁° = Ix → Set₂
+★₁° : ★ _
+★₁° = Ix → ★₂
 
-∀° : ∀ {f} (F : ★° f) → Set _
+∀° : ∀ {f} (F : ★° f) → ★ _
 ∀° F = ∀ {x} → F x
 
-∃° : ∀ {f} (F : ★° f) → Set _
+∃° : ∀ {f} (F : ★° f) → ★ _
 ∃° F = ∃[ x ] F x
 
-pure° : ∀ {a} {A : Set a} → A → (Ix → A)
+pure° : ∀ {a} {A : ★ a} → A → (Ix → A)
 pure° = const
 
 -- an alias for pure°
-K° : ∀ {a} (A : Set a) → ★° _
+K° : ∀ {a} (A : ★ a) → ★° _
 K° = pure°
 
-Cmp° : (F : ★° _) (i j : Ix) → Set
+Cmp° : (F : ★° _) (i j : Ix) → ★₀
 Cmp° F i j = F i → F j → Bool
 
 Π° : ∀ {f g} (F : ★° f) (G : ∀ {i} → F i → ★° g) → ★° _
@@ -45,7 +46,7 @@ F →° G = Π° F (const G)
 -- expanded: (F →° G) i = F i → G i
 
 infixr 0 _↦°_
-_↦°_ : ∀ {f g} (F : ★° f) (G : ★° g) → Set _
+_↦°_ : ∀ {f g} (F : ★° f) (G : ★° g) → ★ _
 (F ↦° G) = ∀°(F →° G)
 
 id° : ∀ {f} {F : ★° f} → F ↦° F
@@ -66,16 +67,16 @@ _$°′_ = id
 
 infixl 4 _⊛°_
 
-_⊛°_ : ∀ {a b} {A : Set a} {B : Set b}
+_⊛°_ : ∀ {a b} {A : ★ a} {B : ★ b}
          → (Ix → A → B) → ((Ix → A) → (Ix → B))
 _⊛°_ = _ˢ_
 
-liftA° : ∀ {a b} {A : Set a} {B : Set b}
+liftA° : ∀ {a b} {A : ★ a} {B : ★ b}
           → (A → B) → ((Ix → A) → (Ix → B))
 liftA° = _∘′_
 -- liftA° f x = pure° f ⊛° x
 
-liftA₂° : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c}
+liftA₂° : ∀ {a b c} {A : ★ a} {B : ★ b} {C : ★ c}
            → (A → B → C)
            → ((Ix → A) → (Ix → B) → (Ix → C))
 liftA₂° f x y = x ⟨ f ⟩° y
@@ -132,12 +133,12 @@ inj₂° = inj₂
 -- This is the type of |map| functions, the fmap function on Ix-indexed
 -- functors.
 Map° : ∀ {a a' b b'} (F : ★° a → ★° a')
-                     (G : ★° b → ★° b') → Set _
+                     (G : ★° b → ★° b') → ★ _
 Map° F G = ∀ {A B} → (A ↦° B) → F A ↦° G B
 
 map°-K° : ∀ {a a' b b'}
-            {F : Set a → Set a'}
-            {G : Set b → Set b'}
+            {F : ★ a → ★ a'}
+            {G : ★ b → ★ b'}
             (fmap : ∀ {A B} → (A → B) → F A → G B)
             {A B} → (K° A ↦° K° B) → K° (F A) ↦° K° (G B)
 map°-K° fmap f {i} = fmap (f {i})

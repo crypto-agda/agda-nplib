@@ -1,10 +1,11 @@
 module Category.Kleisli where
 
+open import Type hiding (★)
 open import Relation.Binary using (Rel)
 open import Category
 open import Category.Monad
 
-Kleisli : ∀ {ℓ} (M : Set ℓ → Set ℓ) → Rel (Set ℓ) ℓ
+Kleisli : ∀ {ℓ} (M : ★ ℓ → ★ ℓ) → Rel (★ ℓ) ℓ
 Kleisli M A B = A → M B
 
 kleisli-RawCategory : ∀ {ℓ M} → RawMonad M → RawCategory (Kleisli {ℓ} M)

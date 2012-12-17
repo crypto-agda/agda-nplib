@@ -1,5 +1,6 @@
 module Data.Vec.NP where
 
+open import Type hiding (★)
 import Level as L
 open import Category.Applicative
 open import Data.Vec public hiding (_⊛_; zipWith; zip; map; applicative)
@@ -18,53 +19,53 @@ module waiting-for-a-fix-in-the-stdlib where
 
     infixl 4 _⊛_
 
-    _⊛_ : ∀ {a b n} {A : Set a} {B : Set b} →
+    _⊛_ : ∀ {a b n} {A : ★ a} {B : ★ b} →
           Vec (A → B) n → Vec A n → Vec B n
     _⊛_ {n = zero}  fs xs = []
     _⊛_ {n = suc n} fs xs = head fs (head xs) ∷ (tail fs ⊛ tail xs)
 
-    applicative : ∀ {a n} → RawApplicative (λ (A : Set a) → Vec A n)
+    applicative : ∀ {a n} → RawApplicative (λ (A : ★ a) → Vec A n)
     applicative = record
       { pure = replicate
       ; _⊛_  = _⊛_
       }
 
-    map : ∀ {a b n} {A : Set a} {B : Set b} →
+    map : ∀ {a b n} {A : ★ a} {B : ★ b} →
           (A → B) → Vec A n → Vec B n
     map f xs = replicate f ⊛ xs
 
-    zipWith : ∀ {a b c n} {A : Set a} {B : Set b} {C : Set c} →
+    zipWith : ∀ {a b c n} {A : ★ a} {B : ★ b} {C : ★ c} →
               (A → B → C) → Vec A n → Vec B n → Vec C n
     zipWith _⊕_ xs ys = replicate _⊕_ ⊛ xs ⊛ ys
 
-    zip : ∀ {a b n} {A : Set a} {B : Set b} →
+    zip : ∀ {a b n} {A : ★ a} {B : ★ b} →
           Vec A n → Vec B n → Vec (A × B) n
     zip = zipWith _,_
 
-    tabulate-∘ : ∀ {n a b} {A : Set a} {B : Set b}
+    tabulate-∘ : ∀ {n a b} {A : ★ a} {B : ★ b}
                  (f : A → B) (g : Fin n → A) →
                  tabulate (f ∘ g) ≡ map f (tabulate g)
     tabulate-∘ {zero}  f g = refl
     tabulate-∘ {suc n} f g =
       ≡.cong (_∷_ (f (g zero))) (tabulate-∘ f (g ∘ suc))
 
-    tabulate-ext : ∀ {n a}{A : Set a}{f g : Fin n → A} → f ≗ g → tabulate f ≡ tabulate g
+    tabulate-ext : ∀ {n a}{A : ★ a}{f g : Fin n → A} → f ≗ g → tabulate f ≡ tabulate g
     tabulate-ext {zero} f≗g = refl
     tabulate-ext {suc n} f≗g rewrite f≗g zero | tabulate-ext (f≗g ∘ suc) = refl
 
     -- map is functorial.
 
-    map-id : ∀ {a n} {A : Set a} → map id ≗ id {A = Vec A n}
+    map-id : ∀ {a n} {A : ★ a} → map id ≗ id {A = Vec A n}
     map-id []       = refl
     map-id (x ∷ xs) = ≡.cong (_∷_ x) (map-id xs)
 
-    map-∘ : ∀ {a b c n} {A : Set a} {B : Set b} {C : Set c}
+    map-∘ : ∀ {a b c n} {A : ★ a} {B : ★ b} {C : ★ c}
             (f : B → C) (g : A → B) →
             _≗_ {A = Vec A n} (map (f ∘ g)) (map f ∘ map g)
     map-∘ f g []       = refl
     map-∘ f g (x ∷ xs) = ≡.cong (_∷_ (f (g x))) (map-∘ f g xs)
 
-    map-ext : ∀ {a b} {A : Set a} {B : Set b} {f g : A → B} {n} → f ≗ g → map f ≗ map {n = n} g
+    map-ext : ∀ {a b} {A : ★ a} {B : ★ b} {f g : A → B} {n} → f ≗ g → map f ≗ map {n = n} g
     map-ext f≗g [] = refl
     map-ext f≗g (x ∷ xs) rewrite f≗g x | map-ext f≗g xs = refl
 
@@ -78,31 +79,31 @@ module Alternative-Reverse where
     rev-+ zero    = id
     rev-+ (suc x) = rev-+ x ∘ suc
 
-    rev-app : ∀ {a} {A : Set a} {m n} →
+    rev-app : ∀ {a} {A : ★ a} {m n} →
               Vec A n → Vec A m → Vec A (rev-+ n m)
     rev-app []       = id
     rev-app (x ∷ xs) = rev-app xs ∘ _∷_ x
 
-    rev-aux : ∀ {a} {A : Set a} {m} n →
+    rev-aux : ∀ {a} {A : ★ a} {m} n →
               Vec A (rev-+ n zero) →
               (∀ {m} → A → Vec A (rev-+ n m) → Vec A (rev-+ n (suc m))) →
               Vec A m → Vec A (rev-+ n m)
     rev-aux m acc op []       = acc
     rev-aux m acc op (x ∷ xs) = rev-aux (suc m) (op x acc) op xs
 
-    alt-reverse : ∀ {a n} {A : Set a} → Vec A n → Vec A n
+    alt-reverse : ∀ {a n} {A : ★ a} → Vec A n → Vec A n
     alt-reverse = rev-aux 0 [] _∷_
 
-vuncurry : ∀ {n a b} {A : Set a} {B : Set b} (f : A → Vec A n → B) → Vec A (1 + n) → B
+vuncurry : ∀ {n a b} {A : ★ a} {B : ★ b} (f : A → Vec A n → B) → Vec A (1 + n) → B
 vuncurry f (x ∷ xs) = f x xs
 
-countᶠ : ∀ {n a} {A : Set a} → (A → Bool) → Vec A n → Fin (suc n)
+countᶠ : ∀ {n a} {A : ★ a} → (A → Bool) → Vec A n → Fin (suc n)
 countᶠ pred = foldr (Fin ∘ suc) (λ x → if pred x then suc else inject₁) zero
 
-count : ∀ {n a} {A : Set a} → (A → Bool) → Vec A n → ℕ
+count : ∀ {n a} {A : ★ a} → (A → Bool) → Vec A n → ℕ
 count pred = toℕ ∘ countᶠ pred
 
-count-∘ : ∀ {n a b} {A : Set a} {B : Set b} (f : A → B) (pred : B → Bool) →
+count-∘ : ∀ {n a b} {A : ★ a} {B : ★ b} (f : A → B) (pred : B → Bool) →
             count {n} (pred ∘ f) ≗ count pred ∘ map f
 count-∘ f pred [] = refl
 count-∘ f pred (x ∷ xs) with pred (f x)
@@ -111,7 +112,7 @@ count-∘ f pred (x ∷ xs) with pred (f x)
                   | F.inject₁-lemma (countᶠ (pred ∘ f) xs)
                   | count-∘ f pred xs = refl
 
-count-++ : ∀ {m n a} {A : Set a} (pred : A → Bool) (xs : Vec A m) (ys : Vec A n)
+count-++ : ∀ {m n a} {A : ★ a} (pred : A → Bool) (xs : Vec A m) (ys : Vec A n)
             → count pred (xs ++ ys) ≡ count pred xs + count pred ys
 count-++ pred [] ys = refl
 count-++ pred (x ∷ xs) ys with pred x
@@ -119,33 +120,33 @@ count-++ pred (x ∷ xs) ys with pred x
 ... | false rewrite F.inject₁-lemma (countᶠ pred (xs ++ ys))
                   | F.inject₁-lemma (countᶠ pred xs) | count-++ pred xs ys = refl
 
-ext-countᶠ : ∀ {n a} {A : Set a} {f g : A → Bool} → f ≗ g → (xs : Vec A n) → countᶠ f xs ≡ countᶠ g xs
+ext-countᶠ : ∀ {n a} {A : ★ a} {f g : A → Bool} → f ≗ g → (xs : Vec A n) → countᶠ f xs ≡ countᶠ g xs
 ext-countᶠ f≗g [] = refl
 ext-countᶠ f≗g (x ∷ xs) rewrite ext-countᶠ f≗g xs | f≗g x = refl
 
-filter : ∀ {n a} {A : Set a} (pred : A → Bool) (xs : Vec A n) → Vec A (count pred xs)
+filter : ∀ {n a} {A : ★ a} (pred : A → Bool) (xs : Vec A n) → Vec A (count pred xs)
 filter pred [] = []
 filter pred (x ∷ xs) with pred x
 ... | true  = x ∷ filter pred xs
 ... | false rewrite F.inject₁-lemma (countᶠ pred xs) = filter pred xs
 
-η : ∀ {n a} {A : Set a} → Vec A n → Vec A n
+η : ∀ {n a} {A : ★ a} → Vec A n → Vec A n
 η = tabulate ∘ flip lookup
 
-η′ : ∀ {n a} {A : Set a} → Vec A n → Vec A n
+η′ : ∀ {n a} {A : ★ a} → Vec A n → Vec A n
 η′ {zero}  = λ _ → []
 η′ {suc n} = λ xs → head xs ∷ η (tail xs)
 
-shallow-η : ∀ {n a} {A : Set a} (xs : Vec A (1 + n)) → xs ≡ head xs ∷ tail xs
+shallow-η : ∀ {n a} {A : ★ a} (xs : Vec A (1 + n)) → xs ≡ head xs ∷ tail xs
 shallow-η (x ∷ xs) = ≡.refl
 
-uncons : ∀ {n a} {A : Set a} → Vec A (1 + n) → (A × Vec A n)
+uncons : ∀ {n a} {A : ★ a} → Vec A (1 + n) → (A × Vec A n)
 uncons (x ∷ xs) = x , xs
 
-splitAt′ : ∀ {a} {A : Set a} m {n} → Vec A (m + n) → Vec A m × Vec A n
+splitAt′ : ∀ {a} {A : ★ a} m {n} → Vec A (m + n) → Vec A m × Vec A n
 splitAt′ m xs = case splitAt m xs of λ { (ys , zs , _) → (ys , zs) }
 
-++-decomp : ∀ {m n a} {A : Set a} {xs zs : Vec A m} {ys ts : Vec A n}
+++-decomp : ∀ {m n a} {A : ★ a} {xs zs : Vec A m} {ys ts : Vec A n}
              → (xs ++ ys) ≡ (zs ++ ts) → (xs ≡ zs × ys ≡ ts)
 ++-decomp {zero} {xs = []} {[]} p = refl , p
 ++-decomp {suc m} {xs = x ∷ xs} {z ∷ zs} eq with ++-decomp {m} {xs = xs} {zs} (cong tail eq)
@@ -154,7 +155,7 @@ splitAt′ m xs = case splitAt m xs of λ { (ys , zs , _) → (ys , zs) }
 {-
 open import Data.Vec.Equality
 
-module Here {a} {A : Set a} where
+module Here {a} {A : ★ a} where
   open Equality (≡.setoid A)
   ≈-splitAt : ∀ {m n} {xs zs : Vec A m} {ys ts : Vec A n}
                → (xs ++ ys) ≈ (zs ++ ts) → (xs ≈ zs × ys ≈ ts)
@@ -163,101 +164,101 @@ module Here {a} {A : Set a} where
   ... | (q₁ , q₂) = x¹≈x² ∷-cong q₁ , q₂
 -}
 
-++-inj₁ : ∀ {m n} {a} {A : Set a} (xs ys : Vec A m) {zs ts : Vec A n} → xs ++ zs ≡ ys ++ ts → xs ≡ ys
+++-inj₁ : ∀ {m n} {a} {A : ★ a} (xs ys : Vec A m) {zs ts : Vec A n} → xs ++ zs ≡ ys ++ ts → xs ≡ ys
 ++-inj₁ xs ys eq = proj₁ (++-decomp eq)
 
-++-inj₂ : ∀ {m n} {a} {A : Set a} (xs ys : Vec A m) {zs ts : Vec A n} → xs ++ zs ≡ ys ++ ts → zs ≡ ts
+++-inj₂ : ∀ {m n} {a} {A : ★ a} (xs ys : Vec A m) {zs ts : Vec A n} → xs ++ zs ≡ ys ++ ts → zs ≡ ts
 ++-inj₂ xs ys eq = proj₂ (++-decomp {xs = xs} {ys} eq)
 
-take-∷ : ∀ {m a} {A : Set a} n x (xs : Vec A (n + m)) → take (suc n) (x ∷ xs) ≡ x ∷ take n xs
+take-∷ : ∀ {m a} {A : ★ a} n x (xs : Vec A (n + m)) → take (suc n) (x ∷ xs) ≡ x ∷ take n xs
 take-∷ n x xs with splitAt n xs
 take-∷ _ _ ._ | _ , _ , refl = refl
 
-drop-∷ : ∀ {m a} {A : Set a} n x (xs : Vec A (n + m)) → drop (suc n) (x ∷ xs) ≡ drop n xs
+drop-∷ : ∀ {m a} {A : ★ a} n x (xs : Vec A (n + m)) → drop (suc n) (x ∷ xs) ≡ drop n xs
 drop-∷ n x xs with splitAt n xs
 drop-∷ _ _ ._ | _ , _ , refl = refl
 
-take-++ : ∀ m {n} {a} {A : Set a} (xs : Vec A m) (ys : Vec A n) → take m (xs ++ ys) ≡ xs
+take-++ : ∀ m {n} {a} {A : ★ a} (xs : Vec A m) (ys : Vec A n) → take m (xs ++ ys) ≡ xs
 take-++ m xs ys with xs ++ ys | inspect (_++_ xs) ys
 ... | zs | eq with splitAt m zs
 take-++ m xs₁ ys₁ | .(xs ++ ys) | Reveal_is_.[_] eq | xs , ys , refl = sym (++-inj₁ xs₁ xs eq)
 
-drop-++ : ∀ m {n} {a} {A : Set a} (xs : Vec A m) (ys : Vec A n) → drop m (xs ++ ys) ≡ ys
+drop-++ : ∀ m {n} {a} {A : ★ a} (xs : Vec A m) (ys : Vec A n) → drop m (xs ++ ys) ≡ ys
 drop-++ m xs ys with xs ++ ys | inspect (_++_ xs) ys
 ... | zs | eq with splitAt m zs
 drop-++ m xs₁ ys₁ | .(xs ++ ys) | Reveal_is_.[_] eq | xs , ys , refl = sym (++-inj₂ xs₁ xs eq)
 
-take-drop-lem : ∀ m {n} {a} {A : Set a} (xs : Vec A (m + n)) → take m xs ++ drop m xs ≡ xs
+take-drop-lem : ∀ m {n} {a} {A : ★ a} (xs : Vec A (m + n)) → take m xs ++ drop m xs ≡ xs
 take-drop-lem m xs with splitAt m xs
 take-drop-lem m .(ys ++ zs) | ys , zs , refl = refl
 
-take-them-all : ∀ n {a} {A : Set a} (xs : Vec A (n + 0)) → take n xs ++ [] ≡ xs
+take-them-all : ∀ n {a} {A : ★ a} (xs : Vec A (n + 0)) → take n xs ++ [] ≡ xs
 take-them-all n xs with splitAt n xs
 take-them-all n .(ys ++ []) | ys , [] , refl = refl
 
-drop′ : ∀ {a} {A : Set a} m {n} → Vec A (m + n) → Vec A n
+drop′ : ∀ {a} {A : ★ a} m {n} → Vec A (m + n) → Vec A n
 drop′ zero    = id
 drop′ (suc m) = drop′ m ∘ tail
 
-drop′-spec : ∀ {a} {A : Set a} m {n} → drop′ {A = A} m {n} ≗ drop m {n}
+drop′-spec : ∀ {a} {A : ★ a} m {n} → drop′ {A = A} m {n} ≗ drop m {n}
 drop′-spec zero xs = refl
 drop′-spec (suc m) (x ∷ xs) rewrite drop′-spec m xs | drop-∷ m x xs = refl
 
-take′ : ∀ {a} {A : Set a} m {n} → Vec A (m + n) → Vec A m
+take′ : ∀ {a} {A : ★ a} m {n} → Vec A (m + n) → Vec A m
 take′ zero    _  = []
 take′ (suc m) xs = head xs ∷ take′ m (tail xs)
 
-take′-spec : ∀ {a} {A : Set a} m {n} → take′ {A = A} m {n} ≗ take m {n}
+take′-spec : ∀ {a} {A : ★ a} m {n} → take′ {A = A} m {n} ≗ take m {n}
 take′-spec zero xs = refl
 take′-spec (suc m) (x ∷ xs) rewrite take′-spec m xs | take-∷ m x xs = refl
 
-swap : ∀ m {n} {a} {A : Set a} → Vec A (m + n) → Vec A (n + m)
+swap : ∀ m {n} {a} {A : ★ a} → Vec A (m + n) → Vec A (n + m)
 swap m xs = drop m xs ++ take m xs
 
-swap-++ : ∀ m {n} {a} {A : Set a} (xs : Vec A m) (ys : Vec A n) → swap m (xs ++ ys) ≡ ys ++ xs
+swap-++ : ∀ m {n} {a} {A : ★ a} (xs : Vec A m) (ys : Vec A n) → swap m (xs ++ ys) ≡ ys ++ xs
 swap-++ m xs ys rewrite drop-++ m xs ys | take-++ m xs ys = refl
 
-rewire : ∀ {a i o} {A : Set a} → (Fin o → Fin i) → Vec A i → Vec A o
+rewire : ∀ {a i o} {A : ★ a} → (Fin o → Fin i) → Vec A i → Vec A o
 rewire f v = tabulate (flip lookup v ∘ f)
 
-RewireTbl : (i o : ℕ) → Set
+RewireTbl : (i o : ℕ) → ★₀
 RewireTbl i o = Vec (Fin i) o
 
-rewireTbl : ∀ {a i o} {A : Set a} → RewireTbl i o → Vec A i → Vec A o
+rewireTbl : ∀ {a i o} {A : ★ a} → RewireTbl i o → Vec A i → Vec A o
 rewireTbl tbl v = map (flip lookup v) tbl
 
-onᵢ : ∀ {a} {A : Set a} (f : A → A) {n} (i : Fin n) → Vec A n → Vec A n
+onᵢ : ∀ {a} {A : ★ a} (f : A → A) {n} (i : Fin n) → Vec A n → Vec A n
 onᵢ f zero    (x ∷ xs) = f x ∷ xs
 onᵢ f (suc i) (x ∷ xs) = x ∷ onᵢ f i xs
 
 -- Exchange elements at positions 0 and 1 of a given vector
 -- (this only apply if the vector is long enough).
-0↔1 : ∀ {n a} {A : Set a} → Vec A n → Vec A n
+0↔1 : ∀ {n a} {A : ★ a} → Vec A n → Vec A n
 0↔1 (x₀ ∷ x₁ ∷ xs) = x₁ ∷ x₀ ∷ xs
 0↔1 xs = xs
 
-⊛-dist-0↔1 : ∀ {n a} {A : Set a} (fs : Vec (Endo A) n) xs → 0↔1 fs ⊛ 0↔1 xs ≡ 0↔1 (fs ⊛ xs)
+⊛-dist-0↔1 : ∀ {n a} {A : ★ a} (fs : Vec (Endo A) n) xs → 0↔1 fs ⊛ 0↔1 xs ≡ 0↔1 (fs ⊛ xs)
 ⊛-dist-0↔1 _           []          = refl
 ⊛-dist-0↔1 (_ ∷ [])    (_ ∷ [])    = refl
 ⊛-dist-0↔1 (_ ∷ _ ∷ _) (_ ∷ _ ∷ _) = refl
 
-map-tail : ∀ {m n a} {A : Set a} → (Vec A m → Vec A n) → Vec A (suc m) → Vec A (suc n)
+map-tail : ∀ {m n a} {A : ★ a} → (Vec A m → Vec A n) → Vec A (suc m) → Vec A (suc n)
 map-tail f (x ∷ xs) = x ∷ f xs
 
-map-tail-id : ∀ {n a} {A : Set a} → map-tail id ≗ id {A = Vec A (suc n)}
+map-tail-id : ∀ {n a} {A : ★ a} → map-tail id ≗ id {A = Vec A (suc n)}
 map-tail-id (x ∷ xs) = ≡.refl
 
-map-tail∘map-tail : ∀ {m n o a} {A : Set a}
+map-tail∘map-tail : ∀ {m n o a} {A : ★ a}
                       (f : Vec A o → Vec A m)
                       (g : Vec A n → Vec A o)
                     → map-tail f ∘ map-tail g ≗ map-tail (f ∘ g)
 map-tail∘map-tail f g (x ∷ xs) = refl
 
-map-tail-≗ : ∀ {m n a} {A : Set a} (f g : Vec A m → Vec A n) → f ≗ g → map-tail f ≗ map-tail g
+map-tail-≗ : ∀ {m n a} {A : ★ a} (f g : Vec A m → Vec A n) → f ≗ g → map-tail f ≗ map-tail g
 map-tail-≗ f g f≗g (x ∷ xs) rewrite f≗g xs = refl
 
 -- ⟨0↔1+ i ⟩: Exchange elements at position 0 and 1+i.
-⟨0↔1+_⟩ : ∀ {n} (i : Fin n) {a} {A : Set a} → Vec A (1 + n) → Vec A (1 + n)
+⟨0↔1+_⟩ : ∀ {n} (i : Fin n) {a} {A : ★ a} → Vec A (1 + n) → Vec A (1 + n)
 ⟨0↔1+ zero  ⟩ = 0↔1
 ⟨0↔1+ suc i ⟩ = 0↔1 ∘ (map-tail ⟨0↔1+ i ⟩) ∘ 0↔1
   {- 0   1   2 3 ... i 1+i ... n
@@ -268,17 +269,17 @@ map-tail-≗ f g f≗g (x ∷ xs) rewrite f≗g xs = refl
    -}
 
 -- ⟨0↔ i ⟩: Exchange elements at position 0 and i.
-⟨0↔_⟩ : ∀ {n} (i : Fin n) {a} {A : Set a} → Vec A n → Vec A n
+⟨0↔_⟩ : ∀ {n} (i : Fin n) {a} {A : ★ a} → Vec A n → Vec A n
 ⟨0↔ zero  ⟩ = id
 ⟨0↔ suc i ⟩ = ⟨0↔1+ i ⟩
 
-⟨0↔zero⟩ : ∀ {n a} {A : Set a} → ⟨0↔ zero ⟩ ≗ id {A = Vec A (suc n)}
+⟨0↔zero⟩ : ∀ {n a} {A : ★ a} → ⟨0↔ zero ⟩ ≗ id {A = Vec A (suc n)}
 ⟨0↔zero⟩ _ = ≡.refl
 
-_² : ∀ {a} {A : Set a} → Endo (Endo A)
+_² : ∀ {a} {A : ★ a} → Endo (Endo A)
 f ² = f ∘ f
 
-module ⟨↔⟩ {a} (A : Set a) where
+module ⟨↔⟩ {a} (A : ★ a) where
 
     ⟨_↔_⟩ : ∀ {n} (i j : Fin n) → Vec A n → Vec A n
     ⟨ zero  ↔ j     ⟩ = ⟨0↔ j ⟩
@@ -318,7 +319,7 @@ module ⟨↔⟩ {a} (A : Set a) where
             | map-tail-≗ _ _ ⟨ i ↔ j ⟩²-cancel xs
             | map-tail-id xs = refl
 
-    lem01maptail2 : ∀ {m n a} {A : Set a} (f : Vec A m → Vec A n) →
+    lem01maptail2 : ∀ {m n a} {A : ★ a} (f : Vec A m → Vec A n) →
                       0↔1 ∘ map-tail (map-tail f) ∘ 0↔1 ≗ map-tail (map-tail f)
     lem01maptail2 _ (_ ∷ _ ∷ _) = refl
 
@@ -358,12 +359,12 @@ module ⟨↔⟩ {a} (A : Set a) where
                    ⟨ j ↔ k ⟩ xs
                  ∎ where open ≡-Reasoning
 -}
-⟨_↔_⟩ : ∀ {n} (i j : Fin n) {a} {A : Set a} → Vec A n → Vec A n
+⟨_↔_⟩ : ∀ {n} (i j : Fin n) {a} {A : ★ a} → Vec A n → Vec A n
 ⟨_↔_⟩ i j = ⟨↔⟩.⟨_↔_⟩ _ i j
 
 module PermutationSyntax where
     infixr 1 _`⁏_
-    data Perm : ℕ → Set where
+    data Perm : ℕ → ★₀ where
       `id : ∀ {n} → Perm n
       `0↔1 : ∀ {n} → Perm (2 + n)
       _`⁏_ : ∀ {n} → Perm n → Perm n → Perm n
@@ -388,7 +389,7 @@ module PermutationSyntax where
     `⟨ i     ↔ zero  ⟩ = `⟨0↔ i ⟩
     `⟨ suc i ↔ suc j ⟩ = `tl `⟨ i ↔ j ⟩
 
-module PermutationSemantics {a} {A : Set a} where
+module PermutationSemantics {a} {A : ★ a} where
     open PermutationSyntax
 
     eval : ∀ {n} → Perm n → Endo (Vec A n)
@@ -409,7 +410,7 @@ module PermutationSemantics {a} {A : Set a} where
     `⟨0↔ zero  ⟩-spec xs = refl
     `⟨0↔ suc i ⟩-spec xs = `⟨0↔1+ i ⟩-spec xs
 
-    _≗′_ : ∀ {n} → Perm n → Perm n → Set _
+    _≗′_ : ∀ {n} → Perm n → Perm n → ★ _
     f ≗′ g = ∀ xs → f ∙ xs ≡ g ∙ xs
 
     open ⟨↔⟩ A hiding (⟨_↔_⟩)
@@ -447,30 +448,30 @@ module PermutationProperties {a : L.Level} where
     open PermutationSyntax
     open PermutationSemantics
 
-    ⊛-dist-∙ : ∀ {n} {A : Set a} (fs : Vec (Endo A) n) (f : Perm n) xs → (f ∙ fs ⊛ f ∙ xs) ≡ f ∙ (fs ⊛ xs)
+    ⊛-dist-∙ : ∀ {n} {A : ★ a} (fs : Vec (Endo A) n) (f : Perm n) xs → (f ∙ fs ⊛ f ∙ xs) ≡ f ∙ (fs ⊛ xs)
     ⊛-dist-∙ _       `id        _  = refl
     ⊛-dist-∙ fs      `0↔1       xs = ⊛-dist-0↔1 fs xs
     ⊛-dist-∙ (_ ∷ fs) (`tl f)   (_ ∷ xs) rewrite ⊛-dist-∙ fs f xs = refl
     ⊛-dist-∙ fs       (f `⁏ g)   xs rewrite ⊛-dist-∙ (f ∙ fs) g (f ∙ xs)
                                          | ⊛-dist-∙ fs f xs = refl
 
-    ∙-replicate : ∀ {n} {A : Set a} (x : A) (f : Perm n) → f ∙ replicate x ≡ replicate x
+    ∙-replicate : ∀ {n} {A : ★ a} (x : A) (f : Perm n) → f ∙ replicate x ≡ replicate x
     ∙-replicate x `id = refl
     ∙-replicate x `0↔1 = refl
     ∙-replicate x (`tl f) rewrite ∙-replicate x f = refl
     ∙-replicate x (f `⁏ g) rewrite ∙-replicate x f | ∙-replicate x g = refl
 
     private
-        lem : ∀ {n} {A : Set a} (fs : Vec (Endo A) n) f xs
+        lem : ∀ {n} {A : ★ a} (fs : Vec (Endo A) n) f xs
               → fs ⊛ f ∙ xs ≡ f ∙ (f ⁻¹ ∙ fs ⊛ xs)
         lem fs f xs rewrite sym (⊛-dist-∙ (f ⁻¹ ∙ fs) f xs) | (f ⁻¹-inverse′) fs = refl
 
-    ∙-map : ∀ {n} {A : Set a} (f : Endo A) g (xs : Vec A n) → map f (g ∙ xs) ≡ g ∙ map f xs
+    ∙-map : ∀ {n} {A : ★ a} (f : Endo A) g (xs : Vec A n) → map f (g ∙ xs) ≡ g ∙ map f xs
     ∙-map f g xs rewrite sym (⊛-dist-∙ (replicate f) g xs) | ∙-replicate f g = refl
 
-module BijectionSyntax {a b} (A : Set a) (Bijᴬ : Set b) where
+module BijectionSyntax {a b} (A : ★ a) (Bijᴬ : ★ b) where
     infixr 1 _`⁏_
-    data Bij : ℕ → Set (a L.⊔ b) where
+    data Bij : ℕ → ★ (a L.⊔ b) where
       `id : ∀ {n} → Bij n
       `0↔1 : ∀ {n} → Bij (2 + n)
       _`⁏_ : ∀ {n} → Bij n → Bij n → Bij n
@@ -478,8 +479,8 @@ module BijectionSyntax {a b} (A : Set a) (Bijᴬ : Set b) where
 
 module BijectionLib where
     open BijectionSyntax
-    mapBij : ∀ {a bᴬ} {A : Set a} {Bijᴬ : Set bᴬ}
-               {b bᴮ} {B : Set b} {Bijᴮ : Set bᴮ}
+    mapBij : ∀ {a bᴬ} {A : ★ a} {Bijᴬ : ★ bᴬ}
+               {b bᴮ} {B : ★ b} {Bijᴮ : ★ bᴮ}
                (fᴮᴬ : B → A)
                (f   : Bijᴬ → Bijᴮ)
                {n} → Bij A Bijᴬ n → Bij B Bijᴮ n
@@ -488,7 +489,7 @@ module BijectionLib where
     mapBij fᴮᴬ f (`g `⁏ `h) = mapBij fᴮᴬ f `g `⁏ mapBij fᴮᴬ f `h
     mapBij fᴮᴬ f (`fᴬ `∷ `g) = f `fᴬ `∷ λ x → mapBij fᴮᴬ f (`g (fᴮᴬ x))
 
-module BijectionSemantics {a b} {A : Set a} (bijKitᴬ : BijKit b A) where
+module BijectionSemantics {a b} {A : ★ a} (bijKitᴬ : BijKit b A) where
     open BijKit bijKitᴬ renaming (Bij to Bijᴬ; eval to evalᴬ; _⁻¹ to _⁻¹ᴬ;
                                   idBij to idᴬ; _≗Bij_ to _≗ᴬ_;
                                   _⁻¹-inverse to _⁻¹-inverseᴬ;
@@ -512,7 +513,7 @@ module BijectionSemantics {a b} {A : Set a} (bijKitᴬ : BijKit b A) where
     _∙_ : ∀ {n} → Bij n → Endo (Vec A n)
     _∙_ = eval
 
-    _≗′_ : ∀ {n} → Bij n → Bij n → Set _
+    _≗′_ : ∀ {n} → Bij n → Bij n → ★ _
     f ≗′ g = ∀ xs → f ∙ xs ≡ g ∙ xs
 
     _⁻¹-inverse : ∀ {n} (f : Bij n) → (f `⁏ f ⁻¹) ≗′ `id
@@ -586,23 +587,23 @@ sum-∷ʳ : ∀ {n} x (xs : Vec ℕ n) → sum (xs ∷ʳ x) ≡ sum xs + x
 sum-∷ʳ x [] = ℕ°.+-comm x 0
 sum-∷ʳ x (x₁ ∷ xs) rewrite sum-∷ʳ x xs | ℕ°.+-assoc x₁ (sum xs) x = refl
 
-rot₁ : ∀ {n a} {A : Set a} → Vec A n → Vec A n
+rot₁ : ∀ {n a} {A : ★ a} → Vec A n → Vec A n
 rot₁ []       = []
 rot₁ (x ∷ xs) = xs ∷ʳ x
 
-rot : ∀ {n a} {A : Set a} → ℕ → Vec A n → Vec A n
+rot : ∀ {n a} {A : ★ a} → ℕ → Vec A n → Vec A n
 rot zero    xs = xs
 rot (suc n) xs = rot n (rot₁ xs)
 
-sum-distribˡ : ∀ {A : Set} {n} f k (xs : Vec A n) → sum (map (λ x → k * f x) xs) ≡ k * sum (map f xs)
+sum-distribˡ : ∀ {A : ★₀} {n} f k (xs : Vec A n) → sum (map (λ x → k * f x) xs) ≡ k * sum (map f xs)
 sum-distribˡ f k [] = ℕ°.*-comm 0 k
 sum-distribˡ f k (x ∷ xs) rewrite sum-distribˡ f k xs = sym (proj₁ ℕ°.distrib k _ _)
 
-sum-linear : ∀ {A : Set} {n} f g (xs : Vec A n) → sum (map (λ x → f x + g x) xs) ≡ sum (map f xs) + sum (map g xs)
+sum-linear : ∀ {A : ★₀} {n} f g (xs : Vec A n) → sum (map (λ x → f x + g x) xs) ≡ sum (map f xs) + sum (map g xs)
 sum-linear f g [] = refl
 sum-linear f g (x ∷ xs) rewrite sum-linear f g xs = +-interchange (f x) (g x) (sum (map f xs)) (sum (map g xs))
 
-sum-mono : ∀ {A : Set} {n f g} (mono : ∀ x → f x ≤ g x)(xs : Vec A n) → sum (map f xs) ≤ sum (map g xs)
+sum-mono : ∀ {A : ★₀} {n f g} (mono : ∀ x → f x ≤ g x)(xs : Vec A n) → sum (map f xs) ≤ sum (map g xs)
 sum-mono f≤°g [] = Data.Nat.NP.z≤n
 sum-mono f≤°g (x ∷ xs) = f≤°g x +-mono sum-mono f≤°g xs
 
@@ -610,11 +611,11 @@ sum-rot₁ : ∀ {n} (xs : Vec ℕ n) → sum xs ≡ sum (rot₁ xs)
 sum-rot₁ [] = refl
 sum-rot₁ (x ∷ xs) rewrite sum-∷ʳ x xs = ℕ°.+-comm x _
 
-map-∷ʳ : ∀ {n a} {A : Set a} (f : A → ℕ) x (xs : Vec A n) → map f (xs ∷ʳ x) ≡ map f xs ∷ʳ f x
+map-∷ʳ : ∀ {n a} {A : ★ a} (f : A → ℕ) x (xs : Vec A n) → map f (xs ∷ʳ x) ≡ map f xs ∷ʳ f x
 map-∷ʳ f x [] = refl
 map-∷ʳ f x (x₁ ∷ xs) rewrite map-∷ʳ f x xs = refl
 
-sum-map-rot₁ : ∀ {n a} {A : Set a} (f : A → ℕ) (xs : Vec A n) → sum (map f (rot₁ xs)) ≡ sum (map f xs)
+sum-map-rot₁ : ∀ {n a} {A : ★ a} (f : A → ℕ) (xs : Vec A n) → sum (map f (rot₁ xs)) ≡ sum (map f xs)
 sum-map-rot₁ f [] = refl
 sum-map-rot₁ f (x ∷ xs) rewrite ℕ°.+-comm (f x) (sum (map f xs))
                               | ≡.sym (sum-∷ʳ (f x) (map f xs))
@@ -626,38 +627,38 @@ private
     module Foo where
     {-
        WRONG
-        ⟨_↔_⟩ : ∀ {n} (i j : Fin n) {a} {A : Set a} → Vec A n → Vec A n
+        ⟨_↔_⟩ : ∀ {n} (i j : Fin n) {a} {A : ★ a} → Vec A n → Vec A n
         ⟨ i ↔ j ⟩ = ⟨0↔ i ⟩ ∘ ⟨0↔ j ⟩ ∘ ⟨0↔ i ⟩
 
-        ⟨0↔⟩-spec : ∀ {n a} {A : Set a} (i : Fin (suc n)) → ⟨0↔ i ⟩ ≗ ⟨ zero ↔ i ⟩ {A = A}
+        ⟨0↔⟩-spec : ∀ {n a} {A : ★ a} (i : Fin (suc n)) → ⟨0↔ i ⟩ ≗ ⟨ zero ↔ i ⟩ {A = A}
         ⟨0↔⟩-spec _ _ = ≡.refl
         -}
 
-    ⟨0↔_⟩′ : ∀ {n} (i : Fin n) {a} {A : Set a} → Vec A n → Vec A n
+    ⟨0↔_⟩′ : ∀ {n} (i : Fin n) {a} {A : ★ a} → Vec A n → Vec A n
     ⟨0↔_⟩′ {zero}  i xs = xs
     ⟨0↔_⟩′ {suc n} i xs = lookup i xs ∷ tail (xs [ i ]≔ head xs)
 
     -- ⟨ i ↔+1⟩: Exchange elements at position i and i + 1.
-    ⟨_↔+1⟩ : ∀ {n} (i : Fin n) {a} {A : Set a} → Vec A n → Vec A n
+    ⟨_↔+1⟩ : ∀ {n} (i : Fin n) {a} {A : ★ a} → Vec A n → Vec A n
     ⟨ zero  ↔+1⟩ = 0↔1
     ⟨ suc i ↔+1⟩ = map-tail ⟨ i ↔+1⟩
 
-    ⟨↔+1⟩-spec : ∀ {n} (i : Fin n) {a} {A : Set a} → ⟨ inject₁ i ↔+1⟩ ≗ ⟨ inject₁ i ↔ suc i ⟩ {A = A}
+    ⟨↔+1⟩-spec : ∀ {n} (i : Fin n) {a} {A : ★ a} → ⟨ inject₁ i ↔+1⟩ ≗ ⟨ inject₁ i ↔ suc i ⟩ {A = A}
     ⟨↔+1⟩-spec zero    xs       rewrite map-tail-id (0↔1 xs) = ≡.refl
     ⟨↔+1⟩-spec (suc i) (x ∷ xs) rewrite ⟨↔+1⟩-spec i xs = ≡.refl
 
     -- rot-up-to i (x₀ ∷ x₁ ∷ x₂ ∷ … ∷ xᵢ ∷ xs)
     --           ≡ (x₁ ∷ x₂ ∷ x₃ ∷ … ∷ x₀ ∷ xs)
-    rot-up-to : ∀ {n} (i : Fin n) {a} {A : Set a} → Vec A n → Vec A n
+    rot-up-to : ∀ {n} (i : Fin n) {a} {A : ★ a} → Vec A n → Vec A n
     rot-up-to zero    = id
     rot-up-to (suc i) = map-tail (rot-up-to i) ∘ 0↔1
 
     -- Inverse of rot-up-to
-    rot⁻¹-up-to : ∀ {n} (i : Fin n) {a} {A : Set a} → Vec A n → Vec A n
+    rot⁻¹-up-to : ∀ {n} (i : Fin n) {a} {A : ★ a} → Vec A n → Vec A n
     rot⁻¹-up-to zero    = id
     rot⁻¹-up-to (suc i) = 0↔1 ∘ map-tail (rot⁻¹-up-to i)
 
-    rot⁻¹-up-to∘rot-up-to : ∀ {n} (i : Fin n) {a} {A : Set a} → rot⁻¹-up-to i ∘ rot-up-to i ≗ id {a} {Vec A n}
+    rot⁻¹-up-to∘rot-up-to : ∀ {n} (i : Fin n) {a} {A : ★ a} → rot⁻¹-up-to i ∘ rot-up-to i ≗ id {a} {Vec A n}
     rot⁻¹-up-to∘rot-up-to zero            _ = ≡.refl
     rot⁻¹-up-to∘rot-up-to (suc i) {A = A} (x₀ ∷ []) rewrite rot⁻¹-up-to∘rot-up-to i {A = A} [] = ≡.refl
     rot⁻¹-up-to∘rot-up-to (suc i)         (x₀ ∷ x₁ ∷ xs) rewrite rot⁻¹-up-to∘rot-up-to i (x₀ ∷ xs) = ≡.refl

@@ -1,10 +1,11 @@
 module Category.Applicative.NP where
 
+open import Type hiding (★)
 open import Data.Vec using (Vec; []; _∷_)
 open import Data.Nat
 open import Category.Applicative public hiding (module RawApplicative)
 
-module RawApplicative {f} {F : Set f → Set f}
+module RawApplicative {f} {F : ★ f → ★ f}
                       (app : RawApplicative F) where
     open Category.Applicative.RawApplicative app public
 

@@ -1,7 +1,7 @@
 {-# OPTIONS --universe-polymorphism #-}
 module Data.Nat.NP where
 
-open import Type
+open import Type hiding (★)
 import Algebra
 open import Algebra.FunctionProperties.NP
 open import Data.Nat public hiding (module GeneralisedArithmetic; module ≤-Reasoning; fold)
@@ -44,19 +44,19 @@ infixl 6 _+°_
 infixl 7 _*°_ _⊓°_
 infixl 6 _∸°_ _⊔°_
 
-_+°_ : ∀ {a} {A : Set a} (f g : A → ℕ) → A → ℕ
+_+°_ : ∀ {a} {A : ★ a} (f g : A → ℕ) → A → ℕ
 (f +° g) x = f x + g x
 
-_∸°_ : ∀ {a} {A : Set a} (f g : A → ℕ) → A → ℕ
+_∸°_ : ∀ {a} {A : ★ a} (f g : A → ℕ) → A → ℕ
 (f ∸° g) x = f x ∸ g x
 
-_*°_ : ∀ {a} {A : Set a} (f g : A → ℕ) → A → ℕ
+_*°_ : ∀ {a} {A : ★ a} (f g : A → ℕ) → A → ℕ
 (f *° g) x = f x * g x
 
-_⊔°_ : ∀ {a} {A : Set a} (f g : A → ℕ) → A → ℕ
+_⊔°_ : ∀ {a} {A : ★ a} (f g : A → ℕ) → A → ℕ
 (f ⊔° g) x = f x ⊔ g x
 
-_⊓°_ : ∀ {a} {A : Set a} (f g : A → ℕ) → A → ℕ
+_⊓°_ : ∀ {a} {A : ★ a} (f g : A → ℕ) → A → ℕ
 (f ⊓° g) x = f x ⊓ g x
 
 sucx≰x : ∀ x → suc x ≰ x
@@ -82,7 +82,7 @@ a≡a⊓b+a∸b (suc a) (suc b) rewrite ≡.sym (a≡a⊓b+a∸b a b) = ≡.refl
 ¬n+≤y<n : ∀ n {x y} → n + x ≤ y → y < n → ⊥
 ¬n+≤y<n n p q = sucx≰x _ (ℕ≤.trans q (ℕ≤.trans (ℕ≤.trans (ℕ≤.reflexive (ℕ°.+-comm 0 n)) ((ℕ≤.refl {n}) +-mono z≤n)) p))
 
-fold : ∀ {a} {A : Set a} → A → Endo A → ℕ → A
+fold : ∀ {a} {A : ★ a} → A → Endo A → ℕ → A
 fold x f n = nest n f x
 
 +-inj-over-∸ : ∀ x y z → (x + y) ∸ (x + z) ≡ y ∸ z
@@ -426,13 +426,13 @@ module ↑-Props where
 
 module InflModule where
   -- Inflationary functions
-  Infl< : (f : ℕ → ℕ) → ★
+  Infl< : (f : ℕ → ℕ) → ★₀
   Infl< f = ∀ {x} → x < f x
 
-  Infl : (f : ℕ → ℕ) → ★
+  Infl : (f : ℕ → ℕ) → ★₀
   Infl f = Infl< (suc ∘ f)
 
-  InflT< : (f : Endo (Endo ℕ)) → ★
+  InflT< : (f : Endo (Endo ℕ)) → ★₀
   InflT< f = ∀ {g} → Infl< g → Infl< (f g)
 
 {-
@@ -492,7 +492,7 @@ module fold-Props where
   fold-^ m (suc n) rewrite fold-^ m n = ?
 -}
 
-  cong-fold : ∀ {A : ★} {f g : Endo A} (f≗g : f ≗ g) {z} → fold z f ≗ fold z g
+  cong-fold : ∀ {A : ★₀} {f g : Endo A} (f≗g : f ≗ g) {z} → fold z f ≗ fold z g
   cong-fold eq zero = ≡.refl
   cong-fold eq {z} (suc x) rewrite cong-fold eq {z} x = eq _
 
@@ -648,12 +648,12 @@ module ack-Props where
    ∎
      where open ≤-Reasoning
 
-  Mon : (f : ℕ → ℕ) → ★
+  Mon : (f : ℕ → ℕ) → ★₀
   Mon f = ∀ {x y} → x ≤ y → f x ≤ f y
   open InflModule
 
 
-  ℕ-ind : ∀ (P : ℕ → ★) → P zero → (∀ {n} → P n → P (suc n)) → ∀ {n} → P n
+  ℕ-ind : ∀ (P : ℕ → ★₀) → P zero → (∀ {n} → P n → P (suc n)) → ∀ {n} → P n
   ℕ-ind P P0 PS {zero} = P0
   ℕ-ind P P0 PS {suc n} = PS (ℕ-ind P P0 PS)
 
@@ -670,7 +670,7 @@ module ack-Props where
     where open ≤-Reasoning
   fold-mon fmon finfl< (s≤s m≤n) = fmon (fold-mon fmon finfl< m≤n)
 
-  MonT : Endo (Endo ℕ) → ★
+  MonT : Endo (Endo ℕ) → ★₀
   MonT g = ∀ {f} → Mon f → Infl< f → Mon (g f)
 
   fold-mon' : ∀ {f g} → Mon f → Infl< f → MonT g → InflT< g → ∀ {n} → Mon (fold f g n)
@@ -879,7 +879,7 @@ Graham's-number = 3 ⇑⟨ 64 , 4 ⟩ 3
   -- where f x = 3 ↑⟨ 2 + x ⟩ 3
 
 {-
-module GeneralisedArithmetic {a} {A : Set a} (0# : A) (1+ : A → A) where
+module GeneralisedArithmetic {a} {A : ★ a} (0# : A) (1+ : A → A) where
 
   1# : A
   1# = 1+ 0#
@@ -892,7 +892,7 @@ module GeneralisedArithmetic {a} {A : Set a} (0# : A) (1+ : A → A) where
   -- hyperop a n b = fold exp
 
 module == where
-  _≈_ : (m n : ℕ) → ★
+  _≈_ : (m n : ℕ) → ★₀
   m ≈ n = T (m == n)
 
   subst : ∀ {ℓ} → Substitutive _≈_ ℓ
@@ -924,7 +924,7 @@ module == where
   open Setoid setoid public hiding (refl; sym; trans; _≈_)
 
 {-
-data _`≤?`_↝_ : (m n : ℕ) → Dec (m ≤ n) → ★ where
+data _`≤?`_↝_ : (m n : ℕ) → Dec (m ≤ n) → ★₀ where
   z≤?n     : ∀ {n} → zero `≤?` n ↝ yes z≤n
   s≤?z     : ∀ {m} → suc m `≤?` zero ↝ no λ()
   s≤?s-yes : ∀ {m n m≤n} → m `≤?` n ↝ yes m≤n → suc m `≤?` suc n ↝ yes (s≤s m≤n)
@@ -944,7 +944,7 @@ suc _  <= zero   = false
 suc m  <= suc n  = m <= n
 
 module <= where
-  ℛ : ℕ → ℕ → ★
+  ℛ : ℕ → ℕ → ★₀
   ℛ x y = T (x <= y)
 
   sound : ∀ m n → ℛ m n → m ≤ n

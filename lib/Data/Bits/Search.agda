@@ -1,3 +1,5 @@
+-- most of this is subsumed by crypto-agda Search code
+open import Type
 open import Data.Nat.NP hiding (_==_) renaming (_<=_ to _ℕ<=_)
 open import Data.Bits
 open import Data.Bool.Properties using (not-involutive)
@@ -10,8 +12,8 @@ open import Function.NP hiding (_→⟨_⟩_)
 open import Algebra.FunctionProperties.NP
 
 module Data.Bits.Search where
-module Search {i} {I : Set i} (`1 : I) (`2*_ : I → I)
-              {a} {A : I → Set a} (_∙_ : ∀ {m} → A m → A m → A (`2* m)) where
+module Search {i} {I : ★ i} (`1 : I) (`2*_ : I → I)
+              {a} {A : I → ★ a} (_∙_ : ∀ {m} → A m → A m → A (`2* m)) where
 
   `2^_ : ℕ → I
   `2^_ = fold `1 `2*_
@@ -43,7 +45,7 @@ module Search {i} {I : Set i} (`1 : I) (`2*_ : I → I)
     ... | false = refl
   open Comm public
 
-module SimpleSearch {a} {A : Set a} (_∙_ : A → A → A) where
+module SimpleSearch {a} {A : ★ a} (_∙_ : A → A → A) where
 
     open Search 1 2*_ {A = const A} _∙_ public
 
@@ -160,7 +162,7 @@ search-de-morgan op f g = search-≗ op _ _ (|de-morgan| f g)
 
 search-hom :
   ∀ {n a b}
-    {A : Set a} {B : Set b}
+    {A : ★ a} {B : ★ b}
     (_+_ : A → A → A)
     (_*_ : B → B → B)
     (f : A → B)

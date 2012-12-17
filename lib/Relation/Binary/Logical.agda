@@ -143,3 +143,13 @@ private
 
   ⟦→⟧²⇔Preserves₂ = equivalence (λ f {x} {y}   {_} {_} z → f {x} {y} z)
                                 (λ f {x} {y} z {_} {_}   → f z)
+
+⟦Inj⟧ : ∀ {a₁ a₂ aᵣ} {A₁ : ★ a₁} {A₂ : ★ a₂} (Aᵣ : ⟦★⟧ aᵣ A₁ A₂)
+          {b₁ b₂ bᵣ} {B₁ : ★ b₁} {B₂ : ★ b₂} (Bᵣ : ⟦★⟧ bᵣ B₁ B₂)
+          (f₁ : A₁ → B₁) (f₂ : A₂ → B₂) → ★ _
+⟦Inj⟧ Aᵣ Bᵣ f₁ f₂ = ∀ {x₁ x₂} (xᵣ : Bᵣ (f₁ x₁) (f₂ x₂)) → Aᵣ x₁ x₂
+
+⟦Inj⟧′ : ∀ {a aᵣ} {A : ★ a} (Aᵣ : ⟦★⟧ aᵣ A A)
+           {b bᵣ} {B : ★ b} (Bᵣ : ⟦★⟧ bᵣ B B)
+           (f : A → B) → ★ _
+⟦Inj⟧′ Aᵣ Bᵣ f = ⟦Inj⟧ Aᵣ Bᵣ f f

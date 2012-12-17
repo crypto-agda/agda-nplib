@@ -1,11 +1,12 @@
 open import Relation.Binary.NP
+open import Type hiding (★)
 import Algebra.FunctionProperties
 
-module Algebra.FunctionProperties.NP {a ℓ} {A : Set a} (_≈_ : Rel A ℓ) where
+module Algebra.FunctionProperties.NP {a ℓ} {A : ★ a} (_≈_ : Rel A ℓ) where
 
 open Algebra.FunctionProperties _≈_ public
 
-Interchange : Op₂ A → Op₂ A → Set _
+Interchange : Op₂ A → Op₂ A → ★ _
 Interchange _∙_ _∘_ = ∀ x y z t → ((x ∙ y) ∘ (z ∙ t)) ≈ ((x ∘ z) ∙ (y ∘ t))
 
 module InterchangeFromAssocCommCong
