@@ -14,8 +14,11 @@ open import Relation.Binary
 ⟦★⟧ : ∀ {a₁ a₂} aᵣ (A₁ : ★ a₁) (A₂ : ★ a₂) → ★ _
 ⟦★⟧ aᵣ A₁ A₂ = A₁ → A₂ → ★ aᵣ
 
+⟦★⟧₀ : ∀ {a₁ a₂} (A₁ : ★ a₁) (A₂ : ★ a₂) → ★ _
+⟦★⟧₀ = ⟦★⟧ zero
+
 ⟦★₀⟧ : ∀ (A₁ A₂ : ★₀) → ★₁
-⟦★₀⟧ = ⟦★⟧ zero
+⟦★₀⟧ = ⟦★⟧₀
 
 ⟦★₁⟧ : ∀ (A₁ A₂ : ★₁) → ★₂
 ⟦★₁⟧ = ⟦★⟧ (suc zero)
@@ -116,3 +119,27 @@ private
 
 ⟦Op₂⟧ : ∀ {a} → (⟦★⟧ {a} {a} a ⟦→⟧ ⟦★⟧ a) Op₂ Op₂
 ⟦Op₂⟧ Aᵣ = Aᵣ ⟦→⟧ Aᵣ ⟦→⟧ Aᵣ
+
+open import Function.Equivalence
+private
+  ⟦→⟧⇔Preserves :
+    ∀ {a b aᵣ bᵣ}
+      {A : ★ a} {B : ★ b}
+      {Aᵣ : ⟦★⟧ aᵣ A A}
+      {Bᵣ : ⟦★⟧ bᵣ B B}
+      {f}
+    → (Aᵣ ⟦→⟧ Bᵣ) f f ⇔ f Preserves Aᵣ ⟶ Bᵣ
+
+  ⟦→⟧⇔Preserves = equivalence (λ x → x) (λ x → x)
+
+  ⟦→⟧²⇔Preserves₂ :
+    ∀ {a b c aᵣ bᵣ cᵣ}
+      {A : ★ a} {B : ★ b} {C : ★ c}
+      {Aᵣ : ⟦★⟧ aᵣ A A}
+      {Bᵣ : ⟦★⟧ bᵣ B B}
+      {Cᵣ : ⟦★⟧ cᵣ C C}
+      {f}
+    → (Aᵣ ⟦→⟧ Bᵣ ⟦→⟧ Cᵣ) f f ⇔ f Preserves₂ Aᵣ ⟶ Bᵣ ⟶ Cᵣ
+
+  ⟦→⟧²⇔Preserves₂ = equivalence (λ f {x} {y}   {_} {_} z → f {x} {y} z)
+                                (λ f {x} {y} z {_} {_}   → f z)
