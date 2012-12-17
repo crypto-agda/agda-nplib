@@ -2,7 +2,7 @@
 module Function.NP where
 
 import Level as L
-open import Type
+open import Type hiding (★)
 open import Algebra
 open import Algebra.Structures
 open import Function       public
@@ -17,6 +17,9 @@ open import Relation.Binary
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡ using (_≡_; _≗_)
 
+Π : ∀ {a b} (A : ★ a) → (B : A → ★ b) → ★ _
+Π A B = (x : A) → B x
+
 id-app : ∀ {f} → Applicative {f} id
 id-app = rawIApplicative
   where open Monad Id.IdentityMonad
@@ -27,11 +30,11 @@ id-app = rawIApplicative
 _→⟨_⟩_ : ∀ {a b} (A : Set a) (n : ℕ) (B : Set b) → Set (N-ary-level a b n)
 A →⟨ n ⟩ B = N-ary n A B
 
-_→⟨_⟩₀_ : ∀ (A : ★) (n : ℕ) (B : ★) → ★
+_→⟨_⟩₀_ : ∀ (A : ★₀) (n : ℕ) (B : ★₀) → ★₀
 A →⟨ zero  ⟩₀ B = B
 A →⟨ suc n ⟩₀ B = A → A →⟨ n ⟩₀ B
 
-_→⟨_⟩₁_ : ∀ (A : ★) (n : ℕ) (B : ★₁) → ★₁
+_→⟨_⟩₁_ : ∀ (A : ★₀) (n : ℕ) (B : ★₁) → ★₁
 A →⟨ zero  ⟩₁ B = B
 A →⟨ suc n ⟩₁ B = A → A →⟨ n ⟩₁ B
 
@@ -79,7 +82,7 @@ module nest-Properties {a} {A : Set a} (f : Endo A) where
 module more-nest-Properties {a} {A : Set a} where
   nest-+'' : ∀ (f : Endo (Endo A)) g m n → nest m f g ∘ nest n f g ≗ nest (m + n) f g
   nest-+'' f g zero n = {!!}
-  nest-+'' f g (suc m) n = {!!} 
+  nest-+'' f g (suc m) n = {!!}
 -}
 
 _$⟨_⟩_ : ∀ {a} {A : Set a} → Endo A → ℕ → Endo A
@@ -98,21 +101,21 @@ _⟨_⟩°_ : ∀ {i a b c} {Ix : Set i} {A : Set a} {B : A → Set b} {C : (x :
 (f ⟨ _∙_ ⟩° g) x = f x ∙ g x
 
 module Combinators where
-    S : ∀ {A B C : ★} →
+    S : ∀ {A B C : ★₀} →
           (A → B → C) →
           (A → B) →
           (A → C)
     S = _ˢ_
 
-    K : ∀ {A B : ★} → A → B → A
+    K : ∀ {A B : ★₀} → A → B → A
     K = const
 
     -- B ≗ _∘_
-    B : ∀ {A B C : ★} → (B → C) → (A → B) → A → C
+    B : ∀ {A B C : ★₀} → (B → C) → (A → B) → A → C
     B = S (K S) K
 
     -- C ≗ flip
-    C : ∀ {A B C : ★} → (A → B → C) → B → A → C
+    C : ∀ {A B C : ★₀} → (A → B → C) → B → A → C
     C = S (S (K (S (K S) K)) S) (K K)
 
 module EndoMonoid-≈ {a ℓ} {A : Set a}
