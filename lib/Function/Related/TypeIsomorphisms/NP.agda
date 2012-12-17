@@ -278,6 +278,26 @@ module ×-ICMon = CommutativeMonoid ×-ICommutativeMonoid
 module ⊎-ICMon = CommutativeMonoid ⊎-ICommutativeMonoid
 module ×⊎°I    = CommutativeSemiring ×⊎-ICommutativeSemiring
 
+lift-⊎ : ∀ {A B : Set} → Inv.Inverse ((≡.setoid A) ⊎-setoid (≡.setoid B)) (≡.setoid (A ⊎ B))
+lift-⊎ {A}{B} = record
+  { to = record
+    { _⟨$⟩_ = λ x → x
+    ; cong = cong
+    }
+  ; from = record
+    { _⟨$⟩_ = λ x → x
+    ; cong = λ x → Setoid.reflexive (≡.setoid A ⊎-setoid ≡.setoid B) x
+    }
+  ; inverse-of = record
+    { left-inverse-of = λ x → Setoid.refl (≡.setoid A ⊎-setoid ≡.setoid B)
+    ; right-inverse-of = λ x → Setoid.refl (≡.setoid (A ⊎ B))
+    }
+  } where
+    cong : Setoid._≈_ (≡.setoid A ⊎-setoid ≡.setoid B)  =[ _ ]⇒ Setoid._≈_ (≡.setoid (A ⊎ B))
+    cong (₁∼₂ ())
+    cong (₁∼₁ x∼₁y) = ≡.cong inj₁ x∼₁y
+    cong (₂∼₂ x∼₂y) = ≡.cong inj₂ x∼₂y
+
 swap-iso : ∀ {A B} → (A × B) ↔ (B × A)
 swap-iso = ×-CMon.comm _ _
 
@@ -385,3 +405,16 @@ Fin-⊎-+ m n = Maybe^⊥↔Fin (m + n)
 
 Fin∘suc↔⊤⊎Fin : ∀ {n} → Fin (suc n) ↔ (⊤ ⊎ Fin n)
 Fin∘suc↔⊤⊎Fin = Maybe↔⊤⊎ ∘ Fin∘suc↔Maybe∘Fin
+
+Fin-×-* : ∀ m n → (Fin m × Fin n) ↔ Fin (m * n)
+Fin-×-* zero n = (Fin 0 × Fin n) ↔⟨ Fin0↔⊥ ×-cong id ⟩ 
+                 (⊥ × Fin n) ↔⟨ ⊥×A↔⊥ ⟩
+                 ⊥ ↔⟨ sym Fin0↔⊥ ⟩
+                 Fin 0 ∎
+  where open EquationalReasoning hiding (sym)
+Fin-×-* (suc m) n = (Fin (suc m) × Fin n) ↔⟨ Fin∘suc↔⊤⊎Fin ×-cong id ⟩
+                    ((⊤ ⊎ Fin m) × Fin n) ↔⟨ ×⊎°.distribʳ (Fin n) ⊤ (Fin m) ⟩
+                    ((⊤ × Fin n) ⊎ (Fin m × Fin n)) ↔⟨ ⊤×A↔A ⊎-cong Fin-×-* m n ⟩
+                    (Fin n ⊎ Fin (m * n)) ↔⟨ Fin-⊎-+ n (m * n) ⟩
+                    Fin (suc m * n) ∎
+  where open EquationalReasoning hiding (sym)
