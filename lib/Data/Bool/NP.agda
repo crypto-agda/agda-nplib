@@ -24,9 +24,9 @@ open ≡ using (_≡_)
 cond : ∀ {a} {A : ★ a} → A → A → Bool → A
 cond x y b = if b then x else y
 
-Cond : ∀ {ℓ} {A B : ★ ℓ} → A → B → (b : Bool) → cond A B b
-Cond x y true  = x
-Cond x y false = y
+Cond : ∀ {ℓ} (A : Bool → ★ ℓ) → A true → A false → Π Bool A
+Cond _ x y true  = x
+Cond _ x y false = y
 
 module Xor° = Algebra.CommutativeRing B.commutativeRing-xor-∧
 module Bool° = Algebra.CommutativeSemiring B.commutativeSemiring-∧-∨
