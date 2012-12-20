@@ -15,7 +15,7 @@ module Data.Indexed {i} {Ix : ★ i} where
 ★° ℓ = Ix → ★ ℓ
 
 ★₀° : ★ _
-★₀° = Ix → ★
+★₀° = Ix → ★₀
 
 ★₁° : ★ _
 ★₁° = Ix → ★₂
