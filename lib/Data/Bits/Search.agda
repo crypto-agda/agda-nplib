@@ -1,5 +1,5 @@
 -- most of this is subsumed by crypto-agda Search code
-open import Type
+open import Type hiding (★)
 open import Data.Nat.NP hiding (_==_) renaming (_<=_ to _ℕ<=_)
 open import Data.Bits
 open import Data.Bool.Properties using (not-involutive)

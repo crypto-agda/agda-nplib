@@ -9,7 +9,7 @@ open import Data.Product
 open import Relation.Binary
 
 module Flip where
-    module Structures {c} {C : ★ c} {ℓ} (_≈_ : C → C → ★ ℓ) (_∙_ : Op₂ C) where
+    module Structures {c} {C : ★ c} {ℓ} (_≈_ : C → C → ★ ℓ) (_∙_ : Op₂ C) where 
         flipIsSemigroup : IsSemigroup _≈_ _∙_ → IsSemigroup _≈_ (flip _∙_)
         flipIsSemigroup isSg = record { isEquivalence = isEquivalence
                                       ; assoc = λ x y z → sym (assoc z y x)
