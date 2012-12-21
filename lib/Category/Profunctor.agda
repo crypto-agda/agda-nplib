@@ -5,13 +5,13 @@ open import Category.Functor
 
 module Category.Profunctor {ℓ} where
 
-record Profunctor (_↝_ : ★ ℓ → ★ ℓ → ★ ℓ) : ★ (L.suc ℓ) where
+record Profunctor {i} (_↝_ : ★ i → ★ i → ★ ℓ) : ★ (ℓ L.⊔ L.suc i) where
   constructor _,_
   field
     lmap : ∀ {A B C} → (A → B) → B ↝ C → A ↝ C
     rmap : ∀ {A B C} → (B → C) → A ↝ B → A ↝ C
 
-→Profunctor : Profunctor -→-
+→Profunctor : Profunctor {ℓ} -→-
 →Profunctor = flip _∘′_ , _∘′_
 
 UpStar : (★ ℓ → ★ ℓ) → ★ ℓ → ★ ℓ → ★ ℓ
