@@ -4,28 +4,35 @@ module Lens.Type where
 open import Level
 open import Function.NP
 open import Type
-open import Category
 open import Category.Functor
 open import Category.Applicative
 open import Data.Product using (_×_; _,_)
 open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
 open import Relation.Binary.PropositionalEquality using (_≗_; _≡_; refl)
 
+Overloading : (_↝₀_ _↝₁_ : ★ → ★ → ★) (F : ★ → ★) (S T A B : ★) → ★
+Overloading _↝₀_ _↝₁_ F S T A B = A ↝₀ F B → S ↝₁ F T
+
+LensLike : (F : ★ → ★) (S T A B : ★) → ★
+LensLike = Overloading -→- -→-
+-- alternatively
+-- LensLike F S T A B = (A → F B) → S → F T
+
 Simple : ∀ {f s a} (F : (S T : Set s) (A B : Set a) → Set f)
                    (S : Set s) (A : Set a) → Set f
 Simple F S A = F S S A A
 
-LensLike : (F : ★ → ★) (S T A B : ★) → ★
-LensLike F S T A B = (A → F B) → S → F T
+Overloading′ : (_↝₀_ _↝₁_ : ★ → ★ → ★) (F : ★ → ★) (S A : ★) → ★
+Overloading′ _↝₀_ _↝₁_ F = Simple (Overloading _↝₀_ _↝₁_ F)
 
-SimpleLensLike : (F : ★ → ★) (S A : ★) → ★
-SimpleLensLike F = Simple (LensLike F)
+LensLike′ : (F : ★ → ★) (S A : ★) → ★
+LensLike′ F = Simple (LensLike F)
 
 Lens : (S T A B : ★) → ★₁
 Lens S T A B = ∀ {F} {{Ffun : RawFunctor F}} → LensLike F S T A B
 
-SimpleLens : (S A : ★) → ★₁
-SimpleLens = Simple Lens
+Lens′ : (S A : ★) → ★₁
+Lens′ = Simple Lens
 
 lens : ∀ {S T A B} → (S → A) → (S → B → T) → Lens S T A B
 lens sa sbt afb s = sbt s <$> afb (sa s)
@@ -65,6 +72,9 @@ module ContextComonad {A : ★} where
   extend : ∀ {T U} → (W T → U) → W T → W U
   extend f (s , g) = (f ∘ _,_ s) , g
   -- ComonadStore...
+
+Loupe : (S T A B : ★) → ★
+Loupe S T A B = LensLike (Context A B) S T A B
 
 {-
 -- This one is not an Endo functor because of predicativity
@@ -172,6 +182,30 @@ BazaarRawApplicative {A} {B} = record { pure = buy; _⊛_ = _⊛_ }
 -- universe issue
 -- BazaarFunctor : ∀ {A B} → RawFunctor (Bazaar A B)
 
+record Exchange (R A B : ★) : ★ where
+  constructor _,_
+  field
+    exchange : A → R
+    extract  : B
+
+open Exchange public using (exchange)
+
+module Exchanges {R A} where
+  private
+    F = Exchange R A
+
+  map : ∀ {B C} → (B → C) → F B → F C
+  map f (ar , b) = ar , f b
+
+  rawFunctor : RawFunctor F
+  rawFunctor = record { _<$>_ = map }
+
+  extract : ∀ {B} → F B → B
+  extract = Exchange.extract
+
+  duplicate : ∀ {B} → F B → F (F B)
+  duplicate (ar , b) = ar , (ar , b)
+
 choosing : ∀ {F S S′ T T′ A B} {{_ : RawFunctor F}} →
              LensLike F S T A B →
              LensLike F S′ T′ A B →
@@ -183,8 +217,9 @@ choosing ℓ r f = [ _<$>_ inj₁ ∘ ℓ f
 choosen : ∀ {A B} → Lens (A ⊎ A) (B ⊎ B) A B
 choosen = choosing id id
 
-inside : ∀ {S T A B E} →
-           LensLike (Context A B) S T A B → Lens (E → S) (E → T) (E → A) (E → B)
+inside : ∀ {S T A B E}
+         → Loupe S T A B
+         → Lens (E → S) (E → T) (E → A) (E → B)
 inside ℓ f es = o <$> f i where
   open RawFunctor {{...}}
   open Context
@@ -192,8 +227,8 @@ inside ℓ f es = o <$> f i where
   o = λ ea e → set (ℓ (_,_ id) (es e)) (ea e)
 
 alongside : ∀ {S S′ T T′ A A′ B B′}
-            → LensLike (Context A  B)   S  T  A  B
-            → LensLike (Context A′ B′)  S′ T′ A′ B′
+            → Loupe S  T  A  B
+            → Loupe S′ T′ A′ B′
             → Lens (S × S′) (T × T′) (A × A′) (B × B′)
 alongside l r f (s , s′) = case l (_,_ id) s of λ
   { (bt , a) → case r (_,_ id) s′ of λ
@@ -201,33 +236,7 @@ alongside l r f (s , s′) = case l (_,_ id) s of λ
                  } }
                   where _<&>_ = flip (RawFunctor._<$>_ …)
 
-record Isomorphic (_↝_ : ★ → ★ → ★) : ★₁ where
-  constructor mk
-  field
-    category : Category _↝_
-    iso      : ∀ {S T A B F} {{F-fun : RawFunctor F}} → (S → A) → (B → T)
-                                                      → (A → F B) ↝ (S → F T)
-
-→Isomorphic : Isomorphic -→-
-→Isomorphic = mk →-cat (λ f g h s → g <$> (h (f s)))
+cloneLens : ∀ {S T A B} → Loupe S T A B → Lens S T A B
+cloneLens f afb s = case f (_,_ id) s of λ { (bt , a) → bt <$> afb a }
   where open RawFunctor {{...}}
-
-record Prismatic (_↝_ : ★ → ★ → ★) : ★₁ where
-  constructor mk
-  field
-    isomorphic : Isomorphic _↝_
-    prism      : ∀ {S T A B F} {{F-app : RawApplicative F}}
-                 → (B → T) → (S → T ⊎ A)
-                 → (A → F B) ↝ (S → F T)
-
-→Prismatic : Prismatic -→-
-→Prismatic = mk →Isomorphic (λ f seta h → [ pure , _<$>_ f ∘ h ] ∘ seta)
-  where open RawApplicative {{...}}
-
-record Indexable (_↝_ : ★ → ★ → ★) : ★₁ where
-  constructor mk
-  field
-    indexed : ∀ {I A B : ★} → ((I → A) → B) → A ↝ B
-
-→Indexable : Indexable -→-
-→Indexable = mk (λ f → f ∘ const)
+-- -}
