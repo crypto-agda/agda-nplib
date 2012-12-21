@@ -20,6 +20,13 @@ open ≡ using (_≡_; _≗_)
 Π : ∀ {a b} (A : ★ a) → (B : A → ★ b) → ★ _
 Π A B = (x : A) → B x
 
+ΠΠ : ∀ {a b c} (A : ★ a) (B : A → ★ b) (C : Σ A B → ★ c) → ★ _
+ΠΠ A B C = Π A λ x → Π (B x) λ y → C (x , y)
+
+ΠΠΠ : ∀ {a b c d} (A : ★ a) (B : A → ★ b)
+                  (C : Σ A B → ★ c) (D : Σ (Σ A B) C → ★ d) → ★ _
+ΠΠΠ A B C D = Π A λ x → Π (B x) λ y → Π (C (x , y)) λ z → D ((x , y) , z)
+
 id-app : ∀ {f} → Applicative {f} id
 id-app = rawIApplicative
   where open Monad Id.IdentityMonad
