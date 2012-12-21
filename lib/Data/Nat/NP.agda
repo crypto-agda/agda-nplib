@@ -59,6 +59,11 @@ _⊔°_ : ∀ {a} {A : ★ a} (f g : A → ℕ) → A → ℕ
 _⊓°_ : ∀ {a} {A : ★ a} (f g : A → ℕ) → A → ℕ
 (f ⊓° g) x = f x ⊓ g x
 
+-- this one is not completly in line with the
+-- others
+_≤°_ : ∀ {a} {A : ★ a} (f g : A → ℕ) → ★ a
+f ≤° g = ∀ x → f x ≤ g x
+
 sucx≰x : ∀ x → suc x ≰ x
 sucx≰x zero    = λ()
 sucx≰x (suc x) = sucx≰x x ∘ ≤-pred
