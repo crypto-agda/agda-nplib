@@ -17,9 +17,13 @@ open import Relation.Binary.Logical
 ∃ : ∀ {a b} {A : ★ a} → (A → ★ b) → ★ (a ⊔ b)
 ∃ = Σ _
 
-first : ∀ {a b c} {A : ★ a} {B : ★ b} {C : ★ c} →
-          (f : A → B) → A × C → B × C
+first : ∀ {a b c} {A : ★ a} {B : A → ★ b} {C : A → ★ c} →
+          (f : (x : A) → B x) (p : Σ A C) → B (proj₁ p) × C (proj₁ p)
 first f (x , y) = (f x , y)
+
+first′ : ∀ {a b c} {A : ★ a} {B : ★ b} {C : ★ c} →
+          (f : A → B) → A × C → B × C
+first′ = first
 
 second : ∀ {a p q} {A : ★ a} {P : A → ★ p} {Q : A → ★ q} →
            (∀ {x} → P x → Q x) → Σ A P → Σ A Q

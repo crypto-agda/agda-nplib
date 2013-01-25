@@ -282,8 +282,8 @@ lift-⊎ {A}{B} = record
     cong (₁∼₁ x∼₁y) = ≡.cong inj₁ x∼₁y
     cong (₂∼₂ x∼₂y) = ≡.cong inj₂ x∼₂y
 
-swap-iso : ∀ {ℓ} {A B : ★ ℓ} → (A × B) ↔ (B × A)
-swap-iso = ×-CMon.comm _ _
+swap-iso : ∀ {a b} {A : ★ a} {B : ★ b} → (A × B) ↔ (B × A)
+swap-iso = inverses swap swap (λ _ → ≡.refl) (λ _ → ≡.refl)
 
 Maybe↔Lift⊤⊎ : ∀ {ℓ a} {A : ★ a} → Maybe A ↔ (Lift {ℓ = ℓ} ⊤ ⊎ A)
 Maybe↔Lift⊤⊎
@@ -299,7 +299,7 @@ Maybe↔⊤⊎
              (maybe (λ _ → ≡.refl) ≡.refl)
              [ (λ _ → ≡.refl) , (λ _ → ≡.refl) ]
 
-Maybe-cong : ∀ {a b} {A : ★ a} {B : ★ b} → A ↔ B → Maybe A ↔ Maybe B 
+Maybe-cong : ∀ {a b} {A : ★ a} {B : ★ b} → A ↔ B → Maybe A ↔ Maybe B
 Maybe-cong A↔B = sym Maybe↔⊤⊎ ∘ id ⊎-cong A↔B ∘ Maybe↔⊤⊎
 
 Maybe∘Maybe^↔Maybe^∘Maybe : ∀ {a} {A : ★ a} n → Maybe (Maybe^ n A) ↔ Maybe^ n (Maybe A)
