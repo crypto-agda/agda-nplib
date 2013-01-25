@@ -236,8 +236,8 @@ sucBCarry (1b ∷ xs) = view∷ (λ x xs → x ∷ not x ∷ xs) (sucBCarry xs)
 sucB : ∀ {n} → Bits n → Bits n
 sucB = tail ∘ sucBCarry
 
-_[mod_] : ℕ → ℕ → ★₀
-a [mod b ] = DivMod' a b
+--_[mod_] : ℕ → ℕ → ★₀
+--a [mod b ] = DivMod' a b
 
 proj : ∀ {a} {A : ★ a} → A × A → Bit → A
 proj (x₀ , x₁) 0b = x₀
