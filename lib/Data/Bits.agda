@@ -239,9 +239,12 @@ sucB = tail ∘ sucBCarry
 --_[mod_] : ℕ → ℕ → ★₀
 --a [mod b ] = DivMod' a b
 
-proj : ∀ {a} {A : ★ a} → A × A → Bit → A
+proj : ∀ {a} {A : Bit → ★ a} → A 0b × A 1b → (b : Bit) → A b
 proj (x₀ , x₁) 0b = x₀
 proj (x₀ , x₁) 1b = x₁
+
+proj′ : ∀ {a} {A : ★ a} → A × A → Bit → A
+proj′ = proj
 
 rewire : ∀ {i o} → (Fin o → Fin i) → i →ᵇ o
 rewire = V.rewire
