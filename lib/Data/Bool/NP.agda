@@ -2,7 +2,7 @@
 module Data.Bool.NP where
 
 open import Type hiding (★)
-open import Data.Bool using (Bool; true; false; T; if_then_else_; not)
+open import Data.Bool using (Bool; true; false; if_then_else_; not) renaming (T to ✓)
 import Algebra
 open import Algebra.FunctionProperties using (Op₁; Op₂)
 import Data.Bool.Properties as B
@@ -31,10 +31,10 @@ Cond _ x y false = y
 module Xor° = Algebra.CommutativeRing B.commutativeRing-xor-∧
 module Bool° = Algebra.CommutativeSemiring B.commutativeSemiring-∧-∨
 
-check : ∀ b → {pf : T b} → ⊤
+check : ∀ b → {pf : ✓ b} → ⊤
 check = _
 
-If_then_else_ : ∀ {ℓ} {A B : ★ ℓ} b → (T b → A) → (T (not b) → B) → if b then A else B
+If_then_else_ : ∀ {ℓ} {A B : ★ ℓ} b → (✓ b → A) → (✓ (not b) → B) → if b then A else B
 If_then_else_ true  x _ = x _
 If_then_else_ false _ x = x _
 
@@ -42,21 +42,21 @@ If′_then_else_ : ∀ {ℓ} {A B : ★ ℓ} b → A → B → if b then A else 
 If′_then_else_ true  x _ = x
 If′_then_else_ false _ x = x
 
-If-map : ∀ {A B C D : ★₀} b (f : T b → A → C) (g : T (not b) → B → D) →
+If-map : ∀ {A B C D : ★₀} b (f : ✓ b → A → C) (g : ✓ (not b) → B → D) →
            if b then A else B → if b then C else D
 If-map true  f _ = f _
 If-map false _ f = f _
 
 If-elim : ∀ {A B : ★₀} {P : Bool → ★₀}
-            b (f : T b → A → P true) (g : T (not b) → B → P false) → if b then A else B → P b
+            b (f : ✓ b → A → P true) (g : ✓ (not b) → B → P false) → if b then A else B → P b
 If-elim true  f _ = f _
 If-elim false _ f = f _
 
-If-true : ∀ {A B : ★₀} {b} → T b → (if b then A else B) ≡ A
+If-true : ∀ {A B : ★₀} {b} → ✓ b → (if b then A else B) ≡ A
 If-true {b = true}  _ = ≡.refl
 If-true {b = false} ()
 
-If-false : ∀ {A B : ★₀} {b} → T (not b) → (if b then A else B) ≡ B
+If-false : ∀ {A B : ★₀} {b} → ✓ (not b) → (if b then A else B) ≡ B
 If-false {b = true}  ()
 If-false {b = false} _ = ≡.refl
 
@@ -135,7 +135,7 @@ false == false = true
 
 module == where
   _≈_ : (x y : Bool) → ★₀
-  x ≈ y = T (x == y)
+  x ≈ y = ✓ (x == y)
 
   refl : Reflexive _≈_
   refl {true}  = _
@@ -175,7 +175,7 @@ module == where
 
 module ⟦Bool⟧-Reasoning = Setoid-Reasoning ⟦Bool⟧-Props.setoid
 
-open Data.Bool public
+open Data.Bool public renaming (T to ✓)
 
 ⟦not⟧ : (⟦Bool⟧ ⟦→⟧ ⟦Bool⟧) not not
 ⟦not⟧ ⟦true⟧  = ⟦false⟧
@@ -193,61 +193,61 @@ _⟦xor⟧_ : (⟦Bool⟧ ⟦→⟧ ⟦Bool⟧ ⟦→⟧ ⟦Bool⟧) _xor_ _xor_
 ⟦true⟧  ⟦xor⟧ x = ⟦not⟧ x
 ⟦false⟧ ⟦xor⟧ x = x
 
-⟦true⟧′ : ∀ {b} → T b → ⟦Bool⟧ true b
+⟦true⟧′ : ∀ {b} → ✓ b → ⟦Bool⟧ true b
 ⟦true⟧′ {true}  _ = ⟦true⟧
 ⟦true⟧′ {false} ()
 
-⟦false⟧′ : ∀ {b} → T (not b) → ⟦Bool⟧ false b
+⟦false⟧′ : ∀ {b} → ✓ (not b) → ⟦Bool⟧ false b
 ⟦false⟧′ {true} ()
 ⟦false⟧′ {false} _ = ⟦false⟧
 
-≡→T : ∀ {b} → b ≡ true → T b
-≡→T ≡.refl = _
+≡→✓ : ∀ {b} → b ≡ true → ✓ b
+≡→✓ ≡.refl = _
 
-≡→Tnot : ∀ {b} → b ≡ false → T (not b)
-≡→Tnot ≡.refl = _
+≡→✓not : ∀ {b} → b ≡ false → ✓ (not b)
+≡→✓not ≡.refl = _
 
-T→≡ : ∀ {b} → T b → b ≡ true
-T→≡ {true}  _  = ≡.refl
-T→≡ {false} ()
+✓→≡ : ∀ {b} → ✓ b → b ≡ true
+✓→≡ {true}  _  = ≡.refl
+✓→≡ {false} ()
 
-Tnot→≡ : ∀ {b} → T (not b) → b ≡ false
-Tnot→≡ {false} _  = ≡.refl
-Tnot→≡ {true}  ()
+✓not→≡ : ∀ {b} → ✓ (not b) → b ≡ false
+✓not→≡ {false} _  = ≡.refl
+✓not→≡ {true}  ()
 
-T∧ : ∀ {b₁ b₂} → T b₁ → T b₂ → T (b₁ ∧ b₂)
-T∧ p q = _⟨$⟩_ (from B.T-∧) (p , q)
+✓∧ : ∀ {b₁ b₂} → ✓ b₁ → ✓ b₂ → ✓ (b₁ ∧ b₂)
+✓∧ p q = _⟨$⟩_ (from B.T-∧) (p , q)
 
-T∧₁ : ∀ {b₁ b₂} → T (b₁ ∧ b₂) → T b₁
-T∧₁ = proj₁ ∘ _⟨$⟩_ (to B.T-∧)
+✓∧₁ : ∀ {b₁ b₂} → ✓ (b₁ ∧ b₂) → ✓ b₁
+✓∧₁ = proj₁ ∘ _⟨$⟩_ (to B.T-∧)
 
-T∧₂ : ∀ {b₁ b₂} → T (b₁ ∧ b₂) → T b₂
-T∧₂ {b₁} = proj₂ ∘ _⟨$⟩_ (to (B.T-∧ {b₁}))
+✓∧₂ : ∀ {b₁ b₂} → ✓ (b₁ ∧ b₂) → ✓ b₂
+✓∧₂ {b₁} = proj₂ ∘ _⟨$⟩_ (to (B.T-∧ {b₁}))
 
-T∨'⊎ : ∀ {b₁ b₂} → T (b₁ ∨ b₂) → T b₁ ⊎ T b₂
-T∨'⊎ {b₁} = _⟨$⟩_ (to (B.T-∨ {b₁}))
+✓∨'⊎ : ∀ {b₁ b₂} → ✓ (b₁ ∨ b₂) → ✓ b₁ ⊎ ✓ b₂
+✓∨'⊎ {b₁} = _⟨$⟩_ (to (B.T-∨ {b₁}))
 
-T∨₁ : ∀ {b₁ b₂} → T b₁ → T (b₁ ∨ b₂)
-T∨₁ = _⟨$⟩_ (from B.T-∨) ∘ inj₁
+✓∨₁ : ∀ {b₁ b₂} → ✓ b₁ → ✓ (b₁ ∨ b₂)
+✓∨₁ = _⟨$⟩_ (from B.T-∨) ∘ inj₁
 
-T∨₂ : ∀ {b₁ b₂} → T b₂ → T (b₁ ∨ b₂)
-T∨₂ {b₁} = _⟨$⟩_ (from (B.T-∨ {b₁})) ∘ inj₂
+✓∨₂ : ∀ {b₁ b₂} → ✓ b₂ → ✓ (b₁ ∨ b₂)
+✓∨₂ {b₁} = _⟨$⟩_ (from (B.T-∨ {b₁})) ∘ inj₂
 
-T'not'¬ : ∀ {b} → T (not b) → ¬ (T b)
-T'not'¬ {false} _ = λ()
-T'not'¬ {true} ()
+✓'not'¬ : ∀ {b} → ✓ (not b) → ¬ (✓ b)
+✓'not'¬ {false} _ = λ()
+✓'not'¬ {true} ()
 
-T'¬'not : ∀ {b} → ¬ (T b) → T (not b)
-T'¬'not {true}  f = f _
-T'¬'not {false} _ = _
+✓'¬'not : ∀ {b} → ¬ (✓ b) → ✓ (not b)
+✓'¬'not {true}  f = f _
+✓'¬'not {false} _ = _
 
-∧⇒∨ : ∀ x y → T (x ∧ y) → T (x ∨ y)
+∧⇒∨ : ∀ x y → ✓ (x ∧ y) → ✓ (x ∨ y)
 ∧⇒∨ true y = _
 ∧⇒∨ false y = λ ()
 
-Tdec : ∀ b → Dec (T b)
-Tdec true = yes _
-Tdec false = no λ()
+✓dec : ∀ b → Dec (✓ b)
+✓dec true = yes _
+✓dec false = no λ()
 
 de-morgan : ∀ x y → not (x ∨ y) ≡ not x ∧ not y
 de-morgan true  _ = ≡.refl
@@ -313,12 +313,12 @@ module Indexed {a} {A : ★ a} where
 data So : Bool → ★₀ where
   oh! : So true
 
-So→T : ∀ {b} → So b → T b
-So→T oh! = _
+So→✓ : ∀ {b} → So b → ✓ b
+So→✓ oh! = _
 
-T→So : ∀ {b} → T b → So b
-T→So {true}  _  = oh!
-T→So {false} ()
+✓→So : ∀ {b} → ✓ b → So b
+✓→So {true}  _  = oh!
+✓→So {false} ()
 
 So→≡ : ∀ {b} → So b → b ≡ true
 So→≡ oh! = ≡.refl
