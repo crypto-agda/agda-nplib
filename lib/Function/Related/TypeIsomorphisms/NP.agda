@@ -10,27 +10,119 @@ open import Data.Fin using (Fin; zero; suc)
 open import Data.Vec using (Vec; []; _∷_)
 open import Data.Nat.NP using (ℕ; zero; suc; _+_; _*_) renaming (_^_ to _**_)
 open import Data.Maybe.NP
-open import Data.Product renaming (map to map×)
+open import Data.Product.NP renaming (map to map×)
 --open import Data.Product.N-ary
 open import Data.Sum renaming (map to map⊎)
 open import Data.Unit
 open import Data.Empty
+open import Data.Bits using (Bit; 0b; 1b; false; true; proj)
 
-import Function as F
+import Function.NP as F
+open F using (Π)
 import Function.Equality as FE
 open FE using (_⟨$⟩_)
 open import Function.Related as FR
 open import Function.Related.TypeIsomorphisms public
 import Function.Inverse.NP as Inv
-open Inv using (_↔_; _∘_; sym; id; inverses; module Inverse)
+open Inv using (_↔_; _∘_; sym; id; inverses; module Inverse) renaming (_$₁_ to to; _$₂_ to from)
 open import Relation.Binary
 open import Relation.Binary.Product.Pointwise
 open import Relation.Binary.Sum
 import Relation.Binary.PropositionalEquality as ≡
+open ≡ using (_≡_)
 
 private
     Setoid₀ : ★ _
     Setoid₀ = Setoid L.zero L.zero
+
+Σ≡↔⊤ : ∀ {a} {A : ★ a} x → Σ A (_≡_ x) ↔ ⊤
+Σ≡↔⊤ x = inverses (F.const _) (λ _ → _ , ≡.refl)
+                  helper (λ _ → ≡.refl)
+  where helper : (y : Σ _ (_≡_ x)) → (x , ≡.refl) ≡ y
+        helper (.x , ≡.refl) = ≡.refl
+
+module _ {a b c} {A : ★ a} {B : A → ★ b} {C : Σ A B → ★ c} where
+    curried : Π (Σ A B) C ↔ Π A λ a → Π (B a) λ b → C (a , b)
+    curried = inverses curry uncurry (λ _ → ≡.refl) (λ _ → ≡.refl)
+
+module _ {a b c} {A : ★ a} {B : ★ b} {C : A → ★ c} (f : A ↔ B) where
+  private
+    left-f = Inv.Inverse.left-inverse-of f
+    right-f = Inv.Inverse.right-inverse-of f
+    coe : ∀ x → C x → C (from f (to f x))
+    coe x = ≡.subst C (≡.sym (left-f x))
+    ⇒ : Σ A C → Σ B (C F.∘ from f)
+    ⇒ (x , p) = to f x , coe x p
+    ⇐ : Σ B (C F.∘ from f) → Σ A C
+    ⇐ = first (from f)
+    ⇐⇒ : ∀ x → ⇐ (⇒ x) ≡ x
+    ⇐⇒ (x , p) rewrite left-f x = ≡.refl
+    ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
+    ⇒⇐ p = mkΣ≡ (C F.∘ from f) (right-f (proj₁ p)) (helper p)
+            where
+                helper : ∀ p → ≡.subst (C F.∘ from f) (right-f (proj₁ p)) (coe (proj₁ (⇐ p)) (proj₂ (⇐ p))) ≡ proj₂ p
+                helper p with to f (from f (proj₁ p)) | right-f (proj₁ p) | left-f (from f (proj₁ p))
+                helper _ | ._ | ≡.refl | ≡.refl = ≡.refl
+  first-iso : Σ A C ↔ Σ B (C F.∘ from f)
+  first-iso = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
+
+module _ {a b c} {A : ★ a} {B : ★ b} {C : B → ★ c} (f : A ↔ B) where
+  sym-first-iso : Σ A (C F.∘ to f) ↔ Σ B C
+  sym-first-iso = sym (first-iso (sym f))
+
+module _ {a b c} {A : ★ a} {B : A → ★ b} {C : A → ★ c} (f : ∀ x → B x ↔ C x) where
+  private
+    left-f = Inv.Inverse.left-inverse-of F.∘ f
+    right-f = Inv.Inverse.right-inverse-of F.∘ f
+    ⇒ : Σ A B → Σ A C
+    ⇒ = second (to (f _))
+    ⇐ : Σ A C → Σ A B
+    ⇐ = second (from (f _))
+    ⇐⇒ : ∀ x → ⇐ (⇒ x) ≡ x
+    ⇐⇒ (x , y) rewrite left-f x y = ≡.refl
+    ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
+    ⇒⇐ (x , y) rewrite right-f x y = ≡.refl
+  second-iso : Σ A B ↔ Σ A C
+  second-iso = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
+
+module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c} where
+  private
+    S = Σ (A ⊎ B) C
+    T = Σ A (C F.∘ inj₁) ⊎ Σ B (C F.∘ inj₂)
+    ⇒ : S → T
+    ⇒ (inj₁ x , y) = inj₁ (x , y)
+    ⇒ (inj₂ x , y) = inj₂ (x , y)
+    ⇐ : T → S
+    ⇐ (inj₁ (x , y)) = inj₁ x , y
+    ⇐ (inj₂ (x , y)) = inj₂ x , y
+    ⇐⇒ : ∀ x → ⇐ (⇒ x) ≡ x
+    ⇐⇒ (inj₁ _ , _) = ≡.refl
+    ⇐⇒ (inj₂ _ , _) = ≡.refl
+    ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
+    ⇒⇐ (inj₁ _) = ≡.refl
+    ⇒⇐ (inj₂ _) = ≡.refl
+
+  Σ⊎-distrib : S ↔ T
+  Σ⊎-distrib = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
+
+{- requires extensional equality
+module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c} where
+  private
+    S = Π (A ⊎ B) C
+    T = Π A (C F.∘ inj₁) × Π B (C F.∘ inj₂)
+    ⇒ : S → T
+    ⇒ f = f F.∘ inj₁ , f F.∘ inj₂
+    ⇐ : T → S
+    ⇐ (f , g) = [ f , g ]
+    ⇐⇒ : ∀ f x → ⇐ (⇒ f) x ≡ f x
+    ⇐⇒ f (inj₁ x) = ≡.refl
+    ⇐⇒ f (inj₂ y) = ≡.refl
+    ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
+    ⇒⇐ (f , g) = ≡.refl
+
+  Π×-distrib : S ↔ T
+  Π×-distrib = inverses (⇒) (⇐) {!⇐⇒!} ⇒⇐
+-}
 
 ⊎-ICommutativeMonoid : CommutativeMonoid _ _
 ⊎-ICommutativeMonoid = record {
@@ -211,7 +303,7 @@ private
       ; cong = cong-to
       }
     ; from = record
-      { _⟨$⟩_ = from
+      { _⟨$⟩_ = frm
       ; cong = cong-from
       }
     ; inverse-of = record
@@ -230,8 +322,8 @@ private
       cong-to (₁∼₁ x∼₁y , A-rel) = ₁∼₁ (x∼₁y , A-rel)
       cong-to (₂∼₂ x∼₂y , A-rel) = ₂∼₂ (x∼₂y , A-rel)
 
-      from : B' × A' ⊎ C' × A' → (B' ⊎ C') × A'
-      from = [ map× inj₁ F.id , map× inj₂ F.id ]
+      frm : B' × A' ⊎ C' × A' → (B' ⊎ C') × A'
+      frm = [ map× inj₁ F.id , map× inj₂ F.id ]
 
       cong-from : _≈_ ((B ×-setoid A) ⊎-setoid (C ×-setoid A)) =[ _ ]⇒ _≈_ ((B ⊎-setoid C) ×-setoid A)
       cong-from (₁∼₂ ())
@@ -285,6 +377,10 @@ lift-⊎ {A}{B} = record
 swap-iso : ∀ {a b} {A : ★ a} {B : ★ b} → (A × B) ↔ (B × A)
 swap-iso = inverses swap swap (λ _ → ≡.refl) (λ _ → ≡.refl)
 
+module _ {a b c} {A : ★ a} {B : ★ b} {C : A × B → ★ c} where
+  Σ×-swap : Σ (A × B) C ↔ Σ (B × A) (C F.∘ swap)
+  Σ×-swap = first-iso swap-iso
+
 Maybe↔Lift⊤⊎ : ∀ {ℓ a} {A : ★ a} → Maybe A ↔ (Lift {ℓ = ℓ} ⊤ ⊎ A)
 Maybe↔Lift⊤⊎
   = inverses (maybe inj₂ (inj₁ _))
@@ -336,12 +432,12 @@ Fin0↔⊥ = inverses (λ()) (λ()) (λ()) (λ())
 
 Fin∘suc↔Maybe∘Fin : ∀ {n} → Fin (suc n) ↔ Maybe (Fin n)
 Fin∘suc↔Maybe∘Fin {n}
-  = inverses to (maybe suc zero)
+  = inverses to' (maybe suc zero)
              (λ { zero → ≡.refl ; (suc n) → ≡.refl })
              (maybe (λ _ → ≡.refl) ≡.refl)
-  where to : Fin (suc n) → Maybe (Fin n)
-        to zero = nothing
-        to (suc n) = just n
+  where to' : Fin (suc n) → Maybe (Fin n)
+        to' zero = nothing
+        to' (suc n) = just n
 
 Lift↔id : ∀ {a} {A : ★ a} → Lift {a} {a} A ↔ A
 Lift↔id = inverses lower lift (λ { (lift x) → ≡.refl }) (λ _ → ≡.refl)
@@ -378,6 +474,16 @@ Maybe^-⊎-+ : ∀ {A} m n → (Maybe^ m ⊥ ⊎ Maybe^ n A) ↔ Maybe^ (m + n) 
 Maybe^-⊎-+ zero    n = ⊥⊎A↔A
 Maybe^-⊎-+ (suc m) n = Maybe-cong (Maybe^-⊎-+ m n) ∘ Maybe-⊎
 
+Bit↔⊤⊎⊤ : Bit ↔ (⊤ ⊎ ⊤)
+Bit↔⊤⊎⊤ = inverses (proj (inj₁ _ , inj₂ _)) [ F.const 0b , F.const 1b ] ⇐⇒ ⇒⇐
+  where
+  ⇐⇒ : (_ : Bit) → _
+  ⇐⇒ true = ≡.refl
+  ⇐⇒ false = ≡.refl
+  ⇒⇐ : (_ : ⊤ ⊎ ⊤) → _
+  ⇒⇐ (inj₁ _) = ≡.refl
+  ⇒⇐ (inj₂ _) = ≡.refl
+
 Fin-⊎-+ : ∀ m n → (Fin m ⊎ Fin n) ↔ Fin (m + n)
 Fin-⊎-+ m n = Maybe^⊥↔Fin (m + n)
             ∘ Maybe^-⊎-+ m n
@@ -387,7 +493,7 @@ Fin∘suc↔⊤⊎Fin : ∀ {n} → Fin (suc n) ↔ (⊤ ⊎ Fin n)
 Fin∘suc↔⊤⊎Fin = Maybe↔⊤⊎ ∘ Fin∘suc↔Maybe∘Fin
 
 Fin-×-* : ∀ m n → (Fin m × Fin n) ↔ Fin (m * n)
-Fin-×-* zero n = (Fin 0 × Fin n) ↔⟨ Fin0↔⊥ ×-cong id ⟩ 
+Fin-×-* zero n = (Fin 0 × Fin n) ↔⟨ Fin0↔⊥ ×-cong id ⟩
                  (⊥ × Fin n) ↔⟨ ⊥×A↔⊥ ⟩
                  ⊥ ↔⟨ sym Fin0↔⊥ ⟩
                  Fin 0 ∎
@@ -398,3 +504,4 @@ Fin-×-* (suc m) n = (Fin (suc m) × Fin n) ↔⟨ Fin∘suc↔⊤⊎Fin ×-cong
                     (Fin n ⊎ Fin (m * n)) ↔⟨ Fin-⊎-+ n (m * n) ⟩
                     Fin (suc m * n) ∎
   where open EquationalReasoning hiding (sym)
+-- -}
