@@ -33,7 +33,7 @@ module ≤-Reasoning where
   _<⟨_⟩_ : ∀ x {y z : ℕ} → x < y → y ≤ z → x < z
   x <⟨ p ⟩ q = suc x ≤⟨ p ⟩ q
 
-suc-injective : ∀ {n m : ℕ} → (suc n ∶ ℕ) ≡ suc m → n ≡ m
+suc-injective : ∀ {n m : ℕ} → ℕ.suc n ≡ suc m → n ≡ m
 suc-injective = ≡.cong pred
 
 +-≤-inj : ∀ x {y z} → x + y ≤ x + z → y ≤ z
