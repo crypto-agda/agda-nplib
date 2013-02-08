@@ -27,6 +27,118 @@ open import Relation.Binary
 open import Relation.Binary.Product.Pointwise
 open import Relation.Binary.Sum
 import Relation.Binary.PropositionalEquality as ≡
+open ≡ using (_≡_ ; _≢_)
+
+module CancelMaybe where
+  private
+    module _ {A : Set} where
+      just-inj : {x y : A} → Maybe.just x ≡ just y → x ≡ y
+      just-inj ≡.refl = ≡.refl
+
+    module _ {A B : Set}
+      (f : Maybe A ↔ Maybe B)
+      (tof-tot : ∀ x → Inverse.to f ⟨$⟩ just x ≢ nothing)
+      (fof-tot : ∀ x → Inverse.from f ⟨$⟩ just x ≢ nothing) where
+
+        CancelMaybe' : A ↔ B
+        CancelMaybe' = inverses (⇒) (⇐) ⇐⇒ ⇒⇐ where
+          to = λ x → Inverse.to f ⟨$⟩ x
+          from = λ x → Inverse.from f ⟨$⟩ x
+
+          ⇒ : _ → _
+          ⇒ x with to (just x) | tof-tot x
+          ⇒ x | just x₁ | _ = x₁
+          ⇒ x | nothing | p = ⊥-elim (p ≡.refl)
+
+          ⇐ : _ → _
+          ⇐ x with from (just x) | fof-tot x
+          ⇐ x | just x₁ | p = x₁
+          ⇐ x | nothing | p = ⊥-elim (p ≡.refl)
+
+          ⇐⇒ : ∀ x → ⇐ (⇒ x) ≡ x
+          ⇐⇒ x with to (just x)
+                  | tof-tot x
+                  | from (just (⇒ x))
+                  | fof-tot (⇒ x)
+                  | Inverse.left-inverse-of f (just x)
+                  | Inverse.right-inverse-of f (just (⇒ x))
+          ⇐⇒ x | just x₁ | p | just x₂ | q | b | c  = just-inj (≡.trans (≡.sym (Inverse.left-inverse-of f (just x₂))) (≡.trans (≡.cong from c) b))
+          ⇐⇒ x | just x₁ | p | nothing | q | _ | _  = ⊥-elim (q ≡.refl)
+          ⇐⇒ x | nothing | p | z       | q | _ | _  = ⊥-elim (p ≡.refl)
+
+          ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
+          ⇒⇐ x with from (just x)
+                  | fof-tot x
+                  | to (just (⇐ x))
+                  | tof-tot (⇐ x)
+                  | Inverse.right-inverse-of f (just x)
+                  | Inverse.left-inverse-of f (just (⇐ x))
+          ⇒⇐ x | just x₁ | p | just x₂ | q | b | c = just-inj (≡.trans (≡.sym (Inverse.right-inverse-of f (just x₂))) (≡.trans (≡.cong to c) b))
+          ⇒⇐ x | just x₁ | p | nothing | q | _ | _ = ⊥-elim (q ≡.refl)
+          ⇒⇐ x | nothing | p | z       | q | _ | _ = ⊥-elim (p ≡.refl)
+
+    module _ {A B : Set}
+      (f : Maybe A ↔ Maybe B)
+      (f-empty : Inverse.to f ⟨$⟩ nothing ≡ nothing) where
+
+      tof-tot : ∀ x → Inverse.to f ⟨$⟩ just x ≢ nothing
+      tof-tot x eq with Inverse.injective f (≡.trans eq (≡.sym f-empty))
+      ... | ()
+
+      f-empty' : Inverse.from f ⟨$⟩ nothing ≡ nothing
+      f-empty' = ≡.trans (≡.sym (≡.cong (λ x → Inverse.from f ⟨$⟩ x) f-empty)) (Inverse.left-inverse-of f nothing)
+
+      fof-tot : ∀ x → Inverse.from f ⟨$⟩ just x ≢ nothing
+      fof-tot x eq with Inverse.injective (sym f) (≡.trans eq (≡.sym f-empty'))
+      ... | ()
+
+      iso : A ↔ B
+      iso = CancelMaybe' f tof-tot fof-tot
+
+
+    module _ {A B : Set}
+      (f : Maybe A ↔ Maybe B) where
+
+      g : Maybe A ↔ Maybe B
+      g = inverses (⇒) (⇐) ⇐⇒ ⇒⇐ where
+          to = λ x → Inverse.to f ⟨$⟩ x
+          from = λ x → Inverse.from f ⟨$⟩ x
+
+          ⇒ : Maybe A → Maybe B
+          ⇒ (just x) with to (just x)
+          ... | nothing = to nothing
+          ... | just y  = just y
+          ⇒ nothing = nothing
+
+          ⇐ : Maybe B → Maybe A
+          ⇐ (just x) with from (just x)
+          ... | nothing = from nothing
+          ... | just y  = just y
+          ⇐ nothing = nothing
+
+          ⇐⇒ : ∀ x → ⇐ (⇒ x) ≡ x
+          ⇐⇒ (just x) with to (just x) | Inverse.left-inverse-of f (just x)
+          ⇐⇒ (just x) | just x₁ | p rewrite p = ≡.refl
+          ⇐⇒ (just x) | nothing | p with to nothing | Inverse.left-inverse-of f nothing
+          ⇐⇒ (just x₁) | nothing | p | just x | q rewrite q = p
+          ⇐⇒ (just x) | nothing | p | nothing | q = ≡.trans (≡.sym q) p
+          ⇐⇒ nothing = ≡.refl
+
+          ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
+          ⇒⇐ (just x) with from (just x) | Inverse.right-inverse-of f (just x)
+          ⇒⇐ (just x) | just x₁ | p rewrite p = ≡.refl
+          ⇒⇐ (just x) | nothing | p with from nothing | Inverse.right-inverse-of f nothing
+          ⇒⇐ (just x₁) | nothing | p | just x | q rewrite q = p
+          ⇒⇐ (just x) | nothing | p | nothing | q = ≡.trans (≡.sym q) p
+          ⇒⇐ nothing = ≡.refl
+
+      g-empty : Inverse.to g ⟨$⟩ nothing ≡ nothing
+      g-empty = ≡.refl
+
+      iso' : A ↔ B
+      iso' = iso g g-empty
+  CancelMaybe : ∀ {A B : Set} → Maybe A ↔ Maybe B → A ↔ B
+  CancelMaybe f = iso' f
 
 private
     Setoid₀ : ★ _
