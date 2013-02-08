@@ -33,7 +33,7 @@ module ≤-Reasoning where
   _<⟨_⟩_ : ∀ x {y z : ℕ} → x < y → y ≤ z → x < z
   x <⟨ p ⟩ q = suc x ≤⟨ p ⟩ q
 
-suc-injective : ∀ {n m : ℕ} → (suc n ∶ ℕ) ≡ suc m → n ≡ m
+suc-injective : ∀ {n m : ℕ} → ℕ.suc n ≡ suc m → n ≡ m
 suc-injective = ≡.cong pred
 
 +-≤-inj : ∀ x {y z} → x + y ≤ x + z → y ≤ z
@@ -898,7 +898,7 @@ module GeneralisedArithmetic {a} {A : ★ a} (0# : A) (1+ : A → A) where
 
 module == where
   _≈_ : (m n : ℕ) → ★₀
-  m ≈ n = T (m == n)
+  m ≈ n = ✓ (m == n)
 
   subst : ∀ {ℓ} → Substitutive _≈_ ℓ
   subst _ {zero}  {zero}  _  = id
@@ -906,7 +906,7 @@ module == where
   subst _ {zero}  {suc _} ()
   subst _ {suc _} {zero}  ()
 
-  sound : ∀ m n → T (m == n) → m ≡ n
+  sound : ∀ m n → ✓ (m == n) → m ≡ n
   sound m n p = subst (_≡_ m) p ≡.refl
 
   refl : Reflexive _≈_
@@ -950,7 +950,7 @@ suc m  <= suc n  = m <= n
 
 module <= where
   ℛ : ℕ → ℕ → ★₀
-  ℛ x y = T (x <= y)
+  ℛ x y = ✓ (x <= y)
 
   sound : ∀ m n → ℛ m n → m ≤ n
   sound zero    _       _  = z≤n
@@ -979,7 +979,7 @@ module <= where
 
   open IsTotalOrder isTotalOrder public
 
-<=-steps′ : ∀ {x} y → T (x <= (x + y))
+<=-steps′ : ∀ {x} y → ✓ (x <= (x + y))
 <=-steps′ {x} y = <=.complete (≤-steps′ {x} y)
 
 sucx∸y≤suc⟨x∸y⟩ : ∀ x y → suc x ∸ y ≤ suc (x ∸ y)
@@ -1016,5 +1016,5 @@ x<2y→x∸y<y x y p rewrite ≡.sym (2*′-spec y) = x<2y′→x∸y<y x y p
 ... | tri≈ _ eq _    = ℕ≤.reflexive (≡.sym eq)
 ... | tri> _ _ 1+n≤m = ≤-pred (Props.≤-steps 1 1+n≤m)
 
-not<=→< : ∀ x y → T (not (x <= y)) → T (suc y <= x)
-not<=→< x y p = <=.complete (≰→< x y (T'not'¬ p ∘ <=.complete))
+not<=→< : ∀ x y → ✓ (not (x <= y)) → ✓ (suc y <= x)
+not<=→< x y p = <=.complete (≰→< x y (✓'not'¬ p ∘ <=.complete))

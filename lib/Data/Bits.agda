@@ -239,9 +239,12 @@ sucB = tail ∘ sucBCarry
 --_[mod_] : ℕ → ℕ → ★₀
 --a [mod b ] = DivMod' a b
 
-proj : ∀ {a} {A : ★ a} → A × A → Bit → A
+proj : ∀ {a} {A : Bit → ★ a} → A 0b × A 1b → (b : Bit) → A b
 proj (x₀ , x₁) 0b = x₀
 proj (x₀ , x₁) 1b = x₁
+
+proj′ : ∀ {a} {A : ★ a} → A × A → Bit → A
+proj′ = proj
 
 rewire : ∀ {i o} → (Fin o → Fin i) → i →ᵇ o
 rewire = V.rewire
@@ -294,13 +297,13 @@ data _≤ᴮ_ : ∀ {n} (p q : Bits n) → ★₀ where
   there : ∀ {n} {p q : Bits n} b → p ≤ᴮ q → (b ∷ p) ≤ᴮ (b ∷ q)
   0-1   : ∀ {n} (p q : Bits n) → 0∷ p ≤ᴮ 1∷ q
 
-≤ᴮ→<= : ∀ {n} {p q : Bits n} → p ≤ᴮ q → T (p <= q)
+≤ᴮ→<= : ∀ {n} {p q : Bits n} → p ≤ᴮ q → ✓ (p <= q)
 ≤ᴮ→<= [] = _
 ≤ᴮ→<= (there 0b pf) = ≤ᴮ→<= pf
 ≤ᴮ→<= (there 1b pf) = ≤ᴮ→<= pf
 ≤ᴮ→<= (0-1 p q) = _
 
-<=→≤ᴮ : ∀ {n} (p q : Bits n) → T (p <= q) → p ≤ᴮ q
+<=→≤ᴮ : ∀ {n} (p q : Bits n) → ✓ (p <= q) → p ≤ᴮ q
 <=→≤ᴮ [] [] _ = []
 <=→≤ᴮ (1b ∷ p) (0b ∷ q) ()
 <=→≤ᴮ (0b ∷ p) (1b ∷ q) _  = 0-1 p q
@@ -365,29 +368,29 @@ sucB-lem x = {!!}
 2ⁿ≰toℕ : ∀ {n} (xs : Bits n) → 2^ n ≰ toℕ xs
 2ⁿ≰toℕ xs p = ¬n≤x<n _ p (toℕ-bound xs)
 
-Tnot2ⁿ<=toℕ : ∀ {n} (xs : Bits n) → T (not (2^ n ℕ<= (toℕ xs)))
-Tnot2ⁿ<=toℕ {n} xs with (2^ n) ℕ<= (toℕ xs) | ≡.inspect (_ℕ<=_ (2^ n)) (toℕ xs)
-... | true  | ≡.[ p ] = 2ⁿ≰toℕ xs (<=.sound (2^ n) (toℕ xs) (≡→T p))
+✓not2ⁿ<=toℕ : ∀ {n} (xs : Bits n) → ✓ (not (2^ n ℕ<= (toℕ xs)))
+✓not2ⁿ<=toℕ {n} xs with (2^ n) ℕ<= (toℕ xs) | ≡.inspect (_ℕ<=_ (2^ n)) (toℕ xs)
+... | true  | ≡.[ p ] = 2ⁿ≰toℕ xs (<=.sound (2^ n) (toℕ xs) (≡→✓ p))
 ... | false |     _   = _
 
 fromℕ∘toℕ : ∀ {n} (x : Bits n) → fromℕ (toℕ x) ≡ x
 fromℕ∘toℕ [] = ≡.refl
 fromℕ∘toℕ {suc n} (true ∷ xs)
-  rewrite T→≡ (<=-steps′ {2^ n} (toℕ xs))
+  rewrite ✓→≡ (<=-steps′ {2^ n} (toℕ xs))
         | ℕ°.+-comm (2^ n) (toℕ xs)
         | m+n∸n≡m (toℕ xs) (2^ n)
         | fromℕ∘toℕ xs
         = ≡.refl
 fromℕ∘toℕ (false ∷ xs)
-  rewrite Tnot→≡ (Tnot2ⁿ<=toℕ xs)
+  rewrite ✓not→≡ (✓not2ⁿ<=toℕ xs)
         | fromℕ∘toℕ xs
         = ≡.refl
 
 toℕ∘fromℕ : ∀ {n} x → x < 2^ n → toℕ {n} (fromℕ x) ≡ x
 toℕ∘fromℕ {zero} .0 (s≤s z≤n) = ≡.refl
 toℕ∘fromℕ {suc n} x x<2ⁿ with 2^ n ℕ<= x | ≡.inspect (_ℕ<=_ (2^ n)) x
-... | true  | ≡.[ p ] rewrite toℕ∘fromℕ {n} (x ∸ 2^ n) (x<2y→x∸y<y x (2^ n) x<2ⁿ) = m+n∸m≡n {2^ n} {x} (<=.sound (2^ n) x (≡→T p))
-... | false | ≡.[ p ] = toℕ∘fromℕ {n} x (<=.sound (suc x) (2^ n) (not<=→< (2^ n) x (≡→Tnot p)))
+... | true  | ≡.[ p ] rewrite toℕ∘fromℕ {n} (x ∸ 2^ n) (x<2y→x∸y<y x (2^ n) x<2ⁿ) = m+n∸m≡n {2^ n} {x} (<=.sound (2^ n) x (≡→✓ p))
+... | false | ≡.[ p ] = toℕ∘fromℕ {n} x (<=.sound (suc x) (2^ n) (not<=→< (2^ n) x (≡→✓not p)))
 
 fromℕ-inj : ∀ {n} {x y : ℕ} → x < 2^ n → y < 2^ n → fromℕ {n} x ≡ fromℕ y → x ≡ y
 fromℕ-inj {n} {x} {y} x< y< fx≡fy

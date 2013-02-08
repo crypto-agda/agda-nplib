@@ -5,7 +5,7 @@ module Data.Product.NP where
 open import Type hiding (★)
 open import Level
 open import Data.Product public hiding (∃)
-open import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality as ≡
 open import Relation.Unary.NP hiding (Decidable)
 open import Relation.Binary
 open import Relation.Nullary
@@ -17,9 +17,14 @@ open import Relation.Binary.Logical
 ∃ : ∀ {a b} {A : ★ a} → (A → ★ b) → ★ (a ⊔ b)
 ∃ = Σ _
 
-first : ∀ {a b c} {A : ★ a} {B : A → ★ b} {C : A → ★ c} →
+first : ∀ {a b c} {A : ★ a} {B : ★ b} {C : B → ★ c} →
+          (f : A → B) → Σ A (C ∘ f) → Σ B C
+first f = map f id -- f (x , y) = (f x , y)
+
+-- generalized first′ but differently than first
+first' : ∀ {a b c} {A : ★ a} {B : A → ★ b} {C : A → ★ c} →
           (f : (x : A) → B x) (p : Σ A C) → B (proj₁ p) × C (proj₁ p)
-first f (x , y) = (f x , y)
+first' f (x , y) = (f x , y)
 
 first′ : ∀ {a b c} {A : ★ a} {B : ★ b} {C : ★ c} →
           (f : A → B) → A × C → B × C
@@ -27,7 +32,7 @@ first′ = first
 
 second : ∀ {a p q} {A : ★ a} {P : A → ★ p} {Q : A → ★ q} →
            (∀ {x} → P x → Q x) → Σ A P → Σ A Q
-second f (x , y) = (x , f y)
+second = map id
 
 second′ : ∀ {a b c} {A : ★ a} {B : ★ b} {C : ★ c} →
            (B → C) → A × B → A × C
@@ -179,11 +184,13 @@ dec⟦×⟧ decAᵣ decBᵣ (x₁ , y₁) (x₂ , y₂) with decAᵣ x₁ x₂
 ...           | yes yᵣ = yes (xᵣ ⟦,⟧ yᵣ)
 ...           | no ¬yᵣ = no (¬yᵣ ∘ ⟦proj₂⟧)
 
+mkΣ≡ : ∀ {a b} {A : ★ a} {x y : A} (B : A → ★ b) {p : B x} {q : B y} (xy : x ≡ y) → subst B xy p ≡ q → (x , p) ≡ (y , q)
+mkΣ≡ _ xy h rewrite xy | h = ≡.refl
 
-Σ,-injective₂ : ∀ {a b} {A : ★ a} {B : A → ★ b} {x : A} {y z : B x} → ((x , y) ∶ Σ A B) ≡ (x , z) → y ≡ z
+Σ,-injective₂ : ∀ {a b} {A : ★ a} {B : A → ★ b} {x : A} {y z : B x} → (_,_ {B = B} x y) ≡ (x , z) → y ≡ z
 Σ,-injective₂ refl = refl
 
-Σ,-injective₁ : ∀ {a b} {A : ★ a} {B : A → ★ b} {x₁ x₂ : A} {y₁ : B x₁} {y₂ : B x₂} → ((x₁ , y₁) ∶ Σ A B) ≡ (x₂ , y₂) → x₁ ≡ x₂
+Σ,-injective₁ : ∀ {a b} {A : ★ a} {B : A → ★ b} {x₁ x₂ : A} {y₁ : B x₁} {y₂ : B x₂} → (x₁ Σ., y₁) ≡ (x₂ , y₂) → x₁ ≡ x₂
 Σ,-injective₁ refl = refl
 
 proj₁-injective : ∀ {a b} {A : ★ a} {B : A → ★ b} {x y : Σ A B}
@@ -195,8 +202,8 @@ proj₁-injective {x = (a , p₁)} {y = (_ , p₂)} B-uniq eq rewrite sym eq
 proj₂-irrelevance : ∀ {a b} {A : ★ a} {B C : A → ★ b} {x₁ x₂ : A}
                       {y₁ : B x₁} {y₂ : B x₂} {z₁ : C x₁} {z₂ : C x₂}
                     → (C-uniq : ∀ {z} (p₁ p₂ : C z) → p₁ ≡ p₂)
-                    → ((x₁ , y₁) ∶ Σ A B) ≡ (x₂ , y₂)
-                    → ((x₁ , z₁) ∶ Σ A C) ≡ (x₂ , z₂)
+                    → (x₁ Σ., y₁) ≡ (x₂ , y₂)
+                    → (x₁ Σ., z₁) ≡ (x₂ , z₂)
 proj₂-irrelevance C-uniq = proj₁-injective C-uniq ∘ Σ,-injective₁
 
 ≟Σ : ∀ {A : ★₀} {P : A → ★₀}

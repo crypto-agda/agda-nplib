@@ -282,5 +282,5 @@ ext-# f≗g = ext-countᶠ f≗g (allBits _)
 find? : ∀ {n a} {A : ★ a} → (Bits n →? A) →? A
 find? = search (M?._∣_ _)
 
-findB : ∀ {n} → (Bits n → Bool) →? Bits n
-findB pred = find? (λ x → if pred x then just x else nothing)
+findKey : ∀ {n} → (Bits n → Bool) →? Bits n
+findKey pred = find? (λ x → if pred x then just x else nothing)

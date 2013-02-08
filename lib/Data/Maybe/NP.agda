@@ -73,7 +73,7 @@ Maybe^-∘-+ zero    _ _ = ≡.refl
 Maybe^-∘-+ (suc m) _ _ = ≡.cong Maybe (Maybe^-∘-+ m _ _)
 
 just-injective : ∀ {a} {A : ★ a} {x y : A}
-                 → (just x ∶ Maybe A) ≡ just y → x ≡ y
+                 → Maybe.just x ≡ just y → x ≡ y
 just-injective ≡.refl = ≡.refl
 
 maybe-just-nothing : ∀ {a} {A : ★ a} → maybe {A = A} just nothing ≗ id
