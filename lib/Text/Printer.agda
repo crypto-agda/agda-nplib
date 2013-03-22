@@ -1,6 +1,6 @@
 module Text.Printer where
 
-open import Data.Type
+open import Type
 open import Data.String
 open import Data.Nat
 open import Data.Nat.Show
