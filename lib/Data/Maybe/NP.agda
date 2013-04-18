@@ -14,7 +14,7 @@ open import Relation.Binary.PropositionalEquality as ≡ using (_≡_;_≗_)
 open import Relation.Nullary
 open import Relation.Binary
 open import Relation.Binary.Logical
-open import Function using (type-signature;_$_;flip;id)
+open import Function using (_$_;flip;id)
 open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Product
 open import Data.Unit using (⊤)
