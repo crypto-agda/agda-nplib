@@ -5,6 +5,7 @@ open import Type hiding (★)
 open import Level
 open import Function
 open import Data.Sum public
+open import Relation.Binary
 open import Relation.Binary.Logical
 import Relation.Binary.PropositionalEquality as ≡
 open ≡ using (_≡_;_≢_;_≗_)
@@ -37,6 +38,13 @@ data _⟦⊎⟧_ {a₁ a₂ b₁ b₂ aᵣ bᵣ}
             (A ⟦→⟧ C) ⟦→⟧ (B ⟦→⟧ D) ⟦→⟧ (A ⟦⊎⟧ B ⟦→⟧ C ⟦⊎⟧ D))
         (map {a} {b} {c} {d}) (map {a} {b} {c} {d})
 ⟦map⟧ A B C D f g = ⟦[_,_]′⟧ A B (C ⟦⊎⟧ D) (inj₁ ∘′ f) (inj₂ ∘′ g)
+
+⟦⊎⟧-refl : ∀ {a b aᵣ bᵣ}
+             {A : ★ a} (Aᵣ : A → A → ★ aᵣ) (Aᵣ-refl : Reflexive Aᵣ)
+             {B : ★ b} (Bᵣ : B → B → ★ bᵣ) (Bᵣ-refl : Reflexive Bᵣ)
+           → Reflexive (Aᵣ ⟦⊎⟧ Bᵣ)
+⟦⊎⟧-refl Aᵣ Aᵣ-refl Bᵣ Bᵣ-refl {inj₁ x} = inj₁ Aᵣ-refl
+⟦⊎⟧-refl Aᵣ Aᵣ-refl Bᵣ Bᵣ-refl {inj₂ y} = inj₂ Bᵣ-refl
 
 [,]-assoc : ∀ {a₁ a₂ b₁ b₂ c} {A₁ : ★ a₁} {A₂ : ★ a₂}
               {B₁ : ★ b₁} {B₂ : ★ b₂} {C : ★ c}

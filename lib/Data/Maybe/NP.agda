@@ -110,6 +110,10 @@ data ⟦Maybe⟧ {a b r} {A : ★ a} {B : ★ b} (_∼_ : A → B → ★ r) : M
 ⟦maybe⟧ _ _ justᵣ nothingᵣ (⟦just⟧ xᵣ) = justᵣ xᵣ
 ⟦maybe⟧ _ _ justᵣ nothingᵣ ⟦nothing⟧   = nothingᵣ
 
+⟦map?⟧ : ∀ {a b} → (∀⟨ Aᵣ ∶ ⟦★⟧ a ⟩⟦→⟧ ∀⟨ Bᵣ ∶ ⟦★⟧ b ⟩⟦→⟧ (Aᵣ ⟦→⟧ Bᵣ) ⟦→⟧ ⟦Maybe⟧ Aᵣ ⟦→⟧ ⟦Maybe⟧ Bᵣ) (map? {a} {b}) (map? {a} {b})
+⟦map?⟧ _ _ fᵣ (⟦just⟧ xᵣ) = ⟦just⟧ (fᵣ xᵣ)
+⟦map?⟧ _ _ fᵣ ⟦nothing⟧   = ⟦nothing⟧
+
 Any-join? : ∀ {a} {A : ★ a} {P : A → ★ a} {x} → Any (Any P) x → Any P (join? x)
 Any-join? (just p) = p
 
