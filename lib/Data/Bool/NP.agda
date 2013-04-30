@@ -2,7 +2,7 @@
 module Data.Bool.NP where
 
 open import Type hiding (★)
-open import Data.Bool using (Bool; true; false; if_then_else_; not) renaming (T to ✓)
+open import Data.Bool using (Bool; true; false; if_then_else_; not; _xor_) renaming (T to ✓)
 import Algebra
 open import Algebra.FunctionProperties using (Op₁; Op₂)
 import Data.Bool.Properties as B
@@ -127,11 +127,8 @@ module ⟦Bool⟧-Props where
 ⟦If′⟨_,_⟩_then_else_⟧ _ _ ⟦true⟧  xᵣ _ = xᵣ
 ⟦If′⟨_,_⟩_then_else_⟧ _ _ ⟦false⟧ _ xᵣ = xᵣ
 
-_==_ : (x y : Bool) → Bool
-true == true = true
-true == false = false
-false == true = false
-false == false = true
+_==_ : (b₀ b₁ : Bool) → Bool
+b₀ == b₁ = (not b₀) xor b₁
 
 module == where
   _≈_ : (x y : Bool) → ★₀
@@ -172,6 +169,16 @@ module == where
 
   decSetoid : DecSetoid _ _
   decSetoid = record { Carrier = Bool; _≈_ = _≈_; isDecEquivalence = isDecEquivalence }
+
+  neg-xor : ∀ b₀ b₁ → b₀ == b₁ ≡ not (b₀ xor b₁)
+  neg-xor true  b = ≡.sym (B.not-involutive b)
+  neg-xor false b = ≡.refl
+
+  comm : ∀ b₀ b₁ → b₀ == b₁ ≡ b₁ == b₀
+  comm true true = ≡.refl
+  comm true false = ≡.refl
+  comm false true = ≡.refl
+  comm false false = ≡.refl
 
 module ⟦Bool⟧-Reasoning = Setoid-Reasoning ⟦Bool⟧-Props.setoid
 

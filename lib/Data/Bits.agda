@@ -6,8 +6,7 @@ import Level
 open import Data.Nat.NP hiding (_==_) renaming (_<=_ to _ℕ<=_)
 open import Data.Nat.Properties
 open import Data.Nat.DivMod
-import Data.Bool.NP as Bool
-open Bool hiding (_==_; toℕ)
+open import Data.Bit renaming (_==_ to _==ᵇ_; module == to ==ᵇ)
 open import Data.Bool.Properties using (not-involutive)
 import Data.Fin as Fin
 open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise) renaming (_+_ to _+ᶠ_)
@@ -24,17 +23,6 @@ import Data.List.NP as L
 
 open import Data.Bool.NP public using (_xor_; not; true; false; if_then_else_)
 open V public using ([]; _∷_; head; tail; replicate; RewireTbl)
-
-Bit : ★₀
-Bit = Bool
-
-module Defs where
-  0b = false
-  1b = true
-module Patterns where
-  pattern 0b = false
-  pattern 1b = true
-open Patterns
 
 Bits : ℕ → ★₀
 Bits = Vec Bit
@@ -59,29 +47,20 @@ i →ᵇ o = Bits i → Bits o
 _!_ : ∀ {a n} {A : ★ a} → Vec A n → Fin n → A
 _!_ = flip lookup
 
-[0→_,1→_] : ∀ {a} {A : ★ a} → A → A → Bit → A
-[0→ e₀ ,1→ e₁ ] b = if b then e₁ else e₀
-
-case_0→_1→_ : ∀ {a} {A : ★ a} → Bit → A → A → A
-case b 0→ e₀ 1→ e₁ = if b then e₁ else e₀
-
-_==ᵇ_ : (b₀ b₁ : Bit) → Bool
-b₀ ==ᵇ b₁ = not (b₀ xor b₁)
-
-_==_ : ∀ {n} (bs₀ bs₁ : Bits n) → Bool
+_==_ : ∀ {n} (bs₀ bs₁ : Bits n) → Bit
 [] == [] = true
 (b₀ ∷ bs₀) == (b₁ ∷ bs₁) = (b₀ ==ᵇ b₁) ∧ bs₀ == bs₁
 
 ==-comm : ∀ {n} (xs ys : Bits n) → xs == ys ≡ ys == xs
 ==-comm [] [] = refl
-==-comm (x ∷ xs) (x₁ ∷ ys) rewrite Xor°.+-comm x x₁ | ==-comm xs ys = refl
+==-comm (x ∷ xs) (y ∷ ys) rewrite ==ᵇ.comm x y | ==-comm xs ys = refl
 
 ==-refl : ∀ {n} (xs : Bits n) → (xs == xs) ≡ 1b
 ==-refl [] = refl
 ==-refl (true ∷ xs) = ==-refl xs
 ==-refl (false ∷ xs) = ==-refl xs
 
-_<=_ : ∀ {n} (xs ys : Bits n) → Bool
+_<=_ : ∀ {n} (xs ys : Bits n) → Bit
 []        <= []        = 1b
 (1b ∷ xs) <= (0b ∷ ys) = 0b
 (0b ∷ xs) <= (1b ∷ ys) = 1b
@@ -239,13 +218,6 @@ sucB = tail ∘ sucBCarry
 --_[mod_] : ℕ → ℕ → ★₀
 --a [mod b ] = DivMod' a b
 
-proj : ∀ {a} {A : Bit → ★ a} → A 0b × A 1b → (b : Bit) → A b
-proj (x₀ , x₁) 0b = x₀
-proj (x₀ , x₁) 1b = x₁
-
-proj′ : ∀ {a} {A : ★ a} → A × A → Bit → A
-proj′ = proj
-
 rewire : ∀ {i o} → (Fin o → Fin i) → i →ᵇ o
 rewire = V.rewire
 
@@ -402,5 +374,3 @@ fromℕ-inj {n} {x} {y} x< y< fx≡fy
   ≡⟨ toℕ∘fromℕ {n} y y< ⟩
     y
   ∎ where open ≡-Reasoning
-
-open Defs public

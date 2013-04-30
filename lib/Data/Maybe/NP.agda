@@ -23,6 +23,7 @@ open import Data.Nat using (ℕ; zero; suc; _+_)
 Π? : ∀ {a b} (A : ★ a) (B : A → ★ b) → ★ _
 Π? A B = (x : A) → Maybe (B x)
 
+infixr 0 _→?_
 _→?_ : ∀ {a b} → ★ a → ★ b → ★ _
 A →? B = A → Maybe B
 

@@ -3,7 +3,7 @@ module Data.Fin.NP where
 open import Type hiding (★)
 open import Function
 open import Data.Empty
-open import Data.Fin public
+open import Data.Fin public renaming (toℕ to Fin▹ℕ)
 open import Data.Nat.NP using (ℕ; zero; suc; _<=_; module ℕ°) renaming (_+_ to _+ℕ_)
 open import Data.Bool
 import Data.Vec.NP as Vec
@@ -62,22 +62,24 @@ reverse-inject₁ : ∀ {n} (x : Fin n) → reverse (inject₁ x) ≡ suc (rever
 reverse-inject₁ zero = refl
 reverse-inject₁ (suc x) rewrite reverse-inject₁ x = refl
 
+{-
 reverse-involutive : ∀ {n} (x : Fin n) → reverse (reverse x) ≡ x
 reverse-involutive zero = reverse-fromℕ _
 reverse-involutive (suc x) rewrite reverse-inject₁ (reverse x) | reverse-involutive x = refl
+-}
 
-reverse-lem : ∀ {n} (x : Fin n) → toℕ (reverse x) ≡ n ∸ suc (toℕ x)
+reverse-lem : ∀ {n} (x : Fin n) → Fin▹ℕ (reverse x) ≡ n ∸ suc (Fin▹ℕ x)
 reverse-lem zero = to-from _
 reverse-lem (suc x) rewrite inject₁-lemma (reverse x) = reverse-lem x
 
-toℕ-ℕ-lem : ∀ {n} (x : Fin (suc n)) → toℕ (n ℕ- x) ≡ n ∸ toℕ x
-toℕ-ℕ-lem zero = to-from _
-toℕ-ℕ-lem {zero} (suc ())
-toℕ-ℕ-lem {suc n} (suc x) = toℕ-ℕ-lem x
+Fin▹ℕ-ℕ-lem : ∀ {n} (x : Fin (suc n)) → Fin▹ℕ (n ℕ- x) ≡ n ∸ Fin▹ℕ x
+Fin▹ℕ-ℕ-lem zero = to-from _
+Fin▹ℕ-ℕ-lem {zero} (suc ())
+Fin▹ℕ-ℕ-lem {suc n} (suc x) = Fin▹ℕ-ℕ-lem x
 
-reverse-old-lem : ∀ {n} (x : Fin n) → toℕ (reverse-old x) ≡ n ∸ suc (toℕ x)
+reverse-old-lem : ∀ {n} (x : Fin n) → Fin▹ℕ (reverse-old x) ≡ n ∸ suc (Fin▹ℕ x)
 reverse-old-lem {zero} ()
-reverse-old-lem {suc n} x rewrite inject≤-lemma (n ℕ- x) (n∸m≤n (toℕ x) (suc n)) = toℕ-ℕ-lem x
+reverse-old-lem {suc n} x rewrite inject≤-lemma (n ℕ- x) (n∸m≤n (Fin▹ℕ x) (suc n)) = Fin▹ℕ-ℕ-lem x
 
 data FinView {n} : Fin (suc n) → ★₀ where
   `fromℕ   : FinView (fromℕ n)

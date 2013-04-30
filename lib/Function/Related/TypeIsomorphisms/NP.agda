@@ -15,7 +15,7 @@ open import Data.Product.NP renaming (map to map×)
 open import Data.Sum renaming (map to map⊎)
 open import Data.Unit
 open import Data.Empty
-open import Data.Bits using (Bit; 0b; 1b; false; true; proj)
+open import Data.Bit using (Bit; 0b; 1b; proj)
 
 import Function.NP as F
 open F using (Π)
@@ -588,8 +588,8 @@ Bit↔⊤⊎⊤ : Bit ↔ (⊤ ⊎ ⊤)
 Bit↔⊤⊎⊤ = inverses (proj (inj₁ _ , inj₂ _)) [ F.const 0b , F.const 1b ] ⇐⇒ ⇒⇐
   where
   ⇐⇒ : (_ : Bit) → _
-  ⇐⇒ true = ≡.refl
-  ⇐⇒ false = ≡.refl
+  ⇐⇒ 1b = ≡.refl
+  ⇐⇒ 0b = ≡.refl
   ⇒⇐ : (_ : ⊤ ⊎ ⊤) → _
   ⇒⇐ (inj₁ _) = ≡.refl
   ⇒⇐ (inj₂ _) = ≡.refl
