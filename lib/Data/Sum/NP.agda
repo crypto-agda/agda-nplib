@@ -10,10 +10,10 @@ open import Relation.Binary.Logical
 import Relation.Binary.PropositionalEquality as ≡
 open ≡ using (_≡_;_≢_;_≗_)
 
-inj₁-inj : ∀ {a b} {A : ★ a} {B : ★ b} {x y : A} → (inj₁ x ∶ A ⊎ B) ≡ inj₁ y → x ≡ y
+inj₁-inj : ∀ {a b} {A : ★ a} {B : ★ b} {x y : A} → _⊎_.inj₁ {B = B} x ≡ inj₁ y → x ≡ y
 inj₁-inj ≡.refl = ≡.refl
 
-inj₂-inj : ∀ {a b} {A : ★ a} {B : ★ b} {x y : B} → (inj₂ x ∶ A ⊎ B) ≡ inj₂ y → x ≡ y
+inj₂-inj : ∀ {a b} {A : ★ a} {B : ★ b} {x y : B} → _⊎_.inj₂ {A = A} x ≡ inj₂ y → x ≡ y
 inj₂-inj ≡.refl = ≡.refl
 
 infixr 4 _⟦⊎⟧_

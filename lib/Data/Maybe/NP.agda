@@ -14,6 +14,7 @@ open import Relation.Binary.PropositionalEquality as ≡ using (_≡_;_≗_)
 open import Relation.Nullary
 open import Relation.Binary
 open import Relation.Binary.Logical
+open import Relation.Unary.Logical
 open import Function using (_$_;flip;id)
 open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Product
@@ -102,18 +103,31 @@ just?→IsJust {x = nothing} ()
 Any→just? : ∀ {a} {A : ★ a} {P : A → ★ a} {x} → Any P x → just? x
 Any→just? (just _) = _
 
+data [Maybe] {a p} {A : ★ a} (Aₚ : A → ★ p) : Maybe A → ★ (a ⊔ p) where
+  nothing : [Maybe] Aₚ nothing
+  just    : (Aₚ [→] [Maybe] Aₚ) just
+
+[maybe] : ∀ {a b} → (∀⟨ Aₚ ∶ [★] a ⟩[→] (∀⟨ Bₚ ∶ [★] b ⟩[→] ((Aₚ [→] Bₚ) [→] (Bₚ [→] ([Maybe] Aₚ [→] Bₚ)))))
+                     (maybe {a} {b})
+[maybe] _ _ justₚ nothingₚ (just xₚ) = justₚ xₚ
+[maybe] _ _ justₚ nothingₚ nothing   = nothingₚ
+
+[map?] : ∀ {a b} → (∀⟨ Aₚ ∶ [★] a ⟩[→] ∀⟨ Bₚ ∶ [★] b ⟩[→] (Aₚ [→] Bₚ) [→] [Maybe] Aₚ [→] [Maybe] Bₚ) (map? {a} {b})
+[map?] _ _ fₚ (just xₚ) = just (fₚ xₚ)
+[map?] _ _ fₚ nothing   = nothing
+
 data ⟦Maybe⟧ {a b r} {A : ★ a} {B : ★ b} (_∼_ : A → B → ★ r) : Maybe A → Maybe B → ★ (a ⊔ b ⊔ r) where
-  ⟦just⟧ : ∀ {x₁ x₂} → (xᵣ : x₁ ∼ x₂) → ⟦Maybe⟧ _∼_ (just x₁) (just x₂)
-  ⟦nothing⟧ : ⟦Maybe⟧ _∼_ nothing nothing
+  just    : ∀ {x₁ x₂} → (xᵣ : x₁ ∼ x₂) → ⟦Maybe⟧ _∼_ (just x₁) (just x₂)
+  nothing : ⟦Maybe⟧ _∼_ nothing nothing
 
 ⟦maybe⟧ : ∀ {a b} → (∀⟨ Aᵣ ∶ ⟦★⟧ a ⟩⟦→⟧ (∀⟨ Bᵣ ∶ ⟦★⟧ b ⟩⟦→⟧ ((Aᵣ ⟦→⟧ Bᵣ) ⟦→⟧ (Bᵣ ⟦→⟧ (⟦Maybe⟧ Aᵣ ⟦→⟧ Bᵣ)))))
                      (maybe {a} {b}) (maybe {a} {b})
-⟦maybe⟧ _ _ justᵣ nothingᵣ (⟦just⟧ xᵣ) = justᵣ xᵣ
-⟦maybe⟧ _ _ justᵣ nothingᵣ ⟦nothing⟧   = nothingᵣ
+⟦maybe⟧ _ _ justᵣ nothingᵣ (just xᵣ) = justᵣ xᵣ
+⟦maybe⟧ _ _ justᵣ nothingᵣ nothing   = nothingᵣ
 
 ⟦map?⟧ : ∀ {a b} → (∀⟨ Aᵣ ∶ ⟦★⟧ a ⟩⟦→⟧ ∀⟨ Bᵣ ∶ ⟦★⟧ b ⟩⟦→⟧ (Aᵣ ⟦→⟧ Bᵣ) ⟦→⟧ ⟦Maybe⟧ Aᵣ ⟦→⟧ ⟦Maybe⟧ Bᵣ) (map? {a} {b}) (map? {a} {b})
-⟦map?⟧ _ _ fᵣ (⟦just⟧ xᵣ) = ⟦just⟧ (fᵣ xᵣ)
-⟦map?⟧ _ _ fᵣ ⟦nothing⟧   = ⟦nothing⟧
+⟦map?⟧ _ _ fᵣ (just xᵣ) = just (fᵣ xᵣ)
+⟦map?⟧ _ _ fᵣ nothing   = nothing
 
 Any-join? : ∀ {a} {A : ★ a} {P : A → ★ a} {x} → Any (Any P) x → Any P (join? x)
 Any-join? (just p) = p
@@ -224,20 +238,23 @@ module F[] where
                  {f? : A →? B} (f : T[ f? ]) → (f [∘] [id]) [≗] f
     [∘]-[id] {f? = f?} f x {pf1} {pf2} = ≡.refl
 
-_⟦→?⟧_ : ∀ {a b c d} → (⟦★⟧ {a} {b} c ⟦→⟧ ⟦★⟧ {a} {b} d ⟦→⟧ ⟦★⟧ _) _→?_ _→?_
+_[→?]_ : ∀ {a b pa pb} → ([★] {a} pa [→] [★] {b} pb [→] [★] _) _→?_
+Aₚ [→?] Bₚ = Aₚ [→] [Maybe] Bₚ
+
+_⟦→?⟧_ : ∀ {a0 a1 ar b0 b1 br} → (⟦★⟧ {a0} {a1} ar ⟦→⟧ ⟦★⟧ {b0} {b1} br ⟦→⟧ ⟦★⟧ _) _→?_ _→?_
 Aᵣ ⟦→?⟧ Bᵣ = Aᵣ ⟦→⟧ ⟦Maybe⟧ Bᵣ
 
 module ⟦Maybe⟧-Properties where
 
   refl : ∀ {a p} {A : ★ a} {_∼_ : A → A → ★ p} (refl-A : ∀ x → x ∼ x) (mx : Maybe A) → ⟦Maybe⟧ _∼_ mx mx
-  refl refl-A (just x) = ⟦just⟧ (refl-A x)
-  refl refl-A nothing  = ⟦nothing⟧
+  refl refl-A (just x) = just (refl-A x)
+  refl refl-A nothing  = nothing
 
   sym : ∀ {a b r₁ r₂} {A : ★ a} {B : ★ b} {_∼₁_ : A → B → ★ r₁} {_∼₂_ : B → A → ★ r₂}
           (sym-AB : ∀ {x y} → x ∼₁ y → y ∼₂ x) {mx : Maybe A} {my : Maybe B}
         → ⟦Maybe⟧ _∼₁_ mx my → ⟦Maybe⟧ _∼₂_ my mx
-  sym sym-A (⟦just⟧ x∼₁y) = ⟦just⟧ (sym-A x∼₁y)
-  sym sym-A ⟦nothing⟧ = ⟦nothing⟧
+  sym sym-A (just x∼₁y) = just (sym-A x∼₁y)
+  sym sym-A nothing     = nothing
 
   trans : ∀ {a b c r₁ r₂ r₃} {A : ★ a} {B : ★ b} {C : ★ c}
             {_⟦AB⟧_ : A → B → ★ r₁}
@@ -247,8 +264,8 @@ module ⟦Maybe⟧-Properties where
             {mx : Maybe A} {my : Maybe B} {mz : Maybe C}
           → ⟦Maybe⟧ _⟦AB⟧_ mx my → ⟦Maybe⟧ _⟦BC⟧_ my mz
           → ⟦Maybe⟧ _⟦AC⟧_ mx mz
-  trans trans' (⟦just⟧ x∼y) (⟦just⟧ y∼z) = ⟦just⟧ (trans' x∼y y∼z)
-  trans trans' ⟦nothing⟧ ⟦nothing⟧ = ⟦nothing⟧
+  trans trans' (just x∼y) (just y∼z) = just (trans' x∼y y∼z)
+  trans trans' nothing    nothing    = nothing
 
   subst-⟦AB⟧ : ∀ {a b p q r} {A : ★ a} {B : ★ b}
                  (P : Maybe A → ★ p)
@@ -258,8 +275,8 @@ module ⟦Maybe⟧-Properties where
                  (Pnothing→Qnothing : P nothing → Q nothing)
                  {mx : Maybe A} {my : Maybe B}
                → (⟦Maybe⟧ ⟦AB⟧ mx my) → P mx → Q my
-  subst-⟦AB⟧ _ _ _ subst-⟦AB⟧-just _ (⟦just⟧ x∼y) Pmx = subst-⟦AB⟧-just x∼y Pmx
-  subst-⟦AB⟧ _ _ _ _               f ⟦nothing⟧    Pnothing = f Pnothing
+  subst-⟦AB⟧ _ _ _ subst-⟦AB⟧-just _ (just x∼y) Pmx = subst-⟦AB⟧-just x∼y Pmx
+  subst-⟦AB⟧ _ _ _ _               f nothing    Pnothing = f Pnothing
 
   subst : ∀ {a p r} {A : ★ a}
             (P : Maybe A → ★ p)
