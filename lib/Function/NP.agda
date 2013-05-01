@@ -16,6 +16,11 @@ open import Category.Applicative renaming (module RawApplicative to Applicative;
 open import Relation.Binary
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡ using (_≡_; _≗_)
+open import Relation.Unary.Logical
+open import Relation.Binary.Logical
+open Relation.Unary.Logical public using (_[→]_; [Π]; [Π]e; [∀])
+open Relation.Binary.Logical public using (_⟦→⟧_; ⟦Π⟧; ⟦Π⟧e; ⟦∀⟧)
+
 
 Π : ∀ {a b} (A : ★ a) → (B : A → ★ b) → ★ _
 Π A B = (x : A) → B x
@@ -31,10 +36,10 @@ id-app : ∀ {f} → Applicative {f} id
 id-app = rawIApplicative
   where open Monad Id.IdentityMonad
 
--→- : ∀ {a b} (A : Set a) (B : Set b) → Set (a L.⊔ b)
+-→- : ∀ {a b} (A : ★ a) (B : ★ b) → ★ (a L.⊔ b)
 -→- A B = A → B
 
-_→⟨_⟩_ : ∀ {a b} (A : Set a) (n : ℕ) (B : Set b) → Set (N-ary-level a b n)
+_→⟨_⟩_ : ∀ {a b} (A : ★ a) (n : ℕ) (B : ★ b) → ★ (N-ary-level a b n)
 A →⟨ n ⟩ B = N-ary n A B
 
 _→⟨_⟩₀_ : ∀ (A : ★₀) (n : ℕ) (B : ★₀) → ★₀
@@ -45,19 +50,34 @@ _→⟨_⟩₁_ : ∀ (A : ★₀) (n : ℕ) (B : ★₁) → ★₁
 A →⟨ zero  ⟩₁ B = B
 A →⟨ suc n ⟩₁ B = A → A →⟨ n ⟩₁ B
 
-Endo : ∀ {a} → Set a → Set a
+Endo : ∀ {a} → ★ a → ★ a
 Endo A = A → A
 
-Cmp : ∀ {a} → Set a → Set a
+[Endo] : ∀ {a} → ([★] {a} a [→] [★] _) Endo
+[Endo] Aₚ = Aₚ [→] Aₚ
+
+⟦Endo⟧ : ∀ {a} → (⟦★⟧ {a} {a} a ⟦→⟧ ⟦★⟧ _) Endo Endo
+⟦Endo⟧ Aᵣ = Aᵣ ⟦→⟧ Aᵣ
+
+Cmp : ∀ {a} → ★ a → ★ a
 Cmp A = A → A → Bool
 
+{- needs [Bool] and ⟦Bool⟧ potentially move these to Data.Bool.NP
+
+[Cmp] : ∀ {a} → ([★] {a} a [→] [★] _ [→] [★] _) Cmp
+[Cmp] Aₚ = Aₚ [→] Aₚ [→] [Bool]
+
+⟦Cmp⟧ : ∀ {a} → (⟦★⟧ {a} {a} a ⟦→⟧ ⟦★⟧ _) Endo Endo
+⟦Cmp⟧ Aᵣ = Aᵣ ⟦→⟧ Aᵣ ⟦→⟧ ⟦Bool⟧
+-}
+
 -- More properties about fold are in Data.Nat.NP
-nest : ∀ {a} {A : Set a} → ℕ → Endo (Endo A)
+nest : ∀ {a} {A : ★ a} → ℕ → Endo (Endo A)
 -- TMP nest n f x = fold x f n
 nest zero f x = x
 nest (suc n) f x = f (nest n f x)
 
-module nest-Properties {a} {A : Set a} (f : Endo A) where
+module nest-Properties {a} {A : ★ a} (f : Endo A) where
   nest₀ : nest 0 f ≡ id
   nest₀ = ≡.refl
   nest₁ : nest 1 f ≡ f
@@ -86,21 +106,21 @@ module nest-Properties {a} {A : Set a} (f : Endo A) where
    where open ≡.≡-Reasoning
 
 {- WRONG
-module more-nest-Properties {a} {A : Set a} where
+module more-nest-Properties {a} {A : ★ a} where
   nest-+'' : ∀ (f : Endo (Endo A)) g m n → nest m f g ∘ nest n f g ≗ nest (m + n) f g
   nest-+'' f g zero n = {!!}
   nest-+'' f g (suc m) n = {!!}
 -}
 
-_$⟨_⟩_ : ∀ {a} {A : Set a} → Endo A → ℕ → Endo A
+_$⟨_⟩_ : ∀ {a} {A : ★ a} → Endo A → ℕ → Endo A
 _$⟨_⟩_ f n = nest n f
 
 -- If you run a version of Agda without the support of instance
 -- arguments, simply comment this definition, very little code rely on it.
-… : ∀ {a} {A : Set a} ⦃ x : A ⦄ → A
+… : ∀ {a} {A : ★ a} ⦃ x : A ⦄ → A
 … ⦃ x ⦄ = x
 
-_⟨_⟩°_ : ∀ {i a b c} {Ix : Set i} {A : Set a} {B : A → Set b} {C : (x : A) → B x → Set c}
+_⟨_⟩°_ : ∀ {i a b c} {Ix : ★ i} {A : ★ a} {B : A → ★ b} {C : (x : A) → B x → ★ c}
          → (f  : Ix → A)
          → (op : (x : A) (y : B x) → C x y)
          → (g  : (i : Ix) → B (f i))
@@ -125,8 +145,8 @@ module Combinators where
     C : ∀ {A B C : ★₀} → (A → B → C) → B → A → C
     C = S (S (K (S (K S) K)) S) (K K)
 
-module EndoMonoid-≈ {a ℓ} {A : Set a}
-                    {_≈_ : Endo A → Endo A → Set ℓ}
+module EndoMonoid-≈ {a ℓ} {A : ★ a}
+                    {_≈_ : Endo A → Endo A → ★ ℓ}
                     (isEquivalence : IsEquivalence _≈_)
                     (∘-cong : _∘′_ Preserves₂ _≈_ ⟶ _≈_ ⟶ _≈_)
                    where
@@ -142,7 +162,13 @@ module EndoMonoid-≈ {a ℓ} {A : Set a}
 
   open Monoid monoid public
 
-module EndoMonoid-≡ {a} (A : Set a) = EndoMonoid-≈ {A = A} ≡.isEquivalence (≡.cong₂ _∘′_)
+module EndoMonoid-≡ {a} (A : ★ a) = EndoMonoid-≈ {A = A} ≡.isEquivalence (≡.cong₂ _∘′_)
 
-module EndoMonoid-≗ {a} (A : Set a) = EndoMonoid-≈ (Setoid.isEquivalence (A ≡.→-setoid A))
+module EndoMonoid-≗ {a} (A : ★ a) = EndoMonoid-≈ (Setoid.isEquivalence (A ≡.→-setoid A))
                                                    (λ {f} {g} {h} {i} p q x → ≡.trans (p (h x)) (≡.cong g (q x)))
+
+⟦id⟧ : (∀⟨ Aᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ Aᵣ ⟦→⟧ Aᵣ) id id
+⟦id⟧ _ xᵣ = xᵣ
+
+⟦∘′⟧ : (∀⟨ Aᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ ∀⟨ Bᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ ∀⟨ Cᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ (Bᵣ ⟦→⟧ Cᵣ) ⟦→⟧ (Aᵣ ⟦→⟧ Bᵣ) ⟦→⟧ (Aᵣ ⟦→⟧ Cᵣ)) _∘′_ _∘′_
+⟦∘′⟧ _ _ _ fᵣ gᵣ xᵣ = fᵣ (gᵣ xᵣ)
