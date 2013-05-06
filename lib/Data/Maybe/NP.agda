@@ -129,6 +129,10 @@ data ⟦Maybe⟧ {a b r} {A : ★ a} {B : ★ b} (_∼_ : A → B → ★ r) : M
 ⟦map?⟧ _ _ fᵣ (just xᵣ) = just (fᵣ xᵣ)
 ⟦map?⟧ _ _ fᵣ nothing   = nothing
 
+⟦map?-id⟧ : ∀ {a} → (∀⟨ Aᵣ ∶ ⟦★⟧ {a} {a} a ⟩⟦→⟧ ⟦Maybe⟧ Aᵣ ⟦→⟧ ⟦Maybe⟧ Aᵣ) (map? id) id
+⟦map?-id⟧ _ (just xᵣ) = just xᵣ
+⟦map?-id⟧ _ nothing   = nothing
+
 Any-join? : ∀ {a} {A : ★ a} {P : A → ★ a} {x} → Any (Any P) x → Any P (join? x)
 Any-join? (just p) = p
 
