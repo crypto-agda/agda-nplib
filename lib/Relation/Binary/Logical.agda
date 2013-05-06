@@ -68,6 +68,23 @@ _⟦→⟧e_ : ∀ {a₁ a₂ aᵣ} {A₁ : ★ a₁} {A₂ : ★ a₂} (Aᵣ : 
           (f₁ : A₁ → B₁) (f₂ : A₂ → B₂) → ★ _
 _⟦→⟧e_ Aᵣ Bᵣ = ⟦Π⟧e Aᵣ (λ _ → Bᵣ)
 
+_→⟧_ : ∀ {a b₁ b₂ bᵣ} (A : ★ a) {B₁ : ★ b₁} {B₂ : ★ b₂} (Bᵣ : ⟦★⟧ bᵣ B₁ B₂) → ⟦★⟧ _ (A → B₁) (A → B₂)
+(A →⟧ Bᵣ) f₁ f₂ = ∀ (x : A) → Bᵣ (f₁ x) (f₂ x)
+
+Π⟧ : ∀ {a b₁ b₂ bᵣ} (A : ★ a) {B₁ : A → ★ b₁} {B₂ : A → ★ b₂} (Bᵣ : (A →⟧ ⟦★⟧ bᵣ) B₁ B₂) → ⟦★⟧ _ ((x : A) → B₁ x) ((x : A) → B₂ x)
+Π⟧ A Bᵣ f₁ f₂ = ∀ (x : A) → Bᵣ x (f₁ x) (f₂ x)
+
+infixr 0 Π⟧
+syntax Π⟧ A (λ x → f) = ⟨ x ∶ A ⟩→⟧ f
+
+∀⟧ : ∀ {a} (A : ★ a)
+       {b₁ b₂ bᵣ} {B₁ : A → ★ b₁} {B₂ : A → ★ b₂} (Bᵣ : ∀ x → B₁ x → B₂ x → ★ bᵣ)
+       (f₁ : {x : A} → B₁ x) (f₂ : {x : A} → B₂ x) → ★ _
+∀⟧ A Bᵣ f₁ f₂ = {x : A} → Bᵣ x (f₁ {x}) (f₂ {x})
+
+infixr 0 ∀⟧
+syntax ∀⟧ A (λ x → f) = ∀⟨ x ∶ A ⟩→⟧ f
+
 record ⟦⊤⟧ (x₁ x₂ : ⊤) : ★₀ where
   constructor ⟦tt⟧
 

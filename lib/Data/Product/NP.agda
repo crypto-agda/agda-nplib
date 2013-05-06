@@ -86,12 +86,12 @@ record ⟦Σ⟧ {a₁ a₂ b₂ b₁ aᵣ bᵣ}
            (Bᵣ : {x₁ : A₁} {x₂ : A₂} (xᵣ : Aᵣ x₁ x₂)
                 → B₁ x₁ → B₂ x₂ → ★ bᵣ)
            (p₁ : Σ A₁ B₁) (p₂ : Σ A₂ B₂) : ★ (aᵣ ⊔ bᵣ) where
-  constructor _⟦,⟧_
+  constructor _,_
   field
     ⟦proj₁⟧ : Aᵣ (proj₁ p₁) (proj₁ p₂)
     ⟦proj₂⟧ : Bᵣ ⟦proj₁⟧ (proj₂ p₁) (proj₂ p₂)
 open ⟦Σ⟧ public
-infixr 4 _⟦,⟧_
+infixr 4 _,_
 
 syntax ⟦Σ⟧ Aᵣ (λ xᵣ → e) = [ xᵣ ∶ Aᵣ ]⟦×⟧[ e ]
 
@@ -158,7 +158,7 @@ dec⟦Σ⟧ : ∀ {a₁ a₂ b₁ b₂ aᵣ bᵣ A₁ A₂ B₁ B₂}
 dec⟦Σ⟧ {Bᵣ = Bᵣ} decAᵣ uniqAᵣ decBᵣ (x₁ , y₁) (x₂ , y₂) with decAᵣ x₁ x₂
 ... | no ¬xᵣ = no (¬xᵣ ∘ ⟦proj₁⟧)
 ... | yes xᵣ with decBᵣ xᵣ y₁ y₂
-...           | yes yᵣ = yes (xᵣ ⟦,⟧ yᵣ)
+...           | yes yᵣ = yes (xᵣ , yᵣ)
 ...           | no ¬yᵣ = no (¬yᵣ ∘ f ∘ ⟦proj₂⟧)
   where f : ∀ {xᵣ'} → Bᵣ xᵣ' y₁ y₂ → Bᵣ xᵣ y₁ y₂
         f {xᵣ'} yᵣ rewrite uniqAᵣ xᵣ' xᵣ = yᵣ
@@ -181,13 +181,13 @@ dec⟦×⟧ : ∀ {a₁ a₂ b₁ b₂ aᵣ bᵣ}
 dec⟦×⟧ decAᵣ decBᵣ (x₁ , y₁) (x₂ , y₂) with decAᵣ x₁ x₂
 ... | no ¬xᵣ = no (¬xᵣ ∘ ⟦proj₁⟧)
 ... | yes xᵣ with decBᵣ y₁ y₂
-...           | yes yᵣ = yes (xᵣ ⟦,⟧ yᵣ)
+...           | yes yᵣ = yes (xᵣ , yᵣ)
 ...           | no ¬yᵣ = no (¬yᵣ ∘ ⟦proj₂⟧)
 
-mkΣ≡ : ∀ {a b} {A : ★ a} {x y : A} (B : A → ★ b) {p : B x} {q : B y} (xy : x ≡ y) → subst B xy p ≡ q → (x , p) ≡ (y , q)
+mkΣ≡ : ∀ {a b} {A : ★ a} {x y : A} (B : A → ★ b) {p : B x} {q : B y} (xy : x ≡ y) → subst B xy p ≡ q → (x Σ., p) ≡ (y , q)
 mkΣ≡ _ xy h rewrite xy | h = ≡.refl
 
-Σ,-injective₂ : ∀ {a b} {A : ★ a} {B : A → ★ b} {x : A} {y z : B x} → (_,_ {B = B} x y) ≡ (x , z) → y ≡ z
+Σ,-injective₂ : ∀ {a b} {A : ★ a} {B : A → ★ b} {x : A} {y z : B x} → (_,_ {B = B} x y) ≡ (x Σ., z) → y ≡ z
 Σ,-injective₂ refl = refl
 
 Σ,-injective₁ : ∀ {a b} {A : ★ a} {B : A → ★ b} {x₁ x₂ : A} {y₁ : B x₁} {y₂ : B x₂} → (x₁ Σ., y₁) ≡ (x₂ , y₂) → x₁ ≡ x₂

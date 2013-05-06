@@ -46,6 +46,67 @@ data _⟦⊎⟧_ {a₁ a₂ b₁ b₂ aᵣ bᵣ}
 ⟦⊎⟧-refl Aᵣ Aᵣ-refl Bᵣ Bᵣ-refl {inj₁ x} = inj₁ Aᵣ-refl
 ⟦⊎⟧-refl Aᵣ Aᵣ-refl Bᵣ Bᵣ-refl {inj₂ y} = inj₂ Bᵣ-refl
 
+module _ {a₁ a₂ b₁ b₂}
+         {A₁ : ★ a₁} {A₂ : ★ a₂}
+         {B₁ : ★ b₁} {B₂ : ★ b₂} where
+
+    module _ {c} {C : ★ c} (f : A₁ ⊎ B₁ → A₂ ⊎ B₂ → C) where
+      on-inj₁ = λ i j → f (inj₁ i) (inj₁ j)
+      on-inj₂ = λ i j → f (inj₂ i) (inj₂ j)
+
+    module _ {aᵣ bᵣ}
+             {Aᵣ  : ⟦★⟧ aᵣ A₁ A₂}
+             {Bᵣ  : ⟦★⟧ bᵣ B₁ B₂} where
+
+        module _ {aᵣ′ bᵣ′}
+                 {Aᵣ′ : ⟦★⟧ aᵣ′ A₁ A₂}
+                 {Bᵣ′ : ⟦★⟧ bᵣ′ B₁ B₂} where
+
+            ⟦⊎⟧-map : (Aᵣ ⇒ Aᵣ′) → (Bᵣ ⇒ Bᵣ′) → (Aᵣ ⟦⊎⟧ Bᵣ) ⇒ (Aᵣ′ ⟦⊎⟧ Bᵣ′)
+            ⟦⊎⟧-map θ ψ (inj₁ xᵣ) = inj₁ (θ xᵣ)
+            ⟦⊎⟧-map θ ψ (inj₂ xᵣ) = inj₂ (ψ xᵣ)
+
+        module _ {cᵣ} {Cᵣ : ⟦★⟧ cᵣ (A₁ ⊎ B₁) (A₂ ⊎ B₂)} where
+
+            ⟦⊎⟧-[_,_] : (Aᵣ ⇒ on-inj₁ Cᵣ) → (Bᵣ ⇒ on-inj₂ Cᵣ) → (Aᵣ ⟦⊎⟧ Bᵣ) ⇒ Cᵣ
+            ⟦⊎⟧-[ θ , ψ ] (inj₁ xᵣ) = θ xᵣ
+            ⟦⊎⟧-[ θ , ψ ] (inj₂ xᵣ) = ψ xᵣ
+
+        module _ {aᵣ′ bᵣ′}
+                 {Aᵣ′ : flip (⟦★⟧ aᵣ′) A₁ A₂}
+                 {Bᵣ′ : flip (⟦★⟧ bᵣ′) B₁ B₂}
+                 (θ : Sym Aᵣ Aᵣ′) -- remember Sym R S = R ⇒ flip S
+                 (ψ : Sym Bᵣ Bᵣ′) where
+            ⟦⊎⟧-sym : Sym (Aᵣ ⟦⊎⟧ Bᵣ) (Aᵣ′ ⟦⊎⟧ Bᵣ′)
+            ⟦⊎⟧-sym (inj₁ xᵣ) = inj₁ (θ xᵣ)
+            ⟦⊎⟧-sym (inj₂ xᵣ) = inj₂ (ψ xᵣ)
+            {-
+            ⟦⊎⟧-sym = ⟦⊎⟧-[_,_] {Cᵣ = flip (Aᵣ′ ⟦⊎⟧ Bᵣ′)} (inj₁ ∘ θ) (inj₂ ∘ ψ)
+            -}
+
+⟦⊎⟧-symmetric : ∀ {a b aᵣ bᵣ}
+                  {A : ★ a} {Aᵣ : A → A → ★ aᵣ}
+                  {B : ★ b} {Bᵣ : B → B → ★ bᵣ}
+                → Symmetric Aᵣ
+                → Symmetric Bᵣ
+                → Symmetric (Aᵣ ⟦⊎⟧ Bᵣ)
+⟦⊎⟧-symmetric = ⟦⊎⟧-sym
+
+⟦⊎⟧-trans : ∀ {A₁ A₂ A₃} {A₁₂ : ⟦★₀⟧ A₁ A₂} {A₂₃ : ⟦★₀⟧ A₂ A₃} {A₁₃ : ⟦★₀⟧ A₁ A₃}
+              {B₁ B₂ B₃} {B₁₂ : ⟦★₀⟧ B₁ B₂} {B₂₃ : ⟦★₀⟧ B₂ B₃} {B₁₃ : ⟦★₀⟧ B₁ B₃}
+            → Trans A₁₂ A₂₃ A₁₃
+            → Trans B₁₂ B₂₃ B₁₃
+            → Trans (A₁₂ ⟦⊎⟧ B₁₂) (A₂₃ ⟦⊎⟧ B₂₃) (A₁₃ ⟦⊎⟧ B₁₃)
+⟦⊎⟧-trans A-trans B-trans (inj₁ xᵣ) (inj₁ yᵣ) = inj₁ (A-trans xᵣ yᵣ)
+⟦⊎⟧-trans A-trans B-trans (inj₂ xᵣ) (inj₂ yᵣ) = inj₂ (B-trans xᵣ yᵣ)
+
+⟦⊎⟧-transitive : ∀ {A : ★ _} {Aᵣ : ⟦★⟧ _ A A}
+                   {B : ★ _} {Bᵣ : ⟦★⟧ _ B B}
+                 → Transitive Aᵣ
+                 → Transitive Bᵣ
+                 → Transitive (Aᵣ ⟦⊎⟧ Bᵣ)
+⟦⊎⟧-transitive = ⟦⊎⟧-trans
+
 [,]-assoc : ∀ {a₁ a₂ b₁ b₂ c} {A₁ : ★ a₁} {A₂ : ★ a₂}
               {B₁ : ★ b₁} {B₂ : ★ b₂} {C : ★ c}
               {f₁ : B₁ → C} {g₁ : A₁ → B₁} {f₂ : B₂ → C} {g₂ : A₂ → B₂} →
