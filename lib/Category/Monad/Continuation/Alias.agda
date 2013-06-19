@@ -1,39 +1,43 @@
 open import Level
-open import Type -- hiding (★)
+open import Type hiding (★)
 open import Function
 open import Data.Product hiding (map)
 
-module Category.Monad.Continuation.Alias {t} (T : ★_ t) where 
+module Category.Monad.Continuation.Alias {t} where 
 
-Cont : ∀ {a} → ★_ a → ★_ _
-Cont A = (A → T) → T 
+Cont : ∀ {a} → ★ t → ★ a → ★ _
+Cont T A = (A → T) → T 
 
-module _ {a b} {A : ★_ a} {B : ★_ b} where
-    map : (A → B) → (Cont A → Cont B)
-    map f mx k = mx λ x → k (f x)
+module _ {T : ★ t} where
+    M : ∀ {a} → ★ a → ★ _
+    M = Cont T
 
-    _>>=_ : Cont A → (A → Cont B) → Cont B
-    (mx >>= f) k = mx λ x → (f x) k
+    module _ {a b} {A : ★ a} {B : ★ b} where
+        map : (A → B) → (M A → M B)
+        map f mx k = mx λ x → k (f x)
 
-module _ {a} {A : ★_ a} where
-    return : A → Cont A
-    return x k = k x
+        _>>=_ : M A → (A → M B) → M B
+        (mx >>= f) k = mx λ x → (f x) k
 
-    join : Cont (Cont A) → Cont A
-    join mmx = mmx >>= id
+    module _ {a} {A : ★ a} where
+        return : A → M A
+        return x k = k x
 
-    module _ {b} {B : ★_ b} where
-        _⊛_ : Cont (A → B) → Cont A → Cont B
-        mf ⊛ mx = mf >>= λ f → map f mx
+        join : M (M A) → M A
+        join mmx = mmx >>= id
 
-    module _ {b} {B : A → ★_ b} where
-        _⟨,⟩_ : Cont A → (∀ {x} → Cont (B x)) → Cont (Σ A B)
-        (fA ⟨,⟩ fB) f = fA (fB ∘ curry f)
+        module _ {b} {B : ★ b} where
+            _⊛_ : M (A → B) → M A → M B
+            mf ⊛ mx = mf >>= λ f → map f mx
 
-    module _ {b} {B : ★_ b} where
-        _⟨,⟩′_ : Cont A → Cont B → Cont (A × B)
-        mx ⟨,⟩′ my = mx ⟨,⟩ my
+        module _ {b} {B : A → ★ b} where
+            _⟨,⟩_ : M A → (∀ {x} → M (B x)) → M (Σ A B)
+            (fA ⟨,⟩ fB) f = fA (fB ∘ curry f)
 
-module _ {a b c} {A : ★_ a} {B : ★_ b} {C : ★_ c} where
-    ⟪_·_·_⟫ : (A → B → C) → Cont A → Cont B → Cont C
-    ⟪ f · mx · my ⟫ = map f mx ⊛ my
+        module _ {b} {B : ★ b} where
+            _⟨,⟩′_ : M A → M B → M (A × B)
+            mx ⟨,⟩′ my = mx ⟨,⟩ my
+
+    module _ {a b c} {A : ★ a} {B : ★ b} {C : ★ c} where
+        ⟪_·_·_⟫ : (A → B → C) → M A → M B → M C
+        ⟪ f · mx · my ⟫ = map f mx ⊛ my
