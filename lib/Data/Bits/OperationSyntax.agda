@@ -1,3 +1,4 @@
+open import Data.Bit hiding (_==_)
 open import Data.Bits
 open import Data.Bool.NP hiding (_==_)
 import Data.Fin as Fin

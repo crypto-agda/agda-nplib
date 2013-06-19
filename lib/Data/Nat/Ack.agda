@@ -31,6 +31,7 @@ lem>=3'' : ∀ m n → 3 ≤ 2 ↑⟨ suc m ⟩ (3 + n)
 lem>=3'' zero n = s≤s (s≤s (s≤s z≤n))
 lem>=3'' (suc zero) n rewrite ↑₂-* 2 (3 + n) = s≤s (s≤s (s≤s z≤n))
 lem>=3'' (suc (suc m)) n = lem>=3 m n
+
 ack-↑ : ∀ m n → 3 + ack m n ≡ 2 ↑⟨ m ⟩ (3 + n)
 ack-↑ zero n = ≡.refl
 ack-↑ (suc m) zero = 3 + ack (suc m) 0   ≡⟨ ack-↑ m 1 ⟩
@@ -51,7 +52,7 @@ ack-↑ (suc m) (suc n) = 3 + ack (suc m) (suc n)
                       ≡⟨ ≡.refl ⟩
                         2 ↑⟨ suc m ⟩ (4 + n) ∎ 
   where open ≡-Reasoning
-
+{-
 postulate
   1+a^-infl< : ∀ {a}  → Infl< (_^_ (1 + a))
 
@@ -63,3 +64,7 @@ fold-a^-fold1 {n} = fold-infl< 1+a^-infl< fold1+-inflT< {n}
 
 ↑3+-mon : ∀ a n → Mon (fold (_^_ (1 + a)) (fold 1) n)
 ↑3+-mon a n = fold-mon' 1+a^-mon 1+a^-infl< (λ η₁ η₂ → fold-mon η₁ η₂) fold1+-inflT< {n}
+-- -}
+-- -}
+-- -}
+-- -}

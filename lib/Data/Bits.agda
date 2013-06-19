@@ -168,9 +168,6 @@ _|∧|_ f g x = f x ∧ g x
 ... | 1b | 1b = refl
 
 
--- open Search 1 2*_ public using () renaming (search to search′; search-≗ to search′-≗; search-comm to search′-comm)
-
-
 module PermutationSyntax-Props where
     open PermutationSyntax
     open PermutationSemantics

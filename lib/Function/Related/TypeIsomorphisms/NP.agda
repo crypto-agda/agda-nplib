@@ -5,6 +5,7 @@ open import Algebra
 import Algebra.FunctionProperties as FP
 open L using (Lift; lower; lift)
 open import Type hiding (★)
+open import Function using (_ˢ_)
 
 open import Data.Fin using (Fin; zero; suc; pred)
 open import Data.Vec using (Vec; []; _∷_)
@@ -26,10 +27,21 @@ open import Function.Related.TypeIsomorphisms public
 import Function.Inverse.NP as Inv
 open Inv using (_↔_; _∘_; sym; id; inverses; module Inverse) renaming (_$₁_ to to; _$₂_ to from)
 open import Relation.Binary
+import Relation.Binary.Indexed as I
 open import Relation.Binary.Product.Pointwise
 open import Relation.Binary.Sum
 import Relation.Binary.PropositionalEquality as ≡
 open ≡ using (_≡_ ; _≢_)
+
+module _ {a b f} {A : Set a} {B : A → Set b}
+         (F : (x : A) → B x → Set f) where
+
+    -- Also called Axiom of dependent choice.
+    dep-choice-iso : (Π A (λ x → Σ (B x) (F x)))
+                   ↔ (Σ (Π A B) λ f → Π A (F ˢ f))
+    dep-choice-iso = inverses (⇒) (uncurry <_,_>) (λ _ → ≡.refl) (λ _ → ≡.refl)
+      where
+        ⇒ = λ f → (λ x → proj₁ (f x)) , (λ x → proj₂ (f x))
 
 Maybe-injective : ∀ {A B : Set} → Maybe A ↔ Maybe B → A ↔ B
 Maybe-injective f = Iso.iso (g f) (g-empty f)
