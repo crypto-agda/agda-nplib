@@ -530,6 +530,12 @@ A ^ suc n = A × A ^ n
 Fin0↔⊥ : Fin 0 ↔ ⊥
 Fin0↔⊥ = inverses (λ()) (λ()) (λ()) (λ())
 
+Fin1↔⊤ : Fin 1 ↔ ⊤
+Fin1↔⊤ = inverses _ (λ _ → zero) ⇐⇒ (λ _ → ≡.refl)
+  where ⇐⇒ : (_ : Fin 1) → _
+        ⇐⇒ zero = ≡.refl
+        ⇐⇒ (suc ())
+
 Fin∘suc↔Maybe∘Fin : ∀ {n} → Fin (suc n) ↔ Maybe (Fin n)
 Fin∘suc↔Maybe∘Fin {n}
   = inverses to' (maybe suc zero)
