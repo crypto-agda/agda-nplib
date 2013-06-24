@@ -1,5 +1,6 @@
 module Data.Bits.Bits2 where 
 
+open import Data.Bit
 open import Data.Bits
 open import Data.Nat
 open import Data.Vec

@@ -15,6 +15,10 @@ import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡
 open import Function.Bijection.SyntaxKit
 
+module FunVec {a} {A : ★ a} where
+    _→ᵛ_ : ℕ → ℕ → ★ a
+    i →ᵛ o = Vec A i → Vec A o
+
 module waiting-for-a-fix-in-the-stdlib where
 
     infixl 4 _⊛_
