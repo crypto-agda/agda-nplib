@@ -1,5 +1,6 @@
-{-# OPTIONS --universe-polymorphism #-}
-module Irrelevance where
+module Irrelevance.NP where
+
+open import Irrelevance public
 
 import Level
 
