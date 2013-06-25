@@ -17,12 +17,15 @@ open import Relation.Binary.NP
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡ using (_≡_; _≢_; _≗_; module ≡-Reasoning)
 
+ℕˢ = ≡.setoid ℕ
+
 module ℕ°   = Algebra.CommutativeSemiring Props.commutativeSemiring
 module ℕcmp = StrictTotalOrder Props.strictTotalOrder
 module ℕ≤   = DecTotalOrder    decTotalOrder
 module ℕ+   = Algebra.CommutativeMonoid ℕ°.+-commutativeMonoid
 module ℕ+′  = Algebra.Monoid ℕ°.+-monoid
 module ⊔°   = Algebra.CommutativeSemiringWithoutOne ⊔-⊓-0-commutativeSemiringWithoutOne
+module ℕˢ   = Setoid ℕˢ
 
 module ≤-Reasoning where
   open Preorder-Reasoning ℕ≤.preorder public renaming (_∼⟨_⟩_ to _≤⟨_⟩_)
