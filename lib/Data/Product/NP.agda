@@ -234,3 +234,6 @@ proj₁-Injection {B = B} B-uniq
      = record { to        = →-to-⟶ (proj₁ {B = B})
               ; injective = proj₁-injective B-uniq
               }
+
+Δ : ∀ {a} {A : ★ a} → A → A × A
+Δ x = x , x
