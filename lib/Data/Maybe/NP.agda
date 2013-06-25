@@ -41,9 +41,24 @@ _⊛?_ : ∀ {a b}{A : ★ a}{B : ★ b} → Maybe (A → B) → Maybe A → May
 just f  ⊛? just x = just (f x)
 _       ⊛? _      = nothing
 
+infixl 1 _>>=?_
+
+-- More universe-polymorphic than M?._>>=_
+_>>=?_ : ∀ {a b} {A : ★ a} {B : ★ b} → Maybe A → (A → Maybe B) → Maybe B
+mx >>=? f = maybe f nothing mx
+
+infixr 1 _=<<?_
+
+-- More universe-polymorphic than M?._=<<_
+_=<<?_ : ∀ {a b} {A : ★ a} {B : ★ b} → (A → Maybe B) → Maybe A → Maybe B
+f =<<? mx = mx >>=? f
+
 -- More universe-polymorphic than M?._<$>_
 map? : ∀ {a b} {A : ★ a} {B : ★ b} → (A → B) → Maybe A → Maybe B
-map? f = maybe (just ∘′ f) nothing
+map? f mx = mx >>=? (just ∘ f)
+
+_<$?_ : ∀ {a b} {A : ★ a} {B : ★ b} → A → Maybe B → Maybe A
+_<$?_ x = map? (const x)
 
 ⟪_·_⟫? : ∀ {a b} {A : ★ a} {B : ★ b} → (A → B) → Maybe A → Maybe B
 ⟪ f · x ⟫? = map? f x
@@ -60,7 +75,7 @@ map? f = maybe (just ∘′ f) nothing
 ⟪ f · x · y · z ⟫? = map? f x ⊛? y ⊛? z
 
 join? : ∀ {a} {A : ★ a} → Maybe (Maybe A) → Maybe A
-join? = M?.join _
+join? = _=<<?_ id
 
 Maybe^ : ∀ {a} → ℕ → ★ a → ★ a
 Maybe^ zero    = id
@@ -175,7 +190,7 @@ _≗?_ : ∀ {a b} {A : ★ a} {B : ★ b} →
 
 _∘?_ : ∀ {a b c} {A : ★ a} {B : ★ b} {C : ★ c}
        → B →? C → A →? B → A →? C
-f ∘? g = join? ∘ map? f ∘ g
+(f ∘? g) x = g x >>=? f
 
 ∘?-just : ∀ {a b} {A : ★ a} {B : ★ b} →
             (f : A →? B) → f ∘? just ≗? f
@@ -445,3 +460,4 @@ module First-≈ {a ℓ} {A : ★ a} {_≈_ : Maybe A → Maybe A → ★ ℓ}
   open Monoid monoid public
 
 module First {a} (A : ★ a) = First-≈ {A = A} ≡.isEquivalence (λ())
+-- -}
