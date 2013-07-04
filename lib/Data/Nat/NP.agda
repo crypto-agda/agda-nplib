@@ -1021,3 +1021,8 @@ x<2y→x∸y<y x y p rewrite ≡.sym (2*′-spec y) = x<2y′→x∸y<y x y p
 
 not<=→< : ∀ x y → ✓ (not (x <= y)) → ✓ (suc y <= x)
 not<=→< x y p = <=.complete (≰→< x y (✓'not'¬ p ∘ <=.complete))
+
+even? odd? : ℕ → Bool
+even? zero    = true
+even? (suc n) = odd? n 
+odd? n = not (even? n)

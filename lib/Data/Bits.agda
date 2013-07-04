@@ -104,11 +104,11 @@ notᵢ = onᵢ not
 
 ⊕-≢ : ∀ {n} (x : Bits n) → x ⊕ vnot x ≡ 1ⁿ
 ⊕-≢ x = x ⊕ vnot x   ≡⟨ refl ⟩
-         x ⊕ (1ⁿ ⊕ x) ≡⟨ cong (_⊕_ x) (⊕-comm 1ⁿ x) ⟩
-         x ⊕ (x ⊕ 1ⁿ) ≡⟨ sym (⊕-assoc x x 1ⁿ) ⟩
-         (x ⊕ x) ⊕ 1ⁿ ≡⟨ cong (flip _⊕_ 1ⁿ) (⊕-≡ x) ⟩
-         0ⁿ ⊕ 1ⁿ       ≡⟨ ⊕-left-identity 1ⁿ ⟩
-         1ⁿ ∎ where open ≡-Reasoning
+        x ⊕ (1ⁿ ⊕ x) ≡⟨ cong (_⊕_ x) (⊕-comm 1ⁿ x) ⟩
+        x ⊕ (x ⊕ 1ⁿ) ≡⟨ sym (⊕-assoc x x 1ⁿ) ⟩
+        (x ⊕ x) ⊕ 1ⁿ ≡⟨ cong (flip _⊕_ 1ⁿ) (⊕-≡ x) ⟩
+        0ⁿ ⊕ 1ⁿ      ≡⟨ ⊕-left-identity 1ⁿ ⟩
+        1ⁿ ∎ where open ≡-Reasoning
 
 -- "Xor"ing the i-th bit with `b' is the same thing as "xor"ing with a vector of zeros
 -- except at the i-th position.
