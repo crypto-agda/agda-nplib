@@ -2,11 +2,11 @@
 module Relation.Binary.Logical where
 
 open import Type hiding (★)
-open import Level
+open import Level.NP
 open import Algebra.FunctionProperties
 open import Data.Product
-open import Data.Unit
-open import Data.Empty
+open import Data.Zero
+open import Data.One
 open import Relation.Nullary
 open import Relation.Unary.NP hiding (Decidable)
 open import Relation.Binary
@@ -15,13 +15,13 @@ open import Relation.Binary
 ⟦★⟧ aᵣ A₁ A₂ = A₁ → A₂ → ★ aᵣ
 
 ⟦★⟧₀ : ∀ {a₁ a₂} (A₁ : ★ a₁) (A₂ : ★ a₂) → ★ _
-⟦★⟧₀ = ⟦★⟧ zero
+⟦★⟧₀ = ⟦★⟧ ₀
 
 ⟦★₀⟧ : ∀ (A₁ A₂ : ★₀) → ★₁
 ⟦★₀⟧ = ⟦★⟧₀
 
 ⟦★₁⟧ : ∀ (A₁ A₂ : ★₁) → ★₂
-⟦★₁⟧ = ⟦★⟧ (suc zero)
+⟦★₁⟧ = ⟦★⟧ (ₛ ₀)
 
 -- old name
 ⟦Set⟧ : ∀ {a₁ a₂} aᵣ (A₁ : ★ a₁) (A₂ : ★ a₂) → ★ _
@@ -86,15 +86,15 @@ syntax Π⟧ A (λ x → f) = ⟨ x ∶ A ⟩→⟧ f
 infixr 0 ∀⟧
 syntax ∀⟧ A (λ x → f) = ∀⟨ x ∶ A ⟩→⟧ f
 
-record ⟦⊤⟧ (x₁ x₂ : ⊤) : ★₀ where
-  constructor ⟦tt⟧
+record ⟦𝟙⟧ (x₁ x₂ : 𝟙) : ★₀ where
+  constructor ⟦0₁⟧
 
-data ⟦⊥⟧ (x₁ x₂ : ⊥) : ★₀ where
+data ⟦𝟘⟧ (x₁ x₂ : 𝟘) : ★₀ where
 
 infix 3 ⟦¬⟧_
 
 ⟦¬⟧_ : ∀ {a₁ a₂ aₚ} → (⟦★⟧ {a₁} {a₂} aₚ ⟦→⟧ ⟦★⟧ _) ¬_ ¬_
-⟦¬⟧ Aᵣ = Aᵣ ⟦→⟧ ⟦⊥⟧
+⟦¬⟧ Aᵣ = Aᵣ ⟦→⟧ ⟦𝟘⟧
 
 -- Products ⟦Σ⟧, ⟦∃⟧, ⟦×⟧ are in Data.Product.NP
 
@@ -102,7 +102,7 @@ infix 3 ⟦¬⟧_
 ⟦Pred⟧ pᵣ Aᵣ = Aᵣ ⟦→⟧ ⟦★⟧ pᵣ
 
 private
-  REL′ : ∀ ℓ {a b} → ★ a → ★ b → ★ (a ⊔ b ⊔ suc ℓ)
+  REL′ : ∀ ℓ {a b} → ★ a → ★ b → ★ (a ⊔ b ⊔ ₛ ℓ)
   REL′ ℓ A B = A → B → ★ ℓ
 
   ⟦REL⟧′ : ∀ {a₁ a₂ aᵣ b₁ b₂ bᵣ r₁ r₂} rᵣ →

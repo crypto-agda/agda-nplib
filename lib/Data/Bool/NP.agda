@@ -6,7 +6,7 @@ open import Data.Bool using (Bool; true; false; if_then_else_; not; _xor_) renam
 import Algebra
 open import Algebra.FunctionProperties using (Op₁; Op₂)
 import Data.Bool.Properties as B
-open import Data.Unit using (⊤)
+open import Data.One using (𝟙)
 open import Data.Product
 open import Data.Sum
 open import Data.Nat using (ℕ; _≤_; z≤n; s≤s; _⊓_; _⊔_; _∸_)
@@ -31,7 +31,7 @@ Cond _ x y false = y
 module Xor° = Algebra.CommutativeRing B.commutativeRing-xor-∧
 module Bool° = Algebra.CommutativeSemiring B.commutativeSemiring-∧-∨
 
-check : ∀ b → {pf : ✓ b} → ⊤
+check : ∀ b → {pf : ✓ b} → 𝟙
 check = _
 
 If_then_else_ : ∀ {ℓ} {A B : ★ ℓ} b → (✓ b → A) → (✓ (not b) → B) → if b then A else B

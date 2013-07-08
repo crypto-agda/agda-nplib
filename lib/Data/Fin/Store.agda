@@ -1,7 +1,7 @@
 {-# OPTIONS --type-in-type #-}
 module Data.Fin.Store where
 
-open import Data.Unit
+open import Data.One
 open import Data.Nat
 open import Data.Product.NP
 open import Function
@@ -76,7 +76,7 @@ record Monadic : Set where
 
   new : ∀ {A Δ} → A → M Δ (A ◅ Δ) (Ref (A ◅ Δ) A)
   read : ∀ {A Δ Δ′} → Δ ⊆ Δ′ → Ref Δ A → M Δ′ Δ′ A
-  write : ∀ {A Δ Δ′} → Δ ⊆ Δ′ → Ref Δ A → A → M Δ′ Δ′ ⊤
+  write : ∀ {A Δ Δ′} → Δ ⊆ Δ′ → Ref Δ A → A → M Δ′ Δ′ 𝟙
   run : ∀ {A} → (∀ {Δ} → ∃[ Δ′ ] (M Δ Δ′ A)) → A
   return : ∀ {A Δ} → A → M Δ Δ A
   _=<<_ : ∀ {A B Δ₁ Δ₂ Δ₃} → (A → M Δ₂ Δ₃ B) → M Δ₁ Δ₂ A → M Δ₁ Δ₃ B
@@ -90,10 +90,10 @@ record Monadic : Set where
  _>>=_ : ∀ {A B Δ₁ Δ₂ Δ₃} → M Δ₁ Δ₂ A → (A → M Δ₂ Δ₃ B) → M Δ₁ Δ₃ B
  x >>= f = f =<< x
 
- _>>_ : ∀ {A Δ₁ Δ₂ Δ₃} → M Δ₁ Δ₂ ⊤ → M Δ₂ Δ₃ A → M Δ₁ Δ₃ A
+ _>>_ : ∀ {A Δ₁ Δ₂ Δ₃} → M Δ₁ Δ₂ 𝟙 → M Δ₂ Δ₃ A → M Δ₁ Δ₃ A
  x >> y = x >>= const y
 
- modify : ∀ {A Δ Δ′} → Δ ⊆ Δ′ → Ref Δ A → (A → A) → M Δ′ Δ′ ⊤
+ modify : ∀ {A Δ Δ′} → Δ ⊆ Δ′ → Ref Δ A → (A → A) → M Δ′ Δ′ 𝟙
  modify w r f = (write w r ∘ f) =<< read w r
 
 monadicImplem : Monadic
@@ -145,7 +145,7 @@ monadicImplem =
   read : ∀ {A Δ Δ′} → Δ ⊆ Δ′ → Ref Δ A → M Δ′ Δ′ A
   read w r = mk (λ ρ → ρ , Internals.read (coe w r) ρ)
 
-  write : ∀ {A Δ Δ′} → Δ ⊆ Δ′ → Ref Δ A → A → M Δ′ Δ′ ⊤
+  write : ∀ {A Δ Δ′} → Δ ⊆ Δ′ → Ref Δ A → A → M Δ′ Δ′ 𝟙
   write w r v = mk (λ ρ → Internals.write (coe w r) v ρ , _)
 
   run : ∀ {A} → (∀ {Δ} → ∃[ Δ′ ] (M Δ Δ′ A)) → A
@@ -163,10 +163,10 @@ open import Data.List
 module Examples (monadic : Monadic) where
   open Monadic monadic
 
-  add : ∀ {Δ} → Ref Δ ℕ → ℕ → M Δ Δ ⊤
+  add : ∀ {Δ} → Ref Δ ℕ → ℕ → M Δ Δ 𝟙
   add r k = modify ⊆-refl r (_+_ k)
 
-  ex₁ : ∀ {Δ} → Ref Δ ℕ → List ℕ → M Δ Δ ⊤
+  ex₁ : ∀ {Δ} → Ref Δ ℕ → List ℕ → M Δ Δ 𝟙
   ex₁ r []       = return _
   ex₁ r (x ∷ xs) = add r x >> ex₁ r xs
 

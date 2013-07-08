@@ -2,10 +2,11 @@ module Data.Stream.NP where
 
 open import Type
 import Level as L
-open import Data.Bool
 open import Data.Nat
 open import Function
-open import Data.Empty
+open import Data.Zero using (𝟘)
+open import Data.One  using (𝟙)
+open import Data.Two  using (𝟚; 0₂; 1₂)
 open import Function.Equality using (_⟶_)
 open import Data.Product using (Σ; _,_; _×_; uncurry; ∃; proj₁; proj₂)
 import Relation.Binary.PropositionalEquality as ≡
@@ -14,12 +15,13 @@ open import Relation.Nullary
 open import Relation.Binary.NP
 
 not≢id : ∀ b → not b ≢ b
-not≢id true  ()
-not≢id false ()
+not≢id 0₂ ()
+not≢id 1₂ ()
 
+-- TODO use: not-involutive
 not∘not≡id : ∀ b → b ≡ not (not b)
-not∘not≡id true  = ≡.refl
-not∘not≡id false = ≡.refl
+not∘not≡id 0₂ = ≡.refl
+not∘not≡id 1₂ = ≡.refl
 
 module M1 where
   Stream : ★ → ★
@@ -44,7 +46,7 @@ module M1 where
   diagonal : ∀ {A} → Stream (Stream A) → Stream A
   diagonal f n = f n n
 
-  cantor : Stream (Stream Bool) → Stream Bool
+  cantor : Stream (Stream 𝟚) → Stream 𝟚
   cantor = map not ∘ diagonal
 
   _≉_ : ∀ {A} → Stream A → Stream A → ★
@@ -72,13 +74,13 @@ module M1 where
   cantor-thm xss (n , pn) = proj₂ (cantor-lem xss n) (pn n)
 
   -- Meaning that their exists a set that is bigger than ℕ.
-  -- A nice thing with this statement is that it only involves: ★,→,∀,∃,ℕ,≢(¬(⊥),≡)
+  -- A nice thing with this statement is that it only involves: ★,→,∀,∃,ℕ,≢(¬(𝟘),≡)
   cantor-thm2 : ∃ λ (S : ★) → ∀ (f : ℕ → S) → ∃ λ (e : S) → ∀ n → e ≢ f n
-  cantor-thm2 = Stream Bool , (λ f → cantor f , ≉→≢ ∘ cantor-lem f)
+  cantor-thm2 = Stream 𝟚 , (λ f → cantor f , ≉→≢ ∘ cantor-lem f)
 
   -- Meaning that their exists a set that is bigger than ℕ.
-  -- A nice thing with this statement is that it only involves: ★,→,∀,∃,ℕ,≡,⊥
-  cantor-thm3 : ∃ λ (S : ★) → ∀ (f : ℕ → S) → ∃ λ (e : S) → ∀ n → e ≡ f n → ⊥
+  -- A nice thing with this statement is that it only involves: ★,→,∀,∃,ℕ,≡,𝟘
+  cantor-thm3 : ∃ λ (S : ★) → ∀ (f : ℕ → S) → ∃ λ (e : S) → ∀ n → e ≡ f n → 𝟘
   cantor-thm3 = cantor-thm2
 
 module M2 where
@@ -99,7 +101,7 @@ module M2 where
   -- diagonal xs (suc n) = diagonal (tail (map tail xs)) n
   diagonal f n = f n n
 
-  cantor : Stream (Stream Bool) → Stream Bool
+  cantor : Stream (Stream 𝟚) → Stream 𝟚
   cantor = map not ∘ diagonal
 
   All : ∀ {A} (P : A → ★) → Stream A → ★
@@ -172,7 +174,6 @@ module M2 where
            hi' : ∃ λ m → {!!} ?
            hi' = hi
 -}
-open import Data.Unit using (⊤)
 import Data.Stream
 open import Coinduction
 import Function.Related as R
@@ -253,7 +254,7 @@ diagonal ((x ∷ xs) ∷ xss) = x ∷ ♯ diagonal (map tail (♭ xss))
 -- diag = map (head ∘ head) ∘ iterate (tail ∘ tail)
 -- diag xs = tab (λ i → xs ! i ! i)
 
-cantor : Stream (Stream Bool) → Stream Bool
+cantor : Stream (Stream 𝟚) → Stream 𝟚
 cantor = map not ∘ diagonal
 
 infix 4 _∈'_
@@ -269,8 +270,8 @@ xs ∉' xss = ¬(xs ∈' xss)
 ≈-head (_ ∷ _) = ≡.refl
 
 not∷ : ∀ b bs bs' → ¬(not b ∷ bs ≈ b ∷ bs')
-not∷ true  _ _ ()
-not∷ false _ _ ()
+not∷ 0₂ _ _ ()
+not∷ 1₂ _ _ ()
 
 _>>=_ : ∀ {A B : ★} → Stream A → (A → Stream B) → Stream B
 s >>= f = diagonal (map f s)
@@ -339,7 +340,7 @@ map-tail-repeat (x ∷ xs) = _ ∷ ♯ map-tail-repeat (♭ xs)
 module ≋ {A} = Setoid (ZipAll-setoid (setoid A))
 
 {-
-cantor-tail : ∀ (xss : Stream (Stream Bool)) → cantor (map tail (tail xss)) ≈ tail (cantor xss)
+cantor-tail : ∀ (xss : Stream (Stream 𝟚)) → cantor (map tail (tail xss)) ≈ tail (cantor xss)
 cantor-tail ((x ∷ xs) ∷ xs₁) = map-cong not (diagonal-cong (map-tail-cong' ≋.refl))
 -}
 
@@ -348,8 +349,8 @@ cantor-tail ((x ∷ xs) ∷ xs₁) = map-cong not (diagonal-cong (map-tail-cong'
 ≈-∈' p (there x≈y q) = there (trans x≈y p) q
 
 module MM where
-  cantor-thm : ∀ (xss : Stream (Stream Bool)) → cantor xss ∉' xss
-  ∈'-tail : ∀ {xs ys} {xss : Stream (Stream Bool)} → xs ∈' xss → ¬(tail xs ≈ ys)
+  cantor-thm : ∀ (xss : Stream (Stream 𝟚)) → cantor xss ∉' xss
+  ∈'-tail : ∀ {xs ys} {xss : Stream (Stream 𝟚)} → xs ∈' xss → ¬(tail xs ≈ ys)
                -- ys ∈' map tail xss
 
   cantor-thm ((x ∷ xs) ∷ xss) (here x≈y) = not∷ x _ _ x≈y
@@ -367,22 +368,22 @@ module MM where
 --  there : ∀ {x y z xs} (x≈y  : x ≈ y) (x∈xs : x ∈' ♭ xs) → y ∈' z ∷ xs
 
 {-
-cantor-thm : ∀ (xss : Stream (Stream Bool)) → cantor xss ∉' xss
+cantor-thm : ∀ (xss : Stream (Stream 𝟚)) → cantor xss ∉' xss
 cantor-thm ((x ∷ xs) ∷ xss) (here x≈y) = not∷ x _ _ x≈y
 cantor-thm ((x ∷ xs) ∷ xss) (there {._ ∷ ys} (._ ∷ ys≈zs) cs∈xss)
   = cantor-thm (map tail (♭ xss)) (≈-∈' (♭ ys≈zs) (∈'-tail cs∈xss))
 
 bu : ∀ {A} {xs : Stream A} {xss : Stream (Stream A)} → xs ∈ xss → ℕ → ★
-bu here zero = ⊤
-bu here (suc n) = ⊥
-bu (there p) zero = ⊥
+bu here zero = 𝟙
+bu here (suc n) = 𝟘
+bu (there p) zero = 𝟘
 bu (there p) (suc n) = {!S∈' p n!}
 -}
 
 S∈' : ∀ {A} {xs : Stream A} {xss : Stream (Stream A)} → xs ∈' xss → ℕ → ★
-S∈' (here _) zero = ⊤
-S∈' (here _) (suc n) = ⊥
-S∈' (there _ p) zero = ⊥
+S∈' (here _) zero = 𝟙
+S∈' (here _) (suc n) = 𝟘
+S∈' (there _ p) zero = 𝟘
 S∈' (there _ p) (suc n) = S∈' p n
 
 {-
@@ -391,17 +392,17 @@ data E : ℕ → ℕ → ★ where
   suc  : ∀ {m n} → E m n → E (suc m) (suc n)
 -}
 
-S-tail : ∀ {xs : Stream Bool} {xss} (p : xs ∈' xss) n → S∈' p n → S∈' (∈'-tail p) n
+S-tail : ∀ {xs : Stream 𝟚} {xss} (p : xs ∈' xss) n → S∈' p n → S∈' (∈'-tail p) n
 S-tail (here (_ ∷ _)) zero _ = _
 S-tail (here _) (suc n) ()
 S-tail (there _ _) zero ()
 S-tail (there (x ∷ xs≈) p) (suc n) q = S-tail p n q
 
 {-
-bar : ∀ {xs ys : Stream Bool} {xss} (pp : xs ≈ ys) (p : xs ∈' xss) n → S∈' p n → S∈' (≈-∈' pp p) n
+bar : ∀ {xs ys : Stream 𝟚} {xss} (pp : xs ≈ ys) (p : xs ∈' xss) n → S∈' p n → S∈' (≈-∈' pp p) n
 bar pp p n q = {!!}
 
-cantor-thm' : ∀ (xss : Stream (Stream Bool)) (p : cantor xss ∈' xss) n → S∈' p n → ⊥
+cantor-thm' : ∀ (xss : Stream (Stream 𝟚)) (p : cantor xss ∈' xss) n → S∈' p n → 𝟘
 cantor-thm' ((x ∷ xs) ∷ xss) (here x≈y) zero _ = not∷ x _ _ x≈y
 cantor-thm' ((x ∷ xs) ∷ xss) (here x≈y) (suc _) ()
 cantor-thm' ((x ∷ xs) ∷ xss) (there {._ ∷ ys} (._ ∷ ys≈zs) cs∈xss) (suc n) q

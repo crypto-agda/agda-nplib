@@ -13,7 +13,7 @@ open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise) renaming (_+_ to 
 import Data.Vec.NP as V
 open V hiding (rewire; rewireTbl; sum) renaming (map to vmap; swap to vswap)
 open import Data.Vec.N-ary.NP
-open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Zero using (𝟘; 𝟘-elim)
 open import Data.Product using (_×_; _,_; uncurry; proj₁; proj₂)
 open import Function.NP hiding (_→⟨_⟩_)
 import Relation.Binary.PropositionalEquality.NP as ≡
@@ -258,8 +258,8 @@ toℕ-inj : ∀ {n} (x y : Bits n) → toℕ x ≡ toℕ y → x ≡ y
 toℕ-inj         []        []        _ = refl
 toℕ-inj         (0b ∷ xs) (0b ∷ ys) p = cong 0∷_ (toℕ-inj xs ys p)
 toℕ-inj {suc n} (1b ∷ xs) (1b ∷ ys) p = cong 1∷_ (toℕ-inj xs ys (cancel-+-left (2^ n) p))
-toℕ-inj {suc n} (0b ∷ xs) (1b ∷ ys) p = ⊥-elim (2ⁿ+≰toℕ xs (ℕ≤.reflexive (≡.sym p)))
-toℕ-inj {suc n} (1b ∷ xs) (0b ∷ ys) p = ⊥-elim (2ⁿ+≰toℕ ys (ℕ≤.reflexive p))
+toℕ-inj {suc n} (0b ∷ xs) (1b ∷ ys) p = 𝟘-elim (2ⁿ+≰toℕ xs (ℕ≤.reflexive (≡.sym p)))
+toℕ-inj {suc n} (1b ∷ xs) (0b ∷ ys) p = 𝟘-elim (2ⁿ+≰toℕ ys (ℕ≤.reflexive p))
 
 data _≤ᴮ_ : ∀ {n} (p q : Bits n) → ★₀ where
   []    : [] ≤ᴮ []
@@ -283,7 +283,7 @@ toℕ-≤-inj : ∀ {n} (x y : Bits n) → toℕ x ≤ toℕ y → x ≤ᴮ y
 toℕ-≤-inj     [] [] p = []
 toℕ-≤-inj         (0b ∷ xs) (0b ∷ ys) p = there 0b (toℕ-≤-inj xs ys p)
 toℕ-≤-inj         (0b ∷ xs) (1b ∷ ys) p = 0-1 _ _
-toℕ-≤-inj {suc n} (1b ∷ xs) (0b ∷ ys) p = ⊥-elim (2ⁿ+≰toℕ ys p)
+toℕ-≤-inj {suc n} (1b ∷ xs) (0b ∷ ys) p = 𝟘-elim (2ⁿ+≰toℕ ys p)
 toℕ-≤-inj {suc n} (1b ∷ xs) (1b ∷ ys) p = there 1b (toℕ-≤-inj xs ys (+-≤-inj (2^ n) p))
 
 fromℕ : ∀ {n} → ℕ → Bits n

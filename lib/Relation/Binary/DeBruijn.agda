@@ -5,10 +5,9 @@ import Level as L
 open L using (Lift; lift)
 open import Data.Nat.NP hiding (_⊔_)
 open import Data.Product.NP
-open import Data.Unit hiding (_≤?_)
 open import Data.Sum.NP
 open import Data.List
-open import Data.Bool
+open import Data.Bool using (if_then_else_)
 open import Function
 open import Relation.Nullary
 open import Relation.Nullary.Decidable

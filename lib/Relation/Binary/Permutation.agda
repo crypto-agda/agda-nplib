@@ -3,10 +3,10 @@ module Relation.Binary.Permutation where
 
 open import Level
 open import Data.Product.NP
-open import Data.Unit
+open import Data.Zero
+open import Data.One
 open import Data.Sum
 open import Data.List
-open import Data.Empty
 open import Relation.Nullary
 open import Relation.Binary
 import Relation.Binary.PropositionalEquality as ≡
@@ -53,12 +53,12 @@ module PermIdem {a} {A : Set a} (_≟_ : Decidable {A = A} _≡_) {x y : A} {R :
   ⇐ : ∀ {x y} → R [ x ↔ y ] [ x ↔ y ] ⇒ R
   ⇐ (here₁ (here₁ yRj))          = yRj
   ⇐ (here₁ (here₂ xRj))          = xRj
-  ⇐ (here₁ (there _ y≢y _))      = ⊥-elim (y≢y ≡.refl)
+  ⇐ (here₁ (there _ y≢y _))      = 𝟘-elim (y≢y ≡.refl)
   ⇐ (here₂ (here₁ yRj))          = yRj
   ⇐ (here₂ (here₂ xRj))          = xRj
-  ⇐ (here₂ (there x≢x _ _))      = ⊥-elim (x≢x ≡.refl)
-  ⇐ (there x≢x _ (here₁ _))      = ⊥-elim (x≢x ≡.refl)
-  ⇐ (there _ y≢y (here₂ _))      = ⊥-elim (y≢y ≡.refl)
+  ⇐ (here₂ (there x≢x _ _))      = 𝟘-elim (x≢x ≡.refl)
+  ⇐ (there x≢x _ (here₁ _))      = 𝟘-elim (x≢x ≡.refl)
+  ⇐ (there _ y≢y (here₂ _))      = 𝟘-elim (y≢y ≡.refl)
   ⇐ (there _ _ (there _ _ iRj))  = iRj
 
   ⟹ : R ⇒ R [ x ↔ y ] [ x ↔ y ]
@@ -78,7 +78,7 @@ permRel : ∀ {a} {A : Set a} → (π : Permutation A) → Rel A a → Rel A a
 permRel π R = foldr (λ p r → r [ proj₁ p ↔ proj₂ p ]) R π
 
 toRel : ∀ {a} {A : Set a} → (π : Permutation A) → Rel A a
-toRel π = permRel π (λ _ _ → Lift ⊤)
+toRel π = permRel π (λ _ _ → Lift 𝟙)
 
 {-
   _⟨$⟩₁_ : ∀ {a} {A : Set a} → Permutation A → A → Maybe A

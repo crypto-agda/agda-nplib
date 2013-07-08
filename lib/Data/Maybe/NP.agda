@@ -16,9 +16,9 @@ open import Relation.Binary
 open import Relation.Binary.Logical
 open import Relation.Unary.Logical
 open import Function using (_$_;flip;id)
-open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Product
-open import Data.Unit using (⊤)
+open import Data.Zero using (𝟘; 𝟘-elim)
+open import Data.One using (𝟙)
 open import Data.Nat using (ℕ; zero; suc; _+_)
 
 Π? : ∀ {a b} (A : ★ a) (B : A → ★ b) → ★ _
@@ -108,8 +108,8 @@ x ≡JAny y = Any (λ y' → Any (_≡_ y') y) x
 ≡JAll-refl {x = nothing} = nothing
 
 just? : ∀ {a} {A : ★ a} → Maybe A → ★₀
-just? nothing  = ⊥
-just? (just _) = ⊤
+just? nothing  = 𝟘
+just? (just _) = 𝟙
 
 just?→IsJust : ∀ {a} {A : ★ a} {x : Maybe A} → just? x → IsJust x
 just?→IsJust {x = just _}  p = just _
@@ -397,12 +397,12 @@ module MonoidFromSemigroup {c ℓ} (sg   : Semigroup c ℓ)
     ∙-cong : _∙_ Preserves₂ _≈?_ ⟶ _≈?_ ⟶ _≈?_
     ∙-cong {just _}{just _}{just _}{just _}   p q
       = just-cong (SG.∙-cong (just-inj p) (just-inj q))
-    ∙-cong {just _}{just _}{just _}{nothing}  p q = ⊥-elim (just≉nothing q)
-    ∙-cong {just _}{just _}{nothing}{just _}  p q = ⊥-elim (just≉nothing (≈?.sym q))
+    ∙-cong {just _}{just _}{just _}{nothing}  p q = 𝟘-elim (just≉nothing q)
+    ∙-cong {just _}{just _}{nothing}{just _}  p q = 𝟘-elim (just≉nothing (≈?.sym q))
     ∙-cong {just _}{just _}{nothing}{nothing} p q = p
     ∙-cong {nothing} {nothing} p q = q
-    ∙-cong {just _}  {nothing} p q = ⊥-elim (just≉nothing p)
-    ∙-cong {nothing} {just _}  p q = ⊥-elim (just≉nothing (≈?.sym p))
+    ∙-cong {just _}  {nothing} p q = 𝟘-elim (just≉nothing p)
+    ∙-cong {nothing} {just _}  p q = 𝟘-elim (just≉nothing (≈?.sym p))
 
   monoid : Monoid c ℓ
   monoid = record { Carrier = Maybe A
@@ -443,8 +443,8 @@ module First-≈ {a ℓ} {A : ★ a} {_≈_ : Maybe A → Maybe A → ★ ℓ}
     ∙-cong : _∙_ Preserves₂ _≈_ ⟶ _≈_ ⟶ _≈_
     ∙-cong {just _} {just _}   p q = p
     ∙-cong {nothing} {nothing} p q = q
-    ∙-cong {just _} {nothing}  p q = ⊥-elim (just≉nothing p)
-    ∙-cong {nothing} {just _}  p q = ⊥-elim (just≉nothing (≈.sym p))
+    ∙-cong {just _} {nothing}  p q = 𝟘-elim (just≉nothing p)
+    ∙-cong {nothing} {just _}  p q = 𝟘-elim (just≉nothing (≈.sym p))
 
   monoid : Monoid a ℓ
   monoid = record { Carrier = Maybe A

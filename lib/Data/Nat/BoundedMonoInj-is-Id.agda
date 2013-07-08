@@ -2,7 +2,7 @@ module Data.Nat.BoundedMonoInj-is-Id where
 
 open import Type
 open import Function.NP using (Endo)
-open import Data.Empty using (⊥ ; ⊥-elim)
+open import Data.Zero using (𝟘 ; 𝟘-elim)
 open import Data.Nat.NP using (ℕ; zero; suc; sucx≰x; module ℕ≤; _≤_; _<_; z≤n; s≤s; ≤-pred ; suc-injective)
 
 open import Data.Nat.Properties using (≤-step; ≤-steps; <-trans)
@@ -38,7 +38,7 @@ module M (f : ℕ → ℕ) {ub}
 
  f-mono-< : ∀ {x y} → x < y → y < ub → f x < f y
  f-mono-< {x} {y} p y<ub with split-≤ (f-mono {x} {y} (<→≤ p) y<ub)
- ... | inj₁ q = ⊥-elim (sucx≰x y (subst (λ z → suc z ≤ y) (f-inj {x} {y} (<-trans p y<ub) y<ub q) p))
+ ... | inj₁ q = 𝟘-elim (sucx≰x y (subst (λ z → suc z ≤ y) (f-inj {x} {y} (<-trans p y<ub) y<ub q) p))
  ... | inj₂ q = q
 
  le : ∀ n → suc n < ub → f (suc n) ≤ n → f n < n
@@ -47,7 +47,7 @@ module M (f : ℕ → ℕ) {ub}
  fp : ∀ b → b < ub → Bounded (suc b) f → f b ≡ b
  fp b b<ub bub with split-≤ (bub b ℕ≤.refl)
  ... | inj₁ p = suc-injective p
- ... | inj₂ p = ⊥-elim (bo b b<ub (≤-pred p))
+ ... | inj₂ p = 𝟘-elim (bo b b<ub (≤-pred p))
    where
      bo : ∀ b → b < ub → ¬(f b < b)
      bo zero _ ()

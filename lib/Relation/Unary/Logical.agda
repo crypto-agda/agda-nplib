@@ -56,21 +56,21 @@ _[→]e_ : ∀ {a aₚ} {A : ★ a} (Aₚ : A → ★ aₚ)
 _[→]e_ Aₚ Bₚ = [Π]e Aₚ (λ _ → Bₚ)
 
 open import Data.Product
-open import Data.Unit
+open import Data.One
 
-record [⊤] (x : ⊤) : ★₀ where
-  constructor [tt]
+record [𝟙] (x : 𝟙) : ★₀ where
+  constructor [0₁]
 
-open import Data.Empty
+open import Data.Zero
 
-data [⊥] (x : ⊥) : ★₀ where
+data [𝟘] (x : 𝟘) : ★₀ where
 
 open import Relation.Nullary
 
 infix 3 [¬]_
 
 [¬]_ : ∀ {a aₚ} → ([★] {a} aₚ [→] [★] _) ¬_
-[¬] Aₚ = Aₚ [→] [⊥]
+[¬] Aₚ = Aₚ [→] [𝟘]
 
 -- Products [Σ], [∃], [×] are in Data.Product.NP
 

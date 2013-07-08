@@ -2,8 +2,8 @@
 module Data.E where
 
 open import Function
-open import Data.Unit
-open import Data.Empty
+open import Data.Zero
+open import Data.One
 open import Data.Product
 import Relation.Binary.PropositionalEquality as ≡
 open ≡ using (_≡_)
@@ -26,7 +26,7 @@ record Interface (In Out : Set) : Set where
     -- In≡Out : ∀ {P : Set → Set} → E (P In → P Out)
     In≡Out : In ≡E₁ Out
     rOut : R Out
-    r⊥   : R ⊥
+    r𝟘   : R 𝟘
 
   infixl 4 _⊛_
   _>>=_ : ∀ {A B} → E A → (A → E B) → E B
@@ -38,8 +38,8 @@ record Interface (In Out : Set) : Set where
   join : ∀ {A} → R (E A)
   join = _=<<_ id
 
-  r⊤ : R ⊤
-  r⊤ = _
+  r𝟙 : R 𝟙
+  r𝟙 = _
 
   r→ : ∀ {A B} → R B → R (A → B)
   r→ rB f x = rB ((λ g → g x) ⟨$⟩ f)
@@ -74,7 +74,7 @@ record Laws {In Out} (r : Interface In Out) : Set where
     pure≡id : ∀ {A} → pure {A} ≡ coe Id≡Pure id
     =<<≡id  : ∀ {A B} → _=<<_ {A} {B} ≡ coe Id≡=<< id
     rOut≡id : rOut ≡ coe Id≡RA id
-    r⊥≡id   : r⊥ ≡ coe Id≡RA id
+    r𝟘≡id   : r𝟘 ≡ coe Id≡RA id
 
 -- implem : ∀ {In Out} → In ≡ Out → Interface In Out
 -- implem {In} {Out} eq = record {
@@ -84,13 +84,13 @@ implem = record { E      = id;
                   _=<<_  = id;
                   In≡Out = ≡.refl; -- id;
                   rOut   = id;
-                  r⊥     = id
+                  r𝟘     = id
                 }
 
 module ELaws {A} where
   open Interface {A} implem
   laws : E (Laws {A} implem)
-  laws = pure (record { E≡id = ≡.refl; pure≡id = ≡.refl; =<<≡id = ≡.refl; rOut≡id = ≡.refl; r⊥≡id = ≡.refl })
+  laws = pure (record { E≡id = ≡.refl; pure≡id = ≡.refl; =<<≡id = ≡.refl; rOut≡id = ≡.refl; r𝟘≡id = ≡.refl })
 
 -- eLaws : ∀ {In Out} → Interface In Out → E (Laws )
 

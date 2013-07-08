@@ -1,14 +1,14 @@
 module Function.Bijection.SyntaxKit where
 
 open import Type hiding (★)
-import Level as L
+open import Level.NP using (₀; ₛ; _⊔_)
 open import Function.NP
-open import Data.Bool
+open import Data.One
+open import Data.Two
 open import Data.Bool.Properties
-open import Data.Unit
 open import Relation.Binary.PropositionalEquality
 
-record BijKit b {a} (A : ★ a) : ★ (L.suc b L.⊔ a) where
+record BijKit b {a} (A : ★ a) : ★ (ₛ b ⊔ a) where
   constructor mk
   field
     Bij   : ★ b
@@ -50,7 +50,7 @@ module BoolBijection where
   data BoolBij : ★₀ where
     `id `not : BoolBij
 
-  bool-bijKit : BijKit L.zero Bool
+  bool-bijKit : BijKit ₀ Bool
   bool-bijKit = mk BoolBij eval id `id _⁏Bij_ (λ _ → refl) _⁏-spec_ _⁻¹-inverse (λ _ _ → refl)
    module BBK where
     eval  : BoolBij → Endo Bool
@@ -75,31 +75,31 @@ module BoolBijection where
 
   -- `xor can be seen as a fromBool function
   `xor : Bool → BoolBij
-  `xor false = `id
-  `xor true  = `not
+  `xor 0₂ = `id
+  `xor 1₂ = `not
 
   -- `not? can be seen as a toBool function
   `not? : BoolBij → Bool
-  `not? `id  = false
-  `not? `not = true
+  `not? `id  = 0₂
+  `not? `not = 1₂
 
   `xor∘`not? : `xor ∘ `not? ≗ id
   `xor∘`not? `id = refl
   `xor∘`not? `not = refl
 
   `not?∘`xor : `not? ∘ `xor ≗ id
-  `not?∘`xor true  = refl
-  `not?∘`xor false = refl
+  `not?∘`xor 1₂ = refl
+  `not?∘`xor 0₂ = refl
 
 module 1-Bijection {a} (A : ★ a) where
-    1-bij : BijKit L.zero A
-    1-bij = mk ⊤ (λ _ → id) _ _ _ (λ _ → refl) (λ _ _ _ → refl) (λ _ _ → refl) (λ _ _ → refl)
+    1-bij : BijKit ₀ A
+    1-bij = mk 𝟙 (λ _ → id) _ _ _ (λ _ → refl) (λ _ _ _ → refl) (λ _ _ → refl) (λ _ _ → refl)
 
     module 1-BijKit = BijKit 1-bij
 
-module UnitBijection where
+module 𝟙Bijection where
     open 1-Bijection
-    ⊤-bijKit : BijKit L.zero ⊤
-    ⊤-bijKit = 1-bij ⊤
+    𝟙-bijKit : BijKit ₀ 𝟙
+    𝟙-bijKit = 1-bij 𝟙
 
-    module UnitBijKit = 1-BijKit ⊤
+    module 𝟙BijKit = 1-BijKit 𝟙

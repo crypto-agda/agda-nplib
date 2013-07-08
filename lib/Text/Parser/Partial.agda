@@ -1,7 +1,7 @@
 open import Type
 open import Data.Maybe.NP as Maybe
 open import Data.Nat
-open import Data.Unit
+open import Data.One
 open import Data.Char renaming (_==_ to _==ᶜ_)
 open import Data.String as String
 open import Data.List as L using (List; []; _∷_; null; filter)
@@ -36,7 +36,7 @@ sat : (Char → Bool) → Parser⊥ Char
 sat pred (x ∷ xs) = (if pred x then pure x else empty) xs
 sat _    []       = now nothing
 
-eof : Parser⊥ ⊤
+eof : Parser⊥ 𝟙
 eof s = if null s then pure _ [] else empty []
 
 parser∞ : ∀ {A} → ∞(Parser⊥ A) → Parser⊥ A
@@ -87,7 +87,7 @@ mutual
   some p = pure _∷_ ⊛ p ⊛ many p
 -}
 
-char : Char → Parser⊥ ⊤
+char : Char → Parser⊥ 𝟙
 char c = sat (_==ᶜ_ c) *> pure _
 
 private

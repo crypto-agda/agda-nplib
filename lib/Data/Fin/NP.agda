@@ -2,7 +2,7 @@ module Data.Fin.NP where
 
 open import Type hiding (★)
 open import Function
-open import Data.Empty
+open import Data.Zero
 open import Data.Fin public renaming (toℕ to Fin▹ℕ)
 open import Data.Nat.NP using (ℕ; zero; suc; _<=_; module ℕ°) renaming (_+_ to _+ℕ_)
 open import Data.Bool
@@ -154,8 +154,8 @@ module Modulo where
   sucmod-inj {i = i} {j} eq with modq (suc i) | modq (suc j) | modq-inj (suc i) (suc j) | modq-suc i j | modq-suc j i
   sucmod-inj eq | just _  | just _  | p | _ | _ = suc-injective (p (cong just eq))
   sucmod-inj eq | nothing | nothing | p | _ | _ = suc-injective (p refl)
-  sucmod-inj eq | just _  | nothing | _ | p | _ = ⊥-elim (p (cong Maybe.just eq))
-  sucmod-inj eq | nothing | just _  | _ | _ | p = ⊥-elim (p (cong Maybe.just (sym eq)))
+  sucmod-inj eq | just _  | nothing | _ | p | _ = 𝟘-elim (p (cong Maybe.just eq))
+  sucmod-inj eq | nothing | just _  | _ | _ | p = 𝟘-elim (p (cong Maybe.just (sym eq)))
 
   modq-fromℕ : ∀ q → modq (fromℕ q) ≡ nothing
   modq-fromℕ zero = refl

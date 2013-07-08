@@ -2,11 +2,11 @@ open import Type            hiding (★)
 open import Level           using (_⊔_; suc; Level)
 open import Function.NP     using (id; const; _∘_; _∘′_; _ˢ_; _⟨_⟩°_)
 open import Data.Sum        using (_⊎_; inj₁; inj₂)
-open import Data.Bool       using (Bool; true; false)
-open import Data.Unit       using (⊤)
+open import Data.Zero       using (𝟘)
+open import Data.One        using (𝟙)
+open import Data.Two        using (𝟚)
 open import Data.List       using (List; []; _∷_)
 open import Data.Maybe      using (Maybe; nothing; just)
-open import Data.Empty      using (⊥)
 open import Data.Product.NP using (∃; _,_; _×_)
 
 module Data.Indexed {i} {Ix : ★ i} where
@@ -34,7 +34,7 @@ K° : ∀ {a} (A : ★ a) → ★° _
 K° = pure°
 
 Cmp° : (F : ★° _) (i j : Ix) → ★₀
-Cmp° F i j = F i → F j → Bool
+Cmp° F i j = F i → F j → 𝟚
 
 Π° : ∀ {f g} (F : ★° f) (G : ∀ {i} → F i → ★° g) → ★° _
 Π° F G i = (x : F i) → G x i
@@ -121,14 +121,14 @@ inj₁° = inj₁
 inj₂° : ∀ {f g} {F : ★° f} {G : ★° g} → G ↦° F ⊎° G
 inj₂° = inj₂
 
-⊤° : ★° _
-⊤° = pure° ⊤
+𝟙° : ★° _
+𝟙° = pure° 𝟙
 
-⊥° : ★° _
-⊥° = pure° ⊥
+𝟘° : ★° _
+𝟘° = pure° 𝟘
 
 ¬° : ∀ {ℓ} → ★° ℓ → ★° _
-¬° F = F →° ⊥°
+¬° F = F →° 𝟘°
 
 -- This is the type of |map| functions, the fmap function on Ix-indexed
 -- functors.

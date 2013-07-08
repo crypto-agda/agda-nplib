@@ -10,7 +10,7 @@ open import Data.Nat.Logical
 open import Data.Bool.NP hiding (_==_; module ==)
 open import Data.Product using (proj₁; proj₂; ∃; _,_)
 open import Data.Sum renaming (map to ⊎-map)
-open import Data.Empty using (⊥-elim; ⊥)
+open import Data.Zero using (𝟘-elim; 𝟘)
 open import Function.NP
 open import Relation.Nullary
 open import Relation.Binary.NP
@@ -84,10 +84,10 @@ a≡a⊓b+a∸b zero (suc b) = ≡.refl
 a≡a⊓b+a∸b (suc a) zero = ≡.refl
 a≡a⊓b+a∸b (suc a) (suc b) rewrite ≡.sym (a≡a⊓b+a∸b a b) = ≡.refl
 
-¬n≤x<n : ∀ n {x} → n ≤ x → x < n → ⊥
+¬n≤x<n : ∀ n {x} → n ≤ x → x < n → 𝟘
 ¬n≤x<n n p q = sucx≰x _ (ℕ≤.trans q p)
 
-¬n+≤y<n : ∀ n {x y} → n + x ≤ y → y < n → ⊥
+¬n+≤y<n : ∀ n {x y} → n + x ≤ y → y < n → 𝟘
 ¬n+≤y<n n p q = sucx≰x _ (ℕ≤.trans q (ℕ≤.trans (ℕ≤.trans (ℕ≤.reflexive (ℕ°.+-comm 0 n)) ((ℕ≤.refl {n}) +-mono z≤n)) p))
 
 fold : ∀ {a} {A : ★ a} → A → Endo A → ℕ → A
@@ -1011,11 +1011,11 @@ x<2y→x∸y<y x y p rewrite ≡.sym (2*′-spec y) = x<2y′→x∸y<y x y p
 ≰→< x y p with ℕcmp.compare (suc y) x
 ≰→< x y p | tri< a ¬b ¬c = ℕ≤.trans (s≤s (≤-step ℕ≤.refl)) a
 ≰→< x y p | tri≈ ¬a b ¬c = ℕ≤.reflexive b
-≰→< x y p | tri> ¬a ¬b c = ⊥-elim (p (≤-pred c))
+≰→< x y p | tri> ¬a ¬b c = 𝟘-elim (p (≤-pred c))
 
 ¬≤ : ∀ {m n} → ¬(m < n) → n ≤ m
 ¬≤ {m} {n} p with ℕcmp.compare m n
-... | tri< m<n _ _   = ⊥-elim (p m<n)
+... | tri< m<n _ _   = 𝟘-elim (p m<n)
 ... | tri≈ _ eq _    = ℕ≤.reflexive (≡.sym eq)
 ... | tri> _ _ 1+n≤m = ≤-pred (Props.≤-steps 1 1+n≤m)
 

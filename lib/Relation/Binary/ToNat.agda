@@ -2,7 +2,7 @@ open import Type
 import Data.Nat.NP as ℕ
 open ℕ using (ℕ; zero; suc; module ℕ≤)
 open import Data.Bool
-open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Zero using (𝟘; 𝟘-elim)
 open import Data.Sum renaming (map to ⊎-map)
 open import Function
 open import Relation.Binary
@@ -61,14 +61,14 @@ open IsTotalOrder isTotalOrder
 ... | true | true   | p | _ = p _ _
 ... | true | false  | _ | _ = ≡.refl
 ... | false | true  | _ | _ = ≡.refl
-... | false | false | _ | p = ⊥-elim ([ id , id ] p)
+... | false | false | _ | p = 𝟘-elim ([ id , id ] p)
 
 ⊔-comm : Commutative _≡_ _⊔_
 ⊔-comm x y with x <= y | y <= x | antisym {y} {x} | total x y
 ... | true | true   | p | _ = p _ _
 ... | true | false  | _ | _ = ≡.refl
 ... | false | true  | _ | _ = ≡.refl
-... | false | false | _ | p = ⊥-elim ([ id , id ] p)
+... | false | false | _ | p = 𝟘-elim ([ id , id ] p)
 
 ⊓-≤ : ∀ x y → (x ⊓ y) ≤ y
 ⊓-≤ x y with total x y

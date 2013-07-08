@@ -1,6 +1,6 @@
 open import Type
-open import Data.Unit using (⊤)
-open import Data.Empty using (⊥)
+open import Data.Zero using (𝟘)
+open import Data.One  using (𝟙)
 open import Data.Nat renaming (_*_ to _*ℕ_; _+_ to _+ℕ_)
 
 module Data.Nat.Positive where
@@ -12,8 +12,8 @@ one : ℕ⁺
 one = suc zero
 
 Positive? : ℕ → ★
-Positive? zero    = ⊥
-Positive? (suc _) = ⊤
+Positive? zero    = 𝟘
+Positive? (suc _) = 𝟙
 
 [_] : (n : ℕ) {pf : Positive? n} → ℕ⁺
 [ suc n ] = suc n

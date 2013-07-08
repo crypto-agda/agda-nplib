@@ -116,13 +116,13 @@ Client : (A : BOOL → Set) → Set₁
 Client A = (bool : BOOL) → A bool
 
 {-
-open import Data.Unit
-open import Data.Empty
+open import Data.Zero
+open import Data.One
 
 ⟦ℕBool⟧ : (x y : ℕBool) → Set
-⟦ℕBool⟧ 0        0        = ⊤
-⟦ℕBool⟧ (suc _)  (suc _)  = ⊤
-⟦ℕBool⟧ _        _        = ⊥
+⟦ℕBool⟧ 0        0        = 𝟙
+⟦ℕBool⟧ (suc _)  (suc _)  = 𝟙
+⟦ℕBool⟧ _        _        = 𝟘
 
 _⟦∨⟧_ : (⟦ℕBool⟧ ⟦→⟧ ⟦ℕBool⟧ ⟦→⟧ ⟦ℕBool⟧) _∨_ _∨_
 _⟦∨⟧_ _ {zero} {suc _} ()
