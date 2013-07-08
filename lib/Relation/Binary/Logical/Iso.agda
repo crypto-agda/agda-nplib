@@ -1,7 +1,7 @@
 module Relation.Binary.Logical.Iso where
 
 open import Type using (★_)
-open import Level using () renaming (zero to ₀)
+open import Level.NP using (₀; ₁)
 open import Data.Product.NP using (_,_)
 open import Relation.Binary using (Setoid; module Setoid)
 open import Function.Inverse.NP using (_$₁_;_$₂_;id;_∈_) renaming (Inverse to _≅_; module Inverse to ≅; inverses to isomorphism)
@@ -41,28 +41,28 @@ module _ {a₁ a₂ aᵣ} {A₁ : Setoid a₁ aᵣ} {A₂ : Setoid a₂ aᵣ} (A
 
 open import Relation.Binary.PropositionalEquality as ≡
 
-open import Data.Two using (𝟚; 0'; 1'; not)
+open import Data.Two using (𝟚; 0₂; 1₂; not)
 open import Data.Bool.Properties
 
 𝟚ˢ : Setoid ₀ ₀
 𝟚ˢ = ≡.setoid 𝟚
 ⟪𝟚⟫ : 𝟚ˢ ≅ 𝟚ˢ
 ⟪𝟚⟫ = id
-⟪0'⟫ : (0' , 0') ∈ ⟪𝟚⟫
-⟪0'⟫ = refl
-⟪1'⟫ : (1' , 1') ∈ ⟪𝟚⟫
-⟪1'⟫ = refl
---⟪not⟫' : (Δ (→-to-⟶ not)) ∈ (⟪𝟚⟫ ⟪→⟫ ⟪𝟚⟫)
---⟪not⟫' refl = refl
+⟪0₂⟫ : (0₂ , 0₂) ∈ ⟪𝟚⟫
+⟪0₂⟫ = refl
+⟪1₂⟫ : (1₂ , 1₂) ∈ ⟪𝟚⟫
+⟪1₂⟫ = refl
+--⟪not⟫₂ : (Δ (→-to-⟶ not)) ∈ (⟪𝟚⟫ ⟪→⟫ ⟪𝟚⟫)
+--⟪not⟫₂ refl = refl
 
 -- 'not' is an isomorphism on '𝟚' and so can be used as an “equality” on '𝟚'
 ⟪not⟫ : 𝟚ˢ ≅ 𝟚ˢ
 ⟪not⟫ = isomorphism not not not-involutive not-involutive
 
-⟪0'1'⟫ : (0' , 1') ∈ ⟪not⟫
-⟪0'1'⟫ = refl
-⟪1'0'⟫ : (0' , 1') ∈ ⟪not⟫
-⟪1'0'⟫ = refl
+⟪0₂1₂⟫ : (0₂ , 1₂) ∈ ⟪not⟫
+⟪0₂1₂⟫ = refl
+⟪1₂0₂⟫ : (0₂ , 1₂) ∈ ⟪not⟫
+⟪1₂0₂⟫ = refl
 
 --⟪not⟫'' : (Δ (→-to-⟶ not)) ∈ (⟪not⟫ ⟪→⟫ ⟪not⟫)
 --⟪not⟫'' refl = not-involutive _
@@ -70,8 +70,8 @@ open import Data.Bool.Properties
 -- since 𝟚ʳ is not reflexive it cannot be an equivalence relation and
 -- thus cannot be used to build a setoid.
 data 𝟚ʳ : 𝟚 → 𝟚 → ★ ₀ where
-  0'1' : 𝟚ʳ 0' 1'
-  1'0' : 𝟚ʳ 1' 0'
+  0₂1₂ : 𝟚ʳ 0₂ 1₂
+  1₂0₂ : 𝟚ʳ 1₂ 0₂
 
 open import Data.Nat.NP using (ℕ; zero; suc; ℕˢ)
 ⟪ℕ⟫ : ℕˢ ≅ ℕˢ
