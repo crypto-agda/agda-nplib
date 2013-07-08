@@ -46,18 +46,18 @@ record BijKit b {a} (A : ★ a) : ★ (ₛ b ⊔ a) where
                              | (f ⁻¹-inverse′)
                             x = refl
 
-module BoolBijection where
-  data BoolBij : ★₀ where
-    `id `not : BoolBij
+module 𝟚Bijection where
+  data 𝟚Bij : ★₀ where
+    `id `not : 𝟚Bij
 
-  bool-bijKit : BijKit ₀ Bool
-  bool-bijKit = mk BoolBij eval id `id _⁏Bij_ (λ _ → refl) _⁏-spec_ _⁻¹-inverse (λ _ _ → refl)
+  bool-bijKit : BijKit ₀ 𝟚
+  bool-bijKit = mk 𝟚Bij eval id `id _⁏Bij_ (λ _ → refl) _⁏-spec_ _⁻¹-inverse (λ _ _ → refl)
    module BBK where
-    eval  : BoolBij → Endo Bool
+    eval  : 𝟚Bij → Endo 𝟚
     eval `id = id
     eval `not = not
 
-    _⁏Bij_ : BoolBij → BoolBij → BoolBij
+    _⁏Bij_ : 𝟚Bij → 𝟚Bij → 𝟚Bij
     `id  ⁏Bij g    = g
     f    ⁏Bij `id  = f
     `not ⁏Bij `not = `id
@@ -71,15 +71,15 @@ module BoolBijection where
     (`id  ⁻¹-inverse) = λ _ → refl
     (`not ⁻¹-inverse) = not-involutive
 
-  module BoolBijKit = BijKit bool-bijKit
+  module 𝟚BijKit = BijKit bool-bijKit
 
-  -- `xor can be seen as a fromBool function
-  `xor : Bool → BoolBij
+  -- `xor can be seen as a from𝟚 function
+  `xor : 𝟚 → 𝟚Bij
   `xor 0₂ = `id
   `xor 1₂ = `not
 
-  -- `not? can be seen as a toBool function
-  `not? : BoolBij → Bool
+  -- `not? can be seen as a to𝟚 function
+  `not? : 𝟚Bij → 𝟚
   `not? `id  = 0₂
   `not? `not = 1₂
 
