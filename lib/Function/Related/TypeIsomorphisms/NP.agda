@@ -8,7 +8,7 @@ open import Type hiding (★)
 open import Function using (_ˢ_; const)
 
 open import Data.Fin using (Fin; zero; suc; pred)
-open import Data.Vec using (Vec; []; _∷_)
+open import Data.Vec.NP using (Vec; []; _∷_; uncons; ∷-uncons)
 open import Data.Nat.NP using (ℕ; zero; suc; _+_; _*_) renaming (_^_ to _**_)
 open import Data.Maybe.NP
 open import Data.Product.NP renaming (map to map×)
@@ -31,7 +31,7 @@ import Relation.Binary.Indexed as I
 open import Relation.Binary.Product.Pointwise
 open import Relation.Binary.Sum
 import Relation.Binary.PropositionalEquality as ≡
-open ≡ using (_≡_ ; _≢_)
+open ≡ using (_≡_ ; _≢_; _≗_)
 
 module _ {a b f} {A : Set a} {B : A → Set b}
          (F : (x : A) → B x → Set f) where
@@ -146,10 +146,6 @@ Maybe-injective f = Iso.iso (g f) (g-empty f)
 private
     Setoid₀ : ★ _
     Setoid₀ = Setoid L.zero L.zero
-
-module _ {n} where
-    fin-suc-inj : ∀ {x y : Fin n} → Fin.suc x ≡ suc y → x ≡ y
-    fin-suc-inj ≡.refl = ≡.refl
 
 Σ≡↔𝟙 : ∀ {a} {A : ★ a} x → Σ A (_≡_ x) ↔ 𝟙
 Σ≡↔𝟙 x = inverses (F.const _) (λ _ → _ , ≡.refl)
@@ -534,8 +530,7 @@ Vec0↔𝟙 = inverses _ (F.const []) (λ { [] → ≡.refl }) (λ _ → ≡.ref
 
 Vec∘suc↔A×Vec : ∀ {a} {A : ★ a} {n} → Vec A (suc n) ↔ (A × Vec A n)
 Vec∘suc↔A×Vec
-  = inverses (λ { (x ∷ xs) → x , xs }) (uncurry _∷_)
-             (λ { (x ∷ xs) → ≡.refl }) (λ _ → ≡.refl)
+  = inverses uncons (uncurry _∷_) ∷-uncons (λ _ → ≡.refl)
 
 infix 8 _^_
 
@@ -583,6 +578,30 @@ Lift↔id = inverses lower lift (λ { (lift x) → ≡.refl }) (λ _ → ≡.ref
 
 A×𝟙↔A : ∀ {A : ★₀} → (A × 𝟙) ↔ A
 A×𝟙↔A = proj₂ ×-CMon.identity _ ∘ id ×-cong sym Lift↔id
+
+Π𝟙F↔F : ∀ {ℓ} {F : 𝟙 → ★_ ℓ} → Π 𝟙 F ↔ F _
+Π𝟙F↔F = inverses (λ x → x _) const (λ _ → ≡.refl) (λ _ → ≡.refl)
+
+𝟙→A↔A : ∀ {ℓ} {A : ★_ ℓ} → (𝟙 → A) ↔ A
+𝟙→A↔A = Π𝟙F↔F
+
+module _ {a} {A : ★_ a} (ext𝟘 : (f g : 𝟘 → A) → f ≡ g) where
+    𝟘→A↔𝟙 : (𝟘 → A) ↔ 𝟙
+    𝟘→A↔𝟙 = inverses _ (const (λ())) (ext𝟘 (λ ())) (λ _ → ≡.refl)
+
+module _ {ℓ} {F : 𝟘 → ★_ ℓ} (ext𝟘 : (f g : Π 𝟘 F) → f ≡ g) where
+    Π𝟘F↔𝟙 : Π 𝟘 F ↔ 𝟙
+    Π𝟘F↔𝟙 = inverses _ (const (λ())) (ext𝟘 (λ ())) (λ _ → ≡.refl)
+
+module _ {ℓ} {F : 𝟚 → ★_ ℓ} (ext𝟚 : {f g : Π 𝟚 F} → (∀ x → f x ≡ g x) → f ≡ g) where
+    Π𝟚F↔F₀×F₁ : Π 𝟚 F ↔ (F 0₂ × F 1₂)
+    Π𝟚F↔F₀×F₁ = inverses (λ f → f 0₂ , f 1₂) proj
+                         (λ f → ext𝟚 (λ { 0₂ → ≡.refl ; 1₂ → ≡.refl }))
+                         (λ _ → ≡.refl)
+
+module _ {ℓ} {A : ★_ ℓ} (ext𝟚 : {f g : 𝟚 → A} → f ≗ g → f ≡ g) where
+    𝟚→A↔A×A : (𝟚 → A) ↔ (A × A)
+    𝟚→A↔A×A = Π𝟚F↔F₀×F₁ ext𝟚
 
 𝟘⊎A↔A : ∀ {A : ★₀} → (𝟘 ⊎ A) ↔ A
 𝟘⊎A↔A = proj₁ ⊎-CMon.identity _ ∘ sym Lift↔id ⊎-cong id

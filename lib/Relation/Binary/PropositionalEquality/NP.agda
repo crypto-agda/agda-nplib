@@ -13,6 +13,10 @@ private
     open IsEquivalence (isEquivalence {a} {A}) public hiding (refl; sym; trans)
 open Dummy public
 
+congD : ∀ {a b} {A : Set a} {B : A → Set b}
+          (f : (x : A) → B x) {x y} (p : x ≡ y) → subst B p (f x) ≡ f y
+congD f refl = refl
+
 cong₃ : ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : Set d}
           (f : A → B → C → D) {a₁ a₂ b₁ b₂ c₁ c₂}
         → a₁ ≡ a₂ → b₁ ≡ b₂ → c₁ ≡ c₂ → f a₁ b₁ c₁ ≡ f a₂ b₂ c₂
