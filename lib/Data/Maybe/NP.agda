@@ -1,3 +1,4 @@
+-- NOTE with-K
 module Data.Maybe.NP where
 
 open import Type hiding (★)

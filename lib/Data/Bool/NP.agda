@@ -1,4 +1,4 @@
-{-# OPTIONS --universe-polymorphism #-}
+-- NOTE with-K
 module Data.Bool.NP where
 
 open import Type hiding (★)

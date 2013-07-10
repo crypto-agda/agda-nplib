@@ -1,4 +1,4 @@
-{-# OPTIONS --universe-polymorphism #-}
+-- NOTE with-K
 -- move this to propeq
 module Relation.Binary.PropositionalEquality.NP where
 

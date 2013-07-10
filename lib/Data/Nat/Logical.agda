@@ -1,4 +1,4 @@
-{-# OPTIONS --universe-polymorphism #-}
+-- NOTE with-K
 module Data.Nat.Logical where
 
 import Level as L

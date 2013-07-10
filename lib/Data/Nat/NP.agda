@@ -1,4 +1,4 @@
-{-# OPTIONS --universe-polymorphism #-}
+-- NOTE with-K
 module Data.Nat.NP where
 
 open import Type hiding (★)
@@ -290,6 +290,21 @@ factor-+-∸ (s≤s {x} {b} x≤b) (s≤s {y} y≤b)   rewrite factor-+-∸ x≤
                                               | ℕ°.+-comm x (suc y)
                                               | n+k∸m (suc y) x≤b
                                               | ℕ°.+-comm x y = ≡.refl
+
+_*′_ : ℕ → ℕ → ℕ
+0 *′ n = 0
+1 *′ n = n
+m *′ 0 = 0
+m *′ 1 = m
+m *′ n = m * n
+
+*′-spec : ∀ m n → m *′ n ≡ m * n
+*′-spec 0             n = ≡.refl
+*′-spec 1             n = ℕ°.+-comm 0 n
+*′-spec (suc (suc m)) 0 = ℕ°.*-comm 0 m
+*′-spec (suc (suc m)) 1 = ≡.cong (suc ∘′ suc)
+                         (≡.sym (proj₂ ℕ°.*-identity m))
+*′-spec (suc (suc m)) (suc (suc n)) = ≡.refl
 
 ≤→≢1+ : ∀ {x y} → x ≤ y → x ≢ suc y
 ≤→≢1+ z≤n     ()

@@ -1,5 +1,4 @@
--- move this to product
-{-# OPTIONS --universe-polymorphism #-}
+-- NOTE with-K
 module Data.Product.NP where
 
 open import Type hiding (★)
