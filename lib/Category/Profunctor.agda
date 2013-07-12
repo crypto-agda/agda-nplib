@@ -1,7 +1,10 @@
+{-# OPTIONS --without-K #-}
+-- Based on profunctors 3.1 haskell package
 import Level as L
 open import Type hiding (★)
 open import Function.NP
 open import Category.Functor
+open import Data.Product
 
 module Category.Profunctor {ℓ} where
 
@@ -11,8 +14,21 @@ record Profunctor {i} (_↝_ : ★ i → ★ i → ★ ℓ) : ★ (ℓ L.⊔ L.s
     lmap : ∀ {A B C} → (A → B) → B ↝ C → A ↝ C
     rmap : ∀ {A B C} → (B → C) → A ↝ B → A ↝ C
 
+  dimap : ∀ {A B C D} → (A → B) → (C → D) → B ↝ C → A ↝ D
+  dimap f g = lmap f ∘ rmap g
+
+record Lenticular {i} (_↝_ : ★ i → ★ i → ★ ℓ) : ★ (ℓ L.⊔ L.suc i) where
+  constructor mk
+  field
+    profunctor : Profunctor _↝_
+    lenticular : ∀ {A B} → A ↝ B → A ↝ (A × B)
+  open Profunctor profunctor public
+
 →Profunctor : Profunctor {ℓ} -→-
 →Profunctor = flip _∘′_ , _∘′_
+
+→Lenticular : Lenticular {ℓ} -→-
+→Lenticular = mk →Profunctor (λ f x → x , f x)
 
 UpStar : (★ ℓ → ★ ℓ) → ★ ℓ → ★ ℓ → ★ ℓ
 UpStar F D C = D → F C
