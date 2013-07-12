@@ -14,7 +14,7 @@ private
   module Dummy {a} {A : ★ a} where
     open IsEquivalence (isEquivalence {a} {A}) public hiding (refl; sym; trans)
 open Dummy public
- 
+
 PathOver : ∀ {i j} {A : ★ i} (B : A → ★ j)
   {x y : A} (p : x ≡ y) (u : B x) (v : B y) → ★ j
 PathOver B refl u v = (u ≡ v)
@@ -59,7 +59,7 @@ coe refl x = x
 coe! : ∀ {i} {A B : ★ i} (p : A ≡ B) → B → A
 coe! refl x = x
 
-cong₃ : ∀ {a b c d} {A : ★ a} {B : ★ b} {C : ★ c} {D : ★ d}
+cong₃ : ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : Set d}
           (f : A → B → C → D) {a₁ a₂ b₁ b₂ c₁ c₂}
         → a₁ ≡ a₂ → b₁ ≡ b₂ → c₁ ≡ c₂ → f a₁ b₁ c₁ ≡ f a₂ b₂ c₂
 cong₃ f refl refl refl = refl

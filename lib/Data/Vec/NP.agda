@@ -147,6 +147,9 @@ shallow-η (x ∷ xs) = ≡.refl
 uncons : ∀ {n a} {A : ★ a} → Vec A (1 + n) → (A × Vec A n)
 uncons (x ∷ xs) = x , xs
 
+∷-uncons : ∀ {n a} {A : ★ a} (xs : Vec A (1 + n)) → uncurry _∷_ (uncons xs) ≡ xs
+∷-uncons (x ∷ xs) = refl
+
 splitAt′ : ∀ {a} {A : ★ a} m {n} → Vec A (m + n) → Vec A m × Vec A n
 splitAt′ m xs = case splitAt m xs of λ { (ys , zs , _) → (ys , zs) }
 
