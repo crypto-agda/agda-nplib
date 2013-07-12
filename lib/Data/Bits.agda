@@ -3,15 +3,14 @@ module Data.Bits where
 
 open import Type hiding (★)
 -- cleanup
-import Level
 open import Data.Nat.NP hiding (_==_) renaming (_<=_ to _ℕ<=_)
 open import Data.Nat.Properties
 open import Data.Nat.DivMod
 open import Data.Bit using (Bit)
 open import Data.Two renaming (_==_ to _==ᵇ_)
 import Data.Two.Equality as ==ᵇ
-import Data.Fin as Fin
-open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise) renaming (_+_ to _+ᶠ_)
+import Data.Fin.NP as Fin
+open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise; Fin▹ℕ) renaming (_+_ to _+ᶠ_)
 import Data.Vec.NP as V
 open import Data.Vec.Bijection
 open import Data.Vec.Permutation
@@ -43,7 +42,6 @@ i →ᵇ o = Bits i → Bits o
 0∷_ : ∀ {n} → Bits n → Bits (suc n)
 0∷ xs = 0₂ ∷ xs
 
-{-
 -- can't we make these pattern aliases?
 1∷_ : ∀ {n} → Bits n → Bits (suc n)
 1∷ xs = 1₂ ∷ xs
@@ -52,7 +50,7 @@ _!_ : ∀ {a n} {A : ★ a} → Vec A n → Fin n → A
 _!_ = flip lookup
 
 _==_ : ∀ {n} (bs₀ bs₁ : Bits n) → Bit
-[] == [] = 1₂
+[]         == []         = 1₂
 (b₀ ∷ bs₀) == (b₁ ∷ bs₁) = (b₀ ==ᵇ b₁) ∧ bs₀ == bs₁
 
 ==-comm : ∀ {n} (xs ys : Bits n) → xs == ys ≡ ys == xs
@@ -271,13 +269,15 @@ Bits▹ℕ-≤-inj {suc n} (1₂ ∷ xs) (1₂ ∷ ys) p = there 1₂ (Bits▹�
 
 ℕ▹Bits : ∀ {n} → ℕ → Bits n
 ℕ▹Bits {zero}  _ = []
-ℕ▹Bits {suc n} x = if 2^ n ℕ<= x then 1∷ ℕ▹Bits (x ∸ 2^ n) else 0∷ ℕ▹Bits x
+ℕ▹Bits {suc n} x = [0: 0∷ ℕ▹Bits x
+                    1: 1∷ ℕ▹Bits (x ∸ 2^ n)
+                   ]′ (2^ n ℕ<= x)
 
 ℕ▹Bits′ : ∀ {n} → ℕ → Bits n
 ℕ▹Bits′ = fold 0ⁿ sucB
 
 fromFin : ∀ {n} → Fin (2^ n) → Bits n
-fromFin = ℕ▹Bits ∘ Fin.Bits▹ℕ
+fromFin = ℕ▹Bits ∘ Fin▹ℕ
 
 lookupTbl : ∀ {n a} {A : ★ a} → Bits n → Vec A (2^ n) → A
 lookupTbl         []         (x ∷ []) = x
@@ -289,7 +289,7 @@ funFromTbl = flip lookupTbl
 
 tblFromFun : ∀ {n a} {A : ★ a} → (Bits n → A) → Vec A (2^ n)
 -- tblFromFun f = tabulate (f ∘ fromFin)
-tblFromFun {zero} f = f [] ∷ []
+tblFromFun {zero}  f = f [] ∷ []
 tblFromFun {suc n} f = tblFromFun {n} (f ∘ 0∷_) ++ tblFromFun {n} (f ∘ 1∷_)
 
 funFromTbl∘tblFromFun : ∀ {n a} {A : ★ a} (fun : Bits n → A) → funFromTbl (tblFromFun fun) ≗ fun
@@ -354,4 +354,3 @@ Bits▹ℕ∘ℕ▹Bits {suc n} x x<2ⁿ with 2^ n ℕ<= x | ≡.inspect (_ℕ<=
   ≡⟨ Bits▹ℕ∘ℕ▹Bits {n} y y< ⟩
     y
   ∎ where open ≡-Reasoning
--- -}
