@@ -66,6 +66,9 @@ module _ {a} {A : ★ a} where
     proj′ : A × A → 𝟚 → A
     proj′ = proj
 
+    proj[_] : 𝟚 → A × A → A
+    proj[_] = [0: proj₁ 1: proj₂ ]
+
     mux : 𝟚 × (A × A) → A
     mux (s , eᵢ) = proj eᵢ s
 
