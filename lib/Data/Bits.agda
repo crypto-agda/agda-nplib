@@ -7,11 +7,14 @@ import Level
 open import Data.Nat.NP hiding (_==_) renaming (_<=_ to _ℕ<=_)
 open import Data.Nat.Properties
 open import Data.Nat.DivMod
-open import Data.Bit renaming (_==_ to _==ᵇ_; module == to ==ᵇ)
-open import Data.Bool.Properties using (not-involutive)
+open import Data.Bit using (Bit)
+open import Data.Two renaming (_==_ to _==ᵇ_)
+import Data.Two.Equality as ==ᵇ
 import Data.Fin as Fin
 open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise) renaming (_+_ to _+ᶠ_)
 import Data.Vec.NP as V
+open import Data.Vec.Bijection
+open import Data.Vec.Permutation
 open V hiding (rewire; rewireTbl; sum) renaming (map to vmap; swap to vswap)
 open import Data.Vec.N-ary.NP
 open import Data.Zero using (𝟘; 𝟘-elim)
@@ -22,7 +25,6 @@ open ≡
 open import Algebra.FunctionProperties.NP
 import Data.List.NP as L
 
-open import Data.Bool.NP public using (_xor_; not; true; false; if_then_else_)
 open V public using ([]; _∷_; head; tail; replicate; RewireTbl)
 
 Bits : ℕ → ★₀
@@ -32,39 +34,40 @@ _→ᵇ_ : ℕ → ℕ → ★₀
 i →ᵇ o = Bits i → Bits o
 
 0ⁿ : ∀ {n} → Bits n
-0ⁿ = replicate 0b
+0ⁿ = replicate 0₂
 
 -- Warning: 0ⁿ {0} ≡ 1ⁿ {0}
 1ⁿ : ∀ {n} → Bits n
-1ⁿ = replicate 1b
+1ⁿ = replicate 1₂
 
 0∷_ : ∀ {n} → Bits n → Bits (suc n)
-0∷ xs = 0b ∷ xs
+0∷ xs = 0₂ ∷ xs
 
+{-
 -- can't we make these pattern aliases?
 1∷_ : ∀ {n} → Bits n → Bits (suc n)
-1∷ xs = 1b ∷ xs
+1∷ xs = 1₂ ∷ xs
 
 _!_ : ∀ {a n} {A : ★ a} → Vec A n → Fin n → A
 _!_ = flip lookup
 
 _==_ : ∀ {n} (bs₀ bs₁ : Bits n) → Bit
-[] == [] = true
+[] == [] = 1₂
 (b₀ ∷ bs₀) == (b₁ ∷ bs₁) = (b₀ ==ᵇ b₁) ∧ bs₀ == bs₁
 
 ==-comm : ∀ {n} (xs ys : Bits n) → xs == ys ≡ ys == xs
 ==-comm [] [] = refl
 ==-comm (x ∷ xs) (y ∷ ys) rewrite ==ᵇ.comm x y | ==-comm xs ys = refl
 
-==-refl : ∀ {n} (xs : Bits n) → (xs == xs) ≡ 1b
+==-refl : ∀ {n} (xs : Bits n) → (xs == xs) ≡ 1₂
 ==-refl [] = refl
-==-refl (true ∷ xs) = ==-refl xs
-==-refl (false ∷ xs) = ==-refl xs
+==-refl (1₂ ∷ xs) = ==-refl xs
+==-refl (0₂ ∷ xs) = ==-refl xs
 
 _<=_ : ∀ {n} (xs ys : Bits n) → Bit
-[]        <= []        = 1b
-(1b ∷ xs) <= (0b ∷ ys) = 0b
-(0b ∷ xs) <= (1b ∷ ys) = 1b
+[]        <= []        = 1₂
+(1₂ ∷ xs) <= (0₂ ∷ ys) = 0₂
+(0₂ ∷ xs) <= (1₂ ∷ ys) = 1₂
 (_  ∷ xs) <= (_  ∷ ys) = xs <= ys
 
 infixr 5 _⊕_
@@ -132,14 +135,14 @@ lsb₂ = reverse ∘ msb 2 ∘ reverse
 
 #1 : ∀ {n} → Bits n → Fin (suc n)
 #1 [] = zero
-#1 (0b ∷ bs) = inject₁ (#1 bs)
-#1 (1b ∷ bs) = suc (#1 bs)
+#1 (0₂ ∷ bs) = inject₁ (#1 bs)
+#1 (1₂ ∷ bs) = suc (#1 bs)
 
 #0 : ∀ {n} → Bits n → Fin (suc n)
 #0 = #1 ∘ vmap not
 
 allBitsL : ∀ n → L.List (Bits n)
-allBitsL _ = replicateM (toList (0b ∷ 1b ∷ []))
+allBitsL _ = replicateM (toList (0₂ ∷ 1₂ ∷ []))
   where open L.Monad
 
 allBits : ∀ n → Vec (Bits n) (2^ n)
@@ -148,9 +151,9 @@ allBits (suc n) = vmap 0∷_ bs ++ vmap 1∷_ bs
   where bs = allBits n
 
 always : ∀ n → Bits n → Bit
-always _ _ = 1b
+always _ _ = 1₂
 never  : ∀ n → Bits n → Bit
-never _ _ = 0b
+never _ _ = 0₂
 
 _|∨|_ : ∀ {n} → (f g : Bits n → Bit) → Bits n → Bit
 _|∨|_ f g x = f x ∨ g x
@@ -163,11 +166,10 @@ _|∧|_ f g x = f x ∧ g x
 
 |∧|-comm : ∀ {n} (f g : Bits n → Bit) → f |∧| g ≗ g |∧| f
 |∧|-comm f g x with f x | g x
-... | 0b | 0b = refl
-... | 0b | 1b = refl
-... | 1b | 0b = refl
-... | 1b | 1b = refl
-
+... | 0₂ | 0₂ = refl
+... | 0₂ | 1₂ = refl
+... | 1₂ | 0₂ = refl
+... | 1₂ | 1₂ = refl
 
 module PermutationSyntax-Props where
     open PermutationSyntax
@@ -179,36 +181,21 @@ module PermutationSyntax-Props where
     ⊕-dist-0↔1 (_ ∷ [])    (_ ∷ [])    = refl
     ⊕-dist-0↔1 (_ ∷ _ ∷ _) (_ ∷ _ ∷ _) = refl
 
-    -- TODO make use of ⊛-dist-∙
-    ⊕-dist-∙ : ∀ {n} (pad : Bits n) π xs → π ∙ pad ⊕ π ∙ xs ≡ π ∙ (pad ⊕ xs)
-    ⊕-dist-∙ fs      `id        xs = refl
-    ⊕-dist-∙ fs      `0↔1       xs = ⊕-dist-0↔1 fs xs
-    ⊕-dist-∙ (f ∷ fs) (`tl π)   (x ∷ xs) rewrite ⊕-dist-∙ fs π xs = refl
-    ⊕-dist-∙ fs       (π₀ `⁏ π₁) xs rewrite ⊕-dist-∙ (π₀ ∙ fs) π₁ (π₀ ∙ xs)
-                                         | ⊕-dist-∙ fs π₀ xs = refl
-    {-
- -- ⊛-dist-∙ : ∀ {n a} {A : ★ a} (fs : Vec (A → A) n) π xs → π ∙ fs ⊛ π ∙ xs ≡ π ∙ (fs ⊛ xs)
-    ⊕-dist-∙ : ∀ {n} (pad : Bits n) π xs → π ∙ pad ⊕ π ∙ xs ≡ π ∙ (pad ⊕ xs)
-    ⊕-dist-∙ pad π xs = π ∙ pad ⊕ π ∙ xs
-                      ≡⟨ refl ⟩
-                        vmap _xor_ (π ∙ pad) ⊛ π ∙ xs
-                      ≡⟨ TODO ⟩
-                        π ∙ vmap _xor_ pad ⊛ π ∙ xs
-                      ≡⟨ ⊛-dist-∙ _ (vmap _xor_ pad) π xs ⟩
-                        π ∙ (vmap _xor_ pad ⊛ xs)
-                      ≡⟨ refl ⟩
-                        π ∙ (pad ⊕ xs)
-                      ∎ where open ≡-Reasoning
-     -- rans {!⊛-dist-∙ (vmap _xor_ (op ∙ pad)) op xs!} (⊛-dist-∙ (vmap _xor_ pad) op xs)
--}
+    -- TODO make use of ⊛-dist-·
+    ⊕-dist-· : ∀ {n} (pad : Bits n) π xs → π · pad ⊕ π · xs ≡ π · (pad ⊕ xs)
+    ⊕-dist-· fs      `id        xs = refl
+    ⊕-dist-· fs      `0↔1       xs = ⊕-dist-0↔1 fs xs
+    ⊕-dist-· (f ∷ fs) (`tl π)   (x ∷ xs) rewrite ⊕-dist-· fs π xs = refl
+    ⊕-dist-· fs       (π₀ `⁏ π₁) xs rewrite ⊕-dist-· (π₀ · fs) π₁ (π₀ · xs)
+                                         | ⊕-dist-· fs π₀ xs = refl
 
 view∷ : ∀ {n a b} {A : ★ a} {B : ★ b} → (A → Vec A n → B) → Vec A (suc n) → B
 view∷ f (x ∷ xs) = f x xs
 
 sucBCarry : ∀ {n} → Bits n → Bits (1 + n)
-sucBCarry []        = 0b ∷ []
-sucBCarry (0b ∷ xs) = 0b ∷ sucBCarry xs
-sucBCarry (1b ∷ xs) = view∷ (λ x xs → x ∷ not x ∷ xs) (sucBCarry xs)
+sucBCarry []        = 0₂ ∷ []
+sucBCarry (0₂ ∷ xs) = 0₂ ∷ sucBCarry xs
+sucBCarry (1₂ ∷ xs) = view∷ (λ x xs → x ∷ not x ∷ xs) (sucBCarry xs)
 
 sucB : ∀ {n} → Bits n → Bits n
 sucB = tail ∘ sucBCarry
@@ -225,42 +212,37 @@ rewireTbl = V.rewireTbl
 module ReversedBits where
   sucRB : ∀ {n} → Bits n → Bits n
   sucRB [] = []
-  sucRB (0b ∷ xs) = 1b ∷ xs
-  sucRB (1b ∷ xs) = 0b ∷ sucRB xs
+  sucRB (0₂ ∷ xs) = 1₂ ∷ xs
+  sucRB (1₂ ∷ xs) = 0₂ ∷ sucRB xs
 
 toFin : ∀ {n} → Bits n → Fin (2^ n)
 toFin         []        = zero
-toFin         (0b ∷ xs) = inject+ _ (toFin xs)
-toFin {suc n} (1b ∷ xs) = raise (2^ n) (toFin xs)
+toFin         (0₂ ∷ xs) = inject+ _ (toFin xs)
+toFin {suc n} (1₂ ∷ xs) = raise (2^ n) (toFin xs)
 
-{-
-toℕ : ∀ {n} → Bits n → ℕ
-toℕ = Fin.toℕ ∘ toFin
--}
+Bits▹ℕ : ∀ {n} → Bits n → ℕ
+Bits▹ℕ         []        = zero
+Bits▹ℕ         (0₂ ∷ xs) = Bits▹ℕ xs
+Bits▹ℕ {suc n} (1₂ ∷ xs) = 2^ n + Bits▹ℕ xs
 
-toℕ : ∀ {n} → Bits n → ℕ
-toℕ         []        = zero
-toℕ         (0b ∷ xs) = toℕ xs
-toℕ {suc n} (1b ∷ xs) = 2^ n + toℕ xs
+Bits▹ℕ-bound : ∀ {n} (xs : Bits n) → Bits▹ℕ xs < 2^ n 
+Bits▹ℕ-bound         [] = s≤s z≤n
+Bits▹ℕ-bound {suc n} (1₂ ∷ xs) rewrite +-assoc-comm 1 (2^ n) (Bits▹ℕ xs) = ℕ≤.refl {2^ n} +-mono Bits▹ℕ-bound xs
+Bits▹ℕ-bound {suc n} (0₂ ∷ xs) = ≤-steps (2^ n) (Bits▹ℕ-bound xs)
 
-toℕ-bound : ∀ {n} (xs : Bits n) → toℕ xs < 2^ n 
-toℕ-bound         [] = s≤s z≤n
-toℕ-bound {suc n} (1b ∷ xs) rewrite +-assoc-comm 1 (2^ n) (toℕ xs) = ℕ≤.refl {2^ n} +-mono toℕ-bound xs
-toℕ-bound {suc n} (0b ∷ xs) = ≤-steps (2^ n) (toℕ-bound xs)
-
-toℕ≤2ⁿ+ : ∀ {n} (x : Bits n) {y} → toℕ {n} x ≤ 2^ n + y
-toℕ≤2ⁿ+ {n} x {y} = ℕ≤.trans (≤-steps y (≤-pred (≤-steps 1 (toℕ-bound x))))
+Bits▹ℕ≤2ⁿ+ : ∀ {n} (x : Bits n) {y} → Bits▹ℕ {n} x ≤ 2^ n + y
+Bits▹ℕ≤2ⁿ+ {n} x {y} = ℕ≤.trans (≤-steps y (≤-pred (≤-steps 1 (Bits▹ℕ-bound x))))
                              (ℕ≤.reflexive (ℕ°.+-comm y (2^ n)))
 
-2ⁿ+≰toℕ : ∀ {n x} (y : Bits n) → 2^ n + x ≰ toℕ {n} y
-2ⁿ+≰toℕ {n} {x} y p = ¬n+≤y<n (2^ n) p (toℕ-bound y)
+2ⁿ+≰Bits▹ℕ : ∀ {n x} (y : Bits n) → 2^ n + x ≰ Bits▹ℕ {n} y
+2ⁿ+≰Bits▹ℕ {n} {x} y p = ¬n+≤y<n (2^ n) p (Bits▹ℕ-bound y)
 
-toℕ-inj : ∀ {n} (x y : Bits n) → toℕ x ≡ toℕ y → x ≡ y
-toℕ-inj         []        []        _ = refl
-toℕ-inj         (0b ∷ xs) (0b ∷ ys) p = cong 0∷_ (toℕ-inj xs ys p)
-toℕ-inj {suc n} (1b ∷ xs) (1b ∷ ys) p = cong 1∷_ (toℕ-inj xs ys (cancel-+-left (2^ n) p))
-toℕ-inj {suc n} (0b ∷ xs) (1b ∷ ys) p = 𝟘-elim (2ⁿ+≰toℕ xs (ℕ≤.reflexive (≡.sym p)))
-toℕ-inj {suc n} (1b ∷ xs) (0b ∷ ys) p = 𝟘-elim (2ⁿ+≰toℕ ys (ℕ≤.reflexive p))
+Bits▹ℕ-inj : ∀ {n} (x y : Bits n) → Bits▹ℕ x ≡ Bits▹ℕ y → x ≡ y
+Bits▹ℕ-inj         []        []        _ = refl
+Bits▹ℕ-inj         (0₂ ∷ xs) (0₂ ∷ ys) p = cong 0∷_ (Bits▹ℕ-inj xs ys p)
+Bits▹ℕ-inj {suc n} (1₂ ∷ xs) (1₂ ∷ ys) p = cong 1∷_ (Bits▹ℕ-inj xs ys (cancel-+-left (2^ n) p))
+Bits▹ℕ-inj {suc n} (0₂ ∷ xs) (1₂ ∷ ys) p = 𝟘-elim (2ⁿ+≰Bits▹ℕ xs (ℕ≤.reflexive (≡.sym p)))
+Bits▹ℕ-inj {suc n} (1₂ ∷ xs) (0₂ ∷ ys) p = 𝟘-elim (2ⁿ+≰Bits▹ℕ ys (ℕ≤.reflexive p))
 
 data _≤ᴮ_ : ∀ {n} (p q : Bits n) → ★₀ where
   []    : [] ≤ᴮ []
@@ -269,38 +251,38 @@ data _≤ᴮ_ : ∀ {n} (p q : Bits n) → ★₀ where
 
 ≤ᴮ→<= : ∀ {n} {p q : Bits n} → p ≤ᴮ q → ✓ (p <= q)
 ≤ᴮ→<= [] = _
-≤ᴮ→<= (there 0b pf) = ≤ᴮ→<= pf
-≤ᴮ→<= (there 1b pf) = ≤ᴮ→<= pf
+≤ᴮ→<= (there 0₂ pf) = ≤ᴮ→<= pf
+≤ᴮ→<= (there 1₂ pf) = ≤ᴮ→<= pf
 ≤ᴮ→<= (0-1 p q) = _
 
 <=→≤ᴮ : ∀ {n} (p q : Bits n) → ✓ (p <= q) → p ≤ᴮ q
 <=→≤ᴮ [] [] _ = []
-<=→≤ᴮ (1b ∷ p) (0b ∷ q) ()
-<=→≤ᴮ (0b ∷ p) (1b ∷ q) _  = 0-1 p q
-<=→≤ᴮ (0b ∷ p) (0b ∷ q) pf = there 0b (<=→≤ᴮ p q pf)
-<=→≤ᴮ (1b ∷ p) (1b ∷ q) pf = there 1b (<=→≤ᴮ p q pf)
+<=→≤ᴮ (1₂ ∷ p) (0₂ ∷ q) ()
+<=→≤ᴮ (0₂ ∷ p) (1₂ ∷ q) _  = 0-1 p q
+<=→≤ᴮ (0₂ ∷ p) (0₂ ∷ q) pf = there 0₂ (<=→≤ᴮ p q pf)
+<=→≤ᴮ (1₂ ∷ p) (1₂ ∷ q) pf = there 1₂ (<=→≤ᴮ p q pf)
 
-toℕ-≤-inj : ∀ {n} (x y : Bits n) → toℕ x ≤ toℕ y → x ≤ᴮ y
-toℕ-≤-inj     [] [] p = []
-toℕ-≤-inj         (0b ∷ xs) (0b ∷ ys) p = there 0b (toℕ-≤-inj xs ys p)
-toℕ-≤-inj         (0b ∷ xs) (1b ∷ ys) p = 0-1 _ _
-toℕ-≤-inj {suc n} (1b ∷ xs) (0b ∷ ys) p = 𝟘-elim (2ⁿ+≰toℕ ys p)
-toℕ-≤-inj {suc n} (1b ∷ xs) (1b ∷ ys) p = there 1b (toℕ-≤-inj xs ys (+-≤-inj (2^ n) p))
+Bits▹ℕ-≤-inj : ∀ {n} (x y : Bits n) → Bits▹ℕ x ≤ Bits▹ℕ y → x ≤ᴮ y
+Bits▹ℕ-≤-inj     [] [] p = []
+Bits▹ℕ-≤-inj         (0₂ ∷ xs) (0₂ ∷ ys) p = there 0₂ (Bits▹ℕ-≤-inj xs ys p)
+Bits▹ℕ-≤-inj         (0₂ ∷ xs) (1₂ ∷ ys) p = 0-1 _ _
+Bits▹ℕ-≤-inj {suc n} (1₂ ∷ xs) (0₂ ∷ ys) p = 𝟘-elim (2ⁿ+≰Bits▹ℕ ys p)
+Bits▹ℕ-≤-inj {suc n} (1₂ ∷ xs) (1₂ ∷ ys) p = there 1₂ (Bits▹ℕ-≤-inj xs ys (+-≤-inj (2^ n) p))
 
-fromℕ : ∀ {n} → ℕ → Bits n
-fromℕ {zero}  _ = []
-fromℕ {suc n} x = if 2^ n ℕ<= x then 1∷ fromℕ (x ∸ 2^ n) else 0∷ fromℕ x
+ℕ▹Bits : ∀ {n} → ℕ → Bits n
+ℕ▹Bits {zero}  _ = []
+ℕ▹Bits {suc n} x = if 2^ n ℕ<= x then 1∷ ℕ▹Bits (x ∸ 2^ n) else 0∷ ℕ▹Bits x
 
-fromℕ′ : ∀ {n} → ℕ → Bits n
-fromℕ′ = fold 0ⁿ sucB
+ℕ▹Bits′ : ∀ {n} → ℕ → Bits n
+ℕ▹Bits′ = fold 0ⁿ sucB
 
 fromFin : ∀ {n} → Fin (2^ n) → Bits n
-fromFin = fromℕ ∘ Fin.toℕ
+fromFin = ℕ▹Bits ∘ Fin.Bits▹ℕ
 
 lookupTbl : ∀ {n a} {A : ★ a} → Bits n → Vec A (2^ n) → A
 lookupTbl         []         (x ∷ []) = x
-lookupTbl         (0b ∷ key) tbl      = lookupTbl key (take _ tbl)
-lookupTbl {suc n} (1b ∷ key) tbl      = lookupTbl key (drop (2^ n) tbl)
+lookupTbl         (0₂ ∷ key) tbl      = lookupTbl key (take _ tbl)
+lookupTbl {suc n} (1₂ ∷ key) tbl      = lookupTbl key (drop (2^ n) tbl)
 
 funFromTbl : ∀ {n a} {A : ★ a} → Vec A (2^ n) → (Bits n → A)
 funFromTbl = flip lookupTbl
@@ -312,10 +294,10 @@ tblFromFun {suc n} f = tblFromFun {n} (f ∘ 0∷_) ++ tblFromFun {n} (f ∘ 1�
 
 funFromTbl∘tblFromFun : ∀ {n a} {A : ★ a} (fun : Bits n → A) → funFromTbl (tblFromFun fun) ≗ fun
 funFromTbl∘tblFromFun {zero} f [] = refl
-funFromTbl∘tblFromFun {suc n} f (0b ∷ xs)
+funFromTbl∘tblFromFun {suc n} f (0₂ ∷ xs)
   rewrite take-++ (2^ n) (tblFromFun {n} (f ∘ 0∷_)) (tblFromFun {n} (f ∘ 1∷_)) =
     funFromTbl∘tblFromFun {n} (f ∘ 0∷_) xs
-funFromTbl∘tblFromFun {suc n} f (1b ∷ xs)
+funFromTbl∘tblFromFun {suc n} f (1₂ ∷ xs)
   rewrite drop-++ (2^ n) (tblFromFun {n} (f ∘ 0∷_)) (tblFromFun {n} (f ∘ 1∷_))
         | take-++ (2^ n) (tblFromFun {n} (f ∘ 1∷_)) [] =
     funFromTbl∘tblFromFun {n} (f ∘ 1∷_) xs
@@ -328,47 +310,48 @@ tblFromFun∘funFromTbl {suc n} tbl
         = take-drop-lem (2^ n) tbl
 
 {-
-sucB-lem : ∀ {n} x → toℕ {2^ n} (sucB x) [mod 2 ^ n ] ≡ (suc (toℕ x)) [mod 2 ^ n ]
+sucB-lem : ∀ {n} x → Bits▹ℕ {2^ n} (sucB x) [mod 2 ^ n ] ≡ (suc (Bits▹ℕ x)) [mod 2 ^ n ]
 sucB-lem x = {!!}
 
 -- _ᴮ : (s : String) {pf : IsBitString s} → Bits (length s)
 -- _ᴮ =
 -}
 
-2ⁿ≰toℕ : ∀ {n} (xs : Bits n) → 2^ n ≰ toℕ xs
-2ⁿ≰toℕ xs p = ¬n≤x<n _ p (toℕ-bound xs)
+2ⁿ≰Bits▹ℕ : ∀ {n} (xs : Bits n) → 2^ n ≰ Bits▹ℕ xs
+2ⁿ≰Bits▹ℕ xs p = ¬n≤x<n _ p (Bits▹ℕ-bound xs)
 
-✓not2ⁿ<=toℕ : ∀ {n} (xs : Bits n) → ✓ (not (2^ n ℕ<= (toℕ xs)))
-✓not2ⁿ<=toℕ {n} xs with (2^ n) ℕ<= (toℕ xs) | ≡.inspect (_ℕ<=_ (2^ n)) (toℕ xs)
-... | true  | ≡.[ p ] = 2ⁿ≰toℕ xs (<=.sound (2^ n) (toℕ xs) (≡→✓ p))
-... | false |     _   = _
+✓not2ⁿ<=Bits▹ℕ : ∀ {n} (xs : Bits n) → ✓ (not (2^ n ℕ<= (Bits▹ℕ xs)))
+✓not2ⁿ<=Bits▹ℕ {n} xs with (2^ n) ℕ<= (Bits▹ℕ xs) | ≡.inspect (_ℕ<=_ (2^ n)) (Bits▹ℕ xs)
+... | 1₂ | ≡.[ p ] = 2ⁿ≰Bits▹ℕ xs (<=.sound (2^ n) (Bits▹ℕ xs) (≡→✓ p))
+... | 0₂ |     _   = _
 
-fromℕ∘toℕ : ∀ {n} (x : Bits n) → fromℕ (toℕ x) ≡ x
-fromℕ∘toℕ [] = ≡.refl
-fromℕ∘toℕ {suc n} (true ∷ xs)
-  rewrite ✓→≡ (<=-steps′ {2^ n} (toℕ xs))
-        | ℕ°.+-comm (2^ n) (toℕ xs)
-        | m+n∸n≡m (toℕ xs) (2^ n)
-        | fromℕ∘toℕ xs
+ℕ▹Bits∘Bits▹ℕ : ∀ {n} (x : Bits n) → ℕ▹Bits (Bits▹ℕ x) ≡ x
+ℕ▹Bits∘Bits▹ℕ [] = ≡.refl
+ℕ▹Bits∘Bits▹ℕ {suc n} (1₂ ∷ xs)
+  rewrite ✓→≡ (<=-steps′ {2^ n} (Bits▹ℕ xs))
+        | ℕ°.+-comm (2^ n) (Bits▹ℕ xs)
+        | m+n∸n≡m (Bits▹ℕ xs) (2^ n)
+        | ℕ▹Bits∘Bits▹ℕ xs
         = ≡.refl
-fromℕ∘toℕ (false ∷ xs)
-  rewrite ✓not→≡ (✓not2ⁿ<=toℕ xs)
-        | fromℕ∘toℕ xs
+ℕ▹Bits∘Bits▹ℕ (0₂ ∷ xs)
+  rewrite ✓not→≡ (✓not2ⁿ<=Bits▹ℕ xs)
+        | ℕ▹Bits∘Bits▹ℕ xs
         = ≡.refl
 
-toℕ∘fromℕ : ∀ {n} x → x < 2^ n → toℕ {n} (fromℕ x) ≡ x
-toℕ∘fromℕ {zero} .0 (s≤s z≤n) = ≡.refl
-toℕ∘fromℕ {suc n} x x<2ⁿ with 2^ n ℕ<= x | ≡.inspect (_ℕ<=_ (2^ n)) x
-... | true  | ≡.[ p ] rewrite toℕ∘fromℕ {n} (x ∸ 2^ n) (x<2y→x∸y<y x (2^ n) x<2ⁿ) = m+n∸m≡n {2^ n} {x} (<=.sound (2^ n) x (≡→✓ p))
-... | false | ≡.[ p ] = toℕ∘fromℕ {n} x (<=.sound (suc x) (2^ n) (not<=→< (2^ n) x (≡→✓not p)))
+Bits▹ℕ∘ℕ▹Bits : ∀ {n} x → x < 2^ n → Bits▹ℕ {n} (ℕ▹Bits x) ≡ x
+Bits▹ℕ∘ℕ▹Bits {zero} .0 (s≤s z≤n) = ≡.refl
+Bits▹ℕ∘ℕ▹Bits {suc n} x x<2ⁿ with 2^ n ℕ<= x | ≡.inspect (_ℕ<=_ (2^ n)) x
+... | 1₂ | ≡.[ p ] rewrite Bits▹ℕ∘ℕ▹Bits {n} (x ∸ 2^ n) (x<2y→x∸y<y x (2^ n) x<2ⁿ) = m+n∸m≡n {2^ n} {x} (<=.sound (2^ n) x (≡→✓ p))
+... | 0₂ | ≡.[ p ] = Bits▹ℕ∘ℕ▹Bits {n} x (<=.sound (suc x) (2^ n) (not<=→< (2^ n) x (≡→✓not p)))
 
-fromℕ-inj : ∀ {n} {x y : ℕ} → x < 2^ n → y < 2^ n → fromℕ {n} x ≡ fromℕ y → x ≡ y
-fromℕ-inj {n} {x} {y} x< y< fx≡fy
+ℕ▹Bits-inj : ∀ {n} {x y : ℕ} → x < 2^ n → y < 2^ n → ℕ▹Bits {n} x ≡ ℕ▹Bits y → x ≡ y
+ℕ▹Bits-inj {n} {x} {y} x< y< fx≡fy
   = x
-  ≡⟨ ≡.sym (toℕ∘fromℕ {n} x x<) ⟩
-    toℕ (fromℕ {n} x)
-  ≡⟨ ≡.cong toℕ fx≡fy ⟩
-    toℕ (fromℕ {n} y)
-  ≡⟨ toℕ∘fromℕ {n} y y< ⟩
+  ≡⟨ ≡.sym (Bits▹ℕ∘ℕ▹Bits {n} x x<) ⟩
+    Bits▹ℕ (ℕ▹Bits {n} x)
+  ≡⟨ ≡.cong Bits▹ℕ fx≡fy ⟩
+    Bits▹ℕ (ℕ▹Bits {n} y)
+  ≡⟨ Bits▹ℕ∘ℕ▹Bits {n} y y< ⟩
     y
   ∎ where open ≡-Reasoning
+-- -}

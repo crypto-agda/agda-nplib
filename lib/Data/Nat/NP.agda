@@ -8,7 +8,8 @@ open import Algebra.FunctionProperties.NP
 open import Data.Nat public hiding (module GeneralisedArithmetic; module ≤-Reasoning; fold)
 open import Data.Nat.Properties as Props
 open import Data.Nat.Logical
-open import Data.Bool.NP hiding (_==_; module ==)
+open import Data.Two hiding (_==_)
+import Data.Two.Equality as 𝟚==
 open import Data.Product using (proj₁; proj₂; ∃; _,_)
 open import Data.Sum renaming (map to ⊎-map)
 open import Data.Zero using (𝟘-elim; 𝟘)
@@ -16,7 +17,7 @@ open import Function.NP
 open import Relation.Nullary
 open import Relation.Binary.NP
 import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_; _≢_; _≗_; module ≡-Reasoning)
+open ≡ using (_≡_; _≢_; _≗_; module ≡-Reasoning; idp; !; _∙_; ap)
 
 ℕˢ = ≡.setoid ℕ
 
@@ -27,6 +28,13 @@ module ℕ+   = Algebra.CommutativeMonoid ℕ°.+-commutativeMonoid
 module ℕ+′  = Algebra.Monoid ℕ°.+-monoid
 module ⊔°   = Algebra.CommutativeSemiringWithoutOne ⊔-⊓-0-commutativeSemiringWithoutOne
 module ℕˢ   = Setoid ℕˢ
+
+[P:_zero:_suc:_] : ∀ {p} (P : ℕ → ★ p) → P zero → (∀ {n} → P n → P (suc n)) → ∀ n → P n
+[P: _ zero: z suc: _ ] zero    = z
+[P: P zero: z suc: s ] (suc n) = s ([P: P zero: z suc: s ] n)
+
+[zero:_suc:_] : ∀ {a} {A : ★ a} → A → (ℕ → A → A) → ℕ → A
+[zero: z suc: s ] = [P: _ zero: z suc: λ {n} → s n ]
 
 module ≤-Reasoning where
   open Preorder-Reasoning ℕ≤.preorder public renaming (_∼⟨_⟩_ to _≤⟨_⟩_)
@@ -41,8 +49,8 @@ suc-injective : ∀ {n m : ℕ} → ℕ.suc n ≡ suc m → n ≡ m
 suc-injective = ≡.cong pred
 
 +-≤-inj : ∀ x {y z} → x + y ≤ x + z → y ≤ z
-+-≤-inj zero    p       = p
-+-≤-inj (suc x) (s≤s p) = +-≤-inj x p
++-≤-inj zero    = id
++-≤-inj (suc x) = +-≤-inj x ∘ ≤-pred
 
 infixl 6 _+°_
 infixl 7 _*°_ _⊓°_
@@ -103,16 +111,14 @@ fold x f n = nest n f x
 2*-spec : ∀ n → 2* n ≡ 2 * n
 2*-spec n rewrite ℕ°.+-comm n 0 = ≡.refl
 
-_==_ : (x y : ℕ) → Bool
-zero   == zero   = true
-zero   == suc _  = false
-suc _  == zero   = false
+_==_ : (x y : ℕ) → 𝟚
+zero   == zero   = 1₂
+zero   == suc _  = 0₂
+suc _  == zero   = 0₂
 suc m  == suc n  = m == n
 
 +-assoc-comm : ∀ x y z → x + (y + z) ≡ y + (x + z)
-+-assoc-comm x y z rewrite ≡.sym (ℕ°.+-assoc x y z)
-                       | ℕ°.+-comm x y
-                       | ℕ°.+-assoc y x z = ≡.refl
++-assoc-comm x y z = !(ℕ°.+-assoc x y z) ∙ ap (flip _+_ z) (ℕ°.+-comm x y) ∙ ℕ°.+-assoc y x z
 
 +-interchange : Interchange _≡_ _+_ _+_
 +-interchange = InterchangeFromAssocCommCong.∙-interchange _≡_ ≡.isEquivalence
@@ -962,9 +968,9 @@ data _`≤?`_↝_ : (m n : ℕ) → Dec (m ≤ n) → ★₀ where
 ... | no q  | r = s≤?s-no {!!}
 -}
 
-_<=_ : (x y : ℕ) → Bool
-zero   <= _      = true
-suc _  <= zero   = false
+_<=_ : (x y : ℕ) → 𝟚
+zero   <= _      = 1₂
+suc _  <= zero   = 0₂
 suc m  <= suc n  = m <= n
 
 module <= where
@@ -1036,9 +1042,9 @@ x<2y→x∸y<y x y p rewrite ≡.sym (2*′-spec y) = x<2y′→x∸y<y x y p
 ... | tri> _ _ 1+n≤m = ≤-pred (Props.≤-steps 1 1+n≤m)
 
 not<=→< : ∀ x y → ✓ (not (x <= y)) → ✓ (suc y <= x)
-not<=→< x y p = <=.complete (≰→< x y (✓'not'¬ p ∘ <=.complete))
+not<=→< x y p = <=.complete (≰→< x y (✓-not-¬ p ∘ <=.complete))
 
-even? odd? : ℕ → Bool
-even? zero    = true
+even? odd? : ℕ → 𝟚
+even? zero    = 1₂
 even? (suc n) = odd? n 
 odd? n = not (even? n)
