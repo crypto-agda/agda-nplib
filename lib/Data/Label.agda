@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Data.Label where
 
 open import Type

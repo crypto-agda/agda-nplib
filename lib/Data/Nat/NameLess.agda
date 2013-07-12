@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Data.Nat.NameLess where
 
 open import Function

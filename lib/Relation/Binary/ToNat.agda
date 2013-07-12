@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 open import Type
 import Data.Nat.NP as ℕ
 open ℕ using (ℕ; zero; suc; module ℕ≤)

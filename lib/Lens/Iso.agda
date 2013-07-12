@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 open import Function.NP
 open import Type
 open import Lens.Type

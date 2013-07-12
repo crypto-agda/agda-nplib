@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Data.Stream.NP where
 
 open import Type

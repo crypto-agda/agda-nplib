@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Category.Applicative.NP where
 
 open import Type hiding (★)

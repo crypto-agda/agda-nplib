@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Relation.Unary.NP where
 
 open import Level

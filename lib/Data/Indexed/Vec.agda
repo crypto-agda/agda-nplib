@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 open import Type hiding (★)
 open import Data.Vec
 open import Data.Nat

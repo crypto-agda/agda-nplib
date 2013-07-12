@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Data.Nat.Ack where
 
 open import Data.Nat.NP

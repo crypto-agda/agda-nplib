@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Data.Atom where
 
 open import Type

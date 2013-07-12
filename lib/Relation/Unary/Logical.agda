@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Relation.Unary.Logical where
 
 open import Type hiding (★)

@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Data.Tree.Binary.Perfect.Any where
 
 open import Level

@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Data.Bits.Bits4 where 
 
 open import Data.Bits

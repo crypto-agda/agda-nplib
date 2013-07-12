@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 import Level as L
 open import Type
 open import Data.Sum using (_⊎_; [_,_])

@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 {-# OPTIONS --universe-polymorphism #-}
 module Data.Sum.NP where
 

@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Function.Inverse.NP where
 
 open import Function.Inverse public

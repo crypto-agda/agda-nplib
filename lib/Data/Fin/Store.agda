@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 {-# OPTIONS --type-in-type #-}
 module Data.Fin.Store where
 

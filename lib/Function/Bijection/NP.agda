@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 {-# OPTIONS --universe-polymorphism #-}
 module Function.Bijection.NP where
 

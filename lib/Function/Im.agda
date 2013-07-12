@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Function.Im where
 
 open import Type

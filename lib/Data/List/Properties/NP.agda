@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Data.List.Properties.NP where
 
 open import Type hiding (★)

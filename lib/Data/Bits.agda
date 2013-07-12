@@ -1,3 +1,4 @@
+-- NOTE with-K
 module Data.Bits where
 
 open import Type hiding (★)

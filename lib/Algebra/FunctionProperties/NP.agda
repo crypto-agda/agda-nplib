@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 open import Relation.Binary.NP
 open import Type hiding (★)
 import Algebra.FunctionProperties

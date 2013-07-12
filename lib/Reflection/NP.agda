@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Reflection.NP where
 
 open import Type

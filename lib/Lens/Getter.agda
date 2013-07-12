@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 -- Inspired from the haskell 'lens' package
 module Lens.Getter where
 

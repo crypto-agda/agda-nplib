@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Data.Bit where
 
 import Data.Two

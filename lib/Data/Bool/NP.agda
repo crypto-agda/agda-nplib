@@ -1,4 +1,5 @@
--- NOTE with-K
+{-# OPTIONS --without-K #-}
+-- DEPRECATED module use Data.Two
 module Data.Bool.NP where
 
 open import Type hiding (★)

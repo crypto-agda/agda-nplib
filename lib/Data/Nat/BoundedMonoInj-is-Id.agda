@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Data.Nat.BoundedMonoInj-is-Id where
 
 open import Type

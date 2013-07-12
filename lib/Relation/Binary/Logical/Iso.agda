@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Relation.Binary.Logical.Iso where
 
 open import Type using (★_)

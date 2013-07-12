@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Category.Monad.Partiality.NP where
 
 open import Type hiding (★)

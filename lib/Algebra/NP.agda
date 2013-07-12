@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Algebra.NP where
 
 open import Type hiding (★)

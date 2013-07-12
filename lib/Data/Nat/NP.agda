@@ -1,4 +1,5 @@
--- NOTE with-K
+-- NOTE with-K so far
+-- TODO {-# OPTIONS --without-K #-}
 module Data.Nat.NP where
 
 open import Type hiding (★)

@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Data.Two where
 
 open import Type hiding (★)

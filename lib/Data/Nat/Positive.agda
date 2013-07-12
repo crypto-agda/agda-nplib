@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 open import Type
 open import Data.Zero using (𝟘)
 open import Data.One  using (𝟙)

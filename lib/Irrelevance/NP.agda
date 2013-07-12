@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Irrelevance.NP where
 
 open import Irrelevance public

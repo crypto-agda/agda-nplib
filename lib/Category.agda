@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Category where
 
 open import Level

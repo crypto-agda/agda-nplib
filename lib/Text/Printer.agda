@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Text.Printer where
 
 open import Type

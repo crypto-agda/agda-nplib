@@ -1,3 +1,4 @@
+-- NOTE with-K
 module Function.Bijection.SyntaxKit where
 
 open import Type hiding (★)

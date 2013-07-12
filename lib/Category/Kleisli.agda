@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Category.Kleisli where
 
 open import Type hiding (★)

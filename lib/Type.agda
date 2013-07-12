@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Type where
 
 open import Level

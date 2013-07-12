@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 open import Type using (★; ★_)
 open import Data.Maybe.NP using (_→?_; module M?; just; maybe′; nothing; map?)
 open import Data.Nat using (zero; suc)

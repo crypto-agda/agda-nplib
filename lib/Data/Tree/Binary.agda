@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 open import Type hiding (★)
 
 module Data.Tree.Binary where

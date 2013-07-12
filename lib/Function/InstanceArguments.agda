@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 open import Level
 open import Type hiding (★)
 

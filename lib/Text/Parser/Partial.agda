@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 open import Type
 open import Data.Maybe.NP as Maybe
 open import Data.Nat

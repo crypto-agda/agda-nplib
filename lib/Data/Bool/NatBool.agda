@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 {-# OPTIONS --universe-polymorphism #-}
 -- This is an example of the use of logical relations
 module Data.Bool.NatBool where

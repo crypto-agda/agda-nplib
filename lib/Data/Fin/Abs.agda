@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Data.Fin.Abs (W : Set) (ø : W) (_^¹ _⁺¹ : W → W) {-; z≤n; s≤s)-} where
 
 open import Data.Nat as Nat

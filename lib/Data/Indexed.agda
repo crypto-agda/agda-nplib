@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 open import Type            hiding (★)
 open import Level           using (_⊔_; suc; Level)
 open import Function.NP     using (id; const; _∘_; _∘′_; _ˢ_; _⟨_⟩°_)

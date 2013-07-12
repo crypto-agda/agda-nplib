@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Data.Char.NP where
 
 open import Data.Char public
