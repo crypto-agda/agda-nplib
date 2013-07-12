@@ -8,7 +8,7 @@ open import Algebra
 open import Algebra.Structures
 open import Function       public
 open import Data.Nat       using (ℕ; zero; suc; _+_; _*_; fold)
-open import Data.Bool      using (Bool)
+open import Data.Bool      renaming (Bool to 𝟚)
 open import Data.Product
 open import Data.Vec.N-ary using (N-ary; N-ary-level)
 import Category.Monad.Identity as Id
@@ -61,15 +61,15 @@ Endo A = A → A
 ⟦Endo⟧ Aᵣ = Aᵣ ⟦→⟧ Aᵣ
 
 Cmp : ∀ {a} → ★ a → ★ a
-Cmp A = A → A → Bool
+Cmp A = A → A → 𝟚
 
-{- needs [Bool] and ⟦Bool⟧ potentially move these to Data.Bool.NP
+{- needs [𝟚] and ⟦𝟚⟧ potentially move these to Data.Two
 
 [Cmp] : ∀ {a} → ([★] {a} a [→] [★] _ [→] [★] _) Cmp
-[Cmp] Aₚ = Aₚ [→] Aₚ [→] [Bool]
+[Cmp] Aₚ = Aₚ [→] Aₚ [→] [𝟚]
 
 ⟦Cmp⟧ : ∀ {a} → (⟦★⟧ {a} {a} a ⟦→⟧ ⟦★⟧ _) Endo Endo
-⟦Cmp⟧ Aᵣ = Aᵣ ⟦→⟧ Aᵣ ⟦→⟧ ⟦Bool⟧
+⟦Cmp⟧ Aᵣ = Aᵣ ⟦→⟧ Aᵣ ⟦→⟧ ⟦𝟚⟧
 -}
 
 -- More properties about fold are in Data.Nat.NP
