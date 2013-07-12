@@ -263,3 +263,42 @@ map-tail∘map-tail f g (x ∷ xs) = refl
 
 map-tail-≗ : ∀ {m n a} {A : ★ a} (f g : Vec A m → Vec A n) → f ≗ g → map-tail f ≗ map-tail g
 map-tail-≗ f g f≗g (x ∷ xs) rewrite f≗g xs = refl
+
+sum-∷ʳ : ∀ {n} x (xs : Vec ℕ n) → sum (xs ∷ʳ x) ≡ sum xs + x
+sum-∷ʳ x [] = ℕ°.+-comm x 0
+sum-∷ʳ x (x₁ ∷ xs) rewrite sum-∷ʳ x xs | ℕ°.+-assoc x₁ (sum xs) x = refl
+
+rot₁ : ∀ {n a} {A : ★ a} → Vec A n → Vec A n
+rot₁ []       = []
+rot₁ (x ∷ xs) = xs ∷ʳ x
+
+rot : ∀ {n a} {A : ★ a} → ℕ → Vec A n → Vec A n
+rot zero    xs = xs
+rot (suc n) xs = rot n (rot₁ xs)
+
+sum-distribˡ : ∀ {A : ★₀} {n} f k (xs : Vec A n) → sum (map (λ x → k * f x) xs) ≡ k * sum (map f xs)
+sum-distribˡ f k [] = ℕ°.*-comm 0 k
+sum-distribˡ f k (x ∷ xs) rewrite sum-distribˡ f k xs = sym (proj₁ ℕ°.distrib k _ _)
+
+sum-linear : ∀ {A : ★₀} {n} f g (xs : Vec A n) → sum (map (λ x → f x + g x) xs) ≡ sum (map f xs) + sum (map g xs)
+sum-linear f g [] = refl
+sum-linear f g (x ∷ xs) rewrite sum-linear f g xs = +-interchange (f x) (g x) (sum (map f xs)) (sum (map g xs))
+
+sum-mono : ∀ {A : ★₀} {n f g} (mono : ∀ x → f x ≤ g x)(xs : Vec A n) → sum (map f xs) ≤ sum (map g xs)
+sum-mono f≤°g [] = Data.Nat.NP.z≤n
+sum-mono f≤°g (x ∷ xs) = f≤°g x +-mono sum-mono f≤°g xs
+
+sum-rot₁ : ∀ {n} (xs : Vec ℕ n) → sum xs ≡ sum (rot₁ xs)
+sum-rot₁ [] = refl
+sum-rot₁ (x ∷ xs) rewrite sum-∷ʳ x xs = ℕ°.+-comm x _
+
+map-∷ʳ : ∀ {n a} {A : ★ a} (f : A → ℕ) x (xs : Vec A n) → map f (xs ∷ʳ x) ≡ map f xs ∷ʳ f x
+map-∷ʳ f x [] = refl
+map-∷ʳ f x (x₁ ∷ xs) rewrite map-∷ʳ f x xs = refl
+
+sum-map-rot₁ : ∀ {n a} {A : ★ a} (f : A → ℕ) (xs : Vec A n) → sum (map f (rot₁ xs)) ≡ sum (map f xs)
+sum-map-rot₁ f [] = refl
+sum-map-rot₁ f (x ∷ xs) rewrite ℕ°.+-comm (f x) (sum (map f xs))
+                              | sym (sum-∷ʳ (f x) (map f xs))
+                              | sym (map-∷ʳ f x xs)
+                              = refl
