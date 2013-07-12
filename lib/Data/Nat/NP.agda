@@ -34,7 +34,7 @@ module ℕˢ   = Setoid ℕˢ
 [P: P zero: z suc: s ] (suc n) = s ([P: P zero: z suc: s ] n)
 
 [zero:_suc:_] : ∀ {a} {A : ★ a} → A → (ℕ → A → A) → ℕ → A
-[zero: z suc: s ] = [P: _ zero: z suc: λ {n} → s n ]
+[zero: z suc: s ] = [P: _ zero: z suc: (λ {n} → s n) ]
 
 module ≤-Reasoning where
   open Preorder-Reasoning ℕ≤.preorder public renaming (_∼⟨_⟩_ to _≤⟨_⟩_)
