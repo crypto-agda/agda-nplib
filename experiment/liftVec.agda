@@ -57,12 +57,12 @@ module MultiDataType {A : Set} {nrVar : ℕ} where
 
   infixl 6 _+'_
   _+'_ : Tm → Tm → Tm
-  _+'_ = fun  
+  _+'_ = fun
 
   infix 4 _≡'_
   record TmEq : Set where
-    constructor _≡'_ 
-    field 
+    constructor _≡'_
+    field
       lhs rhs : Tm
 
 module multi (A : Set)(_+_ : A → A → A)(nrVar : ℕ) where
@@ -134,29 +134,28 @@ module Full (A : Set)(_+_ : A → A → A) (m : ℕ) n where
     go [] f         = f
     go (x ∷ args) f = go args (f (var x))
 
-  prove :  ∀ (t : N-ary n Tm TmEq) → 
-           let 
+  prove :  ∀ (t : N-ary n Tm TmEq) →
+           let
              l = TmEq.lhs (mkTm t)
              r = TmEq.rhs (mkTm t)
            in ∀ⁿ n (curryⁿ′ (λ G → eval l G ≡ eval r G))
          → ∀ⁿ n (curryⁿ′ (λ G → veval {m} l G ≡ veval r G))
   prove t x = solve (TmEq.lhs (mkTm t)) (TmEq.rhs (mkTm t)) x
 
-open import Data.Bool
+open import Data.Two
 
 module example where
 
   open import Data.Fin
-  open import Data.Bool.NP
   open import Data.Product using (Σ ; proj₁)
 
-  module VecBoolXorProps {m} = Full Bool _xor_ m
+  module VecBoolXorProps {m} = Full 𝟚 _xor_ m
   open MultiDataType
 
-  coolTheorem : {m : ℕ} → (xs ys : Vec Bool m) → zipWith _xor_ xs ys ≡ zipWith _xor_ ys xs
-  coolTheorem = VecBoolXorProps.prove 2 (λ x y → x +' y ≡' y +' x) Xor°.+-comm 
+  coolTheorem : {m : ℕ} → (xs ys : Vec 𝟚 m) → zipWith _xor_ xs ys ≡ zipWith _xor_ ys xs
+  coolTheorem = VecBoolXorProps.prove 2 (λ x y → x +' y ≡' y +' x) Xor°.+-comm
 
-  coolTheorem2 : {m : ℕ} → (xs : Vec Bool m) → _
-  coolTheorem2 = VecBoolXorProps.prove 1 (λ x → (x +' x) ≡' (cst false)) (proj₁ Xor°.-‿inverse) 
- 
-test = example.coolTheorem (true ∷ false ∷ []) (false ∷ false ∷ [])
+  coolTheorem2 : {m : ℕ} → (xs : Vec 𝟚 m) → _
+  coolTheorem2 = VecBoolXorProps.prove 1 (λ x → (x +' x) ≡' (cst 0₂)) (proj₁ Xor°.-‿inverse)
+
+test = example.coolTheorem (1₂ ∷ 0₂ ∷ []) (0₂ ∷ 0₂ ∷ [])
