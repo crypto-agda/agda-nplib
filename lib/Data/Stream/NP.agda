@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K #-}
+--TODO {-# OPTIONS --without-K #-}
 module Data.Stream.NP where
 
 open import Type
@@ -7,7 +7,7 @@ open import Data.Nat
 open import Function
 open import Data.Zero using (𝟘)
 open import Data.One  using (𝟙)
-open import Data.Two  using (𝟚; 0₂; 1₂)
+open import Data.Two  using (𝟚; 0₂; 1₂; not)
 open import Function.Equality using (_⟶_)
 open import Data.Product using (Σ; _,_; _×_; uncurry; ∃; proj₁; proj₂)
 import Relation.Binary.PropositionalEquality as ≡

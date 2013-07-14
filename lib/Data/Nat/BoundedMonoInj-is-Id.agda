@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K #-}
+-- NOTE with-K
 module Data.Nat.BoundedMonoInj-is-Id where
 
 open import Type
@@ -58,7 +58,7 @@ module M (f : ℕ → ℕ) {ub}
  ob zero b≤ub bub _ ()
  ob (suc b) b≤ub bub x pf with split-≤ pf
  ... | inj₁ p rewrite suc-injective p = fp b b≤ub bub
- ... | inj₂ (s≤s p) = ob b (<→≤ b≤ub) ((λ y y<b → ℕ≤.trans (f-mono-< y<b b≤ub) (ℕ≤.reflexive (fp b b≤ub bub)))) x p
+ ... | inj₂ p = ob b (<→≤ b≤ub) ((λ y y<b → ℕ≤.trans (f-mono-< y<b b≤ub) (ℕ≤.reflexive (fp b b≤ub bub)))) x (≤-pred p)
 
  is-id : ∀ x → x < ub → f x ≡ x
  is-id = ob ub ℕ≤.refl f-bounded

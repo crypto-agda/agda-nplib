@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K #-}
+--TODO {-# OPTIONS --without-K #-}
 -- Inspired from the haskell 'lens' package
 module Lens.Type where
 

@@ -1,3 +1,4 @@
+-- {-# OPTIONS --without-K #-}
 module Function.Related.TypeIsomorphisms.NP where
 
 import Level as L

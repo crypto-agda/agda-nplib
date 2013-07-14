@@ -1,10 +1,9 @@
-{-# OPTIONS --without-K #-}
+--TODO {-# OPTIONS --without-K #-}
 {-# OPTIONS --universe-polymorphism #-}
 module Relation.Binary.DeBruijn where
 
-import Level as L
-open L using (Lift; lift)
-open import Data.Nat.NP hiding (_⊔_)
+open import Level.NP
+open import Data.Nat.NP hiding (_⊔_; _^_)
 open import Data.Product.NP
 open import Data.Sum.NP
 open import Data.List
@@ -54,7 +53,7 @@ module Data where
            →        ----------------
                     (α ^ suc n) i j
 
-data IdFin : ℕ → Rel ℕ L.zero where
+data IdFin : ℕ → Rel ℕ ₀ where
   zero : ∀ {n} → IdFin (suc n) 0 0
   suc  : ∀ {n i j} → IdFin n i j → IdFin (suc n) (suc i) (suc j)
 
@@ -176,6 +175,7 @@ module Fun-^-equiv-^' where
 
 open Fun public
 
+{-
 module IdFin⇔Never^ where
   open Data hiding (_^_)
   open Props
@@ -195,3 +195,4 @@ module IdFin⇔Never^ where
 
   ⇐ : ∀ {n} → Never ^ n ⇒ IdFin n
   ⇐ {n} = ⇐' n ∘ Fun-^-equiv-^'.⟹ Never n
+-}

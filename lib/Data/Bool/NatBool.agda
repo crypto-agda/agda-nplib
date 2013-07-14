@@ -6,7 +6,7 @@ module Data.Bool.NatBool where
 open import Data.Nat
 open import Relation.Nullary
 open import Relation.Binary.Logical
-open import Level
+open import Level.NP
 import Data.Bool
 
 record BOOL : Set₁ where

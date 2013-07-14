@@ -1,10 +1,9 @@
-{-# OPTIONS --without-K #-}
 {-# OPTIONS --type-in-type #-}
 module Data.Fin.Store where
 
 open import Data.One
 open import Data.Nat
-open import Data.Product.NP
+open import Data.Product.NP hiding (Δ)
 open import Function
 open import Relation.Binary.PropositionalEquality
 open import Relation.Nullary

@@ -1,5 +1,4 @@
-{-# OPTIONS --without-K #-}
-{-# OPTIONS --universe-polymorphism #-}
+-- NOTE with-K
 module Data.Fin.Logical where
 
 open import Function

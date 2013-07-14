@@ -1,4 +1,8 @@
+open import Type
+open import Data.Bool renaming (T to ✓)
+open import Relation.Binary.PropositionalEquality
 
+module Data.Bool.So where
 
 data So : Bool → ★₀ where
   oh! : So true
@@ -11,7 +15,7 @@ So→✓ oh! = _
 ✓→So {false} ()
 
 So→≡ : ∀ {b} → So b → b ≡ true
-So→≡ oh! = ≡.refl
+So→≡ oh! = refl
 
 ≡→So : ∀ {b} → b ≡ true → So b
-≡→So ≡.refl = oh!
+≡→So refl = oh!

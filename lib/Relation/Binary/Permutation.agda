@@ -1,5 +1,4 @@
-{-# OPTIONS --without-K #-}
-{-# OPTIONS --universe-polymorphism #-}
+--TODO {-# OPTIONS --without-K #-}
 module Relation.Binary.Permutation where
 
 open import Level

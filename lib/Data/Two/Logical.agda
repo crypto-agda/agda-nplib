@@ -1,4 +1,11 @@
-open import Data.Two
+open import Type
+open import Data.Two hiding (_≟_; decSetoid)
+open import Data.Bool using (if_then_else_)
+open import Data.Bool.NP using (If′_then_else_)
+open import Function
+open import Relation.Nullary
+open import Relation.Binary.NP
+open import Relation.Binary.Logical
 
 module Data.Two.Logical where
 
@@ -9,26 +16,26 @@ data ⟦𝟚⟧ : (b₁ b₂ : 𝟚) → ★₀ where
 private
  module ⟦𝟚⟧-Internals where
   refl : Reflexive ⟦𝟚⟧
-  refl {1₂}   = ⟦1₂⟧
-  refl {0₂}  = ⟦0₂⟧
+  refl {0₂} = ⟦0₂⟧
+  refl {1₂} = ⟦1₂⟧
 
   sym : Symmetric ⟦𝟚⟧
-  sym ⟦1₂⟧  = ⟦1₂⟧
   sym ⟦0₂⟧ = ⟦0₂⟧
+  sym ⟦1₂⟧ = ⟦1₂⟧
 
   trans : Transitive ⟦𝟚⟧
-  trans ⟦1₂⟧   = id
-  trans ⟦0₂⟧  = id
+  trans ⟦0₂⟧ = id
+  trans ⟦1₂⟧ = id
 
   subst : ∀ {ℓ} → Substitutive ⟦𝟚⟧ ℓ
-  subst _ ⟦1₂⟧   = id
-  subst _ ⟦0₂⟧  = id
+  subst _ ⟦0₂⟧ = id
+  subst _ ⟦1₂⟧ = id
 
   _≟_ : Decidable ⟦𝟚⟧
-  1₂   ≟  1₂   = yes ⟦1₂⟧
-  0₂  ≟  0₂  = yes ⟦0₂⟧
-  1₂   ≟  0₂  = no (λ())
-  0₂  ≟  1₂   = no (λ())
+  0₂ ≟ 0₂ = yes ⟦0₂⟧
+  1₂ ≟ 1₂ = yes ⟦1₂⟧
+  1₂ ≟ 0₂ = no (λ())
+  0₂ ≟ 1₂ = no (λ())
 
   isEquivalence : IsEquivalence ⟦𝟚⟧
   isEquivalence = record { refl = refl; sym = sym; trans = trans }
@@ -51,8 +58,8 @@ module ⟦𝟚⟧-Props where
   open Equality equality public hiding (subst; isEquivalence; refl; reflexive; sym; trans)
 
 ⟦if⟨_⟩_then_else_⟧ : ∀ {a₁ a₂ aᵣ} → (∀⟨ Aᵣ ∶ ⟦★⟧ {a₁} {a₂} aᵣ ⟩⟦→⟧ ⟦𝟚⟧ ⟦→⟧ Aᵣ ⟦→⟧ Aᵣ ⟦→⟧ Aᵣ) if_then_else_ if_then_else_
-⟦if⟨_⟩_then_else_⟧ _ ⟦1₂⟧  xᵣ _ = xᵣ
-⟦if⟨_⟩_then_else_⟧ _ ⟦0₂⟧ _ xᵣ = xᵣ
+⟦if⟨_⟩_then_else_⟧ _ ⟦1₂⟧ xᵣ _  = xᵣ
+⟦if⟨_⟩_then_else_⟧ _ ⟦0₂⟧ _  xᵣ = xᵣ
 
 ⟦If′⟨_,_⟩_then_else_⟧ : ∀ {ℓ₁ ℓ₂ ℓᵣ} →
                        (∀⟨ Aᵣ ∶ ⟦★⟧ {ℓ₁} {ℓ₂} ℓᵣ ⟩⟦→⟧ ∀⟨ Bᵣ ∶ ⟦★⟧ {ℓ₁} {ℓ₂} ℓᵣ ⟩⟦→⟧
@@ -61,29 +68,28 @@ module ⟦𝟚⟧-Props where
 ⟦If′⟨_,_⟩_then_else_⟧ _ _ ⟦1₂⟧  xᵣ _ = xᵣ
 ⟦If′⟨_,_⟩_then_else_⟧ _ _ ⟦0₂⟧ _ xᵣ = xᵣ
 
+⟦not⟧ : (⟦𝟚⟧ ⟦→⟧ ⟦𝟚⟧) not not
+⟦not⟧ ⟦1₂⟧  = ⟦0₂⟧
+⟦not⟧ ⟦0₂⟧ = ⟦1₂⟧
 
-⟦not⟧ : (⟦Bool⟧ ⟦→⟧ ⟦Bool⟧) not not
-⟦not⟧ ⟦true⟧  = ⟦false⟧
-⟦not⟧ ⟦false⟧ = ⟦true⟧
+_⟦∧⟧_ : (⟦𝟚⟧ ⟦→⟧ ⟦𝟚⟧ ⟦→⟧ ⟦𝟚⟧) _∧_ _∧_
+⟦1₂⟧ ⟦∧⟧ x = x
+⟦0₂⟧ ⟦∧⟧ _ = ⟦0₂⟧
 
-_⟦∧⟧_ : (⟦Bool⟧ ⟦→⟧ ⟦Bool⟧ ⟦→⟧ ⟦Bool⟧) _∧_ _∧_
-⟦true⟧  ⟦∧⟧ x = x
-⟦false⟧ ⟦∧⟧ _ = ⟦false⟧
+_⟦∨⟧_ : (⟦𝟚⟧ ⟦→⟧ ⟦𝟚⟧ ⟦→⟧ ⟦𝟚⟧) _∨_ _∨_
+⟦1₂⟧ ⟦∨⟧ _ = ⟦1₂⟧
+⟦0₂⟧ ⟦∨⟧ x = x
 
-_⟦∨⟧_ : (⟦Bool⟧ ⟦→⟧ ⟦Bool⟧ ⟦→⟧ ⟦Bool⟧) _∨_ _∨_
-⟦true⟧  ⟦∨⟧ _ = ⟦true⟧
-⟦false⟧ ⟦∨⟧ x = x
+_⟦xor⟧_ : (⟦𝟚⟧ ⟦→⟧ ⟦𝟚⟧ ⟦→⟧ ⟦𝟚⟧) _xor_ _xor_
+⟦1₂⟧ ⟦xor⟧ x = ⟦not⟧ x
+⟦0₂⟧ ⟦xor⟧ x = x
 
-_⟦xor⟧_ : (⟦Bool⟧ ⟦→⟧ ⟦Bool⟧ ⟦→⟧ ⟦Bool⟧) _xor_ _xor_
-⟦true⟧  ⟦xor⟧ x = ⟦not⟧ x
-⟦false⟧ ⟦xor⟧ x = x
+⟦1₂⟧′ : ∀ {b} → ✓ b → ⟦𝟚⟧ 1₂ b
+⟦1₂⟧′ {1₂} _ = ⟦1₂⟧
+⟦1₂⟧′ {0₂} ()
 
-⟦true⟧′ : ∀ {b} → ✓ b → ⟦Bool⟧ true b
-⟦true⟧′ {true}  _ = ⟦true⟧
-⟦true⟧′ {false} ()
+⟦0₂⟧′ : ∀ {b} → ✓ (not b) → ⟦𝟚⟧ 0₂ b
+⟦0₂⟧′ {1₂} ()
+⟦0₂⟧′ {0₂} _ = ⟦0₂⟧
 
-⟦false⟧′ : ∀ {b} → ✓ (not b) → ⟦Bool⟧ false b
-⟦false⟧′ {true} ()
-⟦false⟧′ {false} _ = ⟦false⟧
-
-module ⟦Bool⟧-Reasoning = Setoid-Reasoning ⟦Bool⟧-Props.setoid
+module ⟦𝟚⟧-Reasoning = Setoid-Reasoning ⟦𝟚⟧-Props.setoid

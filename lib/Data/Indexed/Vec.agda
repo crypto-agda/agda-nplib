@@ -8,5 +8,5 @@ module Data.Indexed.Vec where
 
 open Data.Indexed
 
-|vmap| : ∀ {a b} {A : ★ a} {B : ★ b} → (A → B) → Vec A |↦| Vec B
-|vmap| f {n} xs = map f xs
+vmap° : ∀ {a b} {A : ★ a} {B : ★ b} → (A → B) → Vec A ↦° Vec B
+vmap° f {n} xs = map f xs

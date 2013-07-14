@@ -3,7 +3,7 @@ module Data.Tree.Binary.Perfect.Any where
 
 open import Level
 open import Relation.Binary.PropositionalEquality
-open import prefect-bintree
+open import Data.Tree.Binary.Perfect
 
 data Any {a p} {A : Set a} (P : A → Set p) : ∀ {n} → Tree A n → Set (a ⊔ p) where
   leaf  : ∀ {x} (Px : P x) → Any P (leaf x)
@@ -19,6 +19,8 @@ data All {a p} {A : Set a} (P : A → Set p) : ∀ {n} → Tree A n → Set (a �
 _∈_ : ∀ {a} {A : Set a} (x : A) {n} → Tree A n → Set a
 x ∈ t = Any (_≡_ x) t
 
+{-
 lookup : ∀ x t → Dec (x ∈ t)
 
 P ⇒ Q → All P t → All Q (map f t)
+-}
