@@ -1,10 +1,10 @@
--- NOTE with-K
+{-# OPTIONS --without-K #-}
 module Data.Product.NP where
 
 open import Type hiding (★)
 open import Level
 open import Data.Product public hiding (∃)
-open import Relation.Binary.PropositionalEquality as ≡
+open import Relation.Binary.PropositionalEquality.NP as ≡
 open import Relation.Unary.NP hiding (Decidable)
 open import Relation.Binary
 open import Relation.Nullary
@@ -85,12 +85,12 @@ record ⟦Σ⟧ {a₁ a₂ b₂ b₁ aᵣ bᵣ}
            (Bᵣ : {x₁ : A₁} {x₂ : A₂} (xᵣ : Aᵣ x₁ x₂)
                 → B₁ x₁ → B₂ x₂ → ★ bᵣ)
            (p₁ : Σ A₁ B₁) (p₂ : Σ A₂ B₂) : ★ (aᵣ ⊔ bᵣ) where
-  constructor _,_
+  constructor _⟦,⟧_
   field
     ⟦proj₁⟧ : Aᵣ (proj₁ p₁) (proj₁ p₂)
     ⟦proj₂⟧ : Bᵣ ⟦proj₁⟧ (proj₂ p₁) (proj₂ p₂)
 open ⟦Σ⟧ public
-infixr 4 _,_
+infixr 4 _⟦,⟧_
 
 syntax ⟦Σ⟧ Aᵣ (λ xᵣ → e) = [ xᵣ ∶ Aᵣ ]⟦×⟧[ e ]
 
@@ -157,7 +157,7 @@ dec⟦Σ⟧ : ∀ {a₁ a₂ b₁ b₂ aᵣ bᵣ A₁ A₂ B₁ B₂}
 dec⟦Σ⟧ {Bᵣ = Bᵣ} decAᵣ uniqAᵣ decBᵣ (x₁ , y₁) (x₂ , y₂) with decAᵣ x₁ x₂
 ... | no ¬xᵣ = no (¬xᵣ ∘ ⟦proj₁⟧)
 ... | yes xᵣ with decBᵣ xᵣ y₁ y₂
-...           | yes yᵣ = yes (xᵣ , yᵣ)
+...           | yes yᵣ = yes (xᵣ ⟦,⟧ yᵣ)
 ...           | no ¬yᵣ = no (¬yᵣ ∘ f ∘ ⟦proj₂⟧)
   where f : ∀ {xᵣ'} → Bᵣ xᵣ' y₁ y₂ → Bᵣ xᵣ y₁ y₂
         f {xᵣ'} yᵣ rewrite uniqAᵣ xᵣ' xᵣ = yᵣ
@@ -180,17 +180,14 @@ dec⟦×⟧ : ∀ {a₁ a₂ b₁ b₂ aᵣ bᵣ}
 dec⟦×⟧ decAᵣ decBᵣ (x₁ , y₁) (x₂ , y₂) with decAᵣ x₁ x₂
 ... | no ¬xᵣ = no (¬xᵣ ∘ ⟦proj₁⟧)
 ... | yes xᵣ with decBᵣ y₁ y₂
-...           | yes yᵣ = yes (xᵣ , yᵣ)
+...           | yes yᵣ = yes (xᵣ ⟦,⟧ yᵣ)
 ...           | no ¬yᵣ = no (¬yᵣ ∘ ⟦proj₂⟧)
 
 mkΣ≡ : ∀ {a b} {A : ★ a} {x y : A} (B : A → ★ b) {p : B x} {q : B y} (xy : x ≡ y) → subst B xy p ≡ q → (x Σ., p) ≡ (y , q)
 mkΣ≡ _ xy h rewrite xy | h = ≡.refl
 
-Σ,-injective₂ : ∀ {a b} {A : ★ a} {B : A → ★ b} {x : A} {y z : B x} → (_,_ {B = B} x y) ≡ (x Σ., z) → y ≡ z
-Σ,-injective₂ refl = refl
-
-Σ,-injective₁ : ∀ {a b} {A : ★ a} {B : A → ★ b} {x₁ x₂ : A} {y₁ : B x₁} {y₂ : B x₂} → (x₁ Σ., y₁) ≡ (x₂ , y₂) → x₁ ≡ x₂
-Σ,-injective₁ refl = refl
+Σ,-injective₁ : ∀ {a b} {A : ★ a} {B : A → ★ b} {x₁ x₂ : A} {y₁ : B x₁} {y₂ : B x₂} → (x₁ , y₁) ≡ (x₂ , y₂) → x₁ ≡ x₂
+Σ,-injective₁ = ap proj₁
 
 proj₁-injective : ∀ {a b} {A : ★ a} {B : A → ★ b} {x y : Σ A B}
                     (B-uniq : ∀ {z} (p₁ p₂ : B z) → p₁ ≡ p₂)
@@ -201,20 +198,9 @@ proj₁-injective {x = (a , p₁)} {y = (_ , p₂)} B-uniq eq rewrite sym eq
 proj₂-irrelevance : ∀ {a b} {A : ★ a} {B C : A → ★ b} {x₁ x₂ : A}
                       {y₁ : B x₁} {y₂ : B x₂} {z₁ : C x₁} {z₂ : C x₂}
                     → (C-uniq : ∀ {z} (p₁ p₂ : C z) → p₁ ≡ p₂)
-                    → (x₁ Σ., y₁) ≡ (x₂ , y₂)
-                    → (x₁ Σ., z₁) ≡ (x₂ , z₂)
+                    → (x₁ , y₁) ≡ (x₂ , y₂)
+                    → (x₁ , z₁) ≡ (x₂ , z₂)
 proj₂-irrelevance C-uniq = proj₁-injective C-uniq ∘ Σ,-injective₁
-
-≟Σ : ∀ {A : ★₀} {P : A → ★₀}
-       (decA : Decidable {A = A} _≡_)
-       (decP : ∀ x → Decidable {A = P x} _≡_)
-     → Decidable {A = Σ A P} _≡_
-≟Σ decA decP (w₁ , p₁) (w₂ , p₂) with decA w₁ w₂
-≟Σ decA decP (w  , p₁) (.w , p₂) | yes refl with decP w p₁ p₂
-≟Σ decA decP (w  , p)  (.w , .p) | yes refl | yes refl = yes refl
-≟Σ decA decP (w  , p₁) (.w , p₂) | yes refl | no  p≢
-    = no (p≢ ∘ Σ,-injective₂)
-≟Σ decA decP (w₁ , p₁) (w₂ , p₂) | no w≢ = no (w≢ ∘ cong proj₁)
 
 ≟Σ' : ∀ {A : ★₀} {P : A → ★₀}
        (decA : Decidable {A = A} _≡_)

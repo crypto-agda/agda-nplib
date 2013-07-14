@@ -1,9 +1,10 @@
--- NOTE with-K
+{-# OPTIONS --without-K #-}
 -- move this to propeq
 module Relation.Binary.PropositionalEquality.NP where
 
 open import Type hiding (★)
 open import Data.One using (𝟙)
+open import Data.Product using (Σ; _,_)
 open import Relation.Binary.PropositionalEquality public hiding (module ≡-Reasoning)
 open import Relation.Binary.NP
 open import Relation.Binary.Bijection
@@ -64,24 +65,26 @@ cong₃ : ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : Set d}
         → a₁ ≡ a₂ → b₁ ≡ b₂ → c₁ ≡ c₂ → f a₁ b₁ c₁ ≡ f a₂ b₂ c₂
 cong₃ f refl refl refl = refl
 
-_≡≡_ : ∀ {a} {A : ★ a} {i j : A}
-         (i≡j₁ : i ≡ j) (i≡j₂ : i ≡ j) → i≡j₁ ≡ i≡j₂
-_≡≡_ refl refl = refl
-
-_≟≡_ : ∀ {a} {A : ★ a} {i j : A} → Decidable {A = i ≡ j} _≡_
-_≟≡_ refl refl = yes refl
-
 _≗₂_ : ∀ {a b c} {A : ★ a} {B : ★ b} {C : ★ c} (f g : A → B → C) → ★ _
 f ≗₂ g = ∀ x y → f x y ≡ g x y
 
-injective : ∀ {a} {A : ★ a} → InjectiveRel A _≡_
-injective refl refl = refl
+module _ {a} {A : ★ a} where
+  injective : InjectiveRel A _≡_
+  injective p q = p ∙ ! q
 
-surjective : ∀ {a} {A : ★ a} → SurjectiveRel A _≡_
-surjective refl refl = refl
+  surjective : SurjectiveRel A _≡_
+  surjective p q = ! p ∙ q
 
-bijective : ∀ {a} {A : ★ a} → BijectiveRel A _≡_
-bijective = record { injectiveREL = injective; surjectiveREL = surjective }
+  bijective : BijectiveRel A _≡_
+  bijective = record { injectiveREL = injective; surjectiveREL = surjective }
+
+  Equalizer : ∀ {b} {B : A → ★ b} (f g : (x : A) → B x) → ★ _
+  Equalizer f g = Σ A (λ x → f x ≡ g x)
+  {- In a category theory context this type would the object 'E'
+     and 'proj₁' would be the morphism 'eq : E → A' such that
+     given any object O, and morphism 'm : O → A', there exists
+     a unique morphism 'u : O → E' such that 'eq ∘ u ≡ m'.
+  -}
 
 module ≡-Reasoning {a} {A : ★ a} where
   open Setoid-Reasoning (setoid A) public renaming (_≈⟨_⟩_ to _≡⟨_⟩_)
