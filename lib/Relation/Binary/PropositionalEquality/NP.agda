@@ -86,6 +86,9 @@ module _ {a} {A : ★ a} where
      a unique morphism 'u : O → E' such that 'eq ∘ u ≡ m'.
   -}
 
+  Pullback : ∀ {b c} {B : ★ b} {C : ★ c} (f : A → C) (g : B → C) → ★ _
+  Pullback {B = B} f g = Σ A (λ x → Σ B (λ y → f x ≡ g y))
+
 module ≡-Reasoning {a} {A : ★ a} where
   open Setoid-Reasoning (setoid A) public renaming (_≈⟨_⟩_ to _≡⟨_⟩_)
 
