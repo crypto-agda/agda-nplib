@@ -1,4 +1,5 @@
--- Why I don't want LEM
+-- Why I don't want LEM (another way to see that parametricity is
+-- anti-classical).
 
 open import Type
 open import Function
