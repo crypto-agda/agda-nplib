@@ -349,6 +349,7 @@ cantor-tail ((x ∷ xs) ∷ xs₁) = map-cong not (diagonal-cong (map-tail-cong'
 ≈-∈' p (here x≈y) = here (trans (sym p) x≈y)
 ≈-∈' p (there x≈y q) = there (trans x≈y p) q
 
+{-
 module MM where
   cantor-thm : ∀ (xss : Stream (Stream 𝟚)) → cantor xss ∉' xss
   ∈'-tail : ∀ {xs ys} {xss : Stream (Stream 𝟚)} → xs ∈' xss → ¬(tail xs ≈ ys)
@@ -358,9 +359,9 @@ module MM where
   cantor-thm ((x ∷ xs) ∷ xss) (there {._ ∷ ys} (._ ∷ ys≈zs) cs∈xss)
     = ∈'-tail cs∈xss (♭ ys≈zs)
     -- = cantor-thm (map tail (♭ xss)) (∈'-tail cs∈xss (♭ ys≈zs))
-
   ∈'-tail (here (x ∷ xs≈)) q = {!!}
   ∈'-tail (there (x ∷ xs≈) p) q = {!!}
+-}
 
 ∈'-tail : ∀ {A : ★} {xs} {xss : Stream (Stream A)} → xs ∈' xss → tail xs ∈' map tail xss
 ∈'-tail (here (x ∷ xs≈)) = here (♭ xs≈)
