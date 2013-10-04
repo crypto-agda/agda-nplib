@@ -29,6 +29,7 @@ open import Algebra                    using (module CommutativeRing; module Com
 open import Algebra.FunctionProperties using (Op₁; Op₂)
 
 open import Data.Nat     using (ℕ; _≤_; z≤n; s≤s; _⊓_; _⊔_; _∸_)
+open import Data.Zero    using (𝟘-elim)
 open import Data.One     using (𝟙)
 open import Data.Product using (proj₁; proj₂; uncurry; _×_; _,_)
 open import Data.Sum     using (_⊎_; inj₁; inj₂)
@@ -37,7 +38,7 @@ open import Function.Equivalence using (module Equivalence)
 open import Function.Equality    using (_⟨$⟩_)
 open import Function.NP          using (id; _∘_; _⟨_⟩°_)
 
-open import Relation.Binary.PropositionalEquality.NP using (_≡_; refl; idp; _∙_; !)
+open import Relation.Binary.PropositionalEquality.NP using (_≡_; _≢_; refl; idp; _∙_; !)
 open import Relation.Nullary                         using (¬_; Dec; yes; no)
 
 open Equivalence using (to; from)
@@ -50,6 +51,10 @@ module _ {p} {P : 𝟚 → ★ p} where
     [0:_1:_] : P 0₂ → P 1₂ → (b : 𝟚) → P b
     [0: e₀ 1: e₁ ] 0₂ = e₀
     [0: e₀ 1: e₁ ] 1₂ = e₁
+
+    η-[0:1:] : ∀ (f : (b : 𝟚) → P b) b → [0: f 0₂ 1: f 1₂ ] b ≡ f b
+    η-[0:1:] f 0₂ = refl
+    η-[0:1:] f 1₂ = refl
 
     proj : P 0₂ × P 1₂ → (b : 𝟚) → P b
     proj = uncurry [0:_1:_]
@@ -132,6 +137,14 @@ b₀ == b₁ = (not b₀) xor b₁
 de-morgan : ∀ x y → not (x ∨ y) ≡ not x ∧ not y
 de-morgan 0₂ _ = refl
 de-morgan 1₂ _ = refl
+
+≢0→≡1 : ∀ {x} → x ≢ 0₂ → x ≡ 1₂
+≢0→≡1 {1₂} p = refl
+≢0→≡1 {0₂} p = 𝟘-elim (p refl)
+
+≢1→≡0 : ∀ {x} → x ≢ 1₂ → x ≡ 0₂
+≢1→≡0 {0₂} p = refl
+≢1→≡0 {1₂} p = 𝟘-elim (p refl)
 
 -- 0₂ is 0 and 1₂ is 1
 𝟚▹ℕ : 𝟚 → ℕ
