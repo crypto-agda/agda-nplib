@@ -17,7 +17,7 @@ open import Data.Product.NP renaming (map to map×)
 open import Data.Sum renaming (map to map⊎)
 open import Data.One
 open import Data.Zero
-open import Data.Two using (𝟚; 0₂; 1₂; proj)
+open import Data.Two using (𝟚; 0₂; 1₂; proj; ✓; not; ≡→✓; ≡→✓not; ✓→≡; ✓not→≡)
 
 import Function.NP as F
 open F using (Π)
@@ -29,10 +29,112 @@ import Function.Inverse.NP as Inv
 open Inv using (_↔_; _∘_; sym; id; inverses; module Inverse) renaming (_$₁_ to to; _$₂_ to from)
 open import Relation.Binary
 import Relation.Binary.Indexed as I
+open import Data.Indexed using (_⊎°_)
 open import Relation.Binary.Product.Pointwise
 open import Relation.Binary.Sum
 import Relation.Binary.PropositionalEquality as ≡
 open ≡ using (_≡_ ; _≢_; _≗_)
+
+module _ {A : Set} {p q : A → 𝟚} where
+    ΣAP : Set
+    ΣAP = Σ A (λ x → p x ≡ 1₂)
+
+    ΣAQ : Set
+    ΣAQ = Σ A (λ x → q x ≡ 1₂)
+
+    ΣAP¬Q : Set
+    ΣAP¬Q = Σ A (λ x → p x ≡ 1₂ × q x ≡ 0₂)
+
+    ΣA¬PQ : Set
+    ΣA¬PQ = Σ A (λ x → p x ≡ 0₂ × q x ≡ 1₂)
+
+    {-
+    module M
+      (f : ΣAP → ΣAQ)
+      (f-1 : ΣAQ → ΣAP)
+      (f-1f : ∀ x → f-1 (f x) ≡ x)
+      (ff-1 : ∀ x → f (f-1 x) ≡ x)
+       where
+
+      f' : ΣAP¬Q → ΣA¬PQ
+      f' (x , (p , nq)) = let y = f (x , p) in proj₁ y , {!proj₂ y!} , (proj₂ y)
+
+      f-1' : ΣA¬PQ → ΣAP¬Q
+      f-1' = {!!}
+
+      f-1f' : ∀ x → f-1' (f' x) ≡ x
+      f-1f' = {!!}
+
+      ff-1' : ∀ x → f' (f-1' x) ≡ x
+      ff-1' = {!!}
+    -}
+
+    module Work-In-Progress
+      (f' : ΣAP¬Q → ΣA¬PQ)
+      (f-1' : ΣA¬PQ → ΣAP¬Q)
+      (f-1f' : ∀ x → f-1' (f' x) ≡ x)
+      (ff-1' : ∀ x → f' (f-1' x) ≡ x)
+       where
+
+      f   : (x : A) → p x ≡ 1₂ → q x ≡ 0₂ → ΣA¬PQ
+      f x px qx = f' (x , (px , qx))
+
+      f-1 : (x : A) → p x ≡ 0₂ → q x ≡ 1₂ → ΣAP¬Q
+      f-1 x px qx = f-1' (x , (px , qx))
+
+      f-1f : ∀ x px nqx →
+             let y = proj₂ (f x px nqx) in proj₁ (f-1 (proj₁ (f x px nqx)) (proj₁ y) (proj₂ y)) ≡ x
+      f-1f x px nqx = ≡.cong proj₁ (f-1f' (x , (px , nqx)))
+
+      ff-1 : ∀ x px nqx →
+             let y = proj₂ (f-1 x px nqx) in proj₁ (f (proj₁ (f-1 x px nqx)) (proj₁ y) (proj₂ y)) ≡ x
+      ff-1 x px nqx = ≡.cong proj₁ (ff-1' (x , (px , nqx)))
+
+      π' : (x : A) (px qx : 𝟚) → p x ≡ px → q x ≡ qx → A
+      π' x 1₂ 1₂ px qx = x
+      π' x 1₂ 0₂ px qx = proj₁ (f x px qx)
+      π' x 0₂ 1₂ px qx = proj₁ (f-1 x px qx)
+      π' x 0₂ 0₂ px qx = x
+
+      π : A → A
+      π x = π' x (p x) (q x) ≡.refl ≡.refl
+
+      0≢1 : 0₂ ≢ 1₂
+      0≢1 ()
+
+      π01 : ∀ x px qx (ppx : p x ≡ px) (qqx : q x ≡ qx) (px0 : p x ≡ 0₂) (qx1 : q x ≡ 1₂) → π' x px qx ppx qqx ≡ π' x 0₂ 1₂ px0 qx1
+      π01 x 1₂ _  ppx qqx px0 qx1 = 𝟘-elim (0≢1 (≡.trans (≡.sym px0) ppx))
+      π01 x 0₂ 1₂ ppx qqx px0 qx1 = ≡.cong₂ (λ z1 z2 → proj₁ (f-1 x z1 z2)) (≡.proof-irrelevance ppx px0) (≡.proof-irrelevance qqx qx1)
+      π01 x 0₂ 0₂ ppx qqx px0 qx1 = 𝟘-elim (0≢1 (≡.trans (≡.sym qqx) qx1))
+
+      π10 : ∀ x px qx (ppx : p x ≡ px) (qqx : q x ≡ qx) (px1 : p x ≡ 1₂) (qx0 : q x ≡ 0₂) → π' x px qx ppx qqx ≡ π' x 1₂ 0₂ px1 qx0
+      π10 x 0₂ _  ppx qqx px1 qx0 = 𝟘-elim (0≢1 (≡.trans (≡.sym ppx) px1))
+      π10 x 1₂ 0₂ ppx qqx px1 qx0 = ≡.cong₂ (λ z1 z2 → proj₁ (f x z1 z2)) (≡.proof-irrelevance ppx px1) (≡.proof-irrelevance qqx qx0)
+      π10 x 1₂ 1₂ ppx qqx px1 qx0 = 𝟘-elim (0≢1 (≡.trans (≡.sym qx0) qqx))
+
+      π'bb : ∀ {b} x (px : p x ≡ b) (qx : q x ≡ b) ppx qqx ([ppx] : p x ≡ ppx) ([qqx] : q x ≡ qqx) → π' x ppx qqx [ppx] [qqx] ≡ x
+      π'bb x px qx 1₂ 1₂ [ppx] [qqx] = ≡.refl
+      π'bb x px qx 1₂ 0₂ [ppx] [qqx] = 𝟘-elim (0≢1 (≡.trans (≡.sym [qqx]) (≡.trans qx (≡.trans (≡.sym px) [ppx]))))
+      π'bb x px qx 0₂ 1₂ [ppx] [qqx] = 𝟘-elim (0≢1 (≡.trans (≡.sym [ppx]) (≡.trans px (≡.trans (≡.sym qx) [qqx]))))
+      π'bb x px qx 0₂ 0₂ [ppx] [qqx] = ≡.refl
+
+      ππ' : ∀ x px qx [px] [qx] → let y = (π' x px qx [px] [qx]) in π' y (p y) (q y) ≡.refl ≡.refl ≡ x
+      ππ' x 1₂ 1₂ px qx = π'bb x px qx (p x) (q x) ≡.refl ≡.refl
+      ππ' x 1₂ 0₂ px qx = let fx = f x px qx in let pfx = proj₁ (proj₂ fx) in let qfx = proj₂ (proj₂ fx) in ≡.trans (π01 (proj₁ fx) (p (proj₁ fx)) (q (proj₁ fx)) ≡.refl ≡.refl pfx qfx) (f-1f x px qx)
+      ππ' x 0₂ 1₂ px qx = let fx = f-1 x px qx in let pfx = proj₁ (proj₂ fx) in let qfx = proj₂ (proj₂ fx) in ≡.trans (π10 (proj₁ fx) (p (proj₁ fx)) (q (proj₁ fx)) ≡.refl ≡.refl pfx qfx) (ff-1 x px qx)
+      ππ' x 0₂ 0₂ px qx = π'bb x px qx (p x) (q x) ≡.refl ≡.refl
+
+      ππ : ∀ x → π (π x) ≡ x
+      ππ x = ππ' x (p x) (q x) ≡.refl ≡.refl
+
+      prop' : ∀ px qx x ([px] : p x ≡ px) ([qx] : q x ≡ qx) → q (π' x px qx [px] [qx]) ≡ px
+      prop' 1₂ 1₂ x px qx = qx
+      prop' 1₂ 0₂ x px qx = proj₂ (proj₂ (f x px qx))
+      prop' 0₂ 1₂ x px qx = proj₂ (proj₂ (f-1 x px qx))
+      prop' 0₂ 0₂ x px qx = qx
+
+      prop : ∀ x → p x ≡ q (π x)
+      prop x = ≡.sym (prop' (p x) (q x) x ≡.refl ≡.refl)
 
 module _ {a b f} {A : Set a} {B : A → Set b}
          (F : (x : A) → B x → Set f) where
@@ -222,6 +324,27 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c} where
   Σ⊎-distrib : (Σ (A ⊎ B) C) ↔ (Σ A (C F.∘ inj₁) ⊎ Σ B (C F.∘ inj₂))
   Σ⊎-distrib = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
 
+module _ {a b c} {A : ★ a} {B : A → ★ b} {C : A → ★ c} where
+  private
+    S = Σ A (B ⊎° C)
+    T = Σ A B ⊎ Σ A C
+    ⇒ : S → T
+    ⇒ (x , inj₁ y) = inj₁ (x , y)
+    ⇒ (x , inj₂ y) = inj₂ (x , y)
+    ⇐ : T → S
+    ⇐ (inj₁ (x , y)) = x , inj₁ y
+    ⇐ (inj₂ (x , y)) = x , inj₂ y
+    ⇐⇒ : ∀ x → ⇐ (⇒ x) ≡ x
+    ⇐⇒ (_ , inj₁ _) = ≡.refl
+    ⇐⇒ (_ , inj₂ _) = ≡.refl
+    ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
+    ⇒⇐ (inj₁ _) = ≡.refl
+    ⇒⇐ (inj₂ _) = ≡.refl
+
+  Σ-⊎-hom : Σ A (B ⊎° C) ↔ (Σ A B ⊎ Σ A C)
+  Σ-⊎-hom = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
+
+{-
 {- requires extensional equality
 module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c} where
   private
@@ -677,4 +800,22 @@ Fin-×-* (suc m) n = (Fin (suc m) × Fin n) ↔⟨ Fin∘suc↔𝟙⊎Fin ×-con
                     (Fin n ⊎ Fin (m * n)) ↔⟨ Fin-⊎-+ n (m * n) ⟩
                     Fin (suc m * n) ∎
   where open EquationalReasoning hiding (sym)
+
+Fin⊎-injective : ∀ {A B : Set} n → (Fin n ⊎ A) ↔ (Fin n ⊎ B) → A ↔ B
+Fin⊎-injective zero    f = 𝟘⊎A↔A ∘ Fin0↔𝟘 ⊎-cong id ∘ f ∘ sym Fin0↔𝟘 ⊎-cong id ∘ sym 𝟘⊎A↔A
+Fin⊎-injective (suc n) f =
+  Fin⊎-injective n
+    (Maybe-injective
+       (sym Maybe↔𝟙⊎ ∘
+        ⊎-CMon.assoc _ _ _ ∘
+        Fin∘suc↔𝟙⊎Fin ⊎-cong id ∘
+        f ∘
+        sym Fin∘suc↔𝟙⊎Fin ⊎-cong id ∘
+        sym (⊎-CMon.assoc _ _ _) ∘
+        Maybe↔𝟙⊎))
+
+{-
+-- -}
+-- -}
+-- -}
 -- -}
