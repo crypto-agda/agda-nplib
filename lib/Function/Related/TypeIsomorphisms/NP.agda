@@ -17,7 +17,7 @@ open import Data.Product.NP renaming (map to map×)
 open import Data.Sum renaming (map to map⊎)
 open import Data.One
 open import Data.Zero
-open import Data.Two using (𝟚; 0₂; 1₂; proj; ✓; not; ≡→✓; ≡→✓not; ✓→≡; ✓not→≡)
+open import Data.Two using (𝟚; 0₂; 1₂; proj; ✓; not; ≡→✓; ≡→✓not; ✓→≡; ✓not→≡ ; not-involutive)
 
 import Function.NP as F
 open F using (Π)
@@ -344,7 +344,7 @@ module _ {a b c} {A : ★ a} {B : A → ★ b} {C : A → ★ c} where
   Σ-⊎-hom : Σ A (B ⊎° C) ↔ (Σ A B ⊎ Σ A C)
   Σ-⊎-hom = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
 
-{-
+-- {-
 {- requires extensional equality
 module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c} where
   private
@@ -708,6 +708,16 @@ A×𝟙↔A = proj₂ ×-CMon.identity _ ∘ id ×-cong sym Lift↔id
 
 𝟙→A↔A : ∀ {ℓ} {A : ★_ ℓ} → (𝟙 → A) ↔ A
 𝟙→A↔A = Π𝟙F↔F
+
+not-𝟚↔𝟚 : 𝟚 ↔ 𝟚
+not-𝟚↔𝟚 = inverses not not not-involutive not-involutive
+
+≡-iso : ∀ {ℓ ℓ'}{A : ★_ ℓ}{B : ★_ ℓ'}{x y : A} → (π : A ↔ B) → (x ≡ y) ↔ (to π x ≡ to π y)
+≡-iso {x = x}{y} π = inverses (≡.cong (to π))
+                              (λ p → ≡.trans (≡.sym (Inverse.left-inverse-of π x))
+                                    (≡.trans (≡.cong (from π) p)
+                                             (Inverse.left-inverse-of π y)))
+                              (λ x → ≡.proof-irrelevance _ x) (λ x → ≡.proof-irrelevance _ x)
 
 module _ {a} {A : ★_ a} (ext𝟘 : (f g : 𝟘 → A) → f ≡ g) where
     𝟘→A↔𝟙 : (𝟘 → A) ↔ 𝟙
