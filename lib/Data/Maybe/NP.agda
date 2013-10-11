@@ -113,11 +113,11 @@ just? : ∀ {a} {A : ★ a} → Maybe A → ★₀
 just? nothing  = 𝟘
 just? (just _) = 𝟙
 
-just?→IsJust : ∀ {a} {A : ★ a} {x : Maybe A} → just? x → IsJust x
-just?→IsJust {x = just _}  p = just _
-just?→IsJust {x = nothing} ()
+just?→Is-just : ∀ {a} {A : ★ a} {x : Maybe A} → just? x → Is-just x
+just?→Is-just {x = just _}  p = just _
+just?→Is-just {x = nothing} ()
 
-Any→just? : ∀ {a} {A : ★ a} {P : A → ★ a} {x} → Any P x → just? x
+Any→just? : ∀ {a p} {A : ★ a} {P : A → ★ p} {x} → Any P x → just? x
 Any→just? (just _) = _
 
 data [Maybe] {a p} {A : ★ a} (Aₚ : A → ★ p) : Maybe A → ★ (a ⊔ p) where
@@ -150,29 +150,29 @@ data ⟦Maybe⟧ {a b r} {A : ★ a} {B : ★ b} (_∼_ : A → B → ★ r) : M
 ⟦map?-id⟧ _ (just xᵣ) = just xᵣ
 ⟦map?-id⟧ _ nothing   = nothing
 
-Any-join? : ∀ {a} {A : ★ a} {P : A → ★ a} {x} → Any (Any P) x → Any P (join? x)
+Any-join? : ∀ {a p} {A : ★ a} {P : A → ★ p} {x} → Any (Any P) x → Any P (join? x)
 Any-join? (just p) = p
 
-All-join? : ∀ {a} {A : ★ a} {P : A → ★ a} {x} → All (All P) x → All P (join? x)
+All-join? : ∀ {a p} {A : ★ a} {P : A → ★ p} {x} → All (All P) x → All P (join? x)
 All-join? (just p) = p
 All-join? nothing  = nothing
 
-Any-join?′ : ∀ {a} {A : ★ a} {P : A → ★ a} {x} → Any P (join? x) → Any (Any P) x
+Any-join?′ : ∀ {a p} {A : ★ a} {P : A → ★ p} {x} → Any P (join? x) → Any (Any P) x
 Any-join?′ {x = just x}  p = just p
 Any-join?′ {x = nothing} ()
 
-All-join?′ : ∀ {a} {A : ★ a} {P : A → ★ a} {x} → All P (join? x) → All (All P) x
+All-join?′ : ∀ {a p} {A : ★ a} {P : A → ★ p} {x} → All P (join? x) → All (All P) x
 All-join?′ {x = just x}  p       = just p
 All-join?′ {x = nothing} nothing = nothing
 
-Any→IsJust : ∀ {a} {A : ★ a} {P : A → ★ a} {x} → Any P x → IsJust x
-Any→IsJust (just _) = just _
+Any→Is-just : ∀ {a p} {A : ★ a} {P : A → ★ p} {x} → Any P x → Is-just x
+Any→Is-just (just _) = just _
 
 just≡→just? : ∀ {a} {A : ★ a} {x} {y : A} → x ≡ just y → just? x
 just≡→just? ≡.refl = _
 
 just?-join? : ∀ {a} {A : ★ a} {x : Maybe (Maybe A)} → just? (join? x) → just? x
-just?-join? = Any→just? ∘ Any-join?′ ∘ just?→IsJust
+just?-join? = Any→just? ∘ Any-join?′ ∘ just?→Is-just
 
 Any-just?-join? : ∀ {A : ★₀} (x : Maybe (Maybe A)) → just? (join? x) → Any just? x
 Any-just?-join? (just (just _)) _ = just _
@@ -220,7 +220,7 @@ F[ f? ] x      | just r  = r
 F[ f? ] x {()} | nothing
 
 T'[_] : ∀ {a b} {A : ★ a} {B : ★ b} (f? : A →? B) → ★ (a L.⊔ b)
-T'[_] {A = A} {B} f? = (x : A) → IsJust (f? x) → B
+T'[_] {A = A} {B} f? = (x : A) → Is-just (f? x) → B
 
 F'[_] : ∀ {a b} {A : ★ a} {B : ★ b} (f? : A →? B) → T'[ f? ]
 F'[ f? ] x pf with f? x
@@ -307,12 +307,12 @@ module ⟦Maybe⟧-Properties where
           → (⟦Maybe⟧ Aᵣ mx my) → P mx → P my
   subst P Aᵣ subst-Aᵣ = subst-⟦AB⟧ P P Aᵣ subst-Aᵣ id
 
-IsNothing-≡nothing : ∀ {a} {A : ★ a} {x : Maybe A} → IsNothing x → x ≡ nothing
-IsNothing-≡nothing nothing = ≡.refl
-IsNothing-≡nothing (just (lift ()))
+Is-nothing-≡nothing : ∀ {a} {A : ★ a} {x : Maybe A} → Is-nothing x → x ≡ nothing
+Is-nothing-≡nothing nothing = ≡.refl
+Is-nothing-≡nothing (just ())
 
-≡nothing-IsNothing : ∀ {a} {A : ★ a} {x : Maybe A} → x ≡ nothing → IsNothing x
-≡nothing-IsNothing ≡.refl = nothing
+≡nothing-Is-nothing : ∀ {a} {A : ★ a} {x : Maybe A} → x ≡ nothing → Is-nothing x
+≡nothing-Is-nothing ≡.refl = nothing
 
 module FunctorLemmas {a} where
   open M? a
