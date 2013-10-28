@@ -30,6 +30,8 @@ open Inv using (_↔_; _∘_; sym; id; inverses; module Inverse) renaming (_$₁
 open import Relation.Binary
 import Relation.Binary.Indexed as I
 open import Data.Indexed using (_⊎°_)
+open import Relation.Binary.Product.Pointwise public using (_×-cong_)
+open import Relation.Binary.Sum public using (_⊎-cong_)
 open import Relation.Binary.Product.Pointwise
 open import Relation.Binary.Sum
 import Relation.Binary.PropositionalEquality as ≡
