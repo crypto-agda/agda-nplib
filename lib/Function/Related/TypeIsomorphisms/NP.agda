@@ -344,7 +344,6 @@ module _ {a b c} {A : ★ a} {B : A → ★ b} {C : A → ★ c} where
   Σ-⊎-hom : Σ A (B ⊎° C) ↔ (Σ A B ⊎ Σ A C)
   Σ-⊎-hom = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
 
--- {-
 {- requires extensional equality
 module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c} where
   private
@@ -719,13 +718,15 @@ not-𝟚↔𝟚 = inverses not not not-involutive not-involutive
                                              (Inverse.left-inverse-of π y)))
                               (λ x → ≡.proof-irrelevance _ x) (λ x → ≡.proof-irrelevance _ x)
 
+-- requires extensionality
 module _ {a} {A : ★_ a} (ext𝟘 : (f g : 𝟘 → A) → f ≡ g) where
     𝟘→A↔𝟙 : (𝟘 → A) ↔ 𝟙
-    𝟘→A↔𝟙 = inverses _ (const (λ())) (ext𝟘 (λ ())) (λ _ → ≡.refl)
+    𝟘→A↔𝟙 = inverses _ (λ _ ()) (λ h → ext𝟘 _ h) (λ _ → ≡.refl)
 
+-- requires extensionality
 module _ {ℓ} {F : 𝟘 → ★_ ℓ} (ext𝟘 : (f g : Π 𝟘 F) → f ≡ g) where
-    Π𝟘F↔𝟙 : Π 𝟘 F ↔ 𝟙
-    Π𝟘F↔𝟙 = inverses _ (const (λ())) (ext𝟘 (λ ())) (λ _ → ≡.refl)
+    Π𝟘↔𝟙 : Π 𝟘 F ↔ 𝟙
+    Π𝟘↔𝟙 = inverses _ (λ _ ()) (λ h → ext𝟘 _ h) (λ _ → ≡.refl)
 
 module _ {ℓ} {F : 𝟚 → ★_ ℓ} (ext𝟚 : {f g : Π 𝟚 F} → (∀ x → f x ≡ g x) → f ≡ g) where
     Π𝟚F↔F₀×F₁ : Π 𝟚 F ↔ (F 0₂ × F 1₂)
@@ -762,6 +763,9 @@ Maybe-⊎ {a} = sym Maybe↔Lift𝟙⊎ ∘ ⊎-CMon.assoc (Lift {_} {a} 𝟙) _
 Maybe^-⊎-+ : ∀ {A} m n → (Maybe^ m 𝟘 ⊎ Maybe^ n A) ↔ Maybe^ (m + n) A
 Maybe^-⊎-+ zero    n = 𝟘⊎A↔A
 Maybe^-⊎-+ (suc m) n = Maybe-cong (Maybe^-⊎-+ m n) ∘ Maybe-⊎
+
+Σ𝟘↔𝟘 : ∀ {a} (F : 𝟘 → ★_ a) → Σ 𝟘 F ↔ 𝟘
+Σ𝟘↔𝟘 F = inverses proj₁ (λ ()) (λ { ((), _) }) (λ ())
 
 Σ𝟚↔⊎ : ∀ {a} (F : 𝟚 → ★_ a) → Σ 𝟚 F ↔ (F 0₂ ⊎ F 1₂)
 Σ𝟚↔⊎ F = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
@@ -824,7 +828,6 @@ Fin⊎-injective (suc n) f =
         sym (⊎-CMon.assoc _ _ _) ∘
         Maybe↔𝟙⊎))
 
-{-
 -- -}
 -- -}
 -- -}
