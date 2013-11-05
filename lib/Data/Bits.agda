@@ -7,7 +7,7 @@ open import Data.Nat.NP hiding (_==_) renaming (_<=_ to _ℕ<=_)
 open import Data.Nat.Properties
 open import Data.Nat.DivMod
 open import Data.Bit using (Bit)
-open import Data.Two renaming (_==_ to _==ᵇ_)
+open import Data.Two renaming (_==_ to _==ᵇ_; ==-refl to ==ᵇ-refl)
 import Data.Two.Equality as ==ᵇ
 import Data.Fin.NP as Fin
 open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise; Fin▹ℕ) renaming (_+_ to _+ᶠ_)

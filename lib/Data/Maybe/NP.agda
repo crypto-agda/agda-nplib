@@ -1,4 +1,3 @@
--- {-# OPTIONS --without-K #-}
 -- NOTE with-K
 module Data.Maybe.NP where
 

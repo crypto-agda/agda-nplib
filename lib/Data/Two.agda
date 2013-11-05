@@ -52,12 +52,18 @@ module _ {p} {P : 𝟚 → ★ p} where
     [0: e₀ 1: e₁ ] 0₂ = e₀
     [0: e₀ 1: e₁ ] 1₂ = e₁
 
+    tabulate₂ : ((b : 𝟚) → P b) → P 0₂ × P 1₂
+    tabulate₂ f = f 0₂ , f 1₂
+
     η-[0:1:] : ∀ (f : (b : 𝟚) → P b) b → [0: f 0₂ 1: f 1₂ ] b ≡ f b
     η-[0:1:] f 0₂ = refl
     η-[0:1:] f 1₂ = refl
 
     proj : P 0₂ × P 1₂ → (b : 𝟚) → P b
     proj = uncurry [0:_1:_]
+
+    proj-tabulate₂ : ∀ (f : (b : 𝟚) → P b) b → proj (tabulate₂ f) b ≡ f b
+    proj-tabulate₂ = η-[0:1:]
 
 module _ {a} {A : ★ a} where
 
@@ -85,6 +91,13 @@ nand b₀ b₁ = not (b₀ ∧ b₁)
 
 _==_ : (b₀ b₁ : 𝟚) → 𝟚
 b₀ == b₁ = (not b₀) xor b₁
+
+==-refl : ∀ {b} → ✓ (b == b)
+==-refl {1₂} = _
+==-refl {0₂} = _
+
+==-reflexive : ∀ {x y} → x ≡ y → ✓(x == y)
+==-reflexive {x} refl = ==-refl {x}
 
 ≡→✓ : ∀ {b} → b ≡ 1₂ → ✓ b
 ≡→✓ refl = _
