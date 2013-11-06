@@ -1,10 +1,9 @@
 -- {-# OPTIONS --without-K #-}
 module Function.Related.TypeIsomorphisms.NP where
 
-import Level as L
+open import Level.NP
 open import Algebra
 import Algebra.FunctionProperties as FP
-open L using (Lift; lower; lift)
 open import Type hiding (★)
 open import Function using (_ˢ_; const)
 
@@ -14,10 +13,10 @@ open import Data.Nat.NP using (ℕ; zero; suc; _+_; _*_) renaming (_^_ to _**_)
 open import Data.Maybe.NP
 open import Data.Product.NP renaming (map to map×)
 --open import Data.Product.N-ary
-open import Data.Sum renaming (map to map⊎)
+open import Data.Sum.NP renaming (map to map⊎)
 open import Data.One
 open import Data.Zero
-open import Data.Two using (𝟚; 0₂; 1₂; proj; ✓; not; ≡→✓; ≡→✓not; ✓→≡; ✓not→≡ ; not-involutive)
+open import Data.Two using (𝟚; 0₂; 1₂; proj; ✓; not; ≡→✓; ≡→✓not; ✓→≡; ✓not→≡ ; not-involutive; [0:_1:_])
 
 import Function.NP as F
 open F using (Π)
@@ -250,7 +249,7 @@ Maybe-injective f = Iso.iso (g f) (g-empty f)
 
 private
     Setoid₀ : ★ _
-    Setoid₀ = Setoid L.zero L.zero
+    Setoid₀ = Setoid ₀ ₀
 
 Σ≡↔𝟙 : ∀ {a} {A : ★ a} x → Σ A (_≡_ x) ↔ 𝟙
 Σ≡↔𝟙 x = inverses (F.const _) (λ _ → _ , ≡.refl)
@@ -381,7 +380,7 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c} where
                             }
                          }
   where
-  open FP (Inv.Inverse {f₁ = L.zero}{f₂ = L.zero})
+  open FP (Inv.Inverse {f₁ = ₀}{f₂ = ₀})
 
   left-identity : LeftIdentity (≡.setoid 𝟘) _⊎-setoid_
   left-identity A = record
@@ -471,7 +470,7 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c} where
                             }
                          }
   where
-  open FP (Inv.Inverse {f₁ = L.zero}{f₂ = L.zero})
+  open FP (Inv.Inverse {f₁ = ₀}{f₂ = ₀})
 
   left-identity : LeftIdentity (≡.setoid 𝟙) _×-setoid_
   left-identity A = record
@@ -535,7 +534,7 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c} where
     }
   }
   where
-  open FP (Inv.Inverse {f₁ = L.zero}{f₂ = L.zero})
+  open FP (Inv.Inverse {f₁ = ₀}{f₂ = ₀})
 
   distribʳ : _×-setoid_ DistributesOverʳ _⊎-setoid_
   distribʳ A B C = record
@@ -786,6 +785,22 @@ Maybe^-⊎-+ (suc m) n = Maybe-cong (Maybe^-⊎-+ m n) ∘ Maybe-⊎
     ⇒⇐ (inj₁ _) = ≡.refl
     ⇒⇐ (inj₂ _) = ≡.refl
 
+⊎⇿Σ2 : ∀ {ℓ} {A B : ★ ℓ} → (A ⊎ B) ↔ Σ 𝟚 [0: A 1: B ]
+⊎⇿Σ2 {A = A} {B} = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
+  where
+    ⇒ : A ⊎ B → _
+    ⇒ (inj₁ x) = 0₂ , x
+    ⇒ (inj₂ x) = 1₂ , x
+    ⇐ : Σ _ _ → A ⊎ B
+    ⇐ (0₂ , x) = inj₁ x
+    ⇐ (1₂ , x) = inj₂ x
+    ⇐⇒ : (_ : _ ⊎ _) → _
+    ⇐⇒ (inj₁ x) = ≡.refl
+    ⇐⇒ (inj₂ x) = ≡.refl
+    ⇒⇐ : (_ : Σ _ _) → _
+    ⇒⇐ (0₂ , x) = ≡.refl
+    ⇒⇐ (1₂ , x) = ≡.refl
+
 𝟚↔𝟙⊎𝟙 : 𝟚 ↔ (𝟙 ⊎ 𝟙)
 𝟚↔𝟙⊎𝟙 = inverses (proj (inj₁ _ , inj₂ _)) [ F.const 0₂ , F.const 1₂ ] ⇐⇒ ⇒⇐
   where
@@ -803,6 +818,10 @@ Fin-⊎-+ m n = Maybe^𝟘↔Fin (m + n)
 
 Fin∘suc↔𝟙⊎Fin : ∀ {n} → Fin (suc n) ↔ (𝟙 ⊎ Fin n)
 Fin∘suc↔𝟙⊎Fin = Maybe↔𝟙⊎ ∘ Fin∘suc↔Maybe∘Fin
+
+Fin↔𝟙⊎^𝟘 : ∀ n → Fin n ↔ 𝟙⊎^ n
+Fin↔𝟙⊎^𝟘 zero    = Fin0↔𝟘
+Fin↔𝟙⊎^𝟘 (suc n) = Inv.id ⊎-cong Fin↔𝟙⊎^𝟘 n Inv.∘ Fin∘suc↔𝟙⊎Fin
 
 Fin-×-* : ∀ m n → (Fin m × Fin n) ↔ Fin (m * n)
 Fin-×-* zero n = (Fin 0 × Fin n) ↔⟨ Fin0↔𝟘 ×-cong id ⟩
