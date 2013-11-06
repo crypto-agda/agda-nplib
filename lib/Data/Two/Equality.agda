@@ -9,44 +9,85 @@ open ≡ using (_≡_)
 
 module Data.Two.Equality where
 
-_≈_ : (x y : 𝟚) → ★₀
-x ≈ y = ✓ (x == y)
+module ✓-== where
 
-refl : Reflexive _≈_
-refl {0₂} = _
-refl {1₂} = _
+    decSetoid : DecSetoid _ _
+    decSetoid = record { Carrier = 𝟚; _≈_ = _≈_; isDecEquivalence = isDecEquivalence }
+      where
+        _≈_ : (x y : 𝟚) → ★₀
+        x ≈ y = ✓ (x == y)
 
-subst : ∀ {ℓ} → Substitutive _≈_ ℓ
-subst _ {0₂} {0₂} _ = id
-subst _ {1₂} {1₂} _ = id
-subst _ {0₂} {1₂} ()
-subst _ {1₂} {0₂} ()
+        refl : Reflexive _≈_
+        refl {0₂} = _
+        refl {1₂} = _
 
-sym : Symmetric _≈_
-sym {x} {y} eq = subst (λ y → y ≈ x) {x} {y} eq (refl {x})
+        subst : ∀ {ℓ} → Substitutive _≈_ ℓ
+        subst _ {0₂} {0₂} _ = id
+        subst _ {1₂} {1₂} _ = id
+        subst _ {0₂} {1₂} ()
+        subst _ {1₂} {0₂} ()
 
-trans : Transitive _≈_
-trans {x} {y} {z} x≈y y≈z = subst (_≈_ x) {y} {z} y≈z x≈y
+        sym : Symmetric _≈_
+        sym {x} {y} eq = subst (λ y → y ≈ x) {x} {y} eq (refl {x})
 
-_≟_ : Decidable _≈_
-0₂ ≟ 0₂ = yes _
-1₂ ≟ 1₂ = yes _
-0₂ ≟ 1₂ = no (λ())
-1₂ ≟ 0₂ = no (λ())
+        trans : Transitive _≈_
+        trans {x} {y} {z} x≈y y≈z = subst (_≈_ x) {y} {z} y≈z x≈y
 
-isEquivalence : IsEquivalence _≈_
-isEquivalence = record { refl  = λ {x} → refl {x}
-                       ; sym   = λ {x} {y} → sym {x} {y}
-                       ; trans = λ {x} {y} {z} → trans {x} {y} {z} }
+        _≟_ : Decidable _≈_
+        0₂ ≟ 0₂ = yes _
+        1₂ ≟ 1₂ = yes _
+        0₂ ≟ 1₂ = no (λ())
+        1₂ ≟ 0₂ = no (λ())
 
-isDecEquivalence : IsDecEquivalence _≈_
-isDecEquivalence = record { isEquivalence = isEquivalence; _≟_ = _≟_ }
+        isEquivalence : IsEquivalence _≈_
+        isEquivalence = record { refl  = λ {x} → refl {x}
+                               ; sym   = λ {x} {y} → sym {x} {y}
+                               ; trans = λ {x} {y} {z} → trans {x} {y} {z} }
 
-setoid : Setoid _ _
-setoid = record { Carrier = 𝟚; _≈_ = _≈_ ; isEquivalence = isEquivalence }
+        isDecEquivalence : IsDecEquivalence _≈_
+        isDecEquivalence = record { isEquivalence = isEquivalence; _≟_ = _≟_ }
 
-decSetoid : DecSetoid _ _
-decSetoid = record { Carrier = 𝟚; _≈_ = _≈_; isDecEquivalence = isDecEquivalence }
+    open DecSetoid decSetoid public hiding (_≈_; _≟_)
+
+module ==-≡1₂ where
+
+    decSetoid : DecSetoid _ _
+    decSetoid = record { Carrier = 𝟚; _≈_ = _≈_; isDecEquivalence = isDecEquivalence }
+      where
+        _≈_ : (x y : 𝟚) → ★₀
+        x ≈ y = (x == y) ≡ 1₂
+
+        refl : Reflexive _≈_
+        refl {0₂} = ≡.refl
+        refl {1₂} = ≡.refl
+
+        subst : ∀ {ℓ} → Substitutive _≈_ ℓ
+        subst _ {0₂} {0₂} _ = id
+        subst _ {1₂} {1₂} _ = id
+        subst _ {0₂} {1₂} ()
+        subst _ {1₂} {0₂} ()
+
+        sym : Symmetric _≈_
+        sym {x} {y} eq = subst (λ y → y ≈ x) {x} {y} eq (refl {x})
+
+        trans : Transitive _≈_
+        trans {x} x≈y y≈z = subst (_≈_ x) y≈z x≈y
+
+        _≟_ : Decidable _≈_
+        0₂ ≟ 0₂ = yes ≡.refl
+        1₂ ≟ 1₂ = yes ≡.refl
+        0₂ ≟ 1₂ = no (λ())
+        1₂ ≟ 0₂ = no (λ())
+
+        isEquivalence : IsEquivalence _≈_
+        isEquivalence = record { refl  = λ {x} → refl {x}
+                               ; sym   = λ {x} {y} → sym {x} {y}
+                               ; trans = λ {x} {y} {z} → trans {x} {y} {z} }
+
+        isDecEquivalence : IsDecEquivalence _≈_
+        isDecEquivalence = record { isEquivalence = isEquivalence; _≟_ = _≟_ }
+
+    open DecSetoid decSetoid public
 
 neg-xor : ∀ b₀ b₁ → b₀ == b₁ ≡ not (b₀ xor b₁)
 neg-xor 0₂ b = ≡.refl

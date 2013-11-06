@@ -5,6 +5,7 @@ open import Function.NP
 open import Data.Nat.NP
 open import Data.Nat.Properties
 open import Data.Vec.NP
+open import Data.Bits
 open import Data.Product hiding (map)
 open import Data.Fin using (Fin; zero; suc; inject₁)
 open import Relation.Binary.PropositionalEquality
@@ -191,6 +192,19 @@ module PermutationProperties {a : Level} where
 
     ·-map : ∀ {n} {A : ★ a} (f : Endo A) g (xs : Vec A n) → map f (g · xs) ≡ g · map f xs
     ·-map f g xs rewrite sym (⊛-dist-· (replicate f) g xs) | ·-replicate f g = refl
+
+    ⊕-dist-0↔1 : ∀ {n} (pad : Bits n) xs → 0↔1 pad ⊕ 0↔1 xs ≡ 0↔1 (pad ⊕ xs)
+    ⊕-dist-0↔1 _           []          = refl
+    ⊕-dist-0↔1 (_ ∷ [])    (_ ∷ [])    = refl
+    ⊕-dist-0↔1 (_ ∷ _ ∷ _) (_ ∷ _ ∷ _) = refl
+
+    -- TODO make use of ⊛-dist-·
+    ⊕-dist-· : ∀ {n} (pad : Bits n) π xs → π · pad ⊕ π · xs ≡ π · (pad ⊕ xs)
+    ⊕-dist-· fs      `id        xs = refl
+    ⊕-dist-· fs      `0↔1       xs = ⊕-dist-0↔1 fs xs
+    ⊕-dist-· (f ∷ fs) (`tl π)   (x ∷ xs) rewrite ⊕-dist-· fs π xs = refl
+    ⊕-dist-· fs       (π₀ `⁏ π₁) xs rewrite ⊕-dist-· (π₀ · fs) π₁ (π₀ · xs)
+                                         | ⊕-dist-· fs π₀ xs = refl
 
 private
   module Unused where

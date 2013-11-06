@@ -12,8 +12,7 @@ import Data.Fin.Props as F
 open import Data.Bool
 open import Data.Product hiding (map; zip; swap)
 open import Function.NP
-import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡
+open import Relation.Binary.PropositionalEquality.NP
 
 module FunVec {a} {A : ★ a} where
     _→ᵛ_ : ℕ → ℕ → ★ a

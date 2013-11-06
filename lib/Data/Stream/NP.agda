@@ -208,24 +208,24 @@ ZipAll _∼_ xs ys = All (uncurry _∼_) (zip xs ys)
 ZipAny : ∀ {A B : ★} (_∼_ : A → B → ★) → Stream A → Stream B → ★
 ZipAny _∼_ xs ys = Any (uncurry _∼_) (zip xs ys)
 
+data ZipAllD {A B : ★} (_∼_ : A → B → ★) : Stream A → Stream B → ★ where
+  _∷_ : ∀ {x y xs ys} (x∼y : x ∼ y) → ∞ (ZipAllD _∼_ (♭ xs) (♭ ys)) → ZipAllD _∼_ (x ∷ xs) (y ∷ ys)
+
 module ZipAllProps {A : ★} (_∼_ : A → A → ★) where
-  data ZipAllD {A B : ★} (_∼_ : A → B → ★) : Stream A → Stream B → ★ where
-    _∷_ : ∀ {x y xs ys} (x∼y : x ∼ y) → ∞ (ZipAllD _∼_ (♭ xs) (♭ ys)) → ZipAllD _∼_ (x ∷ xs) (y ∷ ys)
   →All-uncurry : ∀ {xs ys : Stream A} → ZipAllD _∼_ xs ys → All (uncurry _∼_) (zip xs ys)
   →All-uncurry (x∼y ∷ p) = x∼y ∷ ♯ →All-uncurry (♭ p)
 
   ←All-uncurry : ∀ {xs ys : Stream A} → All (uncurry _∼_) (zip xs ys) → ZipAllD _∼_ xs ys
-  -- ←All-uncurry (x ∷ xs) (y ∷ ys) (px ∷ pxs) = px ∷ ♯ ←All-uncurry (♭ xs) (♭ ys) (♭ pxs)
-  ←All-uncurry (px ∷ pxs) = px ∷ ♯ ←All-uncurry (♭ pxs)
+  ←All-uncurry {x ∷ xs} {y ∷ ys} (px ∷ pxs) = px ∷ ♯ ←All-uncurry (♭ pxs)
 
   refl : Reflexive _∼_ → Reflexive (ZipAll _∼_)
   refl re {x ∷ xs} = re ∷ ♯ refl re
 
   trans : Transitive _∼_ → Transitive (ZipAll _∼_)
-  trans tr (x∼y ∷ p) (y∼z ∷ q) = tr x∼y y∼z ∷ ♯ trans tr (♭ p) (♭ q)
+  trans tr {_ ∷ _} {_ ∷ _} {_ ∷ _} (x∼y ∷ p) (y∼z ∷ q) = tr x∼y y∼z ∷ ♯ trans tr (♭ p) (♭ q)
 
   sym : Symmetric _∼_ → Symmetric (ZipAll _∼_)
-  sym sy (x∼y ∷ p) = sy x∼y ∷ ♯ sym sy (♭ p)
+  sym sy {_ ∷ _} {_ ∷ _} (x∼y ∷ p) = sy x∼y ∷ ♯ sym sy (♭ p)
 
 ZipAll-setoid : Setoid L.zero L.zero → Setoid _ _
 ZipAll-setoid s = record
@@ -268,11 +268,11 @@ _∉'_ : ∀ {A} (xs : Stream A) (xss : Stream (Stream A)) → ★
 xs ∉' xss = ¬(xs ∈' xss)
 
 ≈-head : ∀ {A} {x y : A} {xs ys} → x ∷ xs ≈ y ∷ ys → x ≡ y
-≈-head (_ ∷ _) = ≡.refl
+≈-head (≡.refl ∷ _) = ≡.refl
 
 not∷ : ∀ b bs bs' → ¬(not b ∷ bs ≈ b ∷ bs')
-not∷ 0₂ _ _ ()
-not∷ 1₂ _ _ ()
+not∷ 0₂ _ _ (() ∷ _)
+not∷ 1₂ _ _ (() ∷ _)
 
 _>>=_ : ∀ {A B : ★} → Stream A → (A → Stream B) → Stream B
 s >>= f = diagonal (map f s)
@@ -322,19 +322,16 @@ map-cong' : ∀ {A B} (f : Stream A → Stream B) {xs ys} →
 map-cong' f (x≈ ∷ xs≈) = {!!} ∷ ♯ map-cong' f (♭ xs≈)
 -}
 
-tail-cong : ∀ {A} {xs ys : Stream A} → xs ≈ ys → tail xs ≈ tail ys
-tail-cong (_ ∷ xs≈) = ♭ xs≈
-
 map-tail-cong' : ∀ {A} {xs ys : Stream (Stream A)} →
            xs ≋ ys → map tail xs ≋ map tail ys
-map-tail-cong' (x≈ ∷ xs≈) = tail-cong x≈ ∷ ♯ map-tail-cong' (♭ xs≈)
+map-tail-cong' {_} {_ ∷ _} {_ ∷ _} (x≈ ∷ xs≈) = tail-cong x≈ ∷ ♯ map-tail-cong' (♭ xs≈)
 
 diagonal-cong : ∀ {A} {xs ys : Stream (Stream A)} →
                   xs ≋ ys → diagonal xs ≈ diagonal ys
-diagonal-cong ((x ∷ xs≈) ∷ xss≈) = x ∷ ♯ diagonal-cong (map-tail-cong' (♭ xss≈))
+diagonal-cong {A} {._ ∷ _} {._ ∷ _} ((x≡ ∷ xs≈) ∷ xss≈) = x≡ ∷ ♯ diagonal-cong (map-tail-cong' (♭ xss≈))
 
 map-tail-repeat : ∀ {A} (xs : Stream A) → map tail (map repeat xs) ≈ map repeat xs
-map-tail-repeat (x ∷ xs) = _ ∷ ♯ map-tail-repeat (♭ xs)
+map-tail-repeat (x ∷ xs) = ≡.refl ∷ ♯ map-tail-repeat (♭ xs)
 
 -- map not (diag (map tail xss)) = tail (map not (diag xss))
 
@@ -462,4 +459,7 @@ lem (f ∷ fs) (x ∷ xs) -- = trans (f x ∷ ♯ pf) (f x ∷ ♯ lem (♭ fs) 
        ≈⟨ f' x ∷ ♯ refl ⟩
           ff f'
         ∎
--}
+-- -}
+-- -}
+-- -}
+-- -}

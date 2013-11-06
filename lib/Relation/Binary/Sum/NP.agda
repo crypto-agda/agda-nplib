@@ -1,5 +1,4 @@
-{-# OPTIONS --without-K #-}
-{-# OPTIONS --universe-polymorphism #-}
+-- NOTE with-K
 module Relation.Binary.Sum.NP where
 
 open import Data.Sum

@@ -23,6 +23,9 @@ PathOver B refl u v = (u ≡ v)
 syntax PathOver B p u v =
   u ≡ v [ B ↓ p ]
 
+{- one day this will work -}
+-- pattern idp = refl
+
 -- Some definitions with the names from Agda-HoTT
 -- this is only a temporary state of affairs...
 module _ {a} {A : ★ a} where
@@ -37,8 +40,8 @@ module _ {a} {A : ★ a} where
     refl ∙ q  = q
     q ∙' refl = q
 
-    ! : {x y : A} → (x ≡ y → y ≡ x)
-    ! refl = refl
+    !_ : {x y : A} → (x ≡ y → y ≡ x)
+    !_ refl = refl
 
 ap↓ : ∀ {i j k} {A : ★ i} {B : A → ★ j} {C : A → ★ k}
   (g : {a : A} → B a → C a) {x y : A} {p : x ≡ y}

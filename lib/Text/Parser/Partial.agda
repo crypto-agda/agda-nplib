@@ -1,6 +1,6 @@
 {-# OPTIONS --without-K #-}
 open import Type
-open import Data.Maybe.NP as Maybe
+open import Data.Maybe.NP hiding (map)
 open import Data.Nat
 open import Data.One
 open import Data.Char renaming (_==_ to _==ᶜ_)

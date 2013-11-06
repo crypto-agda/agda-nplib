@@ -16,6 +16,7 @@ import Data.Bits
 import Data.Bits.Bits2
 import Data.Bits.Bits4
 import Data.Bits.OperationSyntax
+import Data.Bits.Properties
 import Data.Bool.NP
 import Data.Bool.NatBool
 import Data.Bool.So
@@ -31,6 +32,8 @@ import Data.List.Properties.NP
 import Data.Maybe.NP
 import Data.Nat.Ack
 import Data.Nat.BoundedMonoInj-is-Id
+import Data.Nat.Distance
+import Data.Nat.HyperOperators
 import Data.Nat.Logical
 import Data.Nat.NP
 import Data.Nat.NameLess
@@ -74,6 +77,7 @@ import Relation.Binary.Bijection
 import Relation.Binary.Equivalence
 import Relation.Binary.Logical
 import Relation.Binary.Logical.Iso
+import Relation.Binary.Logical.LEM
 import Relation.Binary.NP
 import Relation.Binary.On.NP
 import Relation.Binary.Permutation
@@ -85,5 +89,5 @@ import Relation.Unary.Logical
 import Relation.Unary.NP
 import Text.Parser
 import Text.Parser.Partial
-import Text.Printer
+--import Text.Printer
 import Type

@@ -2,6 +2,7 @@
 module Data.Nat.Ack where
 
 open import Data.Nat.NP
+open import Data.Nat.HyperOperators
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡
 

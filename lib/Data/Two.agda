@@ -38,7 +38,7 @@ open import Function.Equivalence using (module Equivalence)
 open import Function.Equality    using (_⟨$⟩_)
 open import Function.NP          using (id; _∘_; _⟨_⟩°_)
 
-open import Relation.Binary.PropositionalEquality.NP using (_≡_; _≢_; refl; idp; _∙_; !)
+open import Relation.Binary.PropositionalEquality.NP using (_≡_; _≢_; refl; idp; _∙_; !_)
 open import Relation.Nullary                         using (¬_; Dec; yes; no)
 
 open Equivalence using (to; from)
@@ -89,15 +89,9 @@ nor b₀ b₁ = not (b₀ ∨ b₁)
 nand : (b₀ b₁ : 𝟚) → 𝟚
 nand b₀ b₁ = not (b₀ ∧ b₁)
 
+-- For properties about _==_ see Data.Two.Equality
 _==_ : (b₀ b₁ : 𝟚) → 𝟚
 b₀ == b₁ = (not b₀) xor b₁
-
-==-refl : ∀ {b} → ✓ (b == b)
-==-refl {1₂} = _
-==-refl {0₂} = _
-
-==-reflexive : ∀ {x y} → x ≡ y → ✓(x == y)
-==-reflexive {x} refl = ==-refl {x}
 
 ≡→✓ : ∀ {b} → b ≡ 1₂ → ✓ b
 ≡→✓ refl = _
