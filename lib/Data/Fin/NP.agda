@@ -4,9 +4,10 @@ module Data.Fin.NP where
 open import Type hiding (★)
 open import Function
 open import Data.Zero
+open import Data.One
 open import Data.Fin public renaming (toℕ to Fin▹ℕ)
 open import Data.Nat.NP using (ℕ; zero; suc; _<=_; module ℕ°) renaming (_+_ to _+ℕ_)
-open import Data.Bool
+open import Data.Two hiding (_==_)
 import Data.Vec.NP as Vec
 open Vec using (Vec; []; _∷_; _∷ʳ_; allFin; lookup; rot₁) renaming (map to vmap)
 import Data.Vec.Properties as Vec
@@ -17,18 +18,39 @@ open import Relation.Binary.PropositionalEquality as ≡
 suc-injective : ∀ {m}{i j : Fin m} → Fin.suc i ≡ suc j → i ≡ j
 suc-injective refl = refl
 
+-- The isomorphisms about Fin, 𝟘, 𝟙, 𝟚 are in Function.Related.TypeIsomorphisms.NP
+
+Fin▹𝟘 : Fin 0 → 𝟘
+Fin▹𝟘 ()
+
+𝟘▹Fin : 𝟘 → Fin 0
+𝟘▹Fin ()
+
+Fin▹𝟙 : Fin 1 → 𝟙
+Fin▹𝟙 _ = _
+
+𝟙▹Fin : 𝟙 → Fin 1
+𝟙▹Fin _ = zero
+
+Fin▹𝟚 : Fin 2 → 𝟚
+Fin▹𝟚 zero    = 0₂
+Fin▹𝟚 (suc _) = 1₂
+
+𝟚▹Fin : 𝟚 → Fin 2
+𝟚▹Fin = [0: # 0 1: # 1 ]
+
 _+′_ : ∀ {m n} (x : Fin m) (y : Fin n) → Fin (m +ℕ n)
 _+′_ {suc m} {n} zero y rewrite ℕ°.+-comm (suc m) n = inject+ _ y
 suc x +′ y = suc (x +′ y)
 
-_==_ : ∀ {n} (x y : Fin n) → Bool
+_==_ : ∀ {n} (x y : Fin n) → 𝟚
 x == y = helper (compare x y) where
-  helper : ∀ {n} {i j : Fin n} → Ordering i j → Bool
-  helper (equal _) = true
-  helper _         = false
+  helper : ∀ {n} {i j : Fin n} → Ordering i j → 𝟚
+  helper (equal _) = 1₂
+  helper _         = 0₂
 
 swap : ∀ {i} (x y : Fin i) → Fin i → Fin i
-swap x y z = if x == z then y else if y == z then x else z
+swap x y z = case x == z 0: (case y == z 0: z 1: x) 1: y
 
 data FinSum m n : Fin (m +ℕ n) → ★₀ where
   bound : (x : Fin m) → FinSum m n (inject+ n x)
