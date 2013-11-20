@@ -46,6 +46,9 @@ open Equivalence using (to; from)
 module Xor° = CommutativeRing     commutativeRing-xor-∧
 module 𝟚°   = CommutativeSemiring commutativeSemiring-∧-∨
 
+_² : ∀ {a} → ★ a → ★ a
+A ² = 𝟚 → A
+
 module _ {p} {P : 𝟚 → ★ p} where
 
     [0:_1:_] : P 0₂ → P 1₂ → (b : 𝟚) → P b
@@ -67,14 +70,14 @@ module _ {p} {P : 𝟚 → ★ p} where
 
 module _ {a} {A : ★ a} where
 
-    [0:_1:_]′ : A → A → 𝟚 → A
+    [0:_1:_]′ : A → A → A ²
     [0:_1:_]′ = [0:_1:_]
 
     case_0:_1:_ : 𝟚 → A → A → A
     case b 0: e₀ 1: e₁ = [0: e₀
                           1: e₁ ] b
 
-    proj′ : A × A → 𝟚 → A
+    proj′ : A × A → A ²
     proj′ = proj
 
     proj[_] : 𝟚 → A × A → A
