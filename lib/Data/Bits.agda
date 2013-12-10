@@ -1,6 +1,8 @@
 {-# OPTIONS --without-K #-}
 module Data.Bits where
 
+open import Algebra
+open import Level.NP
 open import Type hiding (★)
 open import Data.Nat.NP hiding (_==_) renaming (_<=_ to _ℕ<=_)
 open import Data.Bit using (Bit)
@@ -51,6 +53,12 @@ _<=_ : ∀ {n} (xs ys : Bits n) → Bit
 infixr 5 _⊕_
 _⊕_ : ∀ {n} (bs₀ bs₁ : Bits n) → Bits n
 _⊕_ = zipWith _xor_
+
+⊕-group : ℕ → Group ₀ ₀
+⊕-group = LiftGroup.group Xor°.+-group
+
+module ⊕-Group  (n : ℕ) = Group (⊕-group n)
+module ⊕-Monoid (n : ℕ) = Monoid (⊕-Group.monoid n)
 
 -- Negate all bits, i.e. "xor"ing them by one.
 vnot : ∀ {n} → Endo (Bits n)
