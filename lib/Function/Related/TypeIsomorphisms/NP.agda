@@ -251,6 +251,26 @@ private
     Setoid₀ : ★ _
     Setoid₀ = Setoid ₀ ₀
 
+-- requires extensionality
+module _ {a b c} {A : ★ a} {B : A → ★ b} {C : A → ★ c}
+         (extB : {f g : Π A B} → (∀ x → f x ≡ g x) → f ≡ g)
+         (extC : {f g : Π A C} → (∀ x → f x ≡ g x) → f ≡ g)
+         (f : ∀ x → B x ↔ C x) where
+  private
+    left-f = Inverse.left-inverse-of F.∘ f
+    right-f = Inverse.right-inverse-of F.∘ f
+    ⇒ : Π A B → Π A C
+    ⇒ g x = to (f x) (g x)
+    ⇐ : Π A C → Π A B
+    ⇐ g x = from (f x) (g x)
+    ⇐⇒ : ∀ x → ⇐ (⇒ x) ≡ x
+    ⇐⇒ g = extB λ x → left-f x (g x)
+    ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
+    ⇒⇐ g = extC λ x → right-f x (g x)
+
+  fiber-iso : Π A B ↔ Π A C
+  fiber-iso = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
+
 Σ≡↔𝟙 : ∀ {a} {A : ★ a} x → Σ A (_≡_ x) ↔ 𝟙
 Σ≡↔𝟙 x = inverses (F.const _) (λ _ → _ , ≡.refl)
                   helper (λ _ → ≡.refl)
@@ -345,8 +365,10 @@ module _ {a b c} {A : ★ a} {B : A → ★ b} {C : A → ★ c} where
   Σ-⊎-hom : Σ A (B ⊎° C) ↔ (Σ A B ⊎ Σ A C)
   Σ-⊎-hom = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
 
-{- requires extensional equality
-module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c} where
+-- requires extensional equality
+module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c}
+         (ext : {f g : Π (A ⊎ B) C} → (∀ x → f x ≡ g x) → f ≡ g)
+         where
   private
     S = Π (A ⊎ B) C
     T = Π A (C F.∘ inj₁) × Π B (C F.∘ inj₂)
@@ -360,9 +382,8 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c} where
     ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
     ⇒⇐ (f , g) = ≡.refl
 
-  Π×-distrib : S ↔ T
-  Π×-distrib = inverses (⇒) (⇐) {!⇐⇒!} ⇒⇐
--}
+  Π×-distrib : Π (A ⊎ B) C ↔ (Π A (C F.∘ inj₁) × Π B (C F.∘ inj₂))
+  Π×-distrib = inverses (⇒) (⇐) (λ f → ext (⇐⇒ f)) ⇒⇐
 
 ⊎-ICommutativeMonoid : CommutativeMonoid _ _
 ⊎-ICommutativeMonoid = record {
