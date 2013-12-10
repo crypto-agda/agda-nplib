@@ -93,10 +93,14 @@ module _ {a} {A : ★ a} where
   Pullback {B = B} f g = Σ A (λ x → Σ B (λ y → f x ≡ g y))
 
 module ≡-Reasoning {a} {A : ★ a} where
-  open Setoid-Reasoning (setoid A) public renaming (_≈⟨_⟩_ to _≡⟨_⟩_)
+  open Setoid-Reasoning (setoid A) public
+    renaming (_≈⟨_⟩_ to _≡⟨_⟩_;
+                    _≈⟨-by-definition-⟩_ to _≡⟨-by-definition-⟩_)
 
 module ≗-Reasoning {a b} {A : ★ a} {B : ★ b} where
-  open Setoid-Reasoning (A →-setoid B) public renaming (_≈⟨_⟩_ to _≗⟨_⟩_)
+  open Setoid-Reasoning (A →-setoid B) public
+    renaming (_≈⟨_⟩_ to _≗⟨_⟩_;
+                    _≈⟨-by-definition-⟩_ to _≗⟨-by-definition-⟩_)
 
 data ⟦≡⟧ {a₁ a₂ aᵣ}
          {A₁ A₂} (Aᵣ : ⟦★⟧ {a₁} {a₂} aᵣ A₁ A₂)
