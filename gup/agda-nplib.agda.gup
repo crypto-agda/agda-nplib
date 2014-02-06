@@ -1,6 +1,6 @@
-exec 2>&1
-echo "module agda-nplib where" >$3
+#!/bin/bash -eu
+echo "module agda-nplib where" >$1
 git ls-files lib |
   grep '\.agda$' |
   sed -e 's|lib/\(.*\)\.agda|import \1|' |
-  tr / . >>$3
+  tr / . >>$1

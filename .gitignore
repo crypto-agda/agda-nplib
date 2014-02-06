@@ -4,4 +4,4 @@
 *.agdai
 .*.vim
 lib/html/
-/\.redo/
+\.gup/
