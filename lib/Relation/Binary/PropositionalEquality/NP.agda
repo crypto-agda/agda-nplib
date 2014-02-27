@@ -72,6 +72,14 @@ _≗₂_ : ∀ {a b c} {A : ★ a} {B : ★ b} {C : ★ c} (f g : A → B → C)
 f ≗₂ g = ∀ x y → f x y ≡ g x y
 
 module _ {a} {A : ★ a} where
+  J-orig : ∀ {b} (P : {x y : A} → x ≡ y → ★_ b) → (∀ {x} → P {x} {x} refl) → ∀ {x y} (p : x ≡ y) → P p
+  J-orig P p refl = p
+
+  -- This version is better suited to our identity type which has the first argument as a parameter.
+  -- (due to Paulin-Mohring)
+  J : ∀ {b} {x : A} (P : {y : A} → x ≡ y → ★_ b) → P {x} refl → ∀ {y} (p : x ≡ y) → P p
+  J P p refl = p
+
   injective : InjectiveRel A _≡_
   injective p q = p ∙ ! q
 
