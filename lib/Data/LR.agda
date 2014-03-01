@@ -15,6 +15,9 @@ data LR : ★ where
 [L: l R: r ] `L = l
 [L: l R: r ] `R = r
 
+[L:_R:_]′ : ∀ {ℓ}{C : ★_ ℓ}(l : C)(r : C)(lr : LR) → C
+[L:_R:_]′ = [L:_R:_]
+
 LR! : LR → LR
 LR! `L = `R
 LR! `R = `L
@@ -31,3 +34,6 @@ isL? = not ∘ isR?
 
 isR?-is-equiv : Is-equiv isR?
 isR?-is-equiv = is-equiv [0: `L 1: `R ] [0: idp 1: idp ] [L: idp R: idp ]
+
+isL?-is-equiv : Is-equiv isL?
+isL?-is-equiv = is-equiv [0: `R 1: `L ] [0: idp 1: idp ] [L: idp R: idp ]
