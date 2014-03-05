@@ -222,3 +222,10 @@ proj₁-Injection {B = B} B-uniq
 
 Δ : ∀ {a} {A : ★ a} → A → A × A
 Δ x = x , x
+
+ΣΣ : ∀ {a b c} (A : ★ a) (B : A → ★ b) (C : Σ A B → ★ c) → ★ _
+ΣΣ A B C = Σ A λ x → Σ (B x) λ y → C (x , y)
+
+ΣΣΣ : ∀ {a b c d} (A : ★ a) (B : A → ★ b)
+                  (C : Σ A B → ★ c) (D : Σ (Σ A B) C → ★ d) → ★ _
+ΣΣΣ A B C D = Σ A λ x → Σ (B x) λ y → Σ (C (x , y)) λ z → D ((x , y) , z)

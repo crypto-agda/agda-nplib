@@ -23,16 +23,6 @@ open Relation.Unary.Logical public using (_[→]_; [Π]; [Π]e; [∀])
 open Relation.Binary.Logical public using (_⟦→⟧_; ⟦Π⟧; ⟦Π⟧e; ⟦∀⟧)
 
 
-Π : ∀ {a b} (A : ★ a) → (B : A → ★ b) → ★ _
-Π A B = (x : A) → B x
-
-ΠΠ : ∀ {a b c} (A : ★ a) (B : A → ★ b) (C : Σ A B → ★ c) → ★ _
-ΠΠ A B C = Π A λ x → Π (B x) λ y → C (x , y)
-
-ΠΠΠ : ∀ {a b c d} (A : ★ a) (B : A → ★ b)
-                  (C : Σ A B → ★ c) (D : Σ (Σ A B) C → ★ d) → ★ _
-ΠΠΠ A B C D = Π A λ x → Π (B x) λ y → Π (C (x , y)) λ z → D ((x , y) , z)
-
 id-app : ∀ {f} → Applicative {f} id
 id-app = rawIApplicative
   where open Monad Id.IdentityMonad
@@ -173,3 +163,35 @@ module EndoMonoid-≗ {a} (A : ★ a) = EndoMonoid-≈ (Setoid.isEquivalence (A 
 
 ⟦∘′⟧ : (∀⟨ Aᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ ∀⟨ Bᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ ∀⟨ Cᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ (Bᵣ ⟦→⟧ Cᵣ) ⟦→⟧ (Aᵣ ⟦→⟧ Bᵣ) ⟦→⟧ (Aᵣ ⟦→⟧ Cᵣ)) _∘′_ _∘′_
 ⟦∘′⟧ _ _ _ fᵣ gᵣ xᵣ = fᵣ (gᵣ xᵣ)
+
+Π : ∀ {a b} (A : ★ a) → (B : A → ★ b) → ★ _
+Π A B = (x : A) → B x
+
+ΠΠ : ∀ {a b c} (A : ★ a) (B : A → ★ b) (C : Σ A B → ★ c) → ★ _
+ΠΠ A B C = Π A λ x → Π (B x) λ y → C (x , y)
+
+ΠΣ : ∀ {a b c} (A : ★ a) (B : A → ★ b) (C : Σ A B → ★ c) → ★ _
+ΠΣ A B C = Π A λ x → Σ (B x) λ y → C (x , y)
+
+ΣΠ : ∀ {a b c} (A : ★ a) (B : A → ★ b) (C : Σ A B → ★ c) → ★ _
+ΣΠ A B C = Σ A λ x → Π (B x) λ y → C (x , y)
+
+ΠΠΠ : ∀ {a b c d} (A : ★ a) (B : A → ★ b)
+                  (C : Σ A B → ★ c) (D : Σ (Σ A B) C → ★ d) → ★ _
+ΠΠΠ A B C D = Π A λ x → Π (B x) λ y → Π (C (x , y)) λ z → D ((x , y) , z)
+
+ΠΣΠ : ∀ {a b c d} (A : ★ a) (B : A → ★ b)
+                  (C : Σ A B → ★ c) (D : Σ (Σ A B) C → ★ d) → ★ _
+ΠΣΠ A B C D = Π A λ x → Σ (B x) λ y → Π (C (x , y)) λ z → D ((x , y) , z)
+
+ΠΣΣ : ∀ {a b c d} (A : ★ a) (B : A → ★ b)
+                  (C : Σ A B → ★ c) (D : Σ (Σ A B) C → ★ d) → ★ _
+ΠΣΣ A B C D = Π A λ x → Σ (B x) λ y → Σ (C (x , y)) λ z → D ((x , y) , z)
+
+ΣΠΣ : ∀ {a b c d} (A : ★ a) (B : A → ★ b)
+                  (C : Σ A B → ★ c) (D : Σ (Σ A B) C → ★ d) → ★ _
+ΣΠΣ A B C D = Σ A λ x → Π (B x) λ y → Σ (C (x , y)) λ z → D ((x , y) , z)
+
+ΣΠΠ : ∀ {a b c d} (A : ★ a) (B : A → ★ b)
+                  (C : Σ A B → ★ c) (D : Σ (Σ A B) C → ★ d) → ★ _
+ΣΠΠ A B C D = Σ A λ x → Π (B x) λ y → Π (C (x , y)) λ z → D ((x , y) , z)
