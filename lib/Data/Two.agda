@@ -36,10 +36,15 @@ open import Data.Sum     using (_⊎_; inj₁; inj₂)
 
 open import Function.Equivalence using (module Equivalence)
 open import Function.Equality    using (_⟨$⟩_)
-open import Function.NP          using (id; _∘_; _⟨_⟩°_)
+open import Function.NP          using (id; _∘_; _⟨_⟩°_; flip)
 
-open import Relation.Binary.PropositionalEquality.NP using (_≡_; _≢_; refl; idp; _∙_; !_)
+import Relation.Binary.PropositionalEquality.NP as ≡
+open ≡ using (_≡_; _≢_; refl; idp; _∙_; !_; coe; coe!; J; J-orig)
 open import Relation.Nullary                         using (¬_; Dec; yes; no)
+
+open import HoTT
+open Equivalences
+
 
 open Equivalence using (to; from)
 
@@ -95,6 +100,13 @@ nand b₀ b₁ = not (b₀ ∧ b₁)
 -- For properties about _==_ see Data.Two.Equality
 _==_ : (b₀ b₁ : 𝟚) → 𝟚
 b₀ == b₁ = (not b₀) xor b₁
+
+twist-equiv : 𝟚 ≃ 𝟚
+twist-equiv = self-inv-equiv not not-involutive
+
+module _ {{_ : UA}} where
+    twist : 𝟚 ≡ 𝟚
+    twist = ua twist-equiv
 
 ≡→✓ : ∀ {b} → b ≡ 1₂ → ✓ b
 ≡→✓ refl = _
