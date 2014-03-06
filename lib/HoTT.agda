@@ -11,11 +11,10 @@ open import Data.Product.NP renaming (proj₁ to fst; proj₂ to snd)
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_])
 open import Relation.Binary using (Reflexive; Symmetric; Transitive)
 import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_; ap; coe; coe!; !_; _∙_; J) renaming (subst to tr; refl to idp; cong₂ to ap₂)
+open ≡ using (_≡_; ap; coe; coe!; !_; _∙_; J) renaming (subst to tr; refl to idp; cong₂ to ap₂; _≗_ to _∼_)
 
 import Function.Inverse.NP as Inv
 open Inv using (_↔_; inverses; module Inverse) renaming (_$₁_ to to; _$₂_ to from)
-open import Function.Related.TypeIsomorphisms.NP hiding (Σ-assoc)
 
 -- Contractible
 module _ {a}(A : ★_ a) where
@@ -27,6 +26,10 @@ module _ {a}{b}{A : ★_ a}{B : A → ★_ b} where
     pair= idp = ap (_,_ _)
     snd= : ∀ {x : A} {y y' : B x} → y ≡ y' → _≡_ {A = Σ A B} (x , y) (x , y')
     snd= = pair= idp
+
+    tr-snd= : ∀ {p}(P : Σ A B → ★_ p){x}{y₀ y₁ : B x}(y= : y₀ ≡ y₁)
+            → tr P (snd= {x = x} y=) ∼ tr (P ∘ _,_ x) y=
+    tr-snd= P idp p = idp
 module _ {a}{b}{A : ★_ a}{B : ★_ b} where
     pair×= : ∀ {x x' : A}(p : x ≡ x')
                {y y' : B}(q : y ≡ y')
@@ -101,13 +104,21 @@ module Equivalences where
                          ; rinv = f
                          ; is-rinv = λ x → ap linv (is-rinv (f x)) ∙ is-linv x }
 
-  module _ {a}{A : ★_ a}{f : A → A}(f-inv : f LeftInverseOf f) where
+  module _ {a b} where
+    infix 4 _≃_
+    _≃_ : ★_ a → ★_ b → ★_(a ⊔ b)
+    A ≃ B = Σ (A → B) Is-equiv
+
+  module _ {a}{A : ★_ a}(f : A → A)(f-inv : f LeftInverseOf f) where
       self-inv-is-equiv : Is-equiv f
       self-inv-is-equiv = record { linv = f ; is-linv = f-inv ; rinv = f ; is-rinv = f-inv }
 
+      self-inv-equiv : A ≃ A
+      self-inv-equiv = f , self-inv-is-equiv
+
   module _ {a}{A : ★_ a} where
     idᴱ : Is-equiv {A = A} id
-    idᴱ = self-inv-is-equiv λ _ → idp
+    idᴱ = self-inv-is-equiv _ λ _ → idp
 
   module _ {a b c}{A : ★_ a}{B : ★_ b}{C : ★_ c}{g : B → C}{f : A → B} where
     _∘ᴱ_ : Is-equiv g → Is-equiv f → Is-equiv (g ∘ f)
@@ -116,11 +127,6 @@ module Equivalences where
       where
         module G = Is-equiv gᴱ
         module F = Is-equiv fᴱ
-
-  module _ {a b} where
-    infix 4 _≃_
-    _≃_ : ★_ a → ★_ b → ★_(a ⊔ b)
-    A ≃ B = Σ (A → B) Is-equiv
 
   module _ {a b}{A : ★_ a}{B : ★_ b} where
     –> : (e : A ≃ B) → (A → B)
@@ -273,10 +279,24 @@ module _ {{_ : UA}}{{_ : FunExt}}{A : ★}{B C : A → ★} where
                             ; (x , inr y) → idp }))
 
 module _ {{_ : UA}}{{_ : FunExt}}{A B : ★}{C : A → ★}{D : B → ★} where
+    dist-⊎-Σ-equiv : (Σ (A ⊎ B) [inl: C ,inr: D ]) ≃ (Σ A C ⊎ Σ B D)
+    dist-⊎-Σ-equiv = equiv (λ { (inl x , y) → inl (x , y)
+                              ; (inr x , y) → inr (x , y) })
+                           [inl: (λ x → inl (fst x) , snd x)
+                           ,inr: (λ x → inr (fst x) , snd x) ]
+                           [inl: (λ x → idp) ,inr: (λ x → idp) ]
+                           (λ { (inl x , y) → idp
+                              ; (inr x , y) → idp })
+
     dist-⊎-Σ : (Σ (A ⊎ B) [inl: C ,inr: D ]) ≡ (Σ A C ⊎ Σ B D)
-    dist-⊎-Σ = ua (iso-to-equiv Σ⊎-distrib)
+    dist-⊎-Σ = ua dist-⊎-Σ-equiv
+
+    dist-×-Π-equiv : (Π (A ⊎ B) [inl: C ,inr: D ]) ≃ (Π A C × Π B D)
+    dist-×-Π-equiv = equiv (λ f → f ∘ inl , f ∘ inr) (λ fg → [inl: fst fg ,inr: snd fg ])
+                           (λ _ → idp) (λ _ → λ= [inl: (λ _ → idp) ,inr: (λ _ → idp) ])
+
     dist-×-Π : (Π (A ⊎ B) [inl: C ,inr: D ]) ≡ (Π A C × Π B D)
-    dist-×-Π = ua (iso-to-equiv (Π×-distrib (λ fg → λ= fg)))
+    dist-×-Π = ua dist-×-Π-equiv
 
 module _ {A : ★}{B : A → ★}{C : (x : A) → B x → ★} where
     Σ-assoc-equiv : (Σ A (λ x → Σ (B x) (C x))) ≃ (Σ (Σ A B) (uncurry C))
@@ -374,6 +394,22 @@ module _ {A : ★} where
 
     ⊎𝟘-inl : {{_ : UA}} → A ≡ (A ⊎ 𝟘)
     ⊎𝟘-inl = ua ⊎𝟘-inl-equiv
+
+    𝟙×-snd : {{_ : UA}} → (𝟙 × A) ≡ A
+    𝟙×-snd = Σ𝟙-snd
+
+    𝟙×-fst : {{_ : UA}} → (A × 𝟙) ≡ A
+    𝟙×-fst = ×-comm ∙ 𝟙×-snd
+
+module _ {A : ★}{B : A → ★}{C : Σ A B → ★} where
+    -- AC: Dependent axiom of choice
+    -- In Type Theory it happens to be neither an axiom nor to be choosing anything.
+    ΠΣ-comm-equiv : (∀ (x : A) → ∃ λ (y : B x) → C (x , y)) ≃ (∃ λ (f : Π A B) → ∀ (x : A) → C (x , f x))
+    ΠΣ-comm-equiv = equiv (λ H → fst ∘ H , snd ∘ H) (λ H → < fst H , snd H >) (λ H → idp) (λ H → idp)
+
+    ΠΣ-comm : {{_ : UA}}
+            → (∀ (x : A) → ∃ λ (y : B x) → C (x , y)) ≡ (∃ λ (f : Π A B) → ∀ (x : A) → C (x , f x))
+    ΠΣ-comm = ua ΠΣ-comm-equiv
 -- -}
 -- -}
 -- -}
