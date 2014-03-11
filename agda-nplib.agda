@@ -89,5 +89,5 @@ import Relation.Unary.Logical
 import Relation.Unary.NP
 import Text.Parser
 import Text.Parser.Partial
---import Text.Printer
+import Text.Printer
 import Type
