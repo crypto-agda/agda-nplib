@@ -5,6 +5,7 @@ open import Level.NP
 open import Algebra
 import Algebra.FunctionProperties as FP
 open import Type hiding (★)
+-- open import Type.Identities
 open import Function using (_ˢ_; const)
 
 open import Data.Fin using (Fin; zero; suc; pred)

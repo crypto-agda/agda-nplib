@@ -61,7 +61,7 @@ coe : ∀ {i} {A B : ★ i} (p : A ≡ B) → A → B
 coe refl x = x
 
 coe! : ∀ {i} {A B : ★ i} (p : A ≡ B) → B → A
-coe! refl x = x
+coe! p x = coe (! p) x
 
 cong₃ : ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : Set d}
           (f : A → B → C → D) {a₁ a₂ b₁ b₂ c₁ c₂}

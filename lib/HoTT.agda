@@ -244,6 +244,14 @@ module _ {ℓ}{A : ★_ ℓ} where
     coe-equiv : ∀ {B} → A ≡ B → A ≃ B
     coe-equiv p = equiv (coe p) (coe! p) (coe!-inv-r p) (coe!-inv-l p)
 
+    coe∘coe : {x y z : Set}(p : y ≡ z)(q : x ≡ y)(m : x) → coe p (coe q m) ≡ coe (q ∙ p) m
+    coe∘coe p idp m = idp
+
+    coe-same : ∀ {A B : Set}{p q : A ≡ B}(e : p ≡ q)(x : A) → coe p x ≡ coe q x
+    coe-same idp x = idp
+
+    coe-inj : ∀ {A B : Set}{x y : A}(p : A ≡ B) → coe p x ≡ coe p y → x ≡ y
+    coe-inj idp = id
 postulate
   UA : ★
 module _ {ℓ}{A B : ★_ ℓ}{{_ : UA}} where
@@ -267,150 +275,13 @@ module _ {{_ : UA}}{{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b}{B₀ : A₀ → ★_
          → Π A₀ B₀ ≡ Π A₁ B₁
     Π≃ A B = Π= (ua A) λ x → B x ∙ ap B₁ (! coe-β A x)
 
-module _ {{_ : UA}}{{_ : FunExt}}{A : ★}{B C : A → ★} where
-    Σ⊎-split : (Σ A (λ x → B x ⊎ C x)) ≡ (Σ A B ⊎ Σ A C)
-    Σ⊎-split = ua (equiv (λ { (x , inl y) → inl (x , y)
-                            ; (x , inr y) → inr (x , y) })
-                         (λ { (inl (x , y)) → x , inl y
-                            ; (inr (x , y)) → x , inr y })
-                         (λ { (inl (x , y)) → idp
-                            ; (inr (x , y)) → idp })
-                         (λ { (x , inl y) → idp
-                            ; (x , inr y) → idp }))
+module _ {{_ : UA}}{{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b}{B : A₀ → ★_ b} where
+    Σ-first : (A : A₀ ≃ A₁) → Σ A₀ B ≡ Σ A₁ (B ∘ <– A)
+    Σ-first A = Σ≃ A (λ x → ap B (! <–-inv-l A x))
 
-module _ {{_ : UA}}{{_ : FunExt}}{A B : ★}{C : A → ★}{D : B → ★} where
-    dist-⊎-Σ-equiv : (Σ (A ⊎ B) [inl: C ,inr: D ]) ≃ (Σ A C ⊎ Σ B D)
-    dist-⊎-Σ-equiv = equiv (λ { (inl x , y) → inl (x , y)
-                              ; (inr x , y) → inr (x , y) })
-                           [inl: (λ x → inl (fst x) , snd x)
-                           ,inr: (λ x → inr (fst x) , snd x) ]
-                           [inl: (λ x → idp) ,inr: (λ x → idp) ]
-                           (λ { (inl x , y) → idp
-                              ; (inr x , y) → idp })
-
-    dist-⊎-Σ : (Σ (A ⊎ B) [inl: C ,inr: D ]) ≡ (Σ A C ⊎ Σ B D)
-    dist-⊎-Σ = ua dist-⊎-Σ-equiv
-
-    dist-×-Π-equiv : (Π (A ⊎ B) [inl: C ,inr: D ]) ≃ (Π A C × Π B D)
-    dist-×-Π-equiv = equiv (λ f → f ∘ inl , f ∘ inr) (λ fg → [inl: fst fg ,inr: snd fg ])
-                           (λ _ → idp) (λ _ → λ= [inl: (λ _ → idp) ,inr: (λ _ → idp) ])
-
-    dist-×-Π : (Π (A ⊎ B) [inl: C ,inr: D ]) ≡ (Π A C × Π B D)
-    dist-×-Π = ua dist-×-Π-equiv
-
-module _ {A : ★}{B : A → ★}{C : (x : A) → B x → ★} where
-    Σ-assoc-equiv : (Σ A (λ x → Σ (B x) (C x))) ≃ (Σ (Σ A B) (uncurry C))
-    Σ-assoc-equiv = equiv (λ x → (fst x , fst (snd x)) , snd (snd x))
-                          (λ x → fst (fst x) , snd (fst x) , snd x)
-                          (λ y → idp)
-                          (λ y → idp)
-
-    Σ-assoc : {{_ : UA}} → (Σ A (λ x → Σ (B x) (C x))) ≡ (Σ (Σ A B) (uncurry C))
-    Σ-assoc = ua Σ-assoc-equiv
-
-module _ {A B : ★} where
-    ×-comm-equiv : (A × B) ≃ (B × A)
-    ×-comm-equiv = equiv swap swap (λ y → idp) (λ x → idp)
-
-    ×-comm : {{_ : UA}} → (A × B) ≡ (B × A)
-    ×-comm = ua ×-comm-equiv
-
-    ⊎-comm-equiv : (A ⊎ B) ≃ (B ⊎ A)
-    ⊎-comm-equiv = equiv [inl: inr ,inr: inl ]
-                         [inl: inr ,inr: inl ]
-                         [inl: (λ x → idp) ,inr: (λ x → idp) ]
-                         [inl: (λ x → idp) ,inr: (λ x → idp) ]
-
-    ⊎-comm : {{_ : UA}} → (A ⊎ B) ≡ (B ⊎ A)
-    ⊎-comm = ua ⊎-comm-equiv
-
-module _ {A B : ★}{C : A → B → ★} where
-    ΠΠ-comm-equiv : ((x : A)(y : B) → C x y) ≃ ((y : B)(x : A) → C x y)
-    ΠΠ-comm-equiv = equiv flip flip (λ _ → idp) (λ _ → idp)
-
-    ΠΠ-comm : {{_ : UA}} → ((x : A)(y : B) → C x y) ≡ ((y : B)(x : A) → C x y)
-    ΠΠ-comm = ua ΠΠ-comm-equiv
-
-    ΣΣ-comm-equiv : (Σ A λ x → Σ B λ y → C x y) ≃ (Σ B λ y → Σ A λ x → C x y)
-    ΣΣ-comm-equiv = equiv (λ { (x , y , z) → y , x , z })
-                          (λ { (x , y , z) → y , x , z })
-                          (λ _ → idp)
-                          (λ _ → idp)
-
-    ΣΣ-comm : {{_ : UA}} → (Σ A λ x → Σ B λ y → C x y) ≡ (Σ B λ y → Σ A λ x → C x y)
-    ΣΣ-comm = ua ΣΣ-comm-equiv
-
-module _ {A B C : ★} where
-    ×-assoc : {{_ : UA}} → (A × (B × C)) ≡ ((A × B) × C)
-    ×-assoc = Σ-assoc
-
-    ⊎-assoc-equiv : (A ⊎ (B ⊎ C)) ≃ ((A ⊎ B) ⊎ C)
-    ⊎-assoc-equiv = equiv [inl: inl ∘ inl ,inr: [inl: inl ∘ inr ,inr: inr ] ]
-                          [inl: [inl: inl ,inr: inr ∘ inl ] ,inr: inr ∘ inr ]
-                          [inl: [inl: (λ x → idp) ,inr: (λ x → idp) ] ,inr: (λ x → idp) ]
-                          [inl: (λ x → idp) ,inr: [inl: (λ x → idp) ,inr: (λ x → idp) ] ]
-
-    ⊎-assoc : {{_ : UA}} → (A ⊎ (B ⊎ C)) ≡ ((A ⊎ B) ⊎ C)
-    ⊎-assoc = ua ⊎-assoc-equiv
-
-module _ {{_ : UA}}{{_ : FunExt}}(A : 𝟘 → ★) where
-    Π𝟘-uniq : Π 𝟘 A ≡ 𝟙
-    Π𝟘-uniq = ua (equiv _ (λ _ ()) (λ _ → idp) (λ _ → λ= (λ())))
-
-module _ {{_ : UA}}(A : 𝟙 → ★) where
-    Π𝟙-uniq : Π 𝟙 A ≡ A _
-    Π𝟙-uniq = ua (equiv (λ f → f _) (λ x _ → x) (λ _ → idp) (λ _ → idp))
-
-module _ {{_ : UA}}(A : ★) where
-    Π𝟙-uniq′ : (𝟙 → A) ≡ A
-    Π𝟙-uniq′ = Π𝟙-uniq (λ _ → A)
-
-module _ {{_ : UA}}{{_ : FunExt}}(A : ★) where
-    Π𝟘-uniq′ : (𝟘 → A) ≡ 𝟙
-    Π𝟘-uniq′ = Π𝟘-uniq (λ _ → A)
-
-module _ {{_ : FunExt}}(F G : 𝟘 → ★) where
-    -- also by Π𝟘-uniq twice
-    Π𝟘-uniq' : Π 𝟘 F ≡ Π 𝟘 G
-    Π𝟘-uniq' = Π=′ 𝟘 (λ())
-
-module _ {A : 𝟘 → ★} where
-    Σ𝟘-fst-equiv : Σ 𝟘 A ≃ 𝟘
-    Σ𝟘-fst-equiv = equiv fst (λ()) (λ()) (λ { (() , _) })
-
-    Σ𝟘-fst : {{_ : UA}} → Σ 𝟘 A ≡ 𝟘
-    Σ𝟘-fst = ua Σ𝟘-fst-equiv
-
-module _ {A : 𝟙 → ★} where
-    Σ𝟙-snd-equiv : Σ 𝟙 A ≃ A _
-    Σ𝟙-snd-equiv = equiv snd (_,_ _) (λ _ → idp) (λ _ → idp)
-
-    Σ𝟙-snd : {{_ : UA}} → Σ 𝟙 A ≡ A _
-    Σ𝟙-snd = ua Σ𝟙-snd-equiv
-
-module _ {A : ★} where
-    ⊎𝟘-inl-equiv : A ≃ (A ⊎ 𝟘)
-    ⊎𝟘-inl-equiv = equiv inl [inl: id ,inr: (λ()) ] [inl: (λ _ → idp) ,inr: (λ()) ] (λ _ → idp)
-
-    ⊎𝟘-inl : {{_ : UA}} → A ≡ (A ⊎ 𝟘)
-    ⊎𝟘-inl = ua ⊎𝟘-inl-equiv
-
-    𝟙×-snd : {{_ : UA}} → (𝟙 × A) ≡ A
-    𝟙×-snd = Σ𝟙-snd
-
-    𝟙×-fst : {{_ : UA}} → (A × 𝟙) ≡ A
-    𝟙×-fst = ×-comm ∙ 𝟙×-snd
-
-module _ {A : ★}{B : A → ★}{C : Σ A B → ★} where
-    -- AC: Dependent axiom of choice
-    -- In Type Theory it happens to be neither an axiom nor to be choosing anything.
-    ΠΣ-comm-equiv : (∀ (x : A) → ∃ λ (y : B x) → C (x , y)) ≃ (∃ λ (f : Π A B) → ∀ (x : A) → C (x , f x))
-    ΠΣ-comm-equiv = equiv (λ H → fst ∘ H , snd ∘ H) (λ H → < fst H , snd H >) (λ H → idp) (λ H → idp)
-
-    ΠΣ-comm : {{_ : UA}}
-            → (∀ (x : A) → ∃ λ (y : B x) → C (x , y)) ≡ (∃ λ (f : Π A B) → ∀ (x : A) → C (x , f x))
-    ΠΣ-comm = ua ΠΣ-comm-equiv
+    Π-first : (A : A₀ ≃ A₁) → Π A₀ B ≡ Π A₁ (B ∘ <– A)
+    Π-first A = Π≃ A (λ x → ap B (! <–-inv-l A x))
 -- -}
 -- -}
 -- -}
--- -}
+-- -}Foo.Bar@host.com
