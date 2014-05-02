@@ -59,10 +59,10 @@ module Refl-Trans-Reasoning
   _∎ : ∀ x → x ≈ x
   _ ∎ = refl
 
-  infixr 2 _≈⟨-by-definition-⟩_
+  infixr 2 _≈⟨by-definition⟩_
 
-  _≈⟨-by-definition-⟩_ : ∀ x {y : A} → x ≈ y → x ≈ y
-  _ ≈⟨-by-definition-⟩ x≈y = x≈y
+  _≈⟨by-definition⟩_ : ∀ x {y : A} → x ≈ y → x ≈ y
+  _ ≈⟨by-definition⟩ x≈y = x≈y
 
 module Equivalence-Reasoning
          {a ℓ} {A : Set a} {_≈_ : Rel A ℓ}
@@ -74,7 +74,7 @@ module Preorder-Reasoning
          {p₁ p₂ p₃} (P : Preorder p₁ p₂ p₃) where
   open Preorder P
   open Refl-Trans-Reasoning _∼_ refl trans public
-     renaming (_≈⟨_⟩_ to _∼⟨_⟩_; _≈⟨-by-definition-⟩_ to _∼⟨-by-definition-⟩_)
+     renaming (_≈⟨_⟩_ to _∼⟨_⟩_; _≈⟨by-definition⟩_ to _∼⟨by-definition⟩_)
   open Equivalence-Reasoning isEquivalence public renaming (_∎ to _☐)
 
 module Setoid-Reasoning {a ℓ} (s : Setoid a ℓ) where
