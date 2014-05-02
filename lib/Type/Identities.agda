@@ -226,11 +226,11 @@ module _ {A : 𝟚 → ★}{{_ : UA}}{{_ : FunExt}} where
   Π𝟚F↔F₀×F₁ = Π𝟚-×
 
 module _ {A : ★}{{_ : UA}}{{_ : FunExt}} where
-  Σ𝟚-⊎′ : 𝟚 × A ≡ (A ⊎ A)
+  Σ𝟚-⊎′ : (𝟚 × A) ≡ (A ⊎ A)
   Σ𝟚-⊎′ = Σ𝟚-⊎
 
-  𝟚→A↔A×A : (𝟚 → A) ↔ (A × A)
-  𝟚→A↔A×A
+  -- 𝟚→A↔A×A : (𝟚 → A) ↔ (A × A)
+  -- 𝟚→A↔A×A
 
 module _ where
 
