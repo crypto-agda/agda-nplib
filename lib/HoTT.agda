@@ -5,10 +5,11 @@ open import Type
 open import Level.NP
 open import Function.NP
 open import Function.Extensionality
-open import Data.Zero using (𝟘)
+open import Data.Zero using (𝟘; 𝟘-elim)
 open import Data.One using (𝟙)
 open import Data.Product.NP renaming (proj₁ to fst; proj₂ to snd)
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_])
+open import Relation.Nullary.NP
 open import Relation.Binary using (Reflexive; Symmetric; Transitive)
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡ using (_≡_; ap; coe; coe!; !_; _∙_; J; ap↓; PathOver; tr)
@@ -17,10 +18,10 @@ open ≡ using (_≡_; ap; coe; coe!; !_; _∙_; J; ap↓; PathOver; tr)
 import Function.Inverse.NP as Inv
 open Inv using (_↔_; inverses; module Inverse) renaming (_$₁_ to to; _$₂_ to from)
 
-idp_ : {A : ★₀}(x : A) → x ≡ x
-idp_ _ = idp
+module _ {a} {A : ★_ a} where
+  idp_ : (x : A) → x ≡ x
+  idp_ _ = idp
 
-module _ {A : ★₀} where
   refl-∙ : ∀ {x y : A} (p : x ≡ y) → idp_ x ∙ p ≡ p
   refl-∙ _ = idp
 
@@ -327,40 +328,84 @@ data T-level : ★₀ where
 
 ℕ₋₂ = T-level
 
-is-contr : ★₀ → ★₀
-is-contr A = Σ _ λ(x : A) → (y : A) → x ≡ y
+module _ {a} where
+    private
+      U = ★_ a
 
-has-level : T-level → ★₀ → ★₀
-has-level ⟨-2⟩   A = is-contr A
-has-level ⟨S n ⟩ A = (x y : A) → has-level n (x ≡ y)
+    is-contr : U → U
+    is-contr A = Σ _ λ(x : A) → (y : A) → x ≡ y
 
-is-prop : ★₀ → ★₀
-is-prop A = has-level ⟨-1⟩ A
+    has-level : T-level → U → U
+    has-level ⟨-2⟩   A = is-contr A
+    has-level ⟨S n ⟩ A = (x y : A) → has-level n (x ≡ y)
 
-is-set : ★₀ → ★₀
-is-set A = has-level ⟨0⟩ A
+    is-prop : U → U
+    is-prop A = has-level ⟨-1⟩ A
 
-has-all-paths : ★₀ → ★₀
-has-all-paths A = (x y : A) → x ≡ y
+    is-set : U → U
+    is-set A = has-level ⟨0⟩ A
 
-module _ {A : ★₀} where
-    prop-has-all-paths : is-prop A → has-all-paths A
-    prop-has-all-paths A-prop x y = fst (A-prop x y)
+    has-all-paths : U → U
+    has-all-paths A = (x y : A) → x ≡ y
 
-    all-paths-is-prop : has-all-paths A → is-prop A
-    all-paths-is-prop c x y = c x y , canon-path
-      where
-      lemma : {x y : A} (p : x ≡ y) → c x y ≡ p ∙ c y y
-      lemma = J' (λ x y p → c x y ≡ p ∙ c y y) (λ x → idp)
+    UIP : U → U
+    UIP A = {x y : A} (p q : x ≡ y) -> p ≡ q
 
-      canon-path : {x y : A} (p : x ≡ y) → c x y ≡ p
-      canon-path = J' (λ x y p → c x y ≡ p)
-                      (λ x → lemma (! c x x) ∙ !-∙ (c x x))
+    private
+      UIP-check : {A : U} → UIP A ≡ ({x y : A} → has-all-paths (x ≡ y))
+      UIP-check = idp
 
-is-set' : ★₀ → ★₀
-is-set' A = {x y : A} → has-all-paths (x ≡ y)
+    module _ {A : U} where
+        prop-has-all-paths : is-prop A → has-all-paths A
+        prop-has-all-paths A-prop x y = fst (A-prop x y)
+
+        all-paths-is-prop : has-all-paths A → is-prop A
+        all-paths-is-prop c x y = c x y , canon-path
+          where
+          lemma : {x y : A} (p : x ≡ y) → c x y ≡ p ∙ c y y
+          lemma = J' (λ x y p → c x y ≡ p ∙ c y y) (λ x → idp)
+
+          canon-path : {x y : A} (p : x ≡ y) → c x y ≡ p
+          canon-path = J' (λ x y p → c x y ≡ p)
+                          (λ x → lemma (! c x x) ∙ !-∙ (c x x))
+
+
+module _ {a} (A : ★_ a) where
+    has-dec-eq : ★_ a
+    has-dec-eq = (x y : A) → Dec (x ≡ y)
+
+module _ {a} {A : ★_ a} (d : has-dec-eq A) where
+    private
+        Code' : {x y : A} (dxy : Dec (x ≡ y)) (dxx : Dec (x ≡ x)) → x ≡ y → ★_ a
+        Code' {x} {y} dxy dxx p = case dxy of λ
+          { (no  _) → Lift 𝟘
+          ; (yes b) → case dxx of λ
+                      { (no   _) → Lift 𝟘
+                      ; (yes b') → p ≡ ! b' ∙ b
+                      }
+          }
+
+        Code : {x y : A} → x ≡ y → ★_ a
+        Code {x} {y} p = Code' (d x y) (d x x) p
+
+        encode : {x y : A} → (p : x ≡ y) -> Code p
+        encode {x} = J (λ y (p : x ≡ y) → Code p) (elim-Dec (λ d → Code' d d idp) (!_ ∘ !p∙p) (λ x₁ → lift (x₁ idp)) (d x x))
+
+    UIP-dec : UIP A
+    UIP-dec {x} idp q with d x x | encode q
+    UIP-dec     idp q    | yes a | p' = ! !p∙p a ∙ ! p'
+    UIP-dec     idp q    | no  r | _  = 𝟘-elim (r idp)
+
+    dec-eq-is-set : is-set A
+    dec-eq-is-set _ _ = all-paths-is-prop UIP-dec
 
 module _ {ℓ}{A : ★_ ℓ} where
+    UIP-set : is-set A → UIP A
+    UIP-set A-is-set p q = fst (A-is-set _ _ p q)
+
+    UIP→is-set : UIP A → is-set A
+    UIP→is-set A-is-set' x y = all-paths-is-prop A-is-set'
+
     coe!-inv-r : ∀ {B}(p : A ≡ B) y → coe p (coe! p y) ≡ y
     coe!-inv-r idp y = idp
 

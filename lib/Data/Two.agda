@@ -101,6 +101,9 @@ nand b₀ b₁ = not (b₀ ∧ b₁)
 _==_ : (b₀ b₁ : 𝟚) → 𝟚
 b₀ == b₁ = (not b₀) xor b₁
 
+𝟚-is-set : is-set 𝟚
+𝟚-is-set = dec-eq-is-set _≟_
+
 twist-equiv : 𝟚 ≃ 𝟚
 twist-equiv = self-inv-equiv not not-involutive
 

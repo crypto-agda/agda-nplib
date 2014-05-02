@@ -1,27 +1,23 @@
--- NOTE with-K
 module Relation.Binary.PropositionalEquality.K where
 
 open import Type hiding (★)
-open import Relation.Binary.PropositionalEquality
-{-
-open import Data.One using (𝟙)
-open import Data.Product using (Σ; _,_)
-open import Relation.Binary.Bijection
-open import Relation.Binary.Logical
--}
-open import Relation.Binary.NP
-open import Relation.Nullary
+open import Relation.Binary.PropositionalEquality.NP using (_≡_; J; refl)
+open import Relation.Binary.NP using (Decidable)
+open import Relation.Nullary using (yes)
 
-module _ where
-  postulate
-    Is-set : ∀ {a} → Set a → Set a
+postulate
+  KA : ★₀
 
-proof-irrelevance : ∀ {a} {A : Set a} {A-is-set : Is-set A} {x y : A} (p q : x ≡ y) → p ≡ q
-proof-irrelevance refl refl = refl
+module _ {a} {A : ★ a} {{_ : KA}} where
 
-module _ {a} {A : ★ a} where
-  _≡≡_ : ∀ {x y : A} (p q : x ≡ y) → p ≡ q
-  _≡≡_ refl refl = refl
+  K : {x : A} (p : x ≡ x) → p ≡ refl
+  K refl = refl
+
+  proof-irrelevance : {x y : A} (p q : x ≡ y) → p ≡ q
+  proof-irrelevance {x} p q = J (λ y q → (p : x ≡ y) → p ≡ q) K q p
+
+  _≡≡_ : {x y : A} (p q : x ≡ y) → p ≡ q
+  _≡≡_ = proof-irrelevance
 
   _≟≡_ : ∀ {i j : A} → Decidable {A = i ≡ j} _≡_
-  _≟≡_ refl refl = yes refl
+  _≟≡_ p q = yes (proof-irrelevance p q)

@@ -35,3 +35,12 @@ module _ {a b} {A : ★_ a} {B : ★_ b} where
       map-Dec : Dec A → Dec B
       map-Dec (yes p) = yes (to p)
       map-Dec (no ¬p) = no  (¬p ∘ from)
+
+elim-Dec : ∀ {a b}{A : ★_ a}
+             (B : Dec A → ★_ b)
+             (B-yes : (x : A)   → B (yes x))
+             (B-no  : (x : ¬ A) → B (no  x))
+             (d : Dec A)
+           → B d
+elim-Dec B B-yes B-no (yes p) = B-yes p
+elim-Dec B B-yes B-no (no ¬p) = B-no ¬p

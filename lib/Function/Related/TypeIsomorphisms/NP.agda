@@ -17,7 +17,7 @@ open import Data.Product.NP renaming (map to map×)
 open import Data.Sum.NP renaming (map to map⊎)
 open import Data.One
 open import Data.Zero
-open import Data.Two using (𝟚; 0₂; 1₂; proj; ✓; not; ≡→✓; ≡→✓not; ✓→≡; ✓not→≡ ; not-involutive; [0:_1:_])
+open import Data.Two using (𝟚; 0₂; 1₂; proj; ✓; not; ≡→✓; ≡→✓not; ✓→≡; ✓not→≡ ; not-involutive; [0:_1:_]; 𝟚-is-set)
 
 import Function.NP as F
 open F using (Π)
@@ -34,8 +34,9 @@ open import Relation.Binary.Product.Pointwise public using (_×-cong_)
 open import Relation.Binary.Sum public using (_⊎-cong_)
 open import Relation.Binary.Product.Pointwise
 open import Relation.Binary.Sum
-import Relation.Binary.PropositionalEquality as ≡
+import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡ using (_≡_ ; _≢_; _≗_)
+open import HoTT
 
 module _ {A : Set} {p q : A → 𝟚} where
     ΣAP : Set
@@ -106,12 +107,12 @@ module _ {A : Set} {p q : A → 𝟚} where
 
       π01 : ∀ x px qx (ppx : p x ≡ px) (qqx : q x ≡ qx) (px0 : p x ≡ 0₂) (qx1 : q x ≡ 1₂) → π' x px qx ppx qqx ≡ π' x 0₂ 1₂ px0 qx1
       π01 x 1₂ _  ppx qqx px0 qx1 = 𝟘-elim (0≢1 (≡.trans (≡.sym px0) ppx))
-      π01 x 0₂ 1₂ ppx qqx px0 qx1 = ≡.cong₂ (λ z1 z2 → proj₁ (f-1 x z1 z2)) (≡.proof-irrelevance ppx px0) (≡.proof-irrelevance qqx qx1)
+      π01 x 0₂ 1₂ ppx qqx px0 qx1 = ≡.cong₂ (λ z1 z2 → proj₁ (f-1 x z1 z2)) (UIP-set 𝟚-is-set ppx px0) (UIP-set 𝟚-is-set qqx qx1)
       π01 x 0₂ 0₂ ppx qqx px0 qx1 = 𝟘-elim (0≢1 (≡.trans (≡.sym qqx) qx1))
 
       π10 : ∀ x px qx (ppx : p x ≡ px) (qqx : q x ≡ qx) (px1 : p x ≡ 1₂) (qx0 : q x ≡ 0₂) → π' x px qx ppx qqx ≡ π' x 1₂ 0₂ px1 qx0
       π10 x 0₂ _  ppx qqx px1 qx0 = 𝟘-elim (0≢1 (≡.trans (≡.sym ppx) px1))
-      π10 x 1₂ 0₂ ppx qqx px1 qx0 = ≡.cong₂ (λ z1 z2 → proj₁ (f x z1 z2)) (≡.proof-irrelevance ppx px1) (≡.proof-irrelevance qqx qx0)
+      π10 x 1₂ 0₂ ppx qqx px1 qx0 = ≡.cong₂ (λ z1 z2 → proj₁ (f x z1 z2)) (UIP-set 𝟚-is-set ppx px1) (UIP-set 𝟚-is-set qqx qx0)
       π10 x 1₂ 1₂ ppx qqx px1 qx0 = 𝟘-elim (0≢1 (≡.trans (≡.sym qx0) qqx))
 
       π'bb : ∀ {b} x (px : p x ≡ b) (qx : q x ≡ b) ppx qqx ([ppx] : p x ≡ ppx) ([qqx] : q x ≡ qqx) → π' x ppx qqx [ppx] [qqx] ≡ x
