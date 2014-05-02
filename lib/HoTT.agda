@@ -12,10 +12,60 @@ open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_]
 open import Relation.Binary using (Reflexive; Symmetric; Transitive)
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡ using (_≡_; ap; coe; coe!; !_; _∙_; J; ap↓; PathOver; tr)
-       renaming (refl to idp; _≗_ to _∼_; cong₂ to ap₂)
+       renaming (refl to idp; _≗_ to _∼_; cong₂ to ap₂; J-orig to J')
 
 import Function.Inverse.NP as Inv
 open Inv using (_↔_; inverses; module Inverse) renaming (_$₁_ to to; _$₂_ to from)
+
+idp_ : {A : ★₀}(x : A) → x ≡ x
+idp_ _ = idp
+
+module _ {A : ★₀} where
+  refl-∙ : ∀ {x y : A} (p : x ≡ y) → idp_ x ∙ p ≡ p
+  refl-∙ _ = idp
+
+  ∙-refl : ∀ {x y : A} (p : x ≡ y) → p ∙ idp_ y ≡ p
+  ∙-refl = J' (λ (x y : A) (p : x ≡ y) → (p ∙ idp_ y) ≡ p) (λ x → idp)
+
+  hom-!-∙ : ∀ {x y z : A} (p : x ≡ y)(q : y ≡ z) → !(p ∙ q) ≡ ! q ∙ ! p
+  hom-!-∙ p q = J' (λ x y p → ∀ z → (q : y ≡ z) → !(p ∙ q) ≡ ! q ∙ ! p) (λ x z q → ! ∙-refl (! q)) p _ q
+
+  !-inv : ∀ {x y : A} (p : x ≡ y) → ! (! p) ≡ p
+  !-inv = J' (λ x y p → ! (! p) ≡ p) (λ x → idp)
+
+  !-∙ : ∀ {x y : A} (p : x ≡ y) → ! p ∙ p ≡ idp_ y
+  !-∙ = J' (λ x y p → (! p ∙ p) ≡ idp_ y) (λ x → idp)
+
+  ∙-! : ∀ {x y : A} (p : x ≡ y) → p ∙ ! p ≡ idp_ x
+  ∙-! = J' (λ x y p → (p ∙ ! p) ≡ idp_ x) (λ x → idp)
+
+  !p∙p = !-∙
+  p∙!p = ∙-!
+
+  ∙-assoc : ∀ {x y : A} (p : x ≡ y) {z : A} (q : y ≡ z) {t : A} (r : z ≡ t) → p ∙ q ∙ r ≡ (p ∙ q) ∙ r
+  ∙-assoc = J' (λ x y p → ∀ {z} (q : y ≡ z) {t} (r : z ≡ t) → p ∙ (q ∙ r) ≡ (p ∙ q) ∙ r)
+               (λ x q r → idp)
+
+  ==-refl-∙ :  {x y : A} (p : x ≡ y) {q : x ≡ x} → q ≡ idp_ x → q ∙ p ≡ p
+  ==-refl-∙ p = ap (flip _∙_ p)
+
+  ∙-==-refl :  {x y : A} (p : x ≡ y) {q : y ≡ y} → q ≡ idp_ y → p ∙ q ≡ p
+  ∙-==-refl p qr = ap (_∙_ p) qr ∙ ∙-refl p
+
+  ∙-∙-==-refl :  {x y z : A} (p : x ≡ y) (q : y ≡ z) {r : z ≡ z} → r ≡ idp_ z → p ∙ q ∙ r ≡ p ∙ q
+  ∙-∙-==-refl p q rr = ∙-assoc p q _ ∙ ∙-==-refl (p ∙ q) rr
+
+  !p∙p∙q : {x y z : A} (p : x ≡ y) (q : y ≡ z) → ! p ∙ p ∙ q ≡ q
+  !p∙p∙q p q = ∙-assoc (! p) p q ∙ ==-refl-∙ q (!-∙ p)
+
+  p∙!p∙q : {x y z : A} (p : y ≡ x) (q : y ≡ z) → p ∙ ! p ∙ q ≡ q
+  p∙!p∙q p q = ∙-assoc p _ q ∙ ==-refl-∙ q (∙-! p)
+
+  p∙!q∙q : {x y z : A} (p : x ≡ y) (q : z ≡ y) → p ∙ ! q ∙ q ≡ p
+  p∙!q∙q p q = ∙-==-refl p (!-∙ q)
+
+  p∙q∙!q : {x y z : A} (p : x ≡ y) (q : y ≡ z) → p ∙ q ∙ ! q ≡ p
+  p∙q∙!q p q = ∙-==-refl p (∙-! q)
 
 -- Contractible
 module _ {a}(A : ★_ a) where
@@ -265,6 +315,51 @@ module Equivalences where
     -}
 open Equivalences
 
+data T-level : ★₀ where
+  ⟨-2⟩ : T-level
+  ⟨S_⟩ : (n : T-level) → T-level
+
+⟨-1⟩ ⟨0⟩ : T-level
+⟨-1⟩ = ⟨S ⟨-2⟩ ⟩
+⟨0⟩  = ⟨S ⟨-1⟩ ⟩
+⟨1⟩  = ⟨S ⟨0⟩  ⟩
+⟨2⟩  = ⟨S ⟨1⟩  ⟩
+
+ℕ₋₂ = T-level
+
+is-contr : ★₀ → ★₀
+is-contr A = Σ _ λ(x : A) → (y : A) → x ≡ y
+
+has-level : T-level → ★₀ → ★₀
+has-level ⟨-2⟩   A = is-contr A
+has-level ⟨S n ⟩ A = (x y : A) → has-level n (x ≡ y)
+
+is-prop : ★₀ → ★₀
+is-prop A = has-level ⟨-1⟩ A
+
+is-set : ★₀ → ★₀
+is-set A = has-level ⟨0⟩ A
+
+has-all-paths : ★₀ → ★₀
+has-all-paths A = (x y : A) → x ≡ y
+
+module _ {A : ★₀} where
+    prop-has-all-paths : is-prop A → has-all-paths A
+    prop-has-all-paths A-prop x y = fst (A-prop x y)
+
+    all-paths-is-prop : has-all-paths A → is-prop A
+    all-paths-is-prop c x y = c x y , canon-path
+      where
+      lemma : {x y : A} (p : x ≡ y) → c x y ≡ p ∙ c y y
+      lemma = J' (λ x y p → c x y ≡ p ∙ c y y) (λ x → idp)
+
+      canon-path : {x y : A} (p : x ≡ y) → c x y ≡ p
+      canon-path = J' (λ x y p → c x y ≡ p)
+                      (λ x → lemma (! c x x) ∙ !-∙ (c x x))
+
+is-set' : ★₀ → ★₀
+is-set' A = {x y : A} → has-all-paths (x ≡ y)
+
 module _ {ℓ}{A : ★_ ℓ} where
     coe!-inv-r : ∀ {B}(p : A ≡ B) y → coe p (coe! p y) ≡ y
     coe!-inv-r idp y = idp
@@ -283,6 +378,7 @@ module _ {ℓ}{A : ★_ ℓ} where
 
     coe-inj : ∀ {B}{x y : A}(p : A ≡ B) → coe p x ≡ coe p y → x ≡ y
     coe-inj idp = id
+
 postulate
   UA : ★
 module _ {ℓ}{A B : ★_ ℓ}{{_ : UA}} where
