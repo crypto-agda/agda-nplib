@@ -9,14 +9,14 @@ open import Function.Extensionality
 open import Data.Maybe.NP using (Maybe ; just ; nothing ; maybe ; maybe′ ; just-injective)
 open import Data.Zero using (𝟘 ; 𝟘-elim)
 open import Data.One using (𝟙)
-open import Data.Two using (𝟚 ; 0₂ ; 1₂ ; [0:_1:_])
+open import Data.Two using (𝟚 ; 0₂ ; 1₂ ; [0:_1:_]; twist)
 open import Data.Fin as Fin using (Fin ; suc ; zero)
 open import Data.Nat.NP as ℕ using (ℕ ; suc ; zero)
 open import Data.Product.NP renaming (proj₁ to fst; proj₂ to snd)
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_])
 
 import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_; _≢_ ; ap; coe; coe!; !_; _∙_; J ; inspect ; Reveal_is_ ; [_]) renaming (subst to tr; refl to idp; cong₂ to ap₂; _≗_ to _∼_)
+open ≡ using (_≡_; _≢_ ; ap; coe; coe!; !_; _∙_; J ; inspect ; Reveal_is_ ; [_]; tr) renaming (refl to idp; cong₂ to ap₂; _≗_ to _∼_)
 
 module Type.Identities where
 
@@ -168,6 +168,8 @@ module _ {{_ : UA}}{{_ : FunExt}}(A : ★) where
     Π𝟘-uniq′ : (𝟘 → A) ≡ 𝟙
     Π𝟘-uniq′ = Π𝟘-uniq (λ _ → A)
 
+    𝟘→A↔𝟙 = Π𝟘-uniq′
+
 module _ {{_ : FunExt}}(F G : 𝟘 → ★) where
     -- also by Π𝟘-uniq twice
     Π𝟘-uniq' : Π 𝟘 F ≡ Π 𝟘 G
@@ -197,8 +199,12 @@ module _ {A : ★} where
     𝟙×-snd : {{_ : UA}} → (𝟙 × A) ≡ A
     𝟙×-snd = Σ𝟙-snd
 
-    𝟙×-fst : {{_ : UA}} → (A × 𝟙) ≡ A
-    𝟙×-fst = ×-comm ∙ 𝟙×-snd
+    ×𝟙-fst : {{_ : UA}} → (A × 𝟙) ≡ A
+    ×𝟙-fst = ×-comm ∙ 𝟙×-snd
+
+    -- old names
+    A×𝟙≡A = ×𝟙-fst
+    𝟙×A≡A = 𝟙×-snd
 
 module _ {A : ★}{B : A → ★}{C : Σ A B → ★} where
     -- AC: Dependent axiom of choice
@@ -210,12 +216,21 @@ module _ {A : ★}{B : A → ★}{C : Σ A B → ★} where
             → (∀ (x : A) → ∃ λ (y : B x) → C (x , y)) ≡ (∃ λ (f : Π A B) → ∀ (x : A) → C (x , f x))
     ΠΣ-comm = ua ΠΣ-comm-equiv
 
-module _ {A : 𝟚 → ★} where
-  Σ𝟚-⊎ : {{_ : UA}}{{_ : FunExt}} → Σ 𝟚 A ≡ (A 0₂ ⊎ A 1₂)
+module _ {A : 𝟚 → ★}{{_ : UA}}{{_ : FunExt}} where
+  Σ𝟚-⊎ : Σ 𝟚 A ≡ (A 0₂ ⊎ A 1₂)
   Σ𝟚-⊎ = Σ-first 𝟚≃𝟙⊎𝟙 ∙ dist-⊎-Σ ∙ ap₂ _⊎_ Σ𝟙-snd Σ𝟙-snd
 
-  Π𝟚-× : {{_ : UA}}{{_ : FunExt}} → Π 𝟚 A ≡ (A 0₂ × A 1₂)
+  Π𝟚-× : Π 𝟚 A ≡ (A 0₂ × A 1₂)
   Π𝟚-× = Π-first 𝟚≃𝟙⊎𝟙 ∙ dist-×-Π ∙ ap₂ _×_ (Π𝟙-uniq _) (Π𝟙-uniq _)
+
+  Π𝟚F↔F₀×F₁ = Π𝟚-×
+
+module _ {A : ★}{{_ : UA}}{{_ : FunExt}} where
+  Σ𝟚-⊎′ : 𝟚 × A ≡ (A ⊎ A)
+  Σ𝟚-⊎′ = Σ𝟚-⊎
+
+  𝟚→A↔A×A : (𝟚 → A) ↔ (A × A)
+  𝟚→A↔A×A
 
 module _ where
 
@@ -321,8 +336,15 @@ module _ {a}{A : ★_ a} where
   Maybe≡𝟙⊎ : ∀ {{_ : UA}}→ Maybe A ≡ (𝟙 ⊎ A)
   Maybe≡𝟙⊎ = ua Maybe≃𝟙⊎
 
-Fin0≡𝟘 : {{_ : UA}} → Fin 0 ≡ 𝟘
-Fin0≡𝟘 = ua (equiv (λ ()) (λ ()) (λ ()) (λ ()))
+module _ {{_ : UA}} where
+    Fin0≡𝟘 : Fin 0 ≡ 𝟘
+    Fin0≡𝟘 = ua (equiv (λ ()) (λ ()) (λ ()) (λ ()))
+
+    Fin1≡𝟙 : Fin 1 ≡ 𝟙
+    Fin1≡𝟙 = ua (equiv _ (λ _ → zero) (λ _ → idp) β)
+      where β : (_ : Fin 1) → _
+            β zero = idp
+            β (suc ())
 
 module _ where
   isZero? : ∀ {n}{A : Fin (suc n) → Set} → ((i : Fin n) → A (suc i)) → A zero
@@ -368,6 +390,39 @@ Fin⊎-injective zero    f = ⊎𝟘-inl ∙ ⊎-comm ∙  ap₂ _⊎_ (! Fin0�
 Fin⊎-injective (suc n) f = Fin⊎-injective n (Maybe-injective
    (Maybe≡𝟙⊎ ∙ ⊎-assoc ∙ ap₂ _⊎_ (! Fin∘suc≡𝟙⊎Fin) idp ∙ f
    ∙ ap₂ _⊎_ Fin∘suc≡𝟙⊎Fin idp ∙ ! ⊎-assoc ∙ ! Maybe≡𝟙⊎))
+
+module _ {{_ : UA}} where
+    Lift≡id : ∀ {a} {A : ★_ a} → Lift {a} {a} A ≡ A
+    Lift≡id = ua (equiv lower lift (λ _ → idp) (λ { (lift x) → idp }))
+
+    Π𝟙F≡F : ∀ {ℓ} {F : 𝟙 → ★_ ℓ} → Π 𝟙 F ≡ F _
+    Π𝟙F≡F = ua (equiv (λ x → x _) const (λ _ → idp) (λ _ → idp))
+
+    𝟙→A≡A : ∀ {ℓ} {A : ★_ ℓ} → (𝟙 → A) ≡ A
+    𝟙→A≡A = Π𝟙F≡F
+
+    not-𝟚≡𝟚 : 𝟚 ≡ 𝟚
+    not-𝟚≡𝟚 = twist
+
+{-
+TODO ?
+Maybe𝟘↔𝟙 : Maybe 𝟘 ↔ 𝟙
+Maybe𝟘↔𝟙 = A⊎𝟘↔A ∘ Maybe↔𝟙⊎
+
+Maybe^𝟘↔Fin : ∀ n → Maybe^ n 𝟘 ↔ Fin n
+Maybe^𝟘↔Fin zero    = sym Fin0↔𝟘
+Maybe^𝟘↔Fin (suc n) = sym Fin∘suc↔Maybe∘Fin ∘ Maybe-cong (Maybe^𝟘↔Fin n)
+
+Maybe^𝟙↔Fin1+ : ∀ n → Maybe^ n 𝟙 ↔ Fin (suc n)
+Maybe^𝟙↔Fin1+ n = Maybe^𝟘↔Fin (suc n) ∘ sym (Maybe∘Maybe^↔Maybe^∘Maybe n) ∘ Maybe^-cong n (sym Maybe𝟘↔𝟙)
+
+Maybe-⊎ : ∀ {a} {A B : ★ a} → (Maybe A ⊎ B) ↔ Maybe (A ⊎ B)
+Maybe-⊎ {a} = sym Maybe↔Lift𝟙⊎ ∘ ⊎-CMon.assoc (Lift {_} {a} 𝟙) _ _ ∘ (Maybe↔Lift𝟙⊎ ⊎-cong id)
+
+Maybe^-⊎-+ : ∀ {A} m n → (Maybe^ m 𝟘 ⊎ Maybe^ n A) ↔ Maybe^ (m + n) A
+Maybe^-⊎-+ zero    n = 𝟘⊎A↔A
+Maybe^-⊎-+ (suc m) n = Maybe-cong (Maybe^-⊎-+ m n) ∘ Maybe-⊎
+-}
 -- -}
 -- -}
 -- -}
