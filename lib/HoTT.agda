@@ -11,7 +11,8 @@ open import Data.Product.NP renaming (proj₁ to fst; proj₂ to snd)
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_])
 open import Relation.Binary using (Reflexive; Symmetric; Transitive)
 import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_; ap; coe; coe!; !_; _∙_; J) renaming (subst to tr; refl to idp; cong₂ to ap₂; _≗_ to _∼_)
+open ≡ using (_≡_; ap; coe; coe!; !_; _∙_; J; ap↓; PathOver; tr)
+       renaming (refl to idp; _≗_ to _∼_; cong₂ to ap₂)
 
 import Function.Inverse.NP as Inv
 open Inv using (_↔_; inverses; module Inverse) renaming (_$₁_ to to; _$₂_ to from)
@@ -43,16 +44,45 @@ module _ {a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡
     Π=′ : Π A B₀ ≡ Π A B₁
     Π=′ = ap (Π A) (λ= B)
 
-module _ {{_ : FunExt}} where
-    Σ= : ∀ {a}{A₀ A₁ : ★_ a}{b}{B₀ : A₀ → ★_ b}{B₁ : A₁ → ★_ b}
-           (A : A₀ ≡ A₁)(B : (x : A₀) → B₀ x ≡ B₁ (coe A x))
-         → Σ A₀ B₀ ≡ Σ A₁ B₁
-    Σ= idp B = Σ=′ _ B
+module _ {a b c}{A : ★_ a}{B : A → ★_ b}{x₀ : A}{y₀ : B x₀}{C : ★_ c}
+         (f : (x : A) (y : B x) → C) where
+    ap₂↓ : {x₁ : A}(x= : x₀ ≡ x₁)
+           {y₁ : B x₁}(y= : y₀ ≡ y₁ [ B ↓ x= ])
+         → f x₀ y₀ ≡ f x₁ y₁
+    ap₂↓ idp = ap (f x₀)
+    {- Or with J
+    ap₂↓ x= = J (λ x₁' x=' → {y₁ : B x₁'}(y= : y₀ ≡ y₁ [ _ ↓ x=' ])
+                          → f x₀ y₀ ≡ f x₁' y₁)
+                (λ y= → ap (f x₀) y=) x=
+    -- -}
 
-    Π= : ∀ {a}{A₀ A₁ : ★_ a}{b}{B₀ : A₀ → ★_ b}{B₁ : A₁ → ★_ b}
-           (A : A₀ ≡ A₁)(B : (x : A₀) → B₀ x ≡ B₁ (coe A x))
+    apd₂ : {x₁ : A}(x= : x₀ ≡ x₁)
+           {y₁ : B x₁}(y= : tr B x= y₀ ≡ y₁)
+         → f x₀ y₀ ≡ f x₁ y₁
+    -- apd₂ idp = ap (f x₀)
+    -- {- Or with J
+    apd₂ x= = J (λ x₁' x=' → {y₁ : B x₁'}(y= : tr B x=' y₀ ≡ y₁) → f x₀ y₀ ≡ f x₁' y₁)
+                (λ y= → ap (f x₀) y=) x=
+    -- -}
+
+module _ {a b c d}{A : ★_ a}{B : A → ★_ b}{C : ★_ c}{x₀ : A}{y₀ : B x₀ → C}{D : ★_ d}
+         {{_ : FunExt}}
+         (f : (x : A) (y : B x → C) → D) where
+    apd₂⁻ : {x₁ : A}(x= : x₀ ≡ x₁)
+            {y₁ : B x₁ → C}(y= : ∀ x → y₀ x ≡ y₁ (tr B x= x))
+          → f x₀ y₀ ≡ f x₁ y₁
+    apd₂⁻ idp y= = ap (f x₀) (λ= y=)
+
+module _ {a b}{A₀ : ★_ a}{B₀ : A₀ → ★_ b}{{_ : FunExt}} where
+    Σ= : {A₁ : ★_ a}(A= : A₀ ≡ A₁)
+         {B₁ : A₁ → ★_ b}(B= : (x : A₀) → B₀ x ≡ B₁ (coe A= x))
+       → Σ A₀ B₀ ≡ Σ A₁ B₁
+    Σ= idp B= = Σ=′ _ B=
+
+    Π= : ∀ {A₁ : ★_ a}(A= : A₀ ≡ A₁)
+           {B₁ : A₁ → ★_ b}(B= : (x : A₀) → B₀ x ≡ B₁ (coe A= x))
          → Π A₀ B₀ ≡ Π A₁ B₁
-    Π= idp B = Π=′ _ B
+    Π= idp B= = Π=′ _ B=
 
 module _ {a}{A₀ A₁ : ★_ a}{b}{B₀ B₁ : ★_ b}(A= : A₀ ≡ A₁)(B= : B₀ ≡ B₁) where
     ×= : (A₀ × B₀) ≡ (A₁ × B₁)
@@ -177,15 +207,16 @@ module Equivalences where
     ≃-! = ≃-sym
     _≃-∙_ = ≃-trans
 
-  module _ {a}{A : ★_ a} where
+  module _ {a}(A : ★_ a) where
     Paths : ★_ a
     Paths = Σ A λ x → Σ A λ y → x ≡ y
 
-    id-path : A → Paths
+  module _ {a}{A : ★_ a} where
+    id-path : A → Paths A
     id-path x = x , x , idp
 
     fst-rinv-id-path : ∀ p → id-path (fst p) ≡ p
-    fst-rinv-id-path (x , y , p) = snd= (pair= p (J (λ {y} p → tr (_≡_ x) p idp ≡ p) idp p))
+    fst-rinv-id-path (x , y , p) = snd= (pair= p (J (λ y p → tr (_≡_ x) p idp ≡ p) idp p))
 
     id-path-is-equiv : Is-equiv id-path
     id-path-is-equiv = record { linv = fst
@@ -193,7 +224,7 @@ module Equivalences where
                               ; rinv = fst
                               ; is-rinv = fst-rinv-id-path }
 
-    ≃-Paths : A ≃ Paths
+    ≃-Paths : A ≃ Paths A
     ≃-Paths = id-path , id-path-is-equiv
 
   module _ {a b}{A : ★_ a}{B : ★_ b}(f : A → B) where
@@ -244,13 +275,13 @@ module _ {ℓ}{A : ★_ ℓ} where
     coe-equiv : ∀ {B} → A ≡ B → A ≃ B
     coe-equiv p = equiv (coe p) (coe! p) (coe!-inv-r p) (coe!-inv-l p)
 
-    coe∘coe : {x y z : Set}(p : y ≡ z)(q : x ≡ y)(m : x) → coe p (coe q m) ≡ coe (q ∙ p) m
+    coe∘coe : ∀ {B C}(p : B ≡ C)(q : A ≡ B)(m : A) → coe p (coe q m) ≡ coe (q ∙ p) m
     coe∘coe p idp m = idp
 
-    coe-same : ∀ {A B : Set}{p q : A ≡ B}(e : p ≡ q)(x : A) → coe p x ≡ coe q x
+    coe-same : ∀ {B}{p q : A ≡ B}(e : p ≡ q)(x : A) → coe p x ≡ coe q x
     coe-same idp x = idp
 
-    coe-inj : ∀ {A B : Set}{x y : A}(p : A ≡ B) → coe p x ≡ coe p y → x ≡ y
+    coe-inj : ∀ {B}{x y : A}(p : A ≡ B) → coe p x ≡ coe p y → x ≡ y
     coe-inj idp = id
 postulate
   UA : ★
@@ -267,9 +298,9 @@ module _ {ℓ}{A B : ★_ ℓ}{{_ : UA}} where
   coe-β e a = ap (λ e → –> e a) (coe-equiv-β e)
 
 module _ {{_ : UA}}{{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b}{B₀ : A₀ → ★_ b}{B₁ : A₁ → ★_ b} where
-    Σ≃ : (A : A₀ ≃ A₁)(B : (x : A₀) → B₀ x ≡ B₁ (–> A x))
+    Σ≃ : (A≃ : A₀ ≃ A₁)(B= : (x : A₀) → B₀ x ≡ B₁ (–> A≃ x))
          → Σ A₀ B₀ ≡ Σ A₁ B₁
-    Σ≃ A B = Σ= (ua A) λ x → B x ∙ ap B₁ (! coe-β A x)
+    Σ≃ A≃ B= = Σ= (ua A≃) λ x → B= x ∙ ap B₁ (! coe-β A≃ x)
 
     Π≃ : (A : A₀ ≃ A₁)(B : (x : A₀) → B₀ x ≡ B₁ (–> A x))
          → Π A₀ B₀ ≡ Π A₁ B₁
@@ -284,4 +315,3 @@ module _ {{_ : UA}}{{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b}{B : A₀ → ★_ b}
 -- -}
 -- -}
 -- -}
--- -}Foo.Bar@host.com
