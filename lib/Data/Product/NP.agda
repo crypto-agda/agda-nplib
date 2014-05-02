@@ -183,7 +183,7 @@ dec⟦×⟧ decAᵣ decBᵣ (x₁ , y₁) (x₂ , y₂) with decAᵣ x₁ x₂
 ...           | yes yᵣ = yes (xᵣ ⟦,⟧ yᵣ)
 ...           | no ¬yᵣ = no (¬yᵣ ∘ ⟦proj₂⟧)
 
-mkΣ≡ : ∀ {a b} {A : ★ a} {x y : A} (B : A → ★ b) {p : B x} {q : B y} (xy : x ≡ y) → subst B xy p ≡ q → (x Σ., p) ≡ (y , q)
+mkΣ≡ : ∀ {a b} {A : ★ a} {x y : A} (B : A → ★ b) {p : B x} {q : B y} (xy : x ≡ y) → tr B xy p ≡ q → (x Σ., p) ≡ (y , q)
 mkΣ≡ _ xy h rewrite xy | h = ≡.refl
 
 Σ,-injective₁ : ∀ {a b} {A : ★ a} {B : A → ★ b} {x₁ x₂ : A} {y₁ : B x₁} {y₂ : B x₂} → (x₁ , y₁) ≡ (x₂ , y₂) → x₁ ≡ x₂
