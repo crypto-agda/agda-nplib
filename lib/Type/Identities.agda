@@ -9,7 +9,7 @@ open import Function.Extensionality
 open import Data.Maybe.NP using (Maybe ; just ; nothing ; maybe ; maybe′ ; just-injective; Maybe^)
 open import Data.Zero using (𝟘 ; 𝟘-elim)
 open import Data.One using (𝟙)
-open import Data.Two using (𝟚 ; 0₂ ; 1₂ ; [0:_1:_]; twist)
+open import Data.Two
 open import Data.Fin as Fin using (Fin ; suc ; zero)
 open import Data.Nat.NP as ℕ using (ℕ ; suc ; zero; _+_)
 open import Data.Product.NP renaming (proj₁ to fst; proj₂ to snd)
@@ -414,6 +414,16 @@ Fin⊎-injective (suc n) f = Fin⊎-injective n (Maybe-injective
    ∙ ap₂ _⊎_ Fin∘suc≡𝟙⊎Fin idp ∙ ! ⊎-assoc ∙ ! Maybe≡𝟙⊎))
 
 module _ {{_ : UA}} where
+    Fin-≡-≡1₂ : ∀ b → Fin (𝟚▹ℕ b) ≡ (b ≡ 1₂)
+    Fin-≡-≡1₂ 1₂ = Fin1≡𝟙 ∙ ua (Is-contr-to-Is-equiv.𝟙≃ (Ω₁-set-to-contr 𝟚-is-set 1₂))
+    Fin-≡-≡1₂ 0₂ = ua (equiv (λ ()) (λ ()) (λ ()) (λ ()))
+
+    Fin-≡-≡0₂ : ∀ b → Fin (𝟚▹ℕ (not b)) ≡ (b ≡ 0₂)
+    Fin-≡-≡0₂ b = Fin-≡-≡1₂ (not b) ∙ ! –>-paths-equiv twist-equiv
+
+    count-≡ : ∀ {a} {A : ★_ a} (p : A → 𝟚) x → Fin (𝟚▹ℕ (p x)) ≡ (p x ≡ 1₂)
+    count-≡ p x = Fin-≡-≡1₂ (p x)
+
     Lift≡id : ∀ {a} {A : ★_ a} → Lift {a} {a} A ≡ A
     Lift≡id = ua (equiv lower lift (λ _ → idp) (λ { (lift x) → idp }))
 
@@ -446,6 +456,90 @@ module _ {{_ : UA}} where
     Maybe^-⊎-+ : ∀ {A} m n → (Maybe^ m 𝟘 ⊎ Maybe^ n A) ≡ Maybe^ (m + n) A
     Maybe^-⊎-+ zero    n = ! 𝟘⊎-inr
     Maybe^-⊎-+ (suc m) n = Maybe-⊎ ∙ ap Maybe (Maybe^-⊎-+ m n)
+
+module _ {A : Set} {p q : A → 𝟚} where
+    ΣAP¬Q : Set
+    ΣAP¬Q = Σ A (λ x → p x ≡ 1₂ × q x ≡ 0₂)
+
+    ΣA¬PQ : Set
+    ΣA¬PQ = Σ A (λ x → p x ≡ 0₂ × q x ≡ 1₂)
+
+    module EquivalentSubsets (e : ΣAP¬Q ≡ ΣA¬PQ) where
+
+      f' : ΣAP¬Q → ΣA¬PQ
+      f' = coe e
+
+      f-1' : ΣA¬PQ → ΣAP¬Q
+      f-1' = coe! e
+
+      f-1f' : ∀ x → f-1' (f' x) ≡ x
+      f-1f' = coe!-inv-l e
+
+      ff-1' : ∀ x → f' (f-1' x) ≡ x
+      ff-1' = coe!-inv-r e
+
+      f   : (x : A) → p x ≡ 1₂ → q x ≡ 0₂ → ΣA¬PQ
+      f x px qx = f' (x , (px , qx))
+
+      f-1 : (x : A) → p x ≡ 0₂ → q x ≡ 1₂ → ΣAP¬Q
+      f-1 x px qx = f-1' (x , (px , qx))
+
+      f-1f : ∀ x px nqx →
+             let y = snd (f x px nqx) in fst (f-1 (fst (f x px nqx)) (fst y) (snd y)) ≡ x
+      f-1f x px nqx = ≡.cong fst (f-1f' (x , (px , nqx)))
+
+      ff-1 : ∀ x px nqx →
+             let y = snd (f-1 x px nqx) in fst (f (fst (f-1 x px nqx)) (fst y) (snd y)) ≡ x
+      ff-1 x px nqx = ≡.cong fst (ff-1' (x , (px , nqx)))
+
+      π' : (x : A) (px qx : 𝟚) → p x ≡ px → q x ≡ qx → A
+      π' x 1₂ 1₂ px qx = x
+      π' x 1₂ 0₂ px qx = fst (f x px qx)
+      π' x 0₂ 1₂ px qx = fst (f-1 x px qx)
+      π' x 0₂ 0₂ px qx = x
+
+      π : A → A
+      π x = π' x (p x) (q x) ≡.refl ≡.refl
+
+      0≢1 : 0₂ ≢ 1₂
+      0≢1 ()
+
+      π01 : ∀ x px qx (ppx : p x ≡ px) (qqx : q x ≡ qx) (px0 : p x ≡ 0₂) (qx1 : q x ≡ 1₂) → π' x px qx ppx qqx ≡ π' x 0₂ 1₂ px0 qx1
+      π01 x 1₂ _  ppx qqx px0 qx1 = 𝟘-elim (0≢1 (≡.trans (≡.sym px0) ppx))
+      π01 x 0₂ 1₂ ppx qqx px0 qx1 = ≡.cong₂ (λ z1 z2 → fst (f-1 x z1 z2)) (UIP-set 𝟚-is-set ppx px0) (UIP-set 𝟚-is-set qqx qx1)
+      π01 x 0₂ 0₂ ppx qqx px0 qx1 = 𝟘-elim (0≢1 (≡.trans (≡.sym qqx) qx1))
+
+      π10 : ∀ x px qx (ppx : p x ≡ px) (qqx : q x ≡ qx) (px1 : p x ≡ 1₂) (qx0 : q x ≡ 0₂) → π' x px qx ppx qqx ≡ π' x 1₂ 0₂ px1 qx0
+      π10 x 0₂ _  ppx qqx px1 qx0 = 𝟘-elim (0≢1 (≡.trans (≡.sym ppx) px1))
+      π10 x 1₂ 0₂ ppx qqx px1 qx0 = ≡.cong₂ (λ z1 z2 → fst (f x z1 z2)) (UIP-set 𝟚-is-set ppx px1) (UIP-set 𝟚-is-set qqx qx0)
+      π10 x 1₂ 1₂ ppx qqx px1 qx0 = 𝟘-elim (0≢1 (≡.trans (≡.sym qx0) qqx))
+
+      π'bb : ∀ {b} x (px : p x ≡ b) (qx : q x ≡ b) ppx qqx ([ppx] : p x ≡ ppx) ([qqx] : q x ≡ qqx) → π' x ppx qqx [ppx] [qqx] ≡ x
+      π'bb x px qx 1₂ 1₂ [ppx] [qqx] = ≡.refl
+      π'bb x px qx 1₂ 0₂ [ppx] [qqx] = 𝟘-elim (0≢1 (≡.trans (≡.sym [qqx]) (≡.trans qx (≡.trans (≡.sym px) [ppx]))))
+      π'bb x px qx 0₂ 1₂ [ppx] [qqx] = 𝟘-elim (0≢1 (≡.trans (≡.sym [ppx]) (≡.trans px (≡.trans (≡.sym qx) [qqx]))))
+      π'bb x px qx 0₂ 0₂ [ppx] [qqx] = ≡.refl
+
+      ππ' : ∀ x px qx [px] [qx] → let y = (π' x px qx [px] [qx]) in π' y (p y) (q y) ≡.refl ≡.refl ≡ x
+      ππ' x 1₂ 1₂ px qx = π'bb x px qx (p x) (q x) ≡.refl ≡.refl
+      ππ' x 1₂ 0₂ px qx = let fx = f x px qx in let pfx = fst (snd fx) in let qfx = snd (snd fx) in ≡.trans (π01 (fst fx) (p (fst fx)) (q (fst fx)) ≡.refl ≡.refl pfx qfx) (f-1f x px qx)
+      ππ' x 0₂ 1₂ px qx = let fx = f-1 x px qx in let pfx = fst (snd fx) in let qfx = snd (snd fx) in ≡.trans (π10 (fst fx) (p (fst fx)) (q (fst fx)) ≡.refl ≡.refl pfx qfx) (ff-1 x px qx)
+      ππ' x 0₂ 0₂ px qx = π'bb x px qx (p x) (q x) ≡.refl ≡.refl
+
+      ππ : ∀ x → π (π x) ≡ x
+      ππ x = ππ' x (p x) (q x) ≡.refl ≡.refl
+
+      prop' : ∀ px qx x ([px] : p x ≡ px) ([qx] : q x ≡ qx) → q (π' x px qx [px] [qx]) ≡ px
+      prop' 1₂ 1₂ x px qx = qx
+      prop' 1₂ 0₂ x px qx = snd (snd (f x px qx))
+      prop' 0₂ 1₂ x px qx = snd (snd (f-1 x px qx))
+      prop' 0₂ 0₂ x px qx = qx
+
+      prop'' : ∀ x → p x ≡ q (π x)
+      prop'' x = ≡.sym (prop' (p x) (q x) x ≡.refl ≡.refl)
+
+      prop : {{_ : FunExt}} → p ≡ q ∘ π
+      prop = λ= prop''
 -- -}
 -- -}
 -- -}

@@ -332,11 +332,8 @@ module _ {a} where
     private
       U = ★_ a
 
-    is-contr : U → U
-    is-contr A = Σ _ λ(x : A) → (y : A) → x ≡ y
-
     has-level : T-level → U → U
-    has-level ⟨-2⟩   A = is-contr A
+    has-level ⟨-2⟩   A = Is-contr A
     has-level ⟨S n ⟩ A = (x y : A) → has-level n (x ≡ y)
 
     is-prop : U → U
@@ -406,6 +403,9 @@ module _ {ℓ}{A : ★_ ℓ} where
     UIP→is-set : UIP A → is-set A
     UIP→is-set A-is-set' x y = all-paths-is-prop A-is-set'
 
+    Ω₁-set-to-contr : is-set A → (x : A) → Is-contr (x ≡ x)
+    Ω₁-set-to-contr A-is-set x = idp , UIP-set A-is-set idp
+
     coe!-inv-r : ∀ {B}(p : A ≡ B) y → coe p (coe! p y) ≡ y
     coe!-inv-r idp y = idp
 
@@ -424,6 +424,10 @@ module _ {ℓ}{A : ★_ ℓ} where
     coe-inj : ∀ {B}{x y : A}(p : A ≡ B) → coe p x ≡ coe p y → x ≡ y
     coe-inj idp = id
 
+    module _ {B : ★_ ℓ}(p : A ≡ B){x y : A} where
+        coe-paths-equiv : (x ≡ y) ≡ (coe p x ≡ coe p y)
+        coe-paths-equiv = J (λ B (p : A ≡ B) → (x ≡ y) ≡ (coe p x ≡ coe p y)) idp p
+
 postulate
   UA : ★
 module _ {ℓ}{A B : ★_ ℓ}{{_ : UA}} where
@@ -437,6 +441,10 @@ module _ {ℓ}{A B : ★_ ℓ}{{_ : UA}} where
 
   coe-β : (e : A ≃ B) (a : A) → coe (ua e) a ≡ –> e a
   coe-β e a = ap (λ e → –> e a) (coe-equiv-β e)
+
+  module _ (e : A ≃ B){x y : A} where
+    –>-paths-equiv : (x ≡ y) ≡ (–> e x ≡ –> e y)
+    –>-paths-equiv = coe-paths-equiv (ua e) ∙ ap₂ _≡_ (coe-β e x) (coe-β e y)
 
 module _ {{_ : UA}}{{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b}{B₀ : A₀ → ★_ b}{B₁ : A₁ → ★_ b} where
     Σ≃ : (A≃ : A₀ ≃ A₁)(B= : (x : A₀) → B₀ x ≡ B₁ (–> A≃ x))
