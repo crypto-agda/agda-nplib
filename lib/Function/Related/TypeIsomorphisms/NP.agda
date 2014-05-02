@@ -287,7 +287,7 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A → ★ c} (f : A ↔ B) where
     left-f = Inverse.left-inverse-of f
     right-f = Inverse.right-inverse-of f
     coe : ∀ x → C x → C (from f (to f x))
-    coe x = ≡.subst C (≡.sym (left-f x))
+    coe x = ≡.tr C (≡.sym (left-f x))
     ⇒ : Σ A C → Σ B (C F.∘ from f)
     ⇒ (x , p) = to f x , coe x p
     ⇐ : Σ B (C F.∘ from f) → Σ A C
@@ -297,7 +297,7 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A → ★ c} (f : A ↔ B) where
     ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
     ⇒⇐ p = mkΣ≡ (C F.∘ from f) (right-f (proj₁ p)) (helper p)
             where
-                helper : ∀ p → ≡.subst (C F.∘ from f) (right-f (proj₁ p)) (coe (proj₁ (⇐ p)) (proj₂ (⇐ p))) ≡ proj₂ p
+                helper : ∀ p → ≡.tr (C F.∘ from f) (right-f (proj₁ p)) (coe (proj₁ (⇐ p)) (proj₂ (⇐ p))) ≡ proj₂ p
                 helper p with to f (from f (proj₁ p)) | right-f (proj₁ p) | left-f (from f (proj₁ p))
                 helper _ | ._ | ≡.refl | ≡.refl = ≡.refl
   first-iso : Σ A C ↔ Σ B (C F.∘ from f)
@@ -643,6 +643,7 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A × B → ★ c} where
   Σ×-swap : Σ (A × B) C ↔ Σ (B × A) (C F.∘ swap)
   Σ×-swap = first-iso swap-iso
 
+{- PORTED TO HoTT -}
 Maybe↔Lift𝟙⊎ : ∀ {ℓ a} {A : ★ a} → Maybe A ↔ (Lift {ℓ = ℓ} 𝟙 ⊎ A)
 Maybe↔Lift𝟙⊎
   = inverses (maybe inj₂ (inj₁ _))
@@ -660,6 +661,7 @@ Maybe↔𝟙⊎
 Maybe-cong : ∀ {a b} {A : ★ a} {B : ★ b} → A ↔ B → Maybe A ↔ Maybe B
 Maybe-cong A↔B = sym Maybe↔𝟙⊎ ∘ id ⊎-cong A↔B ∘ Maybe↔𝟙⊎
 
+{- PORTED TO HoTT -}
 Maybe∘Maybe^↔Maybe^∘Maybe : ∀ {a} {A : ★ a} n → Maybe (Maybe^ n A) ↔ Maybe^ n (Maybe A)
 Maybe∘Maybe^↔Maybe^∘Maybe zero    = id
 Maybe∘Maybe^↔Maybe^∘Maybe (suc n) = Maybe-cong (Maybe∘Maybe^↔Maybe^∘Maybe n)
@@ -688,15 +690,18 @@ A ^ suc n = A × A ^ n
 ^↔Vec zero    = sym Vec0↔Lift𝟙
 ^↔Vec (suc n) = sym Vec∘suc↔A×Vec ∘ (id ×-cong (^↔Vec n))
 
+-- PORTED to HoTT
 Fin0↔𝟘 : Fin 0 ↔ 𝟘
 Fin0↔𝟘 = inverses (λ()) (λ()) (λ()) (λ())
 
+-- PORTED to HoTT
 Fin1↔𝟙 : Fin 1 ↔ 𝟙
 Fin1↔𝟙 = inverses _ (λ _ → zero) ⇐⇒ (λ _ → ≡.refl)
   where ⇐⇒ : (_ : Fin 1) → _
         ⇐⇒ zero = ≡.refl
         ⇐⇒ (suc ())
 
+-- PORTED to HoTT
 Fin∘suc↔Maybe∘Fin : ∀ {n} → Fin (suc n) ↔ Maybe (Fin n)
 Fin∘suc↔Maybe∘Fin {n}
   = inverses to' (maybe suc zero)
@@ -706,6 +711,7 @@ Fin∘suc↔Maybe∘Fin {n}
         to' zero = nothing
         to' (suc n) = just n
 
+-- PORTED to HoTT
 Fin-injective : ∀ {m n} → Fin m ↔ Fin n → m ≡ n
 Fin-injective = go _ _ where
     go : ∀ m n → Fin m ↔ Fin n → m ≡ n
@@ -716,80 +722,102 @@ Fin-injective = go _ _ where
     ...                       | ()
     go (suc m) (suc n) iso = ≡.cong suc (go m n (Maybe-injective (Fin∘suc↔Maybe∘Fin ∘ iso ∘ sym Fin∘suc↔Maybe∘Fin)))
 
+-- PORTED to HoTT
 Lift↔id : ∀ {a} {A : ★ a} → Lift {a} {a} A ↔ A
 Lift↔id = inverses lower lift (λ { (lift x) → ≡.refl }) (λ _ → ≡.refl)
 
+-- PORTED to HoTT
 𝟙×A↔A : ∀ {A : ★₀} → (𝟙 × A) ↔ A
 𝟙×A↔A = proj₁ ×-CMon.identity _ ∘ sym Lift↔id ×-cong id
 
+-- PORTED to HoTT
 A×𝟙↔A : ∀ {A : ★₀} → (A × 𝟙) ↔ A
 A×𝟙↔A = proj₂ ×-CMon.identity _ ∘ id ×-cong sym Lift↔id
 
+-- PORTED to HoTT
 Π𝟙F↔F : ∀ {ℓ} {F : 𝟙 → ★_ ℓ} → Π 𝟙 F ↔ F _
 Π𝟙F↔F = inverses (λ x → x _) const (λ _ → ≡.refl) (λ _ → ≡.refl)
 
+-- PORTED to HoTT
 𝟙→A↔A : ∀ {ℓ} {A : ★_ ℓ} → (𝟙 → A) ↔ A
 𝟙→A↔A = Π𝟙F↔F
 
+-- PORTED to HoTT
 not-𝟚↔𝟚 : 𝟚 ↔ 𝟚
 not-𝟚↔𝟚 = inverses not not not-involutive not-involutive
 
+{-
 ≡-iso : ∀ {ℓ ℓ'}{A : ★_ ℓ}{B : ★_ ℓ'}{x y : A} → (π : A ↔ B) → (x ≡ y) ↔ (to π x ≡ to π y)
 ≡-iso {x = x}{y} π = inverses (≡.cong (to π))
                               (λ p → ≡.trans (≡.sym (Inverse.left-inverse-of π x))
                                     (≡.trans (≡.cong (from π) p)
                                              (Inverse.left-inverse-of π y)))
                               (λ x → ≡.proof-irrelevance _ x) (λ x → ≡.proof-irrelevance _ x)
+-}
 
 -- requires extensionality
 module _ {a} {A : ★_ a} (ext𝟘 : (f g : 𝟘 → A) → f ≡ g) where
+-- PORTED to HoTT
     𝟘→A↔𝟙 : (𝟘 → A) ↔ 𝟙
     𝟘→A↔𝟙 = inverses _ (λ _ ()) (λ h → ext𝟘 _ h) (λ _ → ≡.refl)
 
 -- requires extensionality
 module _ {ℓ} {F : 𝟘 → ★_ ℓ} (ext𝟘 : (f g : Π 𝟘 F) → f ≡ g) where
+-- PORTED to HoTT
     Π𝟘↔𝟙 : Π 𝟘 F ↔ 𝟙
     Π𝟘↔𝟙 = inverses _ (λ _ ()) (λ h → ext𝟘 _ h) (λ _ → ≡.refl)
 
 module _ {ℓ} {F : 𝟚 → ★_ ℓ} (ext𝟚 : {f g : Π 𝟚 F} → (∀ x → f x ≡ g x) → f ≡ g) where
+-- PORTED to HoTT
     Π𝟚F↔F₀×F₁ : Π 𝟚 F ↔ (F 0₂ × F 1₂)
     Π𝟚F↔F₀×F₁ = inverses (λ f → f 0₂ , f 1₂) proj
                          (λ f → ext𝟚 (λ { 0₂ → ≡.refl ; 1₂ → ≡.refl }))
                          (λ _ → ≡.refl)
 
 module _ {ℓ} {A : ★_ ℓ} (ext𝟚 : {f g : 𝟚 → A} → f ≗ g → f ≡ g) where
+-- PORTED to HoTT
     𝟚→A↔A×A : (𝟚 → A) ↔ (A × A)
     𝟚→A↔A×A = Π𝟚F↔F₀×F₁ ext𝟚
 
+-- PORTED to HoTT
 𝟘⊎A↔A : ∀ {A : ★₀} → (𝟘 ⊎ A) ↔ A
 𝟘⊎A↔A = proj₁ ⊎-CMon.identity _ ∘ sym Lift↔id ⊎-cong id
 
+-- PORTED to HoTT
 A⊎𝟘↔A : ∀ {A : ★₀} → (A ⊎ 𝟘) ↔ A
 A⊎𝟘↔A = proj₂ ⊎-CMon.identity _ ∘ id ⊎-cong sym Lift↔id
 
+-- PORTED to HoTT
 𝟘×A↔𝟘 : ∀ {A : ★₀} → (𝟘 × A) ↔ 𝟘
 𝟘×A↔𝟘 = Lift↔id ∘ proj₁ ×⊎°.zero _ ∘ sym (Lift↔id ×-cong id)
 
+-- PORTED to HoTT
 Maybe𝟘↔𝟙 : Maybe 𝟘 ↔ 𝟙
 Maybe𝟘↔𝟙 = A⊎𝟘↔A ∘ Maybe↔𝟙⊎
 
+-- PORTED to HoTT
 Maybe^𝟘↔Fin : ∀ n → Maybe^ n 𝟘 ↔ Fin n
 Maybe^𝟘↔Fin zero    = sym Fin0↔𝟘
 Maybe^𝟘↔Fin (suc n) = sym Fin∘suc↔Maybe∘Fin ∘ Maybe-cong (Maybe^𝟘↔Fin n)
 
+-- PORTED to HoTT
 Maybe^𝟙↔Fin1+ : ∀ n → Maybe^ n 𝟙 ↔ Fin (suc n)
 Maybe^𝟙↔Fin1+ n = Maybe^𝟘↔Fin (suc n) ∘ sym (Maybe∘Maybe^↔Maybe^∘Maybe n) ∘ Maybe^-cong n (sym Maybe𝟘↔𝟙)
 
+-- PORTED to HoTT
 Maybe-⊎ : ∀ {a} {A B : ★ a} → (Maybe A ⊎ B) ↔ Maybe (A ⊎ B)
 Maybe-⊎ {a} = sym Maybe↔Lift𝟙⊎ ∘ ⊎-CMon.assoc (Lift {_} {a} 𝟙) _ _ ∘ (Maybe↔Lift𝟙⊎ ⊎-cong id)
 
+-- PORTED to HoTT
 Maybe^-⊎-+ : ∀ {A} m n → (Maybe^ m 𝟘 ⊎ Maybe^ n A) ↔ Maybe^ (m + n) A
 Maybe^-⊎-+ zero    n = 𝟘⊎A↔A
 Maybe^-⊎-+ (suc m) n = Maybe-cong (Maybe^-⊎-+ m n) ∘ Maybe-⊎
 
+-- PORTED to HoTT
 Σ𝟘↔𝟘 : ∀ {a} (F : 𝟘 → ★_ a) → Σ 𝟘 F ↔ 𝟘
 Σ𝟘↔𝟘 F = inverses proj₁ (λ ()) (λ { ((), _) }) (λ ())
 
+-- PORTED to HoTT
 Σ𝟚↔⊎ : ∀ {a} (F : 𝟚 → ★_ a) → Σ 𝟚 F ↔ (F 0₂ ⊎ F 1₂)
 Σ𝟚↔⊎ F = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
   where
@@ -807,6 +835,7 @@ Maybe^-⊎-+ (suc m) n = Maybe-cong (Maybe^-⊎-+ m n) ∘ Maybe-⊎
     ⇒⇐ (inj₁ _) = ≡.refl
     ⇒⇐ (inj₂ _) = ≡.refl
 
+-- PORTED to HoTT
 ⊎⇿Σ2 : ∀ {ℓ} {A B : ★ ℓ} → (A ⊎ B) ↔ Σ 𝟚 [0: A 1: B ]
 ⊎⇿Σ2 {A = A} {B} = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
   where
@@ -823,6 +852,7 @@ Maybe^-⊎-+ (suc m) n = Maybe-cong (Maybe^-⊎-+ m n) ∘ Maybe-⊎
     ⇒⇐ (0₂ , x) = ≡.refl
     ⇒⇐ (1₂ , x) = ≡.refl
 
+-- PORTED to HoTT
 𝟚↔𝟙⊎𝟙 : 𝟚 ↔ (𝟙 ⊎ 𝟙)
 𝟚↔𝟙⊎𝟙 = inverses (proj (inj₁ _ , inj₂ _)) [ F.const 0₂ , F.const 1₂ ] ⇐⇒ ⇒⇐
   where
@@ -845,6 +875,7 @@ Fin↔𝟙⊎^𝟘 : ∀ n → Fin n ↔ 𝟙⊎^ n
 Fin↔𝟙⊎^𝟘 zero    = Fin0↔𝟘
 Fin↔𝟙⊎^𝟘 (suc n) = Inv.id ⊎-cong Fin↔𝟙⊎^𝟘 n Inv.∘ Fin∘suc↔𝟙⊎Fin
 
+-- PORTED to HoTT
 Fin-×-* : ∀ m n → (Fin m × Fin n) ↔ Fin (m * n)
 Fin-×-* zero n = (Fin 0 × Fin n) ↔⟨ Fin0↔𝟘 ×-cong id ⟩
                  (𝟘 × Fin n) ↔⟨ 𝟘×A↔𝟘 ⟩
@@ -858,6 +889,7 @@ Fin-×-* (suc m) n = (Fin (suc m) × Fin n) ↔⟨ Fin∘suc↔𝟙⊎Fin ×-con
                     Fin (suc m * n) ∎
   where open EquationalReasoning hiding (sym)
 
+-- PORTED to HoTT
 Fin⊎-injective : ∀ {A B : Set} n → (Fin n ⊎ A) ↔ (Fin n ⊎ B) → A ↔ B
 Fin⊎-injective zero    f = 𝟘⊎A↔A ∘ Fin0↔𝟘 ⊎-cong id ∘ f ∘ sym Fin0↔𝟘 ⊎-cong id ∘ sym 𝟘⊎A↔A
 Fin⊎-injective (suc n) f =

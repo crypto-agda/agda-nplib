@@ -6,12 +6,12 @@ open import HoTT
 open import Function.NP
 open import Function.Extensionality
 
-open import Data.Maybe.NP using (Maybe ; just ; nothing ; maybe ; maybe′ ; just-injective)
+open import Data.Maybe.NP using (Maybe ; just ; nothing ; maybe ; maybe′ ; just-injective; Maybe^)
 open import Data.Zero using (𝟘 ; 𝟘-elim)
 open import Data.One using (𝟙)
 open import Data.Two using (𝟚 ; 0₂ ; 1₂ ; [0:_1:_]; twist)
 open import Data.Fin as Fin using (Fin ; suc ; zero)
-open import Data.Nat.NP as ℕ using (ℕ ; suc ; zero)
+open import Data.Nat.NP as ℕ using (ℕ ; suc ; zero; _+_)
 open import Data.Product.NP renaming (proj₁ to fst; proj₂ to snd)
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_])
 
@@ -97,7 +97,7 @@ module _ {{_ : UA}}{A B C : ★} where
       dist-×-→ : ((A ⊎ B) → C) ≡ ((A → C) × (B → C))
       dist-×-→ = ua dist-×-→-equiv
 
-module _ {A : ★}{B : A → ★}{C : (x : A) → B x → ★} where
+module _ {a b c}{A : ★_ a}{B : A → ★_ b}{C : (x : A) → B x → ★_ c} where
     Σ-assoc-equiv : (Σ A (λ x → Σ (B x) (C x))) ≃ (Σ (Σ A B) (uncurry C))
     Σ-assoc-equiv = equiv (λ x → (fst x , fst (snd x)) , snd (snd x))
                           (λ x → fst (fst x) , snd (fst x) , snd x)
@@ -107,7 +107,7 @@ module _ {A : ★}{B : A → ★}{C : (x : A) → B x → ★} where
     Σ-assoc : {{_ : UA}} → (Σ A (λ x → Σ (B x) (C x))) ≡ (Σ (Σ A B) (uncurry C))
     Σ-assoc = ua Σ-assoc-equiv
 
-module _ {A B : ★} where
+module _ {a b}{A : ★_ a} {B : ★_ b} where
     ×-comm-equiv : (A × B) ≃ (B × A)
     ×-comm-equiv = equiv swap swap (λ y → idp) (λ x → idp)
 
@@ -139,7 +139,7 @@ module _ {A B : ★}{C : A → B → ★} where
     ΣΣ-comm : {{_ : UA}} → (Σ A λ x → Σ B λ y → C x y) ≡ (Σ B λ y → Σ A λ x → C x y)
     ΣΣ-comm = ua ΣΣ-comm-equiv
 
-module _ {A B C : ★} where
+module _ {a b c} {A : ★_ a} {B : ★_ b} {C : ★_ c} where
     ×-assoc : {{_ : UA}} → (A × (B × C)) ≡ ((A × B) × C)
     ×-assoc = Σ-assoc
 
@@ -152,25 +152,25 @@ module _ {A B C : ★} where
     ⊎-assoc : {{_ : UA}} → (A ⊎ (B ⊎ C)) ≡ ((A ⊎ B) ⊎ C)
     ⊎-assoc = ua ⊎-assoc-equiv
 
-module _ {{_ : UA}}{{_ : FunExt}}(A : 𝟘 → ★) where
+module _ {{_ : UA}}{{_ : FunExt}}(A : 𝟘 → ★₀) where
     Π𝟘-uniq : Π 𝟘 A ≡ 𝟙
     Π𝟘-uniq = ua (equiv _ (λ _ ()) (λ _ → idp) (λ _ → λ= (λ())))
 
-module _ {{_ : UA}}(A : 𝟙 → ★) where
+module _ {{_ : UA}}{a}(A : 𝟙 → ★_ a) where
     Π𝟙-uniq : Π 𝟙 A ≡ A _
     Π𝟙-uniq = ua (equiv (λ f → f _) (λ x _ → x) (λ _ → idp) (λ _ → idp))
 
-module _ {{_ : UA}}(A : ★) where
+module _ {{_ : UA}}{a}(A : ★_ a) where
     Π𝟙-uniq′ : (𝟙 → A) ≡ A
     Π𝟙-uniq′ = Π𝟙-uniq (λ _ → A)
 
-module _ {{_ : UA}}{{_ : FunExt}}(A : ★) where
+module _ {{_ : UA}}{{_ : FunExt}}(A : ★₀) where
     Π𝟘-uniq′ : (𝟘 → A) ≡ 𝟙
     Π𝟘-uniq′ = Π𝟘-uniq (λ _ → A)
 
-    𝟘→A↔𝟙 = Π𝟘-uniq′
+    𝟘→A≡𝟙 = Π𝟘-uniq′
 
-module _ {{_ : FunExt}}(F G : 𝟘 → ★) where
+module _ {{_ : FunExt}}{ℓ}(F G : 𝟘 → ★_ ℓ) where
     -- also by Π𝟘-uniq twice
     Π𝟘-uniq' : Π 𝟘 F ≡ Π 𝟘 G
     Π𝟘-uniq' = Π=′ 𝟘 (λ())
@@ -182,7 +182,7 @@ module _ {A : 𝟘 → ★} where
     Σ𝟘-fst : {{_ : UA}} → Σ 𝟘 A ≡ 𝟘
     Σ𝟘-fst = ua Σ𝟘-fst-equiv
 
-module _ {A : 𝟙 → ★} where
+module _ {a}{A : 𝟙 → ★_ a} where
     Σ𝟙-snd-equiv : Σ 𝟙 A ≃ A _
     Σ𝟙-snd-equiv = equiv snd (_,_ _) (λ _ → idp) (λ _ → idp)
 
@@ -193,18 +193,32 @@ module _ {A : ★} where
     ⊎𝟘-inl-equiv : A ≃ (A ⊎ 𝟘)
     ⊎𝟘-inl-equiv = equiv inl [inl: id ,inr: (λ()) ] [inl: (λ _ → idp) ,inr: (λ()) ] (λ _ → idp)
 
-    ⊎𝟘-inl : {{_ : UA}} → A ≡ (A ⊎ 𝟘)
-    ⊎𝟘-inl = ua ⊎𝟘-inl-equiv
+    module _ {{_ : UA}} where
+        ⊎𝟘-inl : A ≡ (A ⊎ 𝟘)
+        ⊎𝟘-inl = ua ⊎𝟘-inl-equiv
 
-    𝟙×-snd : {{_ : UA}} → (𝟙 × A) ≡ A
-    𝟙×-snd = Σ𝟙-snd
+        𝟘⊎-inr : A ≡ (𝟘 ⊎ A)
+        𝟘⊎-inr = ⊎𝟘-inl ∙ ⊎-comm
 
-    ×𝟙-fst : {{_ : UA}} → (A × 𝟙) ≡ A
-    ×𝟙-fst = ×-comm ∙ 𝟙×-snd
+        𝟙×-snd : (𝟙 × A) ≡ A
+        𝟙×-snd = Σ𝟙-snd
 
-    -- old names
-    A×𝟙≡A = ×𝟙-fst
-    𝟙×A≡A = 𝟙×-snd
+        ×𝟙-fst : (A × 𝟙) ≡ A
+        ×𝟙-fst = ×-comm ∙ 𝟙×-snd
+
+        𝟘×-fst : (𝟘 × A) ≡ 𝟘
+        𝟘×-fst = Σ𝟘-fst
+
+        ×𝟘-snd : (A × 𝟘) ≡ 𝟘
+        ×𝟘-snd = ×-comm ∙ Σ𝟘-fst
+
+        -- old names
+        A×𝟙≡A = ×𝟙-fst
+        𝟙×A≡A = 𝟙×-snd
+        𝟘⊎A≡A = 𝟘⊎-inr
+        A⊎𝟘≡A = ⊎𝟘-inl
+        𝟘×A≡𝟘 = 𝟘×-fst
+        A×𝟘≡𝟘 = ×𝟘-snd
 
 module _ {A : ★}{B : A → ★}{C : Σ A B → ★} where
     -- AC: Dependent axiom of choice
@@ -223,14 +237,14 @@ module _ {A : 𝟚 → ★}{{_ : UA}}{{_ : FunExt}} where
   Π𝟚-× : Π 𝟚 A ≡ (A 0₂ × A 1₂)
   Π𝟚-× = Π-first 𝟚≃𝟙⊎𝟙 ∙ dist-×-Π ∙ ap₂ _×_ (Π𝟙-uniq _) (Π𝟙-uniq _)
 
-  Π𝟚F↔F₀×F₁ = Π𝟚-×
+  Π𝟚F≡F₀×F₁ = Π𝟚-×
 
 module _ {A : ★}{{_ : UA}}{{_ : FunExt}} where
   Σ𝟚-⊎′ : (𝟚 × A) ≡ (A ⊎ A)
   Σ𝟚-⊎′ = Σ𝟚-⊎
 
-  -- 𝟚→A↔A×A : (𝟚 → A) ↔ (A × A)
-  -- 𝟚→A↔A×A
+  Π𝟚→×′ : (𝟚 → A) ≡ (A × A)
+  Π𝟚→×′ = Π𝟚-×
 
 module _ where
 
@@ -333,8 +347,16 @@ module _ {a}{A : ★_ a} where
      [inl: (λ x → idp) ,inr: (λ x → idp) ]
      (maybe (λ x → idp) idp)
 
-  Maybe≡𝟙⊎ : ∀ {{_ : UA}}→ Maybe A ≡ (𝟙 ⊎ A)
-  Maybe≡𝟙⊎ = ua Maybe≃𝟙⊎
+  module _ {{_ : UA}} where
+
+    Maybe≡𝟙⊎ : Maybe A ≡ (𝟙 ⊎ A)
+    Maybe≡𝟙⊎ = ua Maybe≃𝟙⊎
+
+    Maybe≡Lift𝟙⊎ : Maybe A ≡ (Lift {ℓ = a} 𝟙 ⊎ A)
+    Maybe≡Lift𝟙⊎ = ua (equiv (maybe inr (inl _))
+                      [inl: const nothing ,inr: just ]
+                      [inl: (λ _ → idp)   ,inr: (λ _ → idp) ]
+                      (maybe (λ _ → idp) idp))
 
 module _ {{_ : UA}} where
     Fin0≡𝟘 : Fin 0 ≡ 𝟘
@@ -404,25 +426,26 @@ module _ {{_ : UA}} where
     not-𝟚≡𝟚 : 𝟚 ≡ 𝟚
     not-𝟚≡𝟚 = twist
 
-{-
-TODO ?
-Maybe𝟘↔𝟙 : Maybe 𝟘 ↔ 𝟙
-Maybe𝟘↔𝟙 = A⊎𝟘↔A ∘ Maybe↔𝟙⊎
+    Maybe𝟘≡𝟙 : Maybe 𝟘 ≡ 𝟙
+    Maybe𝟘≡𝟙 = Maybe≡𝟙⊎ ∙ ! ⊎𝟘-inl
 
-Maybe^𝟘↔Fin : ∀ n → Maybe^ n 𝟘 ↔ Fin n
-Maybe^𝟘↔Fin zero    = sym Fin0↔𝟘
-Maybe^𝟘↔Fin (suc n) = sym Fin∘suc↔Maybe∘Fin ∘ Maybe-cong (Maybe^𝟘↔Fin n)
+    Maybe∘Maybe^≡Maybe^∘Maybe : ∀ {a} {A : ★_ a} n → Maybe (Maybe^ n A) ≡ Maybe^ n (Maybe A)
+    Maybe∘Maybe^≡Maybe^∘Maybe zero    = idp
+    Maybe∘Maybe^≡Maybe^∘Maybe (suc n) = ap Maybe (Maybe∘Maybe^≡Maybe^∘Maybe n)
 
-Maybe^𝟙↔Fin1+ : ∀ n → Maybe^ n 𝟙 ↔ Fin (suc n)
-Maybe^𝟙↔Fin1+ n = Maybe^𝟘↔Fin (suc n) ∘ sym (Maybe∘Maybe^↔Maybe^∘Maybe n) ∘ Maybe^-cong n (sym Maybe𝟘↔𝟙)
+    Maybe^𝟘≡Fin : ∀ n → Maybe^ n 𝟘 ≡ Fin n
+    Maybe^𝟘≡Fin zero    = ! Fin0≡𝟘
+    Maybe^𝟘≡Fin (suc n) = ap Maybe (Maybe^𝟘≡Fin n) ∙ ! Fin∘suc≡Maybe∘Fin
 
-Maybe-⊎ : ∀ {a} {A B : ★ a} → (Maybe A ⊎ B) ↔ Maybe (A ⊎ B)
-Maybe-⊎ {a} = sym Maybe↔Lift𝟙⊎ ∘ ⊎-CMon.assoc (Lift {_} {a} 𝟙) _ _ ∘ (Maybe↔Lift𝟙⊎ ⊎-cong id)
+    Maybe^𝟙≡Fin1+ : ∀ n → Maybe^ n 𝟙 ≡ Fin (suc n)
+    Maybe^𝟙≡Fin1+ n = ap (Maybe^ n) (! Maybe𝟘≡𝟙) ∙ ! Maybe∘Maybe^≡Maybe^∘Maybe n ∙ Maybe^𝟘≡Fin (suc n)
 
-Maybe^-⊎-+ : ∀ {A} m n → (Maybe^ m 𝟘 ⊎ Maybe^ n A) ↔ Maybe^ (m + n) A
-Maybe^-⊎-+ zero    n = 𝟘⊎A↔A
-Maybe^-⊎-+ (suc m) n = Maybe-cong (Maybe^-⊎-+ m n) ∘ Maybe-⊎
--}
+    Maybe-⊎ : ∀ {a} {A B : ★_ a} → (Maybe A ⊎ B) ≡ Maybe (A ⊎ B)
+    Maybe-⊎ {a} = ⊎= Maybe≡Lift𝟙⊎ idp ∙ ! ⊎-assoc ∙ ! Maybe≡Lift𝟙⊎
+
+    Maybe^-⊎-+ : ∀ {A} m n → (Maybe^ m 𝟘 ⊎ Maybe^ n A) ≡ Maybe^ (m + n) A
+    Maybe^-⊎-+ zero    n = ! 𝟘⊎-inr
+    Maybe^-⊎-+ (suc m) n = Maybe-⊎ ∙ ap Maybe (Maybe^-⊎-+ m n)
 -- -}
 -- -}
 -- -}
