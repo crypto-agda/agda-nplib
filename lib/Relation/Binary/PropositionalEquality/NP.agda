@@ -5,7 +5,7 @@ module Relation.Binary.PropositionalEquality.NP where
 open import Type hiding (★)
 open import Data.One using (𝟙)
 open import Data.Product using (Σ; _,_)
-open import Relation.Binary.PropositionalEquality public hiding (module ≡-Reasoning)
+open import Relation.Binary.PropositionalEquality public hiding (module ≡-Reasoning; subst)
 open import Relation.Binary.NP
 open import Relation.Binary.Bijection
 open import Relation.Binary.Logical
@@ -61,23 +61,32 @@ coe : ∀ {i} {A B : ★ i} (p : A ≡ B) → A → B
 coe refl x = x
 
 coe! : ∀ {i} {A B : ★ i} (p : A ≡ B) → B → A
-coe! p x = coe (! p) x
+coe! p = coe (! p)
+
+module _ {ℓ ℓp}
+         {A : Set ℓ}
+         (P : A → Set ℓp)
+         {x y : A}
+         (p : x ≡ y)
+         where
+    tr : P x → P y
+    tr = coe (ap P p)
 
 cong₃ : ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : Set d}
-          (f : A → B → C → D) {a₁ a₂ b₁ b₂ c₁ c₂}
-        → a₁ ≡ a₂ → b₁ ≡ b₂ → c₁ ≡ c₂ → f a₁ b₁ c₁ ≡ f a₂ b₂ c₂
+          (f : A → B → C → D) {a₀ a₁ b₀ b₁ c₀ c₁}
+        → a₀ ≡ a₁ → b₀ ≡ b₁ → c₀ ≡ c₁ → f a₀ b₀ c₀ ≡ f a₁ b₁ c₁
 cong₃ f refl refl refl = refl
 
 _≗₂_ : ∀ {a b c} {A : ★ a} {B : ★ b} {C : ★ c} (f g : A → B → C) → ★ _
 f ≗₂ g = ∀ x y → f x y ≡ g x y
 
 module _ {a} {A : ★ a} where
-  J-orig : ∀ {b} (P : {x y : A} → x ≡ y → ★_ b) → (∀ {x} → P {x} {x} refl) → ∀ {x y} (p : x ≡ y) → P p
-  J-orig P p refl = p
+  J-orig : ∀ {b} (P : (x y : A) → x ≡ y → ★_ b) → (∀ x → P x x refl) → ∀ {x y} (p : x ≡ y) → P x y p
+  J-orig P p refl = p _
 
   -- This version is better suited to our identity type which has the first argument as a parameter.
   -- (due to Paulin-Mohring)
-  J : ∀ {b} {x : A} (P : {y : A} → x ≡ y → ★_ b) → P {x} refl → ∀ {y} (p : x ≡ y) → P p
+  J : ∀ {b} {x : A} (P : (y : A) → x ≡ y → ★_ b) → P x refl → ∀ {y} (p : x ≡ y) → P y p
   J P p refl = p
 
   injective : InjectiveRel A _≡_
@@ -103,18 +112,18 @@ module _ {a} {A : ★ a} where
 module ≡-Reasoning {a} {A : ★ a} where
   open Setoid-Reasoning (setoid A) public
     renaming (_≈⟨_⟩_ to _≡⟨_⟩_;
-                    _≈⟨-by-definition-⟩_ to _≡⟨-by-definition-⟩_)
+                    _≈⟨by-definition⟩_ to _≡⟨by-definition⟩_)
 
 module ≗-Reasoning {a b} {A : ★ a} {B : ★ b} where
   open Setoid-Reasoning (A →-setoid B) public
     renaming (_≈⟨_⟩_ to _≗⟨_⟩_;
-                    _≈⟨-by-definition-⟩_ to _≗⟨-by-definition-⟩_)
+                    _≈⟨by-definition⟩_ to _≗⟨by-definition⟩_)
 
-data ⟦≡⟧ {a₁ a₂ aᵣ}
-         {A₁ A₂} (Aᵣ : ⟦★⟧ {a₁} {a₂} aᵣ A₁ A₂)
-         {x₁ x₂} (xᵣ : Aᵣ x₁ x₂)
-       : (Aᵣ ⟦→⟧ ⟦★⟧ aᵣ) (_≡_ x₁) (_≡_ x₂) where
-    -- : ∀ {y₁ y₂} (yᵣ : Aᵣ y₁ y₂) → x₁ ≡ y₁ → x₂ ≡ y₂ → ★
+data ⟦≡⟧ {a₀ a₁ aᵣ}
+         {A₀ A₁} (Aᵣ : ⟦★⟧ {a₀} {a₁} aᵣ A₀ A₁)
+         {x₀ x₁} (xᵣ : Aᵣ x₀ x₁)
+       : (Aᵣ ⟦→⟧ ⟦★⟧ aᵣ) (_≡_ x₀) (_≡_ x₁) where
+    -- : ∀ {y₀ y₁} (yᵣ : Aᵣ y₀ y₁) → x₀ ≡ y₀ → x₁ ≡ y₁ → ★
   ⟦refl⟧ : ⟦≡⟧ Aᵣ xᵣ xᵣ refl refl
 
 -- Double checking level 0 with a direct ⟦_⟧ encoding
