@@ -8,16 +8,71 @@ open import Algebra.FunctionProperties.NP
 open import Data.Nat public hiding (module GeneralisedArithmetic; module ≤-Reasoning; fold)
 open import Data.Nat.Properties
 open import Data.Nat.Logical
-open import Data.Two hiding (_==_)
+open import Data.Two hiding (_==_;_²)
 import Data.Two.Equality as 𝟚==
 open import Data.Product using (proj₁; proj₂; ∃; _,_)
 open import Data.Sum renaming (map to ⊎-map)
 open import Data.Zero using (𝟘-elim; 𝟘)
+open import Data.One using (𝟙)
 open import Function.NP
+open import Function.Extensionality
 open import Relation.Nullary
 open import Relation.Binary.NP
 import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_; _≢_; _≗_; module ≡-Reasoning; !_; _∙_; ap) renaming (refl to idp)
+open ≡ using (_≡_; _≢_; _≗_; module ≡-Reasoning; !_; _∙_; ap; coe) renaming (refl to idp)
+open import HoTT
+open Equivalences
+
+⟨0↔1⟩ : ℕ → ℕ
+⟨0↔1⟩ 0 = 1
+⟨0↔1⟩ 1 = 0
+⟨0↔1⟩ n = n
+
+private
+  _² : ∀ {A : ★₀} → Endo (Endo A)
+  f ² = f ∘ f
+
+⟨0↔1⟩-involutive : ⟨0↔1⟩ ∘ ⟨0↔1⟩ ≗ id
+⟨0↔1⟩-involutive 0             = idp
+⟨0↔1⟩-involutive 1             = idp
+⟨0↔1⟩-involutive (suc (suc _)) = idp
+
+⇑⟨_⟩ : (ℕ → ℕ) → (ℕ → ℕ)
+⇑⟨ f ⟩ zero    = zero
+⇑⟨ f ⟩ (suc n) = suc (f n)
+
+⟨0↔1+_⟩ : ℕ → ℕ → ℕ
+⟨0↔1+ 0     ⟩ = ⟨0↔1⟩
+⟨0↔1+ suc n ⟩ = ⟨0↔1⟩ ∘ ⇑⟨ ⟨0↔1+ n ⟩ ⟩ ∘ ⟨0↔1⟩
+
+⟨_↔+1⟩ : ℕ → ℕ → ℕ
+⟨ 0     ↔+1⟩ = ⟨0↔1⟩
+⟨ suc n ↔+1⟩ 0       = 0
+⟨ suc n ↔+1⟩ (suc m) = suc (⟨ n ↔+1⟩ m)
+
+⟨_↔+1⟩-involutive : ∀ n → ⟨ n ↔+1⟩ ∘ ⟨ n ↔+1⟩ ≗ id
+⟨_↔+1⟩-involutive 0 = ⟨0↔1⟩-involutive
+⟨_↔+1⟩-involutive (suc _) 0       = idp
+⟨_↔+1⟩-involutive (suc n) (suc m) = ap suc (⟨ n ↔+1⟩-involutive m)
+
+⟨_↔+1⟩-equiv : ℕ → ℕ ≃ ℕ
+⟨ n ↔+1⟩-equiv = self-inv-equiv ⟨ n ↔+1⟩ ⟨ n ↔+1⟩-involutive
+
+⇑⟨_⟩-involutive : ∀ {f} → f ² ≗ id → ⇑⟨ f ⟩ ² ≗ id
+⇑⟨ f²id ⟩-involutive zero    = idp
+⇑⟨ f²id ⟩-involutive (suc x) = ap suc (f²id x)
+
+⟨0↔1+_⟩-involutive : ∀ n → ⟨0↔1+ n ⟩ ² ≗ id
+⟨0↔1+_⟩-involutive zero = ⟨0↔1⟩-involutive
+⟨0↔1+_⟩-involutive (suc n) x = ap (⟨0↔1⟩ ∘ ⇑⟨ ⟨0↔1+ n ⟩ ⟩) (⟨0↔1⟩-involutive (⇑⟨ ⟨0↔1+ n ⟩ ⟩ (⟨0↔1⟩ x)))
+  ∙ ap ⟨0↔1⟩ (⇑⟨ ⟨0↔1+ n ⟩-involutive ⟩-involutive (⟨0↔1⟩ x)) ∙ ⟨0↔1⟩-involutive x
+
+module _ {{_ : UA}} where
+    ⟨_↔+1⟩-eq : ℕ → ℕ ≡ ℕ
+    ⟨_↔+1⟩-eq = ua ∘ ⟨_↔+1⟩-equiv
+
+    ⟨_↔+1⟩-eq-β : ∀ n m → coe ⟨ n ↔+1⟩-eq m ≡ ⟨ n ↔+1⟩ m
+    ⟨_↔+1⟩-eq-β = coe-β ∘ ⟨_↔+1⟩-equiv
 
 ℕˢ = ≡.setoid ℕ
 
@@ -310,6 +365,17 @@ b ^ suc n = b * b ^ n
 ≤⇒∃ z≤n      = _ , idp
 ≤⇒∃ (s≤s pf) = _ , ap suc (proj₂ (≤⇒∃ pf))
 
+is0? : ℕ → 𝟚
+is0? zero    = 1₂
+is0? (suc n) = 0₂
+
+module _ {{_ : UA}} where
+    open Equivalences
+    ∃-is0?-uniq : ∃ (✓ ∘ is0?) ≡ 𝟙
+    ∃-is0?-uniq = ua (equiv _ (const (0 , _)) (const idp)
+                            λ { (0 , _) → idp ; (suc _ , ()) })
+
+
 {-
 module GeneralisedArithmetic {a} {A : ★ a} (0# : A) (1+ : A → A) where
 
@@ -450,3 +516,7 @@ even? odd? : ℕ → 𝟚
 even? zero    = 1₂
 even? (suc n) = odd? n 
 odd? n = not (even? n)
+-- -}
+-- -}
+-- -}
+-- -}
