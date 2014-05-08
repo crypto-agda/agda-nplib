@@ -5,7 +5,7 @@ module Relation.Binary.PropositionalEquality.NP where
 open import Type hiding (★)
 open import Data.One using (𝟙)
 open import Data.Product using (Σ; _,_)
-open import Relation.Binary.PropositionalEquality public hiding (module ≡-Reasoning; subst)
+open import Relation.Binary.PropositionalEquality public hiding (module ≡-Reasoning; subst) renaming (cong₂ to ap₂)
 open import Relation.Binary.NP
 open import Relation.Binary.Bijection
 open import Relation.Binary.Logical

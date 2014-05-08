@@ -153,7 +153,7 @@ module EndoMonoid-≈ {a ℓ} {A : ★ a}
 
   open Monoid monoid public
 
-module EndoMonoid-≡ {a} (A : ★ a) = EndoMonoid-≈ {A = A} ≡.isEquivalence (≡.cong₂ _∘′_)
+module EndoMonoid-≡ {a} (A : ★ a) = EndoMonoid-≈ {A = A} ≡.isEquivalence (≡.ap₂ _∘′_)
 
 module EndoMonoid-≗ {a} (A : ★ a) = EndoMonoid-≈ (Setoid.isEquivalence (A ≡.→-setoid A))
                                                    (λ {f} {g} {h} {i} p q x → ≡.trans (p (h x)) (≡.cong g (q x)))

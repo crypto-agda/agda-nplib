@@ -133,10 +133,10 @@ private
                    ⟦REL⟧ Aᵣ Bᵣ {ℓ₁} {ℓ₂} ℓᵣ ⟦→⟧ ⟦★⟧ _) Decidable Decidable
 ⟦Decidable⟧ Aᵣ Bᵣ _∼ᵣ_ = ⟨ xᵣ ∶ Aᵣ ⟩⟦→⟧ ⟨ yᵣ ∶ Bᵣ ⟩⟦→⟧ ⟦Dec⟧ (xᵣ ∼ᵣ yᵣ)
 
-⟦Op₁⟧ : ∀ {a} → (⟦★⟧ {a} {a} a ⟦→⟧ ⟦★⟧ a) Op₁ Op₁
+⟦Op₁⟧ : ∀ {a₁ a₂ aᵣ} → (⟦★⟧ {a₁} {a₂} (a₁ ⊔ a₂ ⊔ aᵣ) ⟦→⟧ ⟦★⟧ _) Op₁ Op₁
 ⟦Op₁⟧ Aᵣ = Aᵣ ⟦→⟧ Aᵣ
 
-⟦Op₂⟧ : ∀ {a} → (⟦★⟧ {a} {a} a ⟦→⟧ ⟦★⟧ a) Op₂ Op₂
+⟦Op₂⟧ : ∀ {a₁ a₂ aᵣ} → (⟦★⟧ {a₁} {a₂} (a₁ ⊔ a₂ ⊔ aᵣ) ⟦→⟧ ⟦★⟧ _) Op₂ Op₂
 ⟦Op₂⟧ Aᵣ = Aᵣ ⟦→⟧ Aᵣ ⟦→⟧ Aᵣ
 
 open import Function.Equivalence

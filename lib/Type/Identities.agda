@@ -12,20 +12,114 @@ open import Data.One using (𝟙)
 open import Data.Two
 open import Data.Fin as Fin using (Fin ; suc ; zero)
 open import Data.Nat.NP as ℕ using (ℕ ; suc ; zero; _+_)
-open import Data.Product.NP renaming (proj₁ to fst; proj₂ to snd)
-open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_])
+open import Data.Product.NP renaming (proj₁ to fst; proj₂ to snd; map to map×)
+open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_]; map to map⊎)
 
 import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_; _≢_ ; ap; coe; coe!; !_; _∙_; J ; inspect ; Reveal_is_ ; [_]; tr) renaming (refl to idp; cong₂ to ap₂; _≗_ to _∼_)
+open ≡ using (_≡_; _≢_ ; ap; coe; coe!; !_; _∙_; J ; inspect ; Reveal_is_ ; [_]; tr; ap₂) renaming (refl to idp; _≗_ to _∼_)
 
 module Type.Identities where
 
 open Equivalences
 
+module _ {a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x){{_ : FunExt}} where
+    Σ=′ : Σ A B₀ ≡ Σ A B₁
+    Σ=′ = ap (Σ A) (λ= B)
 
--- for use with ap₂ etc.
-_⟶_ : ∀ {a b} → ★_ a → ★_ b → ★_ (b ⊔ a)
-A ⟶ B = A → B
+    Π=′ : Π A B₀ ≡ Π A B₁
+    Π=′ = ap (Π A) (λ= B)
+
+module _ {a b}{A₀ : ★_ a}{B₀ : A₀ → ★_ b}{{_ : FunExt}} where
+    Σ= : {A₁ : ★_ a}(A= : A₀ ≡ A₁)
+         {B₁ : A₁ → ★_ b}(B= : (x : A₀) → B₀ x ≡ B₁ (coe A= x))
+       → Σ A₀ B₀ ≡ Σ A₁ B₁
+    Σ= idp B= = Σ=′ _ B=
+
+    Π= : ∀ {A₁ : ★_ a}(A= : A₀ ≡ A₁)
+           {B₁ : A₁ → ★_ b}(B= : (x : A₀) → B₀ x ≡ B₁ (coe A= x))
+         → Π A₀ B₀ ≡ Π A₁ B₁
+    Π= idp B= = Π=′ _ B=
+
+module _ {a}{A₀ A₁ : ★_ a}{b}{B₀ B₁ : ★_ b}(A= : A₀ ≡ A₁)(B= : B₀ ≡ B₁) where
+    ×= : (A₀ × B₀) ≡ (A₁ × B₁)
+    ×= = ap₂ _×_ A= B=
+
+    ⊎= : (A₀ ⊎ B₀) ≡ (A₁ ⊎ B₁)
+    ⊎= = ap₂ _⊎_ A= B=
+
+    →= : (A₀ → B₀) ≡ (A₁ → B₁)
+    →= = ap₂ -→- A= B=
+
+module _ {a}{A₀ A₁ : ★_ a}{b}{B₀ B₁ : ★_ b}(A≃ : A₀ ≃ A₁)(B≃ : B₀ ≃ B₁) where
+{-
+    ×≃ : (A₀ × B₀) ≃ (A₁ × B₁)
+    ×≃ = equiv (map× (–> A≃) (–> B≃)) (map× (<– A≃) (<– B≃))
+               (λ y → pair= (<–-inv-r A≃ (fst y)) ({!!} ∙ <–-inv-r B≃ (snd y)))
+               {!!}
+               -}
+
+    ⊎≃ : (A₀ ⊎ B₀) ≃ (A₁ ⊎ B₁)
+    ⊎≃ = equiv (map⊎ (–> A≃) (–> B≃)) (map⊎ (<– A≃) (<– B≃))
+               [inl: (λ x → ap inl (<–-inv-r A≃ x)) ,inr: ap inr ∘ <–-inv-r B≃ ]
+               [inl: (λ x → ap inl (<–-inv-l A≃ x)) ,inr: ap inr ∘ <–-inv-l B≃ ]
+
+    →≃ : {{_ : FunExt}} → (A₀ → B₀) ≃ (A₁ → B₁)
+    →≃ = equiv (λ f → –> B≃ ∘ f ∘ <– A≃)
+               (λ f → <– B≃ ∘ f ∘ –> A≃)
+               (λ f → λ= (λ x → <–-inv-r B≃ _ ∙ ap f (<–-inv-r A≃ x)))
+               (λ f → λ= (λ x → <–-inv-l B≃ _ ∙ ap f (<–-inv-l A≃ x)))
+
+module _ {{_ : UA}}{{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b}{B₀ : A₀ → ★_ b}{B₁ : A₁ → ★_ b} where
+    Σ≃ : (A≃ : A₀ ≃ A₁)(B= : (x : A₀) → B₀ x ≡ B₁ (–> A≃ x))
+         → Σ A₀ B₀ ≡ Σ A₁ B₁
+    Σ≃ A≃ B= = Σ= (ua A≃) λ x → B= x ∙ ap B₁ (! coe-β A≃ x)
+
+    Π≃ : (A : A₀ ≃ A₁)(B : (x : A₀) → B₀ x ≡ B₁ (–> A x))
+         → Π A₀ B₀ ≡ Π A₁ B₁
+    Π≃ A B = Π= (ua A) λ x → B x ∙ ap B₁ (! coe-β A x)
+
+    {-
+module _ {{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b}{B₀ : A₀ → ★_ b}{B₁ : A₁ → ★_ b}(A : A₀ ≃ A₁)(B : (x : A₁) → B₀ (<– A x) ≃ B₁ x) where
+    Π≃' : (Π A₀ B₀) ≃ (Π A₁ B₁)
+    Π≃' = equiv (λ f x → –> (B x) (f (<– A x)))
+                {!λ f x → <– (B x) {!(f (–> A x))!}!}
+                {!λ f → λ= (λ x → <–-inv-r B _ ∙ ap f (<–-inv-r A x))!}
+                {!λ f → λ= (λ x → <–-inv-l B _ ∙ ap f (<–-inv-l A x))!}
+                -}
+
+module _ {{_ : UA}}{{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b} where
+    Σ-fst≃ : ∀ (A : A₀ ≃ A₁)(B : A₁ → ★_ b) → Σ A₀ (B ∘ –> A) ≡ Σ A₁ B
+    Σ-fst≃ A B = Σ≃ A (λ x → idp)
+
+    Σ-fst= : ∀ (A : A₀ ≡ A₁)(B : A₁ → ★_ b) → Σ A₀ (B ∘ coe A) ≡ Σ A₁ B
+    Σ-fst= A = Σ-fst≃ (coe-equiv A)
+
+    Π-dom≃ : ∀ (A : A₀ ≃ A₁)(B : A₁ → ★_ b) → Π A₀ (B ∘ –> A) ≡ Π A₁ B
+    Π-dom≃ A B = Π≃ A (λ x → idp)
+
+    Π-dom= : ∀ (A : A₀ ≡ A₁)(B : A₁ → ★_ b) → Π A₀ (B ∘ coe A) ≡ Π A₁ B
+    Π-dom= A = Π-dom≃ (coe-equiv A)
+
+    -- variations where the equiv is transported backward on the right side
+
+    Σ-fst≃′ : (A : A₁ ≃ A₀)(B : A₁ → ★_ b) → Σ A₁ B ≡ Σ A₀ (B ∘ <– A)
+    Σ-fst≃′ A B = ! Σ-fst≃ (≃-sym A) B
+
+    Σ-fst=′ : (A : A₁ ≡ A₀)(B : A₁ → ★_ b) → Σ A₁ B ≡ Σ A₀ (B ∘ coe! A)
+    Σ-fst=′ A = Σ-fst≃′ (coe-equiv A)
+
+    Π-dom≃′ : (A : A₁ ≃ A₀)(B : A₁ → ★_ b) → Π A₁ B ≡ Π A₀ (B ∘ <– A)
+    Π-dom≃′ A B = ! Π-dom≃ (≃-sym A) B
+
+    Π-dom=′ : (A : A₁ ≡ A₀)(B : A₁ → ★_ b) → Π A₁ B ≡ Π A₀ (B ∘ coe! A)
+    Π-dom=′ A = Π-dom≃′ (coe-equiv A)
+
+module _ {a b c} {A : ★_ a} {B : A → ★_ b} {C : Σ A B → ★_ c} where
+    ΠΣ-curry-equiv : Π (Σ A B) C ≃ ((x : A) (y : B x) → C (x , y))
+    ΠΣ-curry-equiv = equiv curry uncurry (λ _ → idp) (λ _ → idp)
+
+    ΠΣ-curry : {{_ : UA}} → Π (Σ A B) C ≡ ((x : A) (y : B x) → C (x , y))
+    ΠΣ-curry = ua ΠΣ-curry-equiv
 
 𝟚≃𝟙⊎𝟙 : 𝟚 ≃ (𝟙 ⊎ 𝟙)
 𝟚≃𝟙⊎𝟙 = equiv [0: inl _ 1: inr _ ]
@@ -47,7 +141,7 @@ module _ {{_ : UA}}{A : ★}{B C : A → ★} where
                          (λ { (x , inl y) → idp
                             ; (x , inr y) → idp }))
 
-module _ {{_ : UA}}{A B : ★}{C : A ⊎ B → ★} where
+module _ {{_ : UA}}{a b c}{A : ★_ a}{B : ★_ b}{C : A ⊎ B → ★_ c} where
     dist-⊎-Σ-equiv : Σ (A ⊎ B) C ≃ (Σ A (C ∘ inl) ⊎ Σ B (C ∘ inr))
     dist-⊎-Σ-equiv = equiv (λ { (inl x , y) → inl (x , y)
                               ; (inr x , y) → inr (x , y) })
@@ -152,9 +246,13 @@ module _ {a b c} {A : ★_ a} {B : ★_ b} {C : ★_ c} where
     ⊎-assoc : {{_ : UA}} → (A ⊎ (B ⊎ C)) ≡ ((A ⊎ B) ⊎ C)
     ⊎-assoc = ua ⊎-assoc-equiv
 
-module _ {{_ : UA}}{{_ : FunExt}}(A : 𝟘 → ★₀) where
-    Π𝟘-uniq : Π 𝟘 A ≡ 𝟙
+module _ {{_ : UA}}{{_ : FunExt}}{a}(A : 𝟘 → ★_ a) where
+    Π𝟘-uniq : Π 𝟘 A ≡ Lift 𝟙
     Π𝟘-uniq = ua (equiv _ (λ _ ()) (λ _ → idp) (λ _ → λ= (λ())))
+
+module _ {{_ : UA}}{{_ : FunExt}}(A : 𝟘 → ★₀) where
+    Π𝟘-uniq₀ : Π 𝟘 A ≡ 𝟙
+    Π𝟘-uniq₀ = ua (equiv _ (λ _ ()) (λ _ → idp) (λ _ → λ= (λ())))
 
 module _ {{_ : UA}}{a}(A : 𝟙 → ★_ a) where
     Π𝟙-uniq : Π 𝟙 A ≡ A _
@@ -166,7 +264,7 @@ module _ {{_ : UA}}{a}(A : ★_ a) where
 
 module _ {{_ : UA}}{{_ : FunExt}}(A : ★₀) where
     Π𝟘-uniq′ : (𝟘 → A) ≡ 𝟙
-    Π𝟘-uniq′ = Π𝟘-uniq (λ _ → A)
+    Π𝟘-uniq′ = Π𝟘-uniq₀ (λ _ → A)
 
     𝟘→A≡𝟙 = Π𝟘-uniq′
 
@@ -174,6 +272,14 @@ module _ {{_ : FunExt}}{ℓ}(F G : 𝟘 → ★_ ℓ) where
     -- also by Π𝟘-uniq twice
     Π𝟘-uniq' : Π 𝟘 F ≡ Π 𝟘 G
     Π𝟘-uniq' = Π=′ 𝟘 (λ())
+
+module _ {a ℓ} {A : 𝟘 → ★_ a} where
+    Σ𝟘-lift∘fst-equiv : Σ 𝟘 A ≃ Lift {ℓ = ℓ} 𝟘
+    Σ𝟘-lift∘fst-equiv = equiv (lift ∘ fst) (λ { (lift ()) }) (λ { (lift ()) }) (λ { (() , _) })
+
+module _ {a} {A : 𝟘 → ★_ a} {{_ : UA}} where
+    Σ𝟘-lift∘fst : Σ 𝟘 A ≡ Lift {ℓ = a} 𝟘
+    Σ𝟘-lift∘fst = ua Σ𝟘-lift∘fst-equiv
 
 module _ {A : 𝟘 → ★} where
     Σ𝟘-fst-equiv : Σ 𝟘 A ≃ 𝟘
@@ -230,12 +336,12 @@ module _ {A : ★}{B : A → ★}{C : Σ A B → ★} where
             → (∀ (x : A) → ∃ λ (y : B x) → C (x , y)) ≡ (∃ λ (f : Π A B) → ∀ (x : A) → C (x , f x))
     ΠΣ-comm = ua ΠΣ-comm-equiv
 
-module _ {A : 𝟚 → ★}{{_ : UA}}{{_ : FunExt}} where
+module _ {ℓ}{A : 𝟚 → ★_ ℓ}{{_ : UA}}{{_ : FunExt}} where
   Σ𝟚-⊎ : Σ 𝟚 A ≡ (A 0₂ ⊎ A 1₂)
-  Σ𝟚-⊎ = Σ-first 𝟚≃𝟙⊎𝟙 ∙ dist-⊎-Σ ∙ ap₂ _⊎_ Σ𝟙-snd Σ𝟙-snd
+  Σ𝟚-⊎ = Σ-fst≃′ 𝟚≃𝟙⊎𝟙 _ ∙ dist-⊎-Σ ∙ ⊎= Σ𝟙-snd Σ𝟙-snd
 
   Π𝟚-× : Π 𝟚 A ≡ (A 0₂ × A 1₂)
-  Π𝟚-× = Π-first 𝟚≃𝟙⊎𝟙 ∙ dist-×-Π ∙ ap₂ _×_ (Π𝟙-uniq _) (Π𝟙-uniq _)
+  Π𝟚-× = Π-dom≃′ 𝟚≃𝟙⊎𝟙 _ ∙ dist-×-Π ∙ ×= (Π𝟙-uniq _) (Π𝟙-uniq _)
 
   Π𝟚F≡F₀×F₁ = Π𝟚-×
 
@@ -358,15 +464,21 @@ module _ {a}{A : ★_ a} where
                       [inl: (λ _ → idp)   ,inr: (λ _ → idp) ]
                       (maybe (λ _ → idp) idp))
 
+Fin0≃𝟘 : Fin 0 ≃ 𝟘
+Fin0≃𝟘 = equiv (λ ()) (λ ()) (λ ()) (λ ())
+
+Fin1≃𝟙 : Fin 1 ≃ 𝟙
+Fin1≃𝟙 = equiv _ (λ _ → zero) (λ _ → idp) β
+  where β : (_ : Fin 1) → _
+        β zero = idp
+        β (suc ())
+
 module _ {{_ : UA}} where
     Fin0≡𝟘 : Fin 0 ≡ 𝟘
-    Fin0≡𝟘 = ua (equiv (λ ()) (λ ()) (λ ()) (λ ()))
+    Fin0≡𝟘 = ua Fin0≃𝟘
 
     Fin1≡𝟙 : Fin 1 ≡ 𝟙
-    Fin1≡𝟙 = ua (equiv _ (λ _ → zero) (λ _ → idp) β)
-      where β : (_ : Fin 1) → _
-            β zero = idp
-            β (suc ())
+    Fin1≡𝟙 = ua Fin1≃𝟙
 
 module _ where
   isZero? : ∀ {n}{A : Fin (suc n) → Set} → ((i : Fin n) → A (suc i)) → A zero
@@ -383,17 +495,17 @@ module _ where
   Fin∘suc≡𝟙⊎Fin = ua Fin∘suc≃𝟙⊎Fin
 
 Fin-⊎-+ : ∀ {{_ : UA}} {m n} → (Fin m ⊎ Fin n) ≡ Fin (m ℕ.+ n)
-Fin-⊎-+ {zero} = ap₂ _⊎_ Fin0≡𝟘 idp ∙ ⊎-comm ∙ ! ⊎𝟘-inl
-Fin-⊎-+ {suc m} = ap₂ _⊎_ Fin∘suc≡𝟙⊎Fin idp ∙ ! ⊎-assoc ∙ ap (_⊎_ 𝟙) Fin-⊎-+ ∙ ! Fin∘suc≡𝟙⊎Fin
+Fin-⊎-+ {zero}  = ⊎= Fin0≡𝟘 idp ∙ ⊎-comm ∙ ! ⊎𝟘-inl
+Fin-⊎-+ {suc m} = ⊎= Fin∘suc≡𝟙⊎Fin idp ∙ ! ⊎-assoc ∙ ap (_⊎_ 𝟙) Fin-⊎-+ ∙ ! Fin∘suc≡𝟙⊎Fin
 
 Fin-×-* : ∀ {{_ : UA}} {m n} → (Fin m × Fin n) ≡ Fin (m ℕ.* n)
-Fin-×-* {zero} = ap₂ _×_ Fin0≡𝟘 idp ∙ Σ𝟘-fst ∙ ! Fin0≡𝟘
-Fin-×-* {suc m} = ap₂ _×_ Fin∘suc≡𝟙⊎Fin idp ∙ dist-⊎-× ∙ ap₂ _⊎_ Σ𝟙-snd Fin-×-* ∙ Fin-⊎-+
+Fin-×-* {zero}  = ×= Fin0≡𝟘 idp ∙ Σ𝟘-fst ∙ ! Fin0≡𝟘
+Fin-×-* {suc m} = ×= Fin∘suc≡𝟙⊎Fin idp ∙ dist-⊎-× ∙ ⊎= Σ𝟙-snd Fin-×-* ∙ Fin-⊎-+
 
 Fin-→-^ : ∀ {{_ : UA}}{{_ : FunExt}}{m n} → (Fin m → Fin n) ≡ Fin (n ℕ.^ m)
-Fin-→-^ {zero} = ap₂ _⟶_ Fin0≡𝟘 idp ∙ Π𝟘-uniq′ _ ∙ ⊎𝟘-inl ∙ ap (_⊎_ 𝟙) (! Fin0≡𝟘)
+Fin-→-^ {zero}  = →= Fin0≡𝟘 idp ∙ Π𝟘-uniq′ _ ∙ ⊎𝟘-inl ∙ ap (_⊎_ 𝟙) (! Fin0≡𝟘)
                   ∙ ! Fin∘suc≡𝟙⊎Fin
-Fin-→-^ {suc m} = ap₂ _⟶_ Fin∘suc≡𝟙⊎Fin idp ∙ dist-×-→ ∙ ap₂ _×_ (Π𝟙-uniq _) Fin-→-^ ∙ Fin-×-*
+Fin-→-^ {suc m} = →= Fin∘suc≡𝟙⊎Fin idp ∙ dist-×-→ ∙ ×= (Π𝟙-uniq _) Fin-→-^ ∙ Fin-×-*
 
 Fin∘suc≡Maybe∘Fin : ∀ {{_ : UA}}{n} → Fin (suc n) ≡ Maybe (Fin n)
 Fin∘suc≡Maybe∘Fin = Fin∘suc≡𝟙⊎Fin ∙ ! Maybe≡𝟙⊎
@@ -407,11 +519,11 @@ Fin-injective {suc m} {suc n} Finm≡Finn
             (! Fin∘suc≡Maybe∘Fin ∙ Finm≡Finn ∙ Fin∘suc≡Maybe∘Fin)))
 
 Fin⊎-injective : ∀ {{_ : UA}}{A B : Set} n → (Fin n ⊎ A) ≡ (Fin n ⊎ B) → A ≡ B
-Fin⊎-injective zero    f = ⊎𝟘-inl ∙ ⊎-comm ∙  ap₂ _⊎_ (! Fin0≡𝟘) idp
-                       ∙ f ∙ (ap₂ _⊎_ Fin0≡𝟘 idp ∙ ⊎-comm) ∙ ! ⊎𝟘-inl
+Fin⊎-injective zero    f = ⊎𝟘-inl ∙ ⊎-comm ∙  ⊎= (! Fin0≡𝟘) idp
+                       ∙ f ∙ (⊎= Fin0≡𝟘 idp ∙ ⊎-comm) ∙ ! ⊎𝟘-inl
 Fin⊎-injective (suc n) f = Fin⊎-injective n (Maybe-injective
-   (Maybe≡𝟙⊎ ∙ ⊎-assoc ∙ ap₂ _⊎_ (! Fin∘suc≡𝟙⊎Fin) idp ∙ f
-   ∙ ap₂ _⊎_ Fin∘suc≡𝟙⊎Fin idp ∙ ! ⊎-assoc ∙ ! Maybe≡𝟙⊎))
+   (Maybe≡𝟙⊎ ∙ ⊎-assoc ∙ ⊎= (! Fin∘suc≡𝟙⊎Fin) idp ∙ f
+   ∙ ⊎= Fin∘suc≡𝟙⊎Fin idp ∙ ! ⊎-assoc ∙ ! Maybe≡𝟙⊎))
 
 module _ {{_ : UA}} where
     Fin-≡-≡1₂ : ∀ b → Fin (𝟚▹ℕ b) ≡ (b ≡ 1₂)
@@ -420,6 +532,10 @@ module _ {{_ : UA}} where
 
     Fin-≡-≡0₂ : ∀ b → Fin (𝟚▹ℕ (not b)) ≡ (b ≡ 0₂)
     Fin-≡-≡0₂ b = Fin-≡-≡1₂ (not b) ∙ ! –>-paths-equiv twist-equiv
+
+    ✓-∧-× : ∀ x y → ✓ (x ∧ y) ≡ (✓ x × ✓ y)
+    ✓-∧-× 1₂ y = ! 𝟙×-snd
+    ✓-∧-× 0₂ y = ! 𝟘×-fst
 
     count-≡ : ∀ {a} {A : ★_ a} (p : A → 𝟚) x → Fin (𝟚▹ℕ (p x)) ≡ (p x ≡ 1₂)
     count-≡ p x = Fin-≡-≡1₂ (p x)
@@ -506,12 +622,12 @@ module _ {A : Set} {p q : A → 𝟚} where
 
       π01 : ∀ x px qx (ppx : p x ≡ px) (qqx : q x ≡ qx) (px0 : p x ≡ 0₂) (qx1 : q x ≡ 1₂) → π' x px qx ppx qqx ≡ π' x 0₂ 1₂ px0 qx1
       π01 x 1₂ _  ppx qqx px0 qx1 = 𝟘-elim (0≢1 (≡.trans (≡.sym px0) ppx))
-      π01 x 0₂ 1₂ ppx qqx px0 qx1 = ≡.cong₂ (λ z1 z2 → fst (f-1 x z1 z2)) (UIP-set 𝟚-is-set ppx px0) (UIP-set 𝟚-is-set qqx qx1)
+      π01 x 0₂ 1₂ ppx qqx px0 qx1 = ≡.ap₂ (λ z1 z2 → fst (f-1 x z1 z2)) (UIP-set 𝟚-is-set ppx px0) (UIP-set 𝟚-is-set qqx qx1)
       π01 x 0₂ 0₂ ppx qqx px0 qx1 = 𝟘-elim (0≢1 (≡.trans (≡.sym qqx) qx1))
 
       π10 : ∀ x px qx (ppx : p x ≡ px) (qqx : q x ≡ qx) (px1 : p x ≡ 1₂) (qx0 : q x ≡ 0₂) → π' x px qx ppx qqx ≡ π' x 1₂ 0₂ px1 qx0
       π10 x 0₂ _  ppx qqx px1 qx0 = 𝟘-elim (0≢1 (≡.trans (≡.sym ppx) px1))
-      π10 x 1₂ 0₂ ppx qqx px1 qx0 = ≡.cong₂ (λ z1 z2 → fst (f x z1 z2)) (UIP-set 𝟚-is-set ppx px1) (UIP-set 𝟚-is-set qqx qx0)
+      π10 x 1₂ 0₂ ppx qqx px1 qx0 = ≡.ap₂ (λ z1 z2 → fst (f x z1 z2)) (UIP-set 𝟚-is-set ppx px1) (UIP-set 𝟚-is-set qqx qx0)
       π10 x 1₂ 1₂ ppx qqx px1 qx0 = 𝟘-elim (0≢1 (≡.trans (≡.sym qx0) qqx))
 
       π'bb : ∀ {b} x (px : p x ≡ b) (qx : q x ≡ b) ppx qqx ([ppx] : p x ≡ ppx) ([qqx] : q x ≡ qqx) → π' x ppx qqx [ppx] [qqx] ≡ x
