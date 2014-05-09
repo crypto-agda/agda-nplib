@@ -27,7 +27,7 @@ module FunVec {a} {A : ★ a} where
 
 ap-∷ : ∀ {a} {A : ★ a} {n}
          {x y : A} {xs ys : Vec A n} → x ≡ y → xs ≡ ys → x ∷ xs ≡ y ∷ ys
-ap-∷ = ≡.cong₂ _∷_
+ap-∷ = ≡.ap₂ _∷_
 
 module waiting-for-a-fix-in-the-stdlib where
 
@@ -368,7 +368,7 @@ swap : ∀ m {n} {a} {A : ★ a} → Vec A (m + n) → Vec A (n + m)
 swap m xs = drop m xs ++ take m xs
 
 swap-++ : ∀ m {n} {a} {A : ★ a} (xs : Vec A m) (ys : Vec A n) → swap m (xs ++ ys) ≡ ys ++ xs
-swap-++ m xs ys = ≡.cong₂ _++_ (drop-++ m xs ys) (take-++ m xs ys)
+swap-++ m xs ys = ≡.ap₂ _++_ (drop-++ m xs ys) (take-++ m xs ys)
 
 rewire : ∀ {a i o} {A : ★ a} → (Fin o → Fin i) → Vec A i → Vec A o
 rewire f v = tabulate (flip lookup v ∘ f)
