@@ -83,6 +83,13 @@ module _ {a}{b}{A : ★_ a}{B : A → ★_ b} where
             → tr P (snd= {x = x} y=) ∼ tr (P ∘ _,_ x) y=
     tr-snd= P idp p = idp
 
+module _ {a}{A : ★_ a} where
+  tr-r≡ : {x y z : A}(p : y ≡ z)(q : x ≡ y) → tr (λ v → x ≡ v) p q ≡ q ∙ p
+  tr-r≡ idp q = ! ∙-refl q
+
+  tr-l≡ : {x y z : A}(p : x ≡ y)(q : x ≡ z) → tr (λ v → v ≡ z) p q ≡ ! p ∙ q
+  tr-l≡ idp q = idp
+
 module _ {A : ★}(f g : A → ★){x y : A}(p : x ≡ y)(h : f x → g x) where
     tr-→ : tr (λ x → f x → g x) p h ≡ (λ x → tr g p (h (tr f (! p) x)))
     tr-→ = J' (λ x y p → (h : f x → g x) → tr (λ x → f x → g x) p h ≡ (λ x → tr g p (h (tr f (! p) x))))

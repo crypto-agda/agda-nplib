@@ -352,6 +352,15 @@ module _ {A : ★}{{_ : UA}}{{_ : FunExt}} where
   Π𝟚→×′ : (𝟚 → A) ≡ (A × A)
   Π𝟚→×′ = Π𝟚-×
 
+module _ {a}{A : ★_ a} where
+
+  Σ≡x≃𝟙 : ∀ x → (Σ A (_≡_ x)) ≃ 𝟙
+  Σ≡x≃𝟙 x = equiv (λ _ → _) (λ _ → x , idp) (λ _ → idp) (λ p → pair= (snd p) (tr-r≡ (snd p) idp))
+
+  Σx≡≃𝟙 : ∀ x → (Σ A (flip _≡_ x)) ≃ 𝟙
+  Σx≡≃𝟙 x = equiv (λ _ → _) (λ _ → x , idp) (λ _ → idp) (λ p →  pair= (! snd p)  ( tr-l≡ (! snd p) idp ∙
+    ∙-refl (! (! (snd p))) ∙ !-inv (snd p)))
+
 module _ where
 
   private
@@ -525,6 +534,9 @@ Fin⊎-injective (suc n) f = Fin⊎-injective n (Maybe-injective
    (Maybe≡𝟙⊎ ∙ ⊎-assoc ∙ ⊎= (! Fin∘suc≡𝟙⊎Fin) idp ∙ f
    ∙ ⊎= Fin∘suc≡𝟙⊎Fin idp ∙ ! ⊎-assoc ∙ ! Maybe≡𝟙⊎))
 
+Lift≃id : ∀ {a} {A : ★_ a} → Lift {a} {a} A ≃ A
+Lift≃id = equiv lower lift (λ _ → idp) (λ { (lift x) → idp })
+
 module _ {{_ : UA}} where
     Fin-≡-≡1₂ : ∀ b → Fin (𝟚▹ℕ b) ≡ (b ≡ 1₂)
     Fin-≡-≡1₂ 1₂ = Fin1≡𝟙 ∙ ua (Is-contr-to-Is-equiv.𝟙≃ (Ω₁-set-to-contr 𝟚-is-set 1₂))
@@ -540,8 +552,9 @@ module _ {{_ : UA}} where
     count-≡ : ∀ {a} {A : ★_ a} (p : A → 𝟚) x → Fin (𝟚▹ℕ (p x)) ≡ (p x ≡ 1₂)
     count-≡ p x = Fin-≡-≡1₂ (p x)
 
+
     Lift≡id : ∀ {a} {A : ★_ a} → Lift {a} {a} A ≡ A
-    Lift≡id = ua (equiv lower lift (λ _ → idp) (λ { (lift x) → idp }))
+    Lift≡id = ua Lift≃id
 
     Π𝟙F≡F : ∀ {ℓ} {F : 𝟙 → ★_ ℓ} → Π 𝟙 F ≡ F _
     Π𝟙F≡F = ua (equiv (λ x → x _) const (λ _ → idp) (λ _ → idp))
