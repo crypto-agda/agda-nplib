@@ -7,7 +7,7 @@ open import Function.NP
 open import Function.Extensionality
 open import Data.Zero using (𝟘; 𝟘-elim)
 open import Data.One using (𝟙)
-open import Data.Product.NP renaming (proj₁ to fst; proj₂ to snd)
+open import Data.Product.NP
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_])
 open import Relation.Nullary.NP
 open import Relation.Binary using (Reflexive; Symmetric; Transitive)

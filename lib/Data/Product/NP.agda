@@ -3,7 +3,7 @@ module Data.Product.NP where
 
 open import Type hiding (★)
 open import Level
-open import Data.Product public hiding (∃)
+open import Data.Product public hiding (∃) renaming (proj₁ to fst; proj₂ to snd)
 open import Relation.Binary.PropositionalEquality.NP as ≡
 open import Relation.Unary.NP hiding (Decidable)
 open import Relation.Binary
@@ -22,7 +22,7 @@ first f = map f id -- f (x , y) = (f x , y)
 
 -- generalized first′ but differently than first
 first' : ∀ {a b c} {A : ★ a} {B : A → ★ b} {C : A → ★ c} →
-          (f : (x : A) → B x) (p : Σ A C) → B (proj₁ p) × C (proj₁ p)
+          (f : (x : A) → B x) (p : Σ A C) → B (fst p) × C (fst p)
 first' f (x , y) = (f x , y)
 
 first′ : ∀ {a b c} {A : ★ a} {B : ★ b} {C : ★ c} →
@@ -48,8 +48,8 @@ record [Σ] {a b aₚ bₚ}
            (p : Σ A B) : ★ (aₚ ⊔ bₚ) where
   constructor _[,]_
   field
-    [proj₁] : Aₚ (proj₁ p)
-    [proj₂] : Bₚ [proj₁] (proj₂ p)
+    [fst] : Aₚ (fst p)
+    [snd] : Bₚ [fst] (snd p)
 open [Σ] public
 infixr 4 _[,]_
 
@@ -87,8 +87,8 @@ record ⟦Σ⟧ {a₁ a₂ b₂ b₁ aᵣ bᵣ}
            (p₁ : Σ A₁ B₁) (p₂ : Σ A₂ B₂) : ★ (aᵣ ⊔ bᵣ) where
   constructor _⟦,⟧_
   field
-    ⟦proj₁⟧ : Aᵣ (proj₁ p₁) (proj₁ p₂)
-    ⟦proj₂⟧ : Bᵣ ⟦proj₁⟧ (proj₂ p₁) (proj₂ p₂)
+    ⟦fst⟧ : Aᵣ (fst p₁) (fst p₂)
+    ⟦snd⟧ : Bᵣ ⟦fst⟧ (snd p₁) (snd p₂)
 open ⟦Σ⟧ public
 infixr 4 _⟦,⟧_
 
@@ -117,8 +117,8 @@ _⟦×⟧_ Aᵣ Bᵣ = ⟦Σ⟧ Aᵣ (λ _ → Bᵣ)
 _⟦×⟧_ : ∀ {a₁ a₂ aᵣ} {A₁ : ★ a₁} {A₂ : ★ a₂} (Aᵣ : A₁ → A₂ → ★ aᵣ)
           {b₁ b₂ bᵣ} {B₁ : ★ b₁} {B₂ : ★ b₂} (Bᵣ : B₁ → B₂ → ★ bᵣ)
           (p₁ : A₁ × B₁) (p₂ : A₂ × B₂) → ★ _
-_⟦×⟧_ Aᵣ Bᵣ = λ p₁ p₂ → Aᵣ (proj₁ p₁) (proj₁ p₂) ×
-                        Bᵣ (proj₂ p₁) (proj₂ p₂)
+_⟦×⟧_ Aᵣ Bᵣ = λ p₁ p₂ → Aᵣ (fst p₁) (fst p₂) ×
+                        Bᵣ (snd p₁) (snd p₂)
 -}
 
 {- One can give these two types to ⟦_,_⟧:
@@ -140,8 +140,8 @@ _⟦×⟧_ Aᵣ Bᵣ = λ p₁ p₂ → Aᵣ (proj₁ p₁) (proj₁ p₂) ×
        {Aᵣ : ⟦★⟧ aᵣ A₁ A₂}
        {Bᵣ : ⟦Pred⟧ Aᵣ bᵣ B₁ B₂}
        {p₁ p₂}
-       (⟦proj₁⟧ : Aᵣ (proj₁ p₁) (proj₁ p₂))
-       (⟦proj₂⟧ : Bᵣ ⟦proj₁⟧ (proj₂ p₁) (proj₂ p₂))
+       (⟦fst⟧ : Aᵣ (fst p₁) (fst p₂))
+       (⟦snd⟧ : Bᵣ ⟦fst⟧ (snd p₁) (snd p₂))
      → ⟦Σ⟧ Aᵣ Bᵣ p₁ p₂
 ⟦_,_⟧'' = ⟦_,_⟧
 -}
@@ -155,10 +155,10 @@ dec⟦Σ⟧ : ∀ {a₁ a₂ b₁ b₂ aᵣ bᵣ A₁ A₂ B₁ B₂}
        (decBᵣ : Dec⟦Pred⟧ Aᵣ {_} {_} {bᵣ {-BUG: with _ here Agda loops-}} Bᵣ)
      → Dec⟦★⟧ (⟦Σ⟧ Aᵣ Bᵣ)
 dec⟦Σ⟧ {Bᵣ = Bᵣ} decAᵣ uniqAᵣ decBᵣ (x₁ , y₁) (x₂ , y₂) with decAᵣ x₁ x₂
-... | no ¬xᵣ = no (¬xᵣ ∘ ⟦proj₁⟧)
+... | no ¬xᵣ = no (¬xᵣ ∘ ⟦fst⟧)
 ... | yes xᵣ with decBᵣ xᵣ y₁ y₂
 ...           | yes yᵣ = yes (xᵣ ⟦,⟧ yᵣ)
-...           | no ¬yᵣ = no (¬yᵣ ∘ f ∘ ⟦proj₂⟧)
+...           | no ¬yᵣ = no (¬yᵣ ∘ f ∘ ⟦snd⟧)
   where f : ∀ {xᵣ'} → Bᵣ xᵣ' y₁ y₂ → Bᵣ xᵣ y₁ y₂
         f {xᵣ'} yᵣ rewrite uniqAᵣ xᵣ' xᵣ = yᵣ
 
@@ -178,29 +178,29 @@ dec⟦×⟧ : ∀ {a₁ a₂ b₁ b₂ aᵣ bᵣ}
            (decBᵣ : Dec⟦★⟧ Bᵣ)
          → Dec⟦★⟧ (Aᵣ ⟦×⟧ Bᵣ)
 dec⟦×⟧ decAᵣ decBᵣ (x₁ , y₁) (x₂ , y₂) with decAᵣ x₁ x₂
-... | no ¬xᵣ = no (¬xᵣ ∘ ⟦proj₁⟧)
+... | no ¬xᵣ = no (¬xᵣ ∘ ⟦fst⟧)
 ... | yes xᵣ with decBᵣ y₁ y₂
 ...           | yes yᵣ = yes (xᵣ ⟦,⟧ yᵣ)
-...           | no ¬yᵣ = no (¬yᵣ ∘ ⟦proj₂⟧)
+...           | no ¬yᵣ = no (¬yᵣ ∘ ⟦snd⟧)
 
 mkΣ≡ : ∀ {a b} {A : ★ a} {x y : A} (B : A → ★ b) {p : B x} {q : B y} (xy : x ≡ y) → tr B xy p ≡ q → (x Σ., p) ≡ (y , q)
 mkΣ≡ _ xy h rewrite xy | h = ≡.refl
 
 Σ,-injective₁ : ∀ {a b} {A : ★ a} {B : A → ★ b} {x₁ x₂ : A} {y₁ : B x₁} {y₂ : B x₂} → (x₁ , y₁) ≡ (x₂ , y₂) → x₁ ≡ x₂
-Σ,-injective₁ = ap proj₁
+Σ,-injective₁ = ap fst
 
-proj₁-injective : ∀ {a b} {A : ★ a} {B : A → ★ b} {x y : Σ A B}
+fst-injective : ∀ {a b} {A : ★ a} {B : A → ★ b} {x y : Σ A B}
                     (B-uniq : ∀ {z} (p₁ p₂ : B z) → p₁ ≡ p₂)
-                  → proj₁ x ≡ proj₁ y → x ≡ y
-proj₁-injective {x = (a , p₁)} {y = (_ , p₂)} B-uniq eq rewrite sym eq
+                  → fst x ≡ fst y → x ≡ y
+fst-injective {x = (a , p₁)} {y = (_ , p₂)} B-uniq eq rewrite sym eq
   = cong (λ p → (a , p)) (B-uniq p₁ p₂)
 
-proj₂-irrelevance : ∀ {a b} {A : ★ a} {B C : A → ★ b} {x₁ x₂ : A}
+snd-irrelevance : ∀ {a b} {A : ★ a} {B C : A → ★ b} {x₁ x₂ : A}
                       {y₁ : B x₁} {y₂ : B x₂} {z₁ : C x₁} {z₂ : C x₂}
                     → (C-uniq : ∀ {z} (p₁ p₂ : C z) → p₁ ≡ p₂)
                     → (x₁ , y₁) ≡ (x₂ , y₂)
                     → (x₁ , z₁) ≡ (x₂ , z₂)
-proj₂-irrelevance C-uniq = proj₁-injective C-uniq ∘ Σ,-injective₁
+snd-irrelevance C-uniq = fst-injective C-uniq ∘ Σ,-injective₁
 
 ≟Σ' : ∀ {A : ★₀} {P : A → ★₀}
        (decA : Decidable {A = A} _≡_)
@@ -209,15 +209,15 @@ proj₂-irrelevance C-uniq = proj₁-injective C-uniq ∘ Σ,-injective₁
 ≟Σ' decA uniqP (w₁ , p₁) (w₂ , p₂) with decA w₁ w₂
 ≟Σ' decA uniqP (w  , p₁) (.w , p₂) | yes refl
   = yes (cong (λ p → (w , p)) (uniqP p₁ p₂))
-≟Σ' decA uniqP (w₁ , p₁) (w₂ , p₂) | no w≢ = no (w≢ ∘ cong proj₁)
+≟Σ' decA uniqP (w₁ , p₁) (w₂ , p₂) | no w≢ = no (w≢ ∘ cong fst)
 
-proj₁-Injection : ∀ {a b} {A : ★ a} {B : A →  ★ b}
+fst-Injection : ∀ {a b} {A : ★ a} {B : A →  ★ b}
                   → (∀ {x} (p₁ p₂ : B x) → p₁ ≡ p₂)
                   → Injection (setoid (Σ A B))
                               (setoid A)
-proj₁-Injection {B = B} B-uniq
-     = record { to        = →-to-⟶ (proj₁ {B = B})
-              ; injective = proj₁-injective B-uniq
+fst-Injection {B = B} B-uniq
+     = record { to        = →-to-⟶ (fst {B = B})
+              ; injective = fst-injective B-uniq
               }
 
 Δ : ∀ {a} {A : ★ a} → A → A × A
