@@ -10,11 +10,11 @@ import Level as L
 open import Category.Applicative
 open import Data.Nat.NP using (ℕ; suc; zero; _+_; _*_; module ℕ° ; +-interchange ; _≤_)
 open import Data.Nat.Properties using (_+-mono_)
-open import Data.Fin hiding (_≤_) renaming (_+_ to _+ᶠ_) 
+open import Data.Fin hiding (_≤_) renaming (_+_ to _+ᶠ_)
 open import Data.Vec using (Vec; []; _∷_; head; tail; replicate; tabulate; foldr; _++_; lookup; splitAt; take; drop; sum; _∷ʳ_)
 import Data.Fin.Props as F
 open import Data.Bool
-open import Data.Product hiding (map; zip; swap)
+open import Data.Product hiding (map; zip; swap) renaming (proj₁ to fst; proj₂ to snd)
 open import Function.NP
 open import Relation.Binary
 import Relation.Binary.PropositionalEquality.NP as ≡
@@ -168,8 +168,8 @@ module LiftMonoid {c ℓ} (M : Monoid c ℓ) where
 
     isMonoid : ∀ {n} → IsMonoid (_≈ᵛ_ {n}) _∙ᵛ_ εᵛ
     isMonoid = record { isSemigroup = isSemigroup
-                                 ; identity = zipWith-id-left (proj₁ M.identity)
-                                                 , zipWith-id-right (proj₂ M.identity) }
+                      ; identity = zipWith-id-left (fst M.identity)
+                                 , zipWith-id-right (snd M.identity) }
 
     monoid : ℕ → Monoid c (ℓ L.⊔ c)
     monoid n = record { isMonoid = isMonoid {n} }
@@ -196,8 +196,8 @@ module LiftGroup {c ℓ} (G : Group c ℓ) where
 
     isGroup : ∀ {n} → IsGroup (_≈ᵛ_ {n}) _∙ᵛ_ εᵛ _⁻¹ᵛ
     isGroup = record { isMonoid = isMonoid
-                                ; inverse = (zipWith-left-inverse (proj₁ G.inverse))
-                                                , (zipWith-right-inverse (proj₂ G.inverse))
+                                ; inverse = (zipWith-left-inverse (fst G.inverse))
+                                                , (zipWith-right-inverse (snd G.inverse))
                                 ; ⁻¹-cong = map-cong G.⁻¹-cong }
 
     group : ℕ → Group c _
@@ -317,10 +317,10 @@ module Here {a} {A : ★ a} where
 -}
 
 ++-inj₁ : ∀ {m n} {a} {A : ★ a} (xs ys : Vec A m) {zs ts : Vec A n} → xs ++ zs ≡ ys ++ ts → xs ≡ ys
-++-inj₁ xs ys eq = proj₁ (++-decomp eq)
+++-inj₁ xs ys eq = fst (++-decomp eq)
 
 ++-inj₂ : ∀ {m n} {a} {A : ★ a} (xs ys : Vec A m) {zs ts : Vec A n} → xs ++ zs ≡ ys ++ ts → zs ≡ ts
-++-inj₂ xs ys eq = proj₂ (++-decomp {xs = xs} {ys} eq)
+++-inj₂ xs ys eq = snd (++-decomp {xs = xs} {ys} eq)
 
 take-∷ : ∀ {m a} {A : ★ a} n x (xs : Vec A (n + m)) → take (suc n) (x ∷ xs) ≡ x ∷ take n xs
 take-∷ n x xs with splitAt n xs
@@ -423,7 +423,7 @@ rot (suc n) xs = rot n (rot₁ xs)
 
 sum-distribˡ : ∀ {A : ★₀} {n} f k (xs : Vec A n) → sum (map (λ x → k * f x) xs) ≡ k * sum (map f xs)
 sum-distribˡ f k [] = ℕ°.*-comm 0 k
-sum-distribˡ f k (x ∷ xs) rewrite sum-distribˡ f k xs = !(proj₁ ℕ°.distrib k _ _)
+sum-distribˡ f k (x ∷ xs) rewrite sum-distribˡ f k xs = !(fst ℕ°.distrib k _ _)
 
 sum-linear : ∀ {A : ★₀} {n} f g (xs : Vec A n) → sum (map (λ x → f x + g x) xs) ≡ sum (map f xs) + sum (map g xs)
 sum-linear f g [] = idp

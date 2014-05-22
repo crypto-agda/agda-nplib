@@ -101,7 +101,7 @@ module _ {a} {A : ★ a} where
   Equalizer : ∀ {b} {B : A → ★ b} (f g : (x : A) → B x) → ★ _
   Equalizer f g = Σ A (λ x → f x ≡ g x)
   {- In a category theory context this type would the object 'E'
-     and 'proj₁' would be the morphism 'eq : E → A' such that
+     and 'fst' would be the morphism 'eq : E → A' such that
      given any object O, and morphism 'm : O → A', there exists
      a unique morphism 'u : O → E' such that 'eq ∘ u ≡ m'.
   -}

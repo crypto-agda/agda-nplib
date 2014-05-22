@@ -5,7 +5,7 @@ open import Function.Inverse public
 import Function as F
 open import Function.Equality using (_⟨$⟩_)
 open import Relation.Binary
-open import Data.Product
+open import Data.Product.NP
 open import Type hiding (★)
 open import Relation.Binary.PropositionalEquality using (→-to-⟶)
 import Function.Equality as FE
@@ -57,8 +57,9 @@ module _ {a b ra rb}
   module _ (xᵢ : Setoid.Carrier A × Setoid.Carrier B)
            (f  : Inverse A B)
            where
-    x₁ = proj₁ xᵢ
-    x₂ = proj₂ xᵢ
+    private
+      x₁ = fst xᵢ
+      x₂ = snd xᵢ
 
     _∈_  : ★ rb
     _∈_  = f $₁ x₁ ≈ᴮ x₂

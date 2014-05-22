@@ -31,7 +31,7 @@ open import Algebra.FunctionProperties using (Op₁; Op₂)
 open import Data.Nat     using (ℕ; _≤_; z≤n; s≤s; _⊓_; _⊔_; _∸_)
 open import Data.Zero    using (𝟘-elim)
 open import Data.One     using (𝟙)
-open import Data.Product using (proj₁; proj₂; uncurry; _×_; _,_)
+open import Data.Product using (uncurry; _×_; _,_) renaming (proj₁ to fst; proj₂ to snd)
 open import Data.Sum     using (_⊎_; inj₁; inj₂)
 
 open import Function.Equivalence using (module Equivalence)
@@ -86,7 +86,7 @@ module _ {a} {A : ★ a} where
     proj′ = proj
 
     proj[_] : 𝟚 → A × A → A
-    proj[_] = [0: proj₁ 1: proj₂ ]
+    proj[_] = [0: fst 1: snd ]
 
     mux : 𝟚 × (A × A) → A
     mux (s , eᵢ) = proj eᵢ s
@@ -129,10 +129,10 @@ module _ {{_ : UA}} where
 ✓∧ p q = _⟨$⟩_ (from ✓-∧) (p , q)
 
 ✓∧₁ : ∀ {b₁ b₂} → ✓ (b₁ ∧ b₂) → ✓ b₁
-✓∧₁ = proj₁ ∘ _⟨$⟩_ (to ✓-∧)
+✓∧₁ = fst ∘ _⟨$⟩_ (to ✓-∧)
 
 ✓∧₂ : ∀ {b₁ b₂} → ✓ (b₁ ∧ b₂) → ✓ b₂
-✓∧₂ {b₁} = proj₂ ∘ _⟨$⟩_ (to (✓-∧ {b₁}))
+✓∧₂ {b₁} = snd ∘ _⟨$⟩_ (to (✓-∧ {b₁}))
 
 ✓∨-⊎ : ∀ {b₁ b₂} → ✓ (b₁ ∨ b₂) → ✓ b₁ ⊎ ✓ b₂
 ✓∨-⊎ {b₁} = _⟨$⟩_ (to (✓-∨ {b₁}))

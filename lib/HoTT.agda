@@ -403,7 +403,7 @@ module _ {a} where
     has-all-paths A = (x y : A) → x ≡ y
 
     UIP : U → U
-    UIP A = {x y : A} (p q : x ≡ y) -> p ≡ q
+    UIP A = {x y : A} (p q : x ≡ y) → p ≡ q
 
     private
       UIP-check : {A : U} → UIP A ≡ ({x y : A} → has-all-paths (x ≡ y))

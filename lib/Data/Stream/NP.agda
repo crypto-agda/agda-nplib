@@ -9,7 +9,7 @@ open import Data.Zero using (𝟘)
 open import Data.One  using (𝟙)
 open import Data.Two  using (𝟚; 0₂; 1₂; not)
 open import Function.Equality using (_⟶_)
-open import Data.Product using (Σ; _,_; _×_; uncurry; ∃; proj₁; proj₂)
+open import Data.Product.NP using (Σ; _,_; _×_; uncurry; ∃; fst; snd)
 import Relation.Binary.PropositionalEquality as ≡
 open ≡ using (_≡_; _≢_)
 open import Relation.Nullary
@@ -72,7 +72,7 @@ module M1 where
   xs ∉ xss = ¬(xs ∈ xss)
 
   cantor-thm : ∀ xss → cantor xss ∉ xss
-  cantor-thm xss (n , pn) = proj₂ (cantor-lem xss n) (pn n)
+  cantor-thm xss (n , pn) = snd (cantor-lem xss n) (pn n)
 
   -- Meaning that their exists a set that is bigger than ℕ.
   -- A nice thing with this statement is that it only involves: ★,→,∀,∃,ℕ,≢(¬(𝟘),≡)
@@ -165,11 +165,11 @@ module M2 where
   xs ∉ xss = ¬(xs ∈ xss)
 
   cantor-thm : ∀ xss → cantor xss ∉ xss
-  cantor-thm xss (n , pn) = proj₂ (cantor-lem xss n) (pn n)
+  cantor-thm xss (n , pn) = snd (cantor-lem xss n) (pn n)
 
 {-
   cantor-thm xss zero    = zero , not≢id _
-  cantor-thm xss (suc n) = suc {!!} , {!proj₂ hi!}
+  cantor-thm xss (suc n) = suc {!!} , {!snd hi!}
      where hi : CantorArg (tail xss) (tail xss n)
            hi = cantor-thm (tail xss) n
            hi' : ∃ λ m → {!!} ?

@@ -10,7 +10,7 @@ open import Data.Nat.Properties
 open import Data.Nat.Logical
 open import Data.Two hiding (_==_;_²)
 import Data.Two.Equality as 𝟚==
-open import Data.Product using (proj₁; proj₂; ∃; _,_)
+open import Data.Product using (∃; _,_) renaming (proj₂ to snd)
 open import Data.Sum renaming (map to ⊎-map)
 open import Data.Zero using (𝟘-elim; 𝟘)
 open import Data.One using (𝟙)
@@ -306,7 +306,7 @@ m *′ n = m * n
 *′-spec 0             n = idp
 *′-spec 1             n = ℕ°.+-comm 0 n
 *′-spec (suc (suc m)) 0 = ℕ°.*-comm 0 m
-*′-spec (suc (suc m)) 1 = ap (suc ∘′ suc) (! proj₂ ℕ°.*-identity m)
+*′-spec (suc (suc m)) 1 = ap (suc ∘′ suc) (! snd ℕ°.*-identity m)
 *′-spec (suc (suc m)) (suc (suc n)) = idp
 
 ≤→≢1+ : ∀ {x y} → x ≤ y → x ≢ suc y
@@ -363,7 +363,7 @@ b ^ suc n = b * b ^ n
 
 ≤⇒∃ : ∀ {m n} → m ≤ n → ∃ λ k → m + k ≡ n
 ≤⇒∃ z≤n      = _ , idp
-≤⇒∃ (s≤s pf) = _ , ap suc (proj₂ (≤⇒∃ pf))
+≤⇒∃ (s≤s pf) = _ , ap suc (snd (≤⇒∃ pf))
 
 is0? : ℕ → 𝟚
 is0? zero    = 1₂
