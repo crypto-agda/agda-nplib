@@ -363,6 +363,21 @@ module _ {a}{A : ★_ a} where
   Σx≡≃𝟙 x = equiv (λ _ → _) (λ _ → x , idp) (λ _ → idp) (λ p →  pair= (! snd p)  ( tr-l≡ (! snd p) idp ∙
     ∙-refl (! (! (snd p))) ∙ !-inv (snd p)))
 
+module _ {ab c}{A B : ★_ ab}{C : A → B → ★_ c}{{_ : UA}}{{_ : FunExt}} where
+
+  Π⊎-equiv : (Π (A ⊎ B) [inl: (λ x → ∀ y → C x y) ,inr: (λ y → ∀ x → C x y) ]) ≃ ((t : 𝟚)(x : A)(y : B) → C x y)
+  Π⊎-equiv = equiv (λ f → [0: (λ x y → f (inl x) y) 1: ((λ x y → f (inr y) x)) ])
+                   (λ f → [inl: f 0₂ ,inr: flip (f 1₂) ])
+                   (λ f → λ= [0: idp 1: idp ])
+                   (λ f → λ= [inl: (λ x → idp) ,inr: (λ x → idp) ])
+
+  Π⊎ : (Π (A ⊎ B) [inl: (λ x → ∀ y → C x y) ,inr: (λ y → ∀ x → C x y) ]) ≡ ((t : 𝟚)(x : A)(y : B) → C x y)
+  Π⊎ = ua Π⊎-equiv
+
+module _ {ab c}{A B : ★_ ab}{C : ★_ c}{{_ : UA}}{{_ : FunExt}} where
+  Π⊎′ : (Π (A ⊎ B) [inl: const (B → C) ,inr: const (A → C) ]) ≡ (𝟚 → A → B → C)
+  Π⊎′ = Π⊎
+
 module _ where
 
   private
