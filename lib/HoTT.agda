@@ -284,11 +284,14 @@ module Equivalences where
         module F = Biinv fᴮ
 
   module _ {a b}{A : ★_ a}{B : ★_ b} where
-    –> : (e : A ≃ B) → (A → B)
-    –> e = fst e
+    ·→ : (e : A ≃ B) → (A → B)
+    ·→ e = fst e
 
-    <– : (e : A ≃ B) → (B → A)
-    <– e = Is-equiv.linv (snd e)
+    ·← : (e : A ≃ B) → (B → A)
+    ·← e = Is-equiv.linv (snd e)
+
+    –> = ·→
+    <– = ·←
 
     <–' : (e : A ≃ B) → (B → A)
     <–' e = Is-equiv.rinv (snd e)
