@@ -1,7 +1,7 @@
 open import Type
 open import Function.NP
 open import Data.Product
-open import Data.Nat.NP
+open import Data.Nat.NP hiding (⇑⟨_⟩)
 open import Data.Nat.Properties
 open import Relation.Binary.PropositionalEquality.NP
 

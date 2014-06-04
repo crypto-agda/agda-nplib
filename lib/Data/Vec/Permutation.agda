@@ -2,7 +2,7 @@
 open import Type hiding (★)
 open import Level.NP
 open import Function.NP
-open import Data.Nat.NP
+open import Data.Nat.NP hiding (⟨_↔+1⟩; ⟨0↔1+_⟩)
 open import Data.Nat.Properties
 open import Data.Vec.NP
 open import Data.Bits

@@ -20,6 +20,9 @@ module _ {a} {A : ★ a} where
     UIP-Axiom : ★ a
     UIP-Axiom = ∀ {x y : A} (p q : x ≡ y) → p ≡ q
 
+    UI2P-Axiom : ★ a
+    UI2P-Axiom = ∀ {x y : A} (p q : x ≡ y) (α β : p ≡ q) → α ≡ β
+
     K→UIP : K-Axiom → UIP-Axiom
     K→UIP K {x} p q = J (λ y q → (p : x ≡ y) → p ≡ q) K q p
 
