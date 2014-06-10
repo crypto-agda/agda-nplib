@@ -16,6 +16,8 @@ open ≡ using (_≡_;_≢_;_≗_)
 open import Data.Two
 open ≡ using (→-to-⟶)
 
+[inl:_,inr:_] = [_,_]
+
 inl-inj : ∀ {a b} {A : ★ a} {B : ★ b} {x y : A} → inl {B = B} x ≡ inl y → x ≡ y
 inl-inj ≡.refl = ≡.refl
 

@@ -51,6 +51,9 @@ open Equivalence using (to; from)
 module Xor° = CommutativeRing     commutativeRing-xor-∧
 module 𝟚°   = CommutativeSemiring commutativeSemiring-∧-∨
 
+0≢1₂ : 0₂ ≢ 1₂
+0≢1₂ ()
+
 _² : ∀ {a} → ★ a → ★ a
 A ² = 𝟚 → A
 
