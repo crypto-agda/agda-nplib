@@ -13,7 +13,7 @@ open import Relation.Binary
 open import Relation.Binary.Logical
 import Relation.Binary.PropositionalEquality as ≡
 open ≡ using (_≡_;_≢_;_≗_)
-open import Data.Two
+open import Data.Two hiding (twist)
 open ≡ using (→-to-⟶)
 
 [inl:_,inr:_] = [_,_]
@@ -69,3 +69,7 @@ open import Function.LeftInverse
 𝟙⊎^ : ℕ → ★₀
 𝟙⊎^ zero    = 𝟘
 𝟙⊎^ (suc n) = 𝟙 ⊎ 𝟙⊎^ n
+
+module _ {a b} {A : ★ a} {B : ★ b} where
+    twist : A ⊎ B → B ⊎ A
+    twist = [inl: inr ,inr: inl ]
