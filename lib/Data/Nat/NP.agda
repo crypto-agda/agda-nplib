@@ -23,6 +23,11 @@ open ≡ using (_≡_; _≢_; _≗_; module ≡-Reasoning; !_; _∙_; ap; coe) r
 open import HoTT
 open Equivalences
 
+pattern 1+_ x = suc x
+pattern 2+_ x = 1+ suc x
+pattern 3+_ x = 2+ suc x
+pattern 4+_ x = 3+ suc x
+
 ⟨0↔1⟩ : ℕ → ℕ
 ⟨0↔1⟩ 0 = 1
 ⟨0↔1⟩ 1 = 0
