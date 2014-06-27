@@ -78,6 +78,13 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   *= : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x * y ≡ x' * y'
   *= {x} {y' = y'} p q = ap (_*_ x) q ∙ ap (λ z → z * y') p
 
+  0-= : ∀ {x x'} → x ≡ x' → 0- x ≡ 0- x'
+  0-= = ap 0-_
+
+  -- Correct naming scheme?
+  +-*-distr : _*_ DistributesOverʳ _+_
+  +-*-distr = *-comm ∙ *-+-distr ∙ += *-comm *-comm
+
   0-c+c+x : ∀ {c x} → 0- c + c + x ≡ x
   0-c+c+x = += 0--inverse refl ∙ 0+-identity
 
@@ -89,11 +96,32 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   +-right-cancel : RightCancel _+_
   +-right-cancel p = +-left-cancel (+-comm ∙ p ∙ +-comm)
 
+  *0-zero : RightZero 0ᶠ _*_
+  *0-zero = +-right-cancel  (+= refl (! *1-identity) ∙ ! *-+-distr
+                            ∙ *= refl 0+-identity ∙ *1-identity ∙ ! 0+-identity)
+
+  0*-zero : LeftZero 0ᶠ _*_
+  0*-zero = *-comm ∙ *0-zero
+
+  -- name ?
+  *-0- : ∀ {x y} → 0- (x * y) ≡ (0- x) * y
+  *-0- = +-right-cancel (0--inverse ∙ ! 0*-zero ∙ *= (! 0--inverse) refl ∙ +-*-distr)
+
+  -1*-neg : ∀ {x} → -1ᶠ * x ≡ 0- x
+  -1*-neg = ! *-0- ∙ 0-= 1*-identity
+
+
   0--involutive : Involutive 0-_
   0--involutive = +-left-cancel (0--right-inverse ∙ ! 0--inverse)
 
   -0≡0 : -0ᶠ ≡ 0ᶠ
   -0≡0 = +-left-cancel (0--right-inverse ∙ ! 0+-identity)
+
+  noZeroDivisor : ∀ {x y} → x ≢ 0ᶠ → y ≢ 0ᶠ → x * y ≢ 0ᶠ
+  noZeroDivisor nx ny x*y≡0ᶠ = ny (! *1-identity ∙ *= refl (! ⁻¹-inverse nx)
+                                   ∙ *= refl *-comm ∙ ! *-assoc
+                                   ∙ *= (*-comm ∙ x*y≡0ᶠ) refl ∙ 0*-zero
+                                   )
 
   open Field-Ops field-ops public
 
