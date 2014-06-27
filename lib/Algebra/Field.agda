@@ -2,8 +2,11 @@ module Algebra.Field where
 
 open import Relation.Binary.PropositionalEquality.NP
 import Algebra.FunctionProperties.Eq as FP
+open import Data.Nat.NP using (ℕ; zero; suc; fold)
+import Data.Integer as ℤ
+open ℤ using (ℤ)
 
-record RawField {ℓ} (A : Set ℓ) : Set ℓ where
+record Field-Ops {ℓ} (A : Set ℓ) : Set ℓ where
   infixl 6 _+_ _−_
   infixl 7 _*_ _/_
 
@@ -21,12 +24,29 @@ record RawField {ℓ} (A : Set ℓ) : Set ℓ where
   -0ᶠ = 0- 0ᶠ
   -1ᶠ = 0- 1ᶠ
 
-record IsField {ℓ} (A : Set ℓ) : Set ℓ where
-  open FP {ℓ} {A}
+  sucᶠ : A → A
+  sucᶠ = _+_ 1ᶠ
 
-  field
-    rawField : RawField A
-  open RawField rawField
+  predᶠ : A → A
+  predᶠ x = x − 1ᶠ
+
+  ℕ[_] : ℕ → A
+  ℕ[_] = fold 0ᶠ sucᶠ
+
+  ℤ[_] : ℤ → A
+  ℤ[ ℤ.+ x      ] = ℕ[ x ]
+  ℤ[ ℤ.-[1+ x ] ] = 0- ℕ[ suc x ]
+
+  _^ℕ_ : A → ℕ → A
+  b ^ℕ e = fold 1ᶠ (_*_ b) e
+
+  _^ℤ_ : A → ℤ → A
+  b ^ℤ (ℤ.+ x)    = b ^ℕ x
+  b ^ℤ ℤ.-[1+ x ] = (b ^ℕ (suc x))⁻¹
+
+record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ where
+  open FP {ℓ} {A}
+  open Field-Ops field-ops
 
   field
     0≢1         : 0ᶠ ≢ 1ᶠ
@@ -75,14 +95,20 @@ record IsField {ℓ} (A : Set ℓ) : Set ℓ where
   -0≡0 : -0ᶠ ≡ 0ᶠ
   -0≡0 = +-left-cancel (0--right-inverse ∙ ! 0+-identity)
 
-  open RawField rawField public
+  open Field-Ops field-ops public
+
+record Field {ℓ} (A : Set ℓ) : Set ℓ where
+  field
+    field-ops    : Field-Ops A
+    field-struct : Field-Struct field-ops
+  open Field-Struct field-struct public
 
 open import Reflection.NP
 open import Data.List
 open import Data.Maybe.NP
 
-module TermField {a} {A : Set a} (F : IsField A) where
-  open IsField F
+module TermField {a} {A : Set a} (F : Field A) where
+  open Field F
   pattern _`+_ t u = con (quote _+_) (argᵛʳ t ∷ argᵛʳ u ∷ [])
   pattern _`*_ t u = con (quote _*_) (argᵛʳ t ∷ argᵛʳ u ∷ [])
   pattern `0-_ t = conᵛʳ (quote 0-_) t
@@ -90,8 +116,8 @@ module TermField {a} {A : Set a} (F : IsField A) where
   pattern `0ᶠ = con (quote 0ᶠ) []
   pattern `1ᶠ = con (quote 1ᶠ) []
 
-  module Decode-RawField {b}{B : Set b}(G : RawField B)(default : Decode-Term B) where
-    module G = RawField G
+  module Decode-RawField {b}{B : Set b}(G : Field-Ops B)(default : Decode-Term B) where
+    module G = Field-Ops G
     decode-Field : Decode-Term B
     decode-Field `0ᶠ = just G.0ᶠ
     decode-Field `1ᶠ = just G.1ᶠ
@@ -102,18 +128,22 @@ module TermField {a} {A : Set a} (F : IsField A) where
     decode-Field t = default t
 
 open ≡-Reasoning
-open import Data.Nat using (ℕ; zero; suc; fold)
-import Data.Integer as ℤ
-open ℤ using (ℤ)
 open import Data.List
 
 infixl 6 _+'_
-infixl 7 _*'_ -- _*ℤ_
+infixl 7 _*'_
 data Tm (A : Set) : Set where
-  -- 0' 1' -1' : Tm A
   lit       : (n : ℤ) → Tm A
   var       : (x : A) → Tm A
   _+'_ _*'_ : Tm A → Tm A → Tm A
+
+pattern  0' = lit (ℤ.+ 0)
+pattern  1' = lit (ℤ.+ 1)
+pattern  2' = lit (ℤ.+ 1)
+pattern  3' = lit (ℤ.+ 1)
+pattern -1' = lit ℤ.-[1+ 0 ]
+pattern -2' = lit ℤ.-[1+ 1 ]
+pattern -3' = lit ℤ.-[1+ 2 ]
 
 record Var (A : Set) : Set where
   constructor _^'_
@@ -153,30 +183,12 @@ module _ {A : Set} where
        n ℤ.* m +' [] +ᴺ n ** us +ᴺ m ** ts +ᴺ ts *** us
 
 module Normalizer {F : Set}
-                  (F-field : IsField F) where
-    open IsField F-field renaming (0-_ to -_)
-
-    sucᶠ : F → F
-    sucᶠ = _+_ 1ᶠ
-
-    nat : ℕ → F
-    nat = fold 0ᶠ sucᶠ
-
-    evalℤ : ℤ → F
-    evalℤ (ℤ.+ x)    = nat x
-    evalℤ ℤ.-[1+ x ] = -(nat (suc x))
-
-    _^ℕ_ : F → ℕ → F
-    b ^ℕ zero  = 1ᶠ
-    b ^ℕ suc x = b * b ^ℕ x
-
-    _^_ : F → ℤ → F
-    b ^ (ℤ.+ x)    = b ^ℕ x
-    b ^ ℤ.-[1+ x ] = (b ^ℕ (suc x))⁻¹
+                  (F-field : Field F) where
+    open Field F-field renaming (0-_ to -_)
 
     module _ {A : Set} where
         eval : (A → F) → Tm A → F
-        eval ρ (lit x) = evalℤ x
+        eval ρ (lit x) = ℤ[ x ]
         eval ρ (t +' t₁) = eval ρ t + eval ρ t₁
         eval ρ (t *' t₁) = eval ρ t * eval ρ t₁
         eval ρ (var x)  = ρ x
