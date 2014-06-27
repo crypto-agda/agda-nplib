@@ -12,50 +12,17 @@ open import Data.One using (𝟙)
 open import Data.Two
 open import Data.Fin as Fin using (Fin ; suc ; zero)
 open import Data.Nat.NP as ℕ using (ℕ ; suc ; zero; _+_)
-open import Data.Product.NP renaming (proj₁ to fst; proj₂ to snd; map to map×)
+open import Data.Product.NP renaming (map to map×)
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_]; map to map⊎)
 
 import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_; _≢_ ; ap; coe; coe!; !_; _∙_; J ; inspect ; Reveal_is_ ; [_]; tr; ap₂) renaming (refl to idp; _≗_ to _∼_)
+open ≡ using (_≡_; _≢_ ; ap; coe; coe!; !_; _∙_; J ; inspect ; Reveal_is_ ; [_]; tr; ap₂; apd) renaming (refl to idp; _≗_ to _∼_; J-orig to J')
 
 module Type.Identities where
 
 open Equivalences
 
-module _ {a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x){{_ : FunExt}} where
-    Σ=′ : Σ A B₀ ≡ Σ A B₁
-    Σ=′ = ap (Σ A) (λ= B)
 
-    Π=′ : Π A B₀ ≡ Π A B₁
-    Π=′ = ap (Π A) (λ= B)
-
-module _ {a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x){{_ : FunExt}} where
-  !Σ=′ : ! (Σ=′ A B) ≡ Σ=′ A (!_ ∘ B)
-  !Σ=′ = !-ap _ (λ= B) ∙ ap (ap (Σ A)) (!-λ= B)
-
-coeΣ=′-aux : ∀{{_ : FunExt}}{a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x){x y}
-  → coe (Σ=′ A B) (x , y) ≡ (x , coe (ap (λ f → f x) (λ= B)) y)
-coeΣ=′-aux A B with λ= B
-coeΣ=′-aux A B | idp = idp
-
-coeΣ=′ : ∀{{_ : FunExt}}{a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x){x y}
-  → coe (Σ=′ A B) (x , y) ≡ (x , coe (B x) y)
-coeΣ=′ A B = coeΣ=′-aux A B ∙ ap (_,_ _) (coe-same (happly (happly-λ= B) _) _)
-
-coe!Σ=′ : ∀{{_ : FunExt}}{a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x){x y}
-  → coe! (Σ=′ A B) (x , y) ≡ (x , coe! (B x) y)
-coe!Σ=′ A B {x}{y} = coe-same (!Σ=′ A B) _ ∙ coeΣ=′ A (!_ ∘ B)
-
-module _ {a b}{A₀ : ★_ a}{B₀ : A₀ → ★_ b}{{_ : FunExt}} where
-    Σ= : {A₁ : ★_ a}(A= : A₀ ≡ A₁)
-         {B₁ : A₁ → ★_ b}(B= : (x : A₀) → B₀ x ≡ B₁ (coe A= x))
-       → Σ A₀ B₀ ≡ Σ A₁ B₁
-    Σ= idp B= = Σ=′ _ B=
-
-    Π= : ∀ {A₁ : ★_ a}(A= : A₀ ≡ A₁)
-           {B₁ : A₁ → ★_ b}(B= : (x : A₀) → B₀ x ≡ B₁ (coe A= x))
-         → Π A₀ B₀ ≡ Π A₁ B₁
-    Π= idp B= = Π=′ _ B=
 
 module _ {a}{A₀ A₁ : ★_ a}{b}{B₀ B₁ : ★_ b}(A= : A₀ ≡ A₁)(B= : B₀ ≡ B₁) where
     ×= : (A₀ × B₀) ≡ (A₁ × B₁)
@@ -66,6 +33,7 @@ module _ {a}{A₀ A₁ : ★_ a}{b}{B₀ B₁ : ★_ b}(A= : A₀ ≡ A₁)(B= :
 
     →= : (A₀ → B₀) ≡ (A₁ → B₁)
     →= = ap₂ -→- A= B=
+
 
 coe×= : ∀ {a}{A₀ A₁ : ★_ a}{b}{B₀ B₁ : ★_ b}(A= : A₀ ≡ A₁)(B= : B₀ ≡ B₁){x y}
       → coe (×= A= B=) (x , y) ≡ (coe A= x , coe B= y)
@@ -91,6 +59,43 @@ module _ {a}{A₀ A₁ : ★_ a}{b}{B₀ B₁ : ★_ b}(A≃ : A₀ ≃ A₁)(B�
                (λ f → λ= (λ x → <–-inv-r B≃ _ ∙ ap f (<–-inv-r A≃ x)))
                (λ f → λ= (λ x → <–-inv-l B≃ _ ∙ ap f (<–-inv-l A≃ x)))
 
+module _ {{_ : FunExt}}{a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x) where
+    Σ=′ : Σ A B₀ ≡ Σ A B₁
+    Σ=′ = ap (Σ A) (λ= B)
+
+    Π=′ : Π A B₀ ≡ Π A B₁
+    Π=′ = ap (Π A) (λ= B)
+
+module _ {a b}{A₀ : ★_ a}{B₀ : A₀ → ★_ b}{{_ : FunExt}} where
+    Σ= : {A₁ : ★_ a}(A= : A₀ ≡ A₁)
+         {B₁ : A₁ → ★_ b}(B= : (x : A₀) → B₀ x ≡ B₁ (coe A= x))
+       → Σ A₀ B₀ ≡ Σ A₁ B₁
+    Σ= = J (λ A₁ A= → {B₁ : A₁ → ★_ b}(B= : (x : A₀) → B₀ x ≡ B₁ (coe A= x))
+                    → Σ A₀ B₀ ≡ Σ A₁ B₁) (Σ=′ _)
+    -- Σ= idp B= = Σ=′ _ B=
+
+    Π= : ∀ {A₁ : ★_ a}(A= : A₀ ≡ A₁)
+           {B₁ : A₁ → ★_ b}(B= : (x : A₀) → B₀ x ≡ B₁ (coe A= x))
+         → Π A₀ B₀ ≡ Π A₁ B₁
+    Π= idp B= = Π=′ _ B=
+
+module _ {a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x){{_ : FunExt}} where
+  !Σ=′ : ! (Σ=′ A B) ≡ Σ=′ A (!_ ∘ B)
+  !Σ=′ = !-ap _ (λ= B) ∙ ap (ap (Σ A)) (!-λ= B)
+
+coeΣ=′-aux : ∀{{_ : FunExt}}{a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x){x y}
+  → coe (Σ=′ A B) (x , y) ≡ (x , coe (ap (λ f → f x) (λ= B)) y)
+coeΣ=′-aux A B with λ= B
+coeΣ=′-aux A B | idp = idp
+
+coeΣ=′ : ∀{{_ : FunExt}}{a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x){x y}
+  → coe (Σ=′ A B) (x , y) ≡ (x , coe (B x) y)
+coeΣ=′ A B = coeΣ=′-aux A B ∙ ap (_,_ _) (coe-same (happly (happly-λ= B) _) _)
+
+coe!Σ=′ : ∀{{_ : FunExt}}{a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x){x y}
+  → coe! (Σ=′ A B) (x , y) ≡ (x , coe! (B x) y)
+coe!Σ=′ A B {x}{y} = coe-same (!Σ=′ A B) _ ∙ coeΣ=′ A (!_ ∘ B)
+
 module _ {{_ : UA}}{{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b}{B₀ : A₀ → ★_ b}{B₁ : A₁ → ★_ b} where
     Σ≃ : (A≃ : A₀ ≃ A₁)(B= : (x : A₀) → B₀ x ≡ B₁ (–> A≃ x))
          → Σ A₀ B₀ ≡ Σ A₁ B₁
@@ -104,10 +109,10 @@ module _ {{_ : UA}}{{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b}{B₀ : A₀ → ★_
 module _ {{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b}{B₀ : A₀ → ★_ b}{B₁ : A₁ → ★_ b}(A : A₀ ≃ A₁)(B : (x : A₁) → B₀ (<– A x) ≃ B₁ x) where
     Π≃' : (Π A₀ B₀) ≃ (Π A₁ B₁)
     Π≃' = equiv (λ f x → –> (B x) (f (<– A x)))
-                {!λ f x → <– (B x) {!(f (–> A x))!}!}
-                {!λ f → λ= (λ x → <–-inv-r B _ ∙ ap f (<–-inv-r A x))!}
+                (λ f x → tr B₀ (<–-inv-l A x) (<– (B (–> A x)) (f (–> A x))))
+                (λ f → λ= (λ x → {!apd (<–-inv-l A (<– A x))!}))
                 {!λ f → λ= (λ x → <–-inv-l B _ ∙ ap f (<–-inv-l A x))!}
-                -}
+    -}
 
 module _ {{_ : UA}}{{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b} where
     Σ-fst≃ : ∀ (A : A₀ ≃ A₁)(B : A₁ → ★_ b) → Σ A₀ (B ∘ –> A) ≡ Σ A₁ B
@@ -382,6 +387,21 @@ module _ {a}{A : ★_ a} where
   Σx≡≃𝟙 : ∀ x → (Σ A (flip _≡_ x)) ≃ 𝟙
   Σx≡≃𝟙 x = equiv (λ _ → _) (λ _ → x , idp) (λ _ → idp) (λ p →  pair= (! snd p)  ( tr-l≡ (! snd p) idp ∙
     ∙-refl (! (! (snd p))) ∙ !-inv (snd p)))
+
+module _ {ab c}{A B : ★_ ab}{C : A → B → ★_ c}{{_ : UA}}{{_ : FunExt}} where
+
+  Π⊎-equiv : (Π (A ⊎ B) [inl: (λ x → ∀ y → C x y) ,inr: (λ y → ∀ x → C x y) ]) ≃ ((t : 𝟚)(x : A)(y : B) → C x y)
+  Π⊎-equiv = equiv (λ f → [0: (λ x y → f (inl x) y) 1: ((λ x y → f (inr y) x)) ])
+                   (λ f → [inl: f 0₂ ,inr: flip (f 1₂) ])
+                   (λ f → λ= [0: idp 1: idp ])
+                   (λ f → λ= [inl: (λ x → idp) ,inr: (λ x → idp) ])
+
+  Π⊎ : (Π (A ⊎ B) [inl: (λ x → ∀ y → C x y) ,inr: (λ y → ∀ x → C x y) ]) ≡ ((t : 𝟚)(x : A)(y : B) → C x y)
+  Π⊎ = ua Π⊎-equiv
+
+module _ {ab c}{A B : ★_ ab}{C : ★_ c}{{_ : UA}}{{_ : FunExt}} where
+  Π⊎′ : (Π (A ⊎ B) [inl: const (B → C) ,inr: const (A → C) ]) ≡ (𝟚 → A → B → C)
+  Π⊎′ = Π⊎
 
 module _ where
 

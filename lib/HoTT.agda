@@ -7,7 +7,7 @@ open import Function.NP
 open import Function.Extensionality
 open import Data.Zero using (𝟘; 𝟘-elim)
 open import Data.One using (𝟙)
-open import Data.Product.NP renaming (proj₁ to fst; proj₂ to snd)
+open import Data.Product.NP
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_])
 open import Relation.Nullary.NP
 open import Relation.Binary using (Reflexive; Symmetric; Transitive)
@@ -310,11 +310,14 @@ module Equivalences where
         module F = Biinv fᴮ
 
   module _ {a b}{A : ★_ a}{B : ★_ b} where
-    –> : (e : A ≃ B) → (A → B)
-    –> e = fst e
+    ·→ : (e : A ≃ B) → (A → B)
+    ·→ e = fst e
 
-    <– : (e : A ≃ B) → (B → A)
-    <– e = Is-equiv.linv (snd e)
+    ·← : (e : A ≃ B) → (B → A)
+    ·← e = Is-equiv.linv (snd e)
+
+    –> = ·→
+    <– = ·←
 
     <–' : (e : A ≃ B) → (B → A)
     <–' e = Is-equiv.rinv (snd e)
@@ -429,7 +432,7 @@ module _ {a} where
     has-all-paths A = (x y : A) → x ≡ y
 
     UIP : U → U
-    UIP A = {x y : A} (p q : x ≡ y) -> p ≡ q
+    UIP A = {x y : A} (p q : x ≡ y) → p ≡ q
 
     private
       UIP-check : {A : U} → UIP A ≡ ({x y : A} → has-all-paths (x ≡ y))

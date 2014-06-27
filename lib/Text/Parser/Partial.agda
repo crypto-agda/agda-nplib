@@ -50,7 +50,7 @@ parser⊥ (later p) s = later (♯ parser⊥ (♭ p) s)
 -- The remaning input is dropped, you may want to first
 -- combine your parser `p' with `eof': `p <* eof'
 runParser : ∀ {A} → Parser⊥ A → List Char → (Maybe A)⊥
-runParser p s = (map⊥ ∘ map?) proj₁ (p s)
+runParser p s = (map⊥ ∘ map?) fst (p s)
 
 infixr 0 _>>=_
 _>>=_ : ∀ {A B} → Parser⊥ A → (A → Parser⊥ B) → Parser⊥ B

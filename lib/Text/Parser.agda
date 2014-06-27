@@ -40,7 +40,7 @@ eof s = if null s then pure _ [] else empty []
 -- The remaning input is dropped, you may want to first
 -- combine your parser `p' with `eof': `p <* eof'
 runParser : ∀ {A} → Parser A → List Char →? A
-runParser p s = map? proj₁ (p s)
+runParser p s = map? fst (p s)
 
 runParserˢ : ∀ {A} → Parser A → String →? A
 runParserˢ p = runParser p ∘ S▹L

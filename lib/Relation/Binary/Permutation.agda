@@ -75,7 +75,7 @@ Permutation : ∀ {a} → Set a → Set a
 Permutation A = List (A × A)
 
 permRel : ∀ {a} {A : Set a} → (π : Permutation A) → Rel A a → Rel A a
-permRel π R = foldr (λ p r → r [ proj₁ p ↔ proj₂ p ]) R π
+permRel π R = foldr (λ p r → r [ fst p ↔ snd p ]) R π
 
 toRel : ∀ {a} {A : Set a} → (π : Permutation A) → Rel A a
 toRel π = permRel π (λ _ _ → Lift 𝟙)

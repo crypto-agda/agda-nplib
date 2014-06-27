@@ -2,67 +2,61 @@
 module Reflection.NP where
 
 open import Type
-import Level as L
-open L using (Level; _⊔_)
+open import Level.NP
 open import Data.Nat using (ℕ; zero; suc) renaming (_⊔_ to _⊔ℕ_)
-open import Data.Maybe as May
+open import Data.Maybe.NP
+open import Data.Zero using (𝟘)
+open import Data.One using (𝟙; 0₁)
+open import Data.Two using (𝟚; 0₂; 1₂; [0:_1:_])
 open import Data.List
-open import Data.Bool
-open import Data.Product
+open import Data.Vec using (Vec) -- ; []; _∷_)
+open import Data.Product.NP
+open import Function.NP hiding (Π)
+
 open import Reflection public
-open import Function
 
 Args : ★
 Args = List (Arg Term)
 
-private
-  primitive
-    primQNameEquality : Name → Name → Bool
+-- lamᵛ : Term → Term
+pattern lamᵛ = lam visible
 
-_==_ : Name → Name → Bool
-_==_ = primQNameEquality
+-- lamʰ : Term → Term
+pattern lamʰ = lam hidden
 
-private
-  _→⟨_⟩_ : ∀ (A : ★) (n : ℕ) (B : ★) → ★
-  A →⟨ zero  ⟩ B = B
-  A →⟨ suc n ⟩ B = A → A →⟨ n ⟩ B
+-- argiᵛʳ : Arg-info
+pattern argiᵛʳ = arg-info visible relevant
 
-  when : ∀ {A : ★} → Bool → Maybe A → Maybe A
-  when true  x = x
-  when false _ = nothing
+-- argiʰʳ : Arg-info
+pattern argiʰʳ = arg-info hidden relevant
 
-  mapMaybe : ∀ {A B : ★} → (A → B) → Maybe A → Maybe B
-  mapMaybe f (just x) = just (f x)
-  mapMaybe f nothing  = nothing
+-- argᵛʳ : ∀{A} → A → Arg A
+pattern argᵛʳ v = arg argiᵛʳ v
 
-lamᵛ : Term → Term
-lamᵛ = lam visible
+-- argʰʳ : ∀{A} → A → Arg A
+pattern argʰʳ v = arg argiʰʳ v
 
-lamʰ : Term → Term
-lamʰ = lam hidden
+Arg-infos : ★
+Arg-infos = List Arg-info
 
-argᵛʳ : ∀{A} → A → Arg A
-argᵛʳ = arg visible relevant
-
-argʰʳ : ∀{A} → A → Arg A
-argʰʳ = arg hidden relevant
-
-Flags : ★
-Flags = List (Visibility × Relevance)
-
-app` : (Args → Term) → (fs : Flags) → Term →⟨ length fs ⟩ Term
+app` : (Args → Term) → (ais : Arg-infos) → Term →⟨ length ais ⟩ Term
 app` f = go [] where
-  go : Args → (fs : Flags) → Term →⟨ length fs ⟩ Term
-  go args []             = f (reverse args)
-  go args ((h , r) ∷ hs) = λ t → go (arg h r t ∷ args) hs
+  go : Args → (ais : Arg-infos) → Term →⟨ length ais ⟩ Term
+  go args []         = f (reverse args)
+  go args (ai ∷ ais) = λ t → go (arg ai t ∷ args) ais
 
-con` : Name → (fs : Flags) → Term →⟨ length fs ⟩ Term
+pattern conᵛʳ n t = con n (argᵛʳ t ∷ [])
+pattern conʰʳ n t = con n (argʰʳ t ∷ [])
+pattern defᵛʳ n t = def n (argᵛʳ t ∷ [])
+pattern defʰʳ n t = def n (argʰʳ t ∷ [])
+
+con` : Name → (ais : Arg-infos) → Term →⟨ length ais ⟩ Term
 con` x = app` (con x)
 
-def` : Name → (fs : Flags) → Term →⟨ length fs ⟩ Term
+def` : Name → (ais : Arg-infos) → Term →⟨ length ais ⟩ Term
 def` x = app` (def x)
 
-var` : ℕ → (fs : Flags) → Term →⟨ length fs ⟩ Term
+var` : ℕ → (ais : Arg-infos) → Term →⟨ length ais ⟩ Term
 var` x = app` (var x)
 
 coe : ∀ {A : ★} {z : A} n → (Term →⟨ length (replicate n z) ⟩ Term) → Term →⟨ n ⟩ Term
@@ -70,32 +64,32 @@ coe zero    t = t
 coe (suc n) f = λ t → coe n (f t)
 
 con`ⁿʳ : Name → (n : ℕ) → Term →⟨ n ⟩ Term
-con`ⁿʳ x n = coe n (app` (con x) (replicate n (visible , relevant)))
+con`ⁿʳ x n = coe n (app` (con x) (replicate n argiᵛʳ))
 
 def`ⁿʳ : Name → (n : ℕ) → Term →⟨ n ⟩ Term
-def`ⁿʳ x n = coe n (app` (def x) (replicate n (visible , relevant)))
+def`ⁿʳ x n = coe n (app` (def x) (replicate n argiᵛʳ))
 
 var`ⁿʳ : ℕ → (n : ℕ) → Term →⟨ n ⟩ Term
-var`ⁿʳ x n = coe n (app` (var x) (replicate n (visible , relevant)))
+var`ⁿʳ x n = coe n (app` (var x) (replicate n argiᵛʳ))
 
-sort₀ : Sort
-sort₀ = lit 0
+-- sort₀ : Sort
+pattern sort₀ = lit 0
 
-sort₁ : Sort
-sort₁ = lit 1
+-- sort₁ : Sort
+pattern sort₁ = lit 1
 
-`★₀ : Term
-`★₀ = sort sort₀
+-- `★₀ : Term
+pattern `★₀ = sort sort₀
 
-el₀ : Term → Type
-el₀ = el sort₀
+-- el₀ : Term → Type
+pattern el₀ t = el sort₀ t
 
 -- Builds a type variable (of type ★₀)
 ``var₀ : ℕ → Args → Type
 ``var₀ n args = el₀ (var n args)
 
-``★₀ : Type
-``★₀ = el sort₁ `★₀
+-- ``★₀ : Type
+pattern ``★₀ = el sort₁ `★₀
 
 unEl : Type → Term
 unEl (el _ tm) = tm
@@ -104,63 +98,70 @@ getSort : Type → Sort
 getSort (el s _) = s
 
 unArg : ∀ {A} → Arg A → A
-unArg (arg _ _ a) = a
+unArg (arg _ a) = a
 
-`Level : Term
-`Level = def (quote Level) []
+-- `Level : Term
+pattern `Level = def (quote Level) []
 
-``Level : Type
-``Level = el₀ `Level
+-- ``Level : Type
+pattern ``Level = el₀ `Level
 
-`sucLevel : Term → Term
-`sucLevel = def`ⁿʳ (quote L.suc) 1
+pattern `₀ = def (quote ₀) []
 
-sucSort : Sort → Sort
-sucSort s = set (`sucLevel (sort s))
+-- `ₛ_ : Term → Term
+-- `ₛ_ = def`ⁿʳ (quote L.suc) 1
+pattern `ₛ_ v = def (quote ₛ) (argᵛʳ v ∷ [])
 
-ℕ→Level : ℕ → Level
-ℕ→Level zero    = L.zero
-ℕ→Level (suc n) = L.suc (ℕ→Level n)
+-- sucSort : Sort → Sort
+pattern sucSort s = set (`ₛ (sort s))
 
-decodeSort : Sort → Maybe ℕ
-decodeSort (set (con c [])) = when (quote L.zero == c) (just zero)
-decodeSort (set (con c (arg visible relevant s ∷ [])))
-    = when (quote L.suc == c) (mapMaybe suc (decodeSort (set s)))
-decodeSort (set (sort s)) = decodeSort s
-decodeSort (set _) = nothing
-decodeSort (lit n) = just n
-decodeSort unknown = nothing
+pattern `set₀ = set `₀
+pattern `setₛ_ s = set (`ₛ s)
+pattern `set_ s = set (sort s)
+
+decode-Sort : Sort → Maybe ℕ
+decode-Sort `set₀ = just zero
+decode-Sort (`setₛ_ s) = map? suc (decode-Sort (set s))
+decode-Sort (`set_ s) = decode-Sort s
+decode-Sort (set _) = nothing
+decode-Sort (lit n) = just n
+decode-Sort unknown = nothing
+
+pattern _`⊔_ s₁ s₂ = set (def (quote _⊔_) (argᵛʳ (sort s₁) ∷ argᵛʳ (sort s₂) ∷ []))
 
 _`⊔`_ : Sort → Sort → Sort
-s₁ `⊔` s₂ with decodeSort s₁ | decodeSort s₂
-...          | just n₁       | just n₂        = lit (n₁ ⊔ℕ n₂)
-...          | _             | _              = set (def (quote _⊔_) (argᵛʳ (sort s₁) ∷ argᵛʳ (sort s₂) ∷ []))
+s₁ `⊔` s₂ with decode-Sort s₁ | decode-Sort s₂
+...          | just n₁        | just n₂        = lit (n₁ ⊔ℕ n₂)
+...          | _              | _              = s₁ `⊔ s₂
+
+pattern piᵛʳ t u = pi (argᵛʳ t) u
+pattern piʰʳ t u = pi (argʰʳ t) u
 
 Π : Arg Type → Type → Type
 Π t u = el (getSort (unArg t) `⊔` getSort u) (pi t u)
 
 Πᵛʳ : Type → Type → Type
-Πᵛʳ t u = el (getSort t `⊔` getSort u) (pi (arg visible relevant t) u)
+Πᵛʳ t u = el (getSort t `⊔` getSort u) (piᵛʳ t u)
 
 Πʰʳ : Type → Type → Type
-Πʰʳ t u = el (getSort t `⊔` getSort u) (pi (arg hidden relevant t) u)
+Πʰʳ t u = el (getSort t `⊔` getSort u) (piʰʳ t u)
 
 -- η vs mk: performs no shifting of the result of mk.
 -- Safe values of mk are def and con for instance
-η : List Visibility → (Args → Term) → Term
-η vs₀ mk = go vs₀ where
-  vars : List Visibility → Args
-  vars []       = []
-  vars (v ∷ vs) = arg v relevant (var (length vs) []) ∷ vars vs
-  go : List Visibility → Term
-  go []       = mk (vars vs₀)
-  go (v ∷ vs) = lam v (go vs)
+η : List Arg-info → (Args → Term) → Term
+η ais₀ mk = go ais₀ where
+  vars : List Arg-info → Args
+  vars []         = []
+  vars (ai ∷ ais) = arg ai (var (length ais) []) ∷ vars ais
+  go : List Arg-info → Term
+  go []                   = mk (vars ais₀)
+  go (arg-info v _ ∷ ais) = lam v (go ais)
 
 ηʰ : ℕ → (Args → Term) → Term
-ηʰ n = η (replicate n hidden)
+ηʰ n = η (replicate n argiʰʳ)
 
 ηᵛ : ℕ → (Args → Term) → Term
-ηᵛ n = η (replicate n visible)
+ηᵛ n = η (replicate n argiᵛʳ)
 
 ηʰⁿ : ℕ → Name → Term
 ηʰⁿ n = ηʰ n ∘ def
@@ -168,26 +169,102 @@ s₁ `⊔` s₂ with decodeSort s₁ | decodeSort s₂
 ηᵛⁿ : ℕ → Name → Term
 ηᵛⁿ n = ηᵛ n ∘ def
 
-arityOfType : Type → List Visibility
-arityOfType (el _ u) with u
-... | pi (arg v _ _) t = v ∷ arityOfType t
+arityOfTerm : Term → List Arg-info
+arityOfType : Type → List Arg-info
+
+arityOfType (el _ u) = arityOfTerm u
+arityOfTerm (pi (arg ai _) t) = ai ∷ arityOfType t
 
 -- no more arguments
-... | var _ _ = []
+arityOfTerm (var _ _) = []
 
 -- TODO
-... | con c args = []
-... | def f args = []
-... | sort s = []
+arityOfTerm (con c args) = []
+arityOfTerm (def f args) = []
+arityOfTerm (sort s)     = []
 
 -- fail
-... | unknown = []
+arityOfTerm unknown = []
 
 -- absurd cases
-... | lam _ _ = []
+arityOfTerm (lam _ _) = []
 
 ηⁿ : Name → Term
 ηⁿ nm = η (arityOfType (type nm)) (def nm)
+
+Decode-Term : ∀ {a} → ★_ a → ★_ a
+Decode-Term A = Term → Maybe A
+
+pattern `𝟘 = def (quote 𝟘) []
+
+pattern `𝟙  = def (quote 𝟙) []
+pattern `0₁ = con (quote 0₁) []
+
+decode-𝟙 : Decode-Term 𝟙
+decode-𝟙 `0₁ = just 0₁
+decode-𝟙 _   = nothing
+
+pattern `𝟚  = def (quote 𝟚) []
+pattern `0₂ = con (quote 0₂) []
+pattern `1₂ = con (quote 1₂) []
+
+decode-𝟚 : Decode-Term 𝟚
+decode-𝟚 `0₂ = just 0₂
+decode-𝟚 `1₂ = just 1₂
+decode-𝟚 _   = nothing
+
+pattern `ℕ     = def (quote ℕ) []
+pattern `zero  = con (quote zero) []
+pattern `suc t = conᵛʳ (quote suc) t
+
+decode-ℕ : Decode-Term ℕ
+decode-ℕ `zero    = just 0
+decode-ℕ (`suc t) = map? suc (decode-ℕ t)
+decode-ℕ _        = nothing
+
+pattern `Maybe t = defᵛʳ (quote Maybe) t
+pattern `nothing = con (quote Maybe.nothing) []
+pattern `just  t = conᵛʳ (quote Maybe.just) t
+
+decode-Maybe : ∀ {a} {A : ★_ a} → Decode-Term A → Decode-Term (Maybe A)
+decode-Maybe decode-A `nothing  = just nothing
+decode-Maybe decode-A (`just t) = map? just (decode-A t)
+decode-Maybe decode-A _         = nothing
+
+pattern `List t = defᵛʳ (quote List) t
+pattern `[] = con (quote List.[]) []
+pattern _`∷_ t u = con (quote List._∷_) (argᵛʳ t ∷ argᵛʳ u ∷ [])
+
+decode-List : ∀ {a} {A : ★_ a} → Decode-Term A → Decode-Term (List A)
+decode-List decode-A `[]      = just []
+decode-List decode-A (t `∷ u) = ⟪ _∷_ · decode-A t · decode-List decode-A u ⟫?
+decode-List decode-A _        = nothing
+
+pattern `Vec t u = def (quote Vec) (argᵛʳ t ∷ argᵛʳ u ∷ [])
+pattern `v[]      = con (quote Vec.[]) []
+pattern _`v∷_ t u = con (quote Vec._∷_) (argᵛʳ t ∷ argᵛʳ u ∷ [])
+
+{-
+decode-Vec : ∀ {a} {A : ★_ a} {n} → Decode-Term A → Decode-Term (Vec A n)
+decode-Vec decode-A `[]      = just []
+decode-Vec decode-A (t `∷ u) = ⟪ _∷_ · decode-A t · decode-Vec decode-A u ⟫?
+decode-Vec decode-A _        = nothing
+-}
+
+pattern `Σ t u = def (quote Σ) (argᵛʳ t ∷ argᵛʳ u ∷ [])
+pattern _`,_ t u = con (quote _,_) (argᵛʳ t ∷ argᵛʳ u ∷ [])
+pattern `fst t = defᵛʳ (quote fst) t
+pattern `snd t = defᵛʳ (quote snd) t
+
+module _ {a b} {A : ★_ a} {B : A → ★_ b}
+         (decode-A : Decode-Term A)
+         (decode-B : (x : A) → Decode-Term (B x))
+         where
+    decode-Σ : Decode-Term (Σ A B)
+    decode-Σ (t `, u) = decode-A t   >>=? λ x →
+                        decode-B x u >>=? λ y →
+                        just (x , y)
+    decode-Σ _        = nothing
 
 module Ex where
   open import Relation.Binary.PropositionalEquality
@@ -211,10 +288,27 @@ module Ex where
   -- this test passes but leave an undecided instance argument
   -- test₅ : unquote ηh ≡ λ {x y : ℕ} {{z : ℕ}} (t u : ℕ) {v : ℕ} → h {x} {y} {{z}} t u {v}
   -- test₅ = refl
-{-
+  ηh₂ : Term
   ηh₂ = ηⁿ (quote h₂)
-  test₆ : unquote ηh₂ ≡ {!!} -- λ {x y : ℕ} {{z : ℕ}} (t u : ℕ) {v : ℕ} → h {x} {y} {{z}} t u {v}
+  {-
+  test₆ : unquote ηh₂ ≡ {!unquote ηh₂!} -- λ {x y : ℕ} {{z : ℕ}} (t u : ℕ) {v : ℕ} → h {x} {y} {{z}} t u {v}
   test₆ = refl
+  -}
+  test₇ : decode-ℕ (quoteTerm (suc (suc zero))) ≡ just 2
+  test₇ = refl
+  test₈ : decode-ℕ (quoteTerm (suc (suc 3))) ≡ just 5
+  test₈ = refl
+  test₉ : decode-Maybe decode-𝟚 (quoteTerm (Maybe.just 0₂)) ≡ just (just 0₂)
+  test₉ = refl
+  test₁₀ : decode-List decode-ℕ (quoteTerm (0 ∷ 1 ∷ 2 ∷ [])) ≡ just (0 ∷ 1 ∷ 2 ∷ [])
+  test₁₀ = refl
+  test₁₁ : quoteTerm (_,′_ 0₂ 1₂) ≡ `0₂ `, `1₂
+  test₁₁ = refl
+  test₁₁' : decode-List (decode-Σ {A = 𝟚} {B = [0: 𝟚 1: ℕ ]} decode-𝟚 [0: decode-𝟚 1: decode-ℕ ])
+                        (quoteTerm ((_,_ {B = [0: 𝟚 1: ℕ ]} 0₂ 1₂) ∷ (1₂ , 4) ∷ [])) ≡ just ((0₂ , 1₂) ∷ (1₂ , 4) ∷ [])
+  test₁₁' = refl
 
-  here = {!!}
--}
+-- -}
+-- -}
+-- -}
+-- -}

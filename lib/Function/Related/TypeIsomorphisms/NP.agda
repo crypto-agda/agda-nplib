@@ -46,7 +46,7 @@ module _ {a b f} {A : Set a} {B : A → Set b}
                    ↔ (Σ (Π A B) λ f → Π A (F ˢ f))
     dep-choice-iso = inverses (⇒) (uncurry <_,_>) (λ _ → ≡.refl) (λ _ → ≡.refl)
       where
-        ⇒ = λ f → (λ x → proj₁ (f x)) , (λ x → proj₂ (f x))
+        ⇒ = λ f → (λ x → fst (f x)) , (λ x → snd (f x))
 
 Maybe-injective : ∀ {A B : Set} → Maybe A ↔ Maybe B → A ↔ B
 Maybe-injective f = Iso.iso (g f) (g-empty f)
@@ -195,10 +195,10 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A → ★ c} (f : A ↔ B) where
     ⇐⇒ : ∀ x → ⇐ (⇒ x) ≡ x
     ⇐⇒ (x , p) rewrite left-f x = ≡.refl
     ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
-    ⇒⇐ p = mkΣ≡ (C F.∘ from f) (right-f (proj₁ p)) (helper p)
+    ⇒⇐ p = mkΣ≡ (C F.∘ from f) (right-f (fst p)) (helper p)
             where
-                helper : ∀ p → ≡.tr (C F.∘ from f) (right-f (proj₁ p)) (coe (proj₁ (⇐ p)) (proj₂ (⇐ p))) ≡ proj₂ p
-                helper p with to f (from f (proj₁ p)) | right-f (proj₁ p) | left-f (from f (proj₁ p))
+                helper : ∀ p → ≡.tr (C F.∘ from f) (right-f (fst p)) (coe (fst (⇐ p)) (snd (⇐ p))) ≡ snd p
+                helper p with to f (from f (fst p)) | right-f (fst p) | left-f (from f (fst p))
                 helper _ | ._ | ≡.refl | ≡.refl = ≡.refl
   first-iso : Σ A C ↔ Σ B (C F.∘ from f)
   first-iso = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
@@ -397,8 +397,8 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c}
   left-identity : LeftIdentity (≡.setoid 𝟙) _×-setoid_
   left-identity A = record
     { to = record
-      { _⟨$⟩_ = proj₂
-      ; cong = proj₂
+      { _⟨$⟩_ = snd
+      ; cong = snd
       }
     ; from = record
       { _⟨$⟩_ = λ x → _ , x
@@ -413,12 +413,12 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c}
   assoc : Associative _×-setoid_
   assoc A B C = record
     { to = record
-      { _⟨$⟩_ = < proj₁ F.∘ proj₁ , < proj₂ F.∘ proj₁ , proj₂ > >
-      ; cong  = < proj₁ F.∘ proj₁ , < proj₂ F.∘ proj₁ , proj₂ > >
+      { _⟨$⟩_ = < fst F.∘ fst , < snd F.∘ fst , snd > >
+      ; cong  = < fst F.∘ fst , < snd F.∘ fst , snd > >
       }
     ; from = record
-      { _⟨$⟩_ = < < proj₁ , proj₁ F.∘ proj₂ > , proj₂ F.∘ proj₂ >
-      ; cong  = < < proj₁ , proj₁ F.∘ proj₂ > , proj₂ F.∘ proj₂ >
+      { _⟨$⟩_ = < < fst , fst F.∘ snd > , snd F.∘ snd >
+      ; cong  = < < fst , fst F.∘ snd > , snd F.∘ snd >
       }
     ; inverse-of = record
       { left-inverse-of = λ _ → Setoid.refl ((A ×-setoid B) ×-setoid C)
@@ -495,15 +495,15 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c}
   zeroˡ : LeftZero (≡.setoid 𝟘) _×-setoid_
   zeroˡ A = record
     { to = record
-      { _⟨$⟩_ = proj₁
-      ; cong = proj₁
+      { _⟨$⟩_ = fst
+      ; cong = fst
       }
     ; from = record
       { _⟨$⟩_ = 𝟘-elim
       ; cong = λ { {()} x }
       }
     ; inverse-of = record
-      { left-inverse-of = λ x → 𝟘-elim (proj₁ x)
+      { left-inverse-of = λ x → 𝟘-elim (fst x)
       ; right-inverse-of = λ x → 𝟘-elim x
       }
     }
@@ -628,11 +628,11 @@ Lift↔id = inverses lower lift (λ { (lift x) → ≡.refl }) (λ _ → ≡.ref
 
 -- PORTED to HoTT
 𝟙×A↔A : ∀ {A : ★₀} → (𝟙 × A) ↔ A
-𝟙×A↔A = proj₁ ×-CMon.identity _ ∘ sym Lift↔id ×-cong id
+𝟙×A↔A = fst ×-CMon.identity _ ∘ sym Lift↔id ×-cong id
 
 -- PORTED to HoTT
 A×𝟙↔A : ∀ {A : ★₀} → (A × 𝟙) ↔ A
-A×𝟙↔A = proj₂ ×-CMon.identity _ ∘ id ×-cong sym Lift↔id
+A×𝟙↔A = snd ×-CMon.identity _ ∘ id ×-cong sym Lift↔id
 
 -- PORTED to HoTT
 Π𝟙F↔F : ∀ {ℓ} {F : 𝟙 → ★_ ℓ} → Π 𝟙 F ↔ F _
@@ -681,15 +681,15 @@ module _ {ℓ} {A : ★_ ℓ} (ext𝟚 : {f g : 𝟚 → A} → f ≗ g → f �
 
 -- PORTED to HoTT
 𝟘⊎A↔A : ∀ {A : ★₀} → (𝟘 ⊎ A) ↔ A
-𝟘⊎A↔A = proj₁ ⊎-CMon.identity _ ∘ sym Lift↔id ⊎-cong id
+𝟘⊎A↔A = fst ⊎-CMon.identity _ ∘ sym Lift↔id ⊎-cong id
 
 -- PORTED to HoTT
 A⊎𝟘↔A : ∀ {A : ★₀} → (A ⊎ 𝟘) ↔ A
-A⊎𝟘↔A = proj₂ ⊎-CMon.identity _ ∘ id ⊎-cong sym Lift↔id
+A⊎𝟘↔A = snd ⊎-CMon.identity _ ∘ id ⊎-cong sym Lift↔id
 
 -- PORTED to HoTT
 𝟘×A↔𝟘 : ∀ {A : ★₀} → (𝟘 × A) ↔ 𝟘
-𝟘×A↔𝟘 = Lift↔id ∘ proj₁ ×⊎°.zero _ ∘ sym (Lift↔id ×-cong id)
+𝟘×A↔𝟘 = Lift↔id ∘ fst ×⊎°.zero _ ∘ sym (Lift↔id ×-cong id)
 
 -- PORTED to HoTT
 Maybe𝟘↔𝟙 : Maybe 𝟘 ↔ 𝟙
@@ -715,7 +715,7 @@ Maybe^-⊎-+ (suc m) n = Maybe-cong (Maybe^-⊎-+ m n) ∘ Maybe-⊎
 
 -- PORTED to HoTT
 Σ𝟘↔𝟘 : ∀ {a} (F : 𝟘 → ★_ a) → Σ 𝟘 F ↔ 𝟘
-Σ𝟘↔𝟘 F = inverses proj₁ (λ ()) (λ { ((), _) }) (λ ())
+Σ𝟘↔𝟘 F = inverses fst (λ ()) (λ { ((), _) }) (λ ())
 
 -- PORTED to HoTT
 Σ𝟚↔⊎ : ∀ {a} (F : 𝟚 → ★_ a) → Σ 𝟚 F ↔ (F 0₂ ⊎ F 1₂)

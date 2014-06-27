@@ -8,7 +8,7 @@ open import Data.Bool using (if_then_else_)
 
 import Data.Fin as Fin
 open Fin using (Fin; zero; suc; #_; inject₁; inject+; raise) renaming (_+_ to _+ᶠ_)
-open import Data.Nat.NP hiding (_==_)
+open import Data.Nat.NP hiding (_==_; ⟨_↔+1⟩; ⟨0↔1+_⟩)
 open import Data.Vec.NP
 open import Data.Vec.Bijection
 open import Data.Vec.Permutation

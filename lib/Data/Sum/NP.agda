@@ -13,8 +13,10 @@ open import Relation.Binary
 open import Relation.Binary.Logical
 import Relation.Binary.PropositionalEquality as ≡
 open ≡ using (_≡_;_≢_;_≗_)
-open import Data.Two
+open import Data.Two hiding (twist)
 open ≡ using (→-to-⟶)
+
+[inl:_,inr:_] = [_,_]
 
 inl-inj : ∀ {a b} {A : ★ a} {B : ★ b} {x y : A} → inl {B = B} x ≡ inl y → x ≡ y
 inl-inj ≡.refl = ≡.refl
@@ -53,13 +55,13 @@ open import Function.Inverse
 open import Function.LeftInverse
 
 {- bad names
-⊎-proj₁ : ∀ {a b} {A : ★ a} {B : ★ b} → A ⊎ B → 𝟚
-⊎-proj₁ (inl _) = 0₂
-⊎-proj₁ (inr _) = 1₂
+⊎-fst : ∀ {a b} {A : ★ a} {B : ★ b} → A ⊎ B → 𝟚
+⊎-fst (inl _) = 0₂
+⊎-fst (inr _) = 1₂
 
-⊎-proj₂ : ∀ {ℓ} {A B : ★ ℓ} (x : A ⊎ B) → case ⊎-proj₁ x 0: A 1: B
-⊎-proj₂ (inl x) = x
-⊎-proj₂ (inr x) = x
+⊎-snd : ∀ {ℓ} {A B : ★ ℓ} (x : A ⊎ B) → case ⊎-fst x 0: A 1: B
+⊎-snd (inl x) = x
+⊎-snd (inr x) = x
 -}
 
 -- Function.Related.TypeIsomorphisms.NP for the A ⊎ B, Σ 𝟚 [0: A 1: B ] iso.
@@ -67,3 +69,7 @@ open import Function.LeftInverse
 𝟙⊎^ : ℕ → ★₀
 𝟙⊎^ zero    = 𝟘
 𝟙⊎^ (suc n) = 𝟙 ⊎ 𝟙⊎^ n
+
+module _ {a b} {A : ★ a} {B : ★ b} where
+    twist : A ⊎ B → B ⊎ A
+    twist = [inl: inr ,inr: inl ]

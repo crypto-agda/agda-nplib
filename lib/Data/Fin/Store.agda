@@ -149,7 +149,7 @@ monadicImplem =
   write w r v = mk (λ ρ → Internals.write (coe w r) v ρ , _)
 
   run : ∀ {A} → (∀ {Δ} → ∃[ Δ′ ] (M Δ Δ′ A)) → A
-  run mf = proj₂ (f Internals.ε) where open M (proj₂ mf)
+  run mf = snd (f Internals.ε) where open M (snd mf)
 
   return : ∀ {A Δ} → A → M Δ Δ A
   return x = mk (λ ρ → ρ , x)
@@ -157,7 +157,7 @@ monadicImplem =
   _=<<_ : ∀ {A B Δ₁ Δ₂ Δ₃} → (A → M Δ₂ Δ₃ B) → M Δ₁ Δ₂ A → M Δ₁ Δ₃ B
   _=<<_ {A} {B} {Δ₁} {Δ₂} {Δ₃} f (mk x) = mk f′ where
     f′ : Store Δ₁ → Store Δ₃ × B
-    f′ ρ₁ = let ρ₂,x = x ρ₁ in M.f (f (proj₂ ρ₂,x)) (proj₁ ρ₂,x)
+    f′ ρ₁ = let ρ₂,x = x ρ₁ in M.f (f (snd ρ₂,x)) (fst ρ₂,x)
 
 open import Data.List
 module Examples (monadic : Monadic) where
