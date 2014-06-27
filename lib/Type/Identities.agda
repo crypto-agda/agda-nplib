@@ -22,6 +22,8 @@ module Type.Identities where
 
 open Equivalences
 
+
+
 module _ {a}{A₀ A₁ : ★_ a}{b}{B₀ B₁ : ★_ b}(A= : A₀ ≡ A₁)(B= : B₀ ≡ B₁) where
     ×= : (A₀ × B₀) ≡ (A₁ × B₁)
     ×= = ap₂ _×_ A= B=
@@ -31,6 +33,12 @@ module _ {a}{A₀ A₁ : ★_ a}{b}{B₀ B₁ : ★_ b}(A= : A₀ ≡ A₁)(B= :
 
     →= : (A₀ → B₀) ≡ (A₁ → B₁)
     →= = ap₂ -→- A= B=
+
+
+coe×= : ∀ {a}{A₀ A₁ : ★_ a}{b}{B₀ B₁ : ★_ b}(A= : A₀ ≡ A₁)(B= : B₀ ≡ B₁){x y}
+      → coe (×= A= B=) (x , y) ≡ (coe A= x , coe B= y)
+coe×= idp idp = idp
+
 
 module _ {a}{A₀ A₁ : ★_ a}{b}{B₀ B₁ : ★_ b}(A≃ : A₀ ≃ A₁)(B≃ : B₀ ≃ B₁) where
 {-
@@ -70,6 +78,23 @@ module _ {a b}{A₀ : ★_ a}{B₀ : A₀ → ★_ b}{{_ : FunExt}} where
            {B₁ : A₁ → ★_ b}(B= : (x : A₀) → B₀ x ≡ B₁ (coe A= x))
          → Π A₀ B₀ ≡ Π A₁ B₁
     Π= idp B= = Π=′ _ B=
+
+module _ {a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x){{_ : FunExt}} where
+  !Σ=′ : ! (Σ=′ A B) ≡ Σ=′ A (!_ ∘ B)
+  !Σ=′ = !-ap _ (λ= B) ∙ ap (ap (Σ A)) (!-λ= B)
+
+coeΣ=′-aux : ∀{{_ : FunExt}}{a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x){x y}
+  → coe (Σ=′ A B) (x , y) ≡ (x , coe (ap (λ f → f x) (λ= B)) y)
+coeΣ=′-aux A B with λ= B
+coeΣ=′-aux A B | idp = idp
+
+coeΣ=′ : ∀{{_ : FunExt}}{a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x){x y}
+  → coe (Σ=′ A B) (x , y) ≡ (x , coe (B x) y)
+coeΣ=′ A B = coeΣ=′-aux A B ∙ ap (_,_ _) (coe-same (happly (happly-λ= B) _) _)
+
+coe!Σ=′ : ∀{{_ : FunExt}}{a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x){x y}
+  → coe! (Σ=′ A B) (x , y) ≡ (x , coe! (B x) y)
+coe!Σ=′ A B {x}{y} = coe-same (!Σ=′ A B) _ ∙ coeΣ=′ A (!_ ∘ B)
 
 module _ {{_ : UA}}{{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b}{B₀ : A₀ → ★_ b}{B₁ : A₁ → ★_ b} where
     Σ≃ : (A≃ : A₀ ≃ A₁)(B= : (x : A₀) → B₀ x ≡ B₁ (–> A≃ x))

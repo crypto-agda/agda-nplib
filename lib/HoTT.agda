@@ -68,6 +68,31 @@ module _ {a} {A : ★_ a} where
   p∙q∙!q : {x y z : A} (p : x ≡ y) (q : y ≡ z) → p ∙ q ∙ ! q ≡ p
   p∙q∙!q p q = ∙-==-refl p (∙-! q)
 
+  ∙-cancel : {x y z : A}{p q : x ≡ y}(r : y ≡ z) → p ∙ r ≡ q ∙ r → p ≡ q
+  ∙-cancel {p = p} {q} idp p∙id=q∙id = ! ∙-refl p ∙ p∙id=q∙id ∙ ∙-refl q
+
+!-ap : ∀ {a b}{A : Set a}{B : Set b}(f : A → B){x y}(p : x ≡ y)
+  → ! (ap f p) ≡ ap f (! p)
+!-ap f idp = idp
+
+ap-id : ∀ {a}{A : Set a}{x y : A}(p : x ≡ y)
+  → ap id p ≡ p
+ap-id idp = idp
+
+module _ {a b}{A : Set a}{B : Set b}{f g : A → B}(H : ∀ x → f x ≡ g x) where
+  ap-nat : ∀ {x y}(q : x ≡ y) → ap f q ∙ H _ ≡ H _ ∙ ap g q
+  ap-nat idp = ! ∙-refl _
+
+module _ {a}{A : Set a}{f : A → A}(H : ∀ x → f x ≡ x) where
+  ap-nat-id : ∀ x → ap f (H x) ≡ H (f x)
+  ap-nat-id x = ∙-cancel (H x) (ap-nat H (H x) ∙ ap (_∙_ (H (f x))) (ap-id (H x)))
+
+tr-∘ : ∀ {a b p}{A : Set a}{B : Set b}(P : B → Set p)(f : A → B){x y}(p : x ≡ y)
+  → tr (P ∘ f) p ≡ tr P (ap f p)
+tr-∘ P f idp = idp
+
+--tr-∘ P (λ f → f _) {!!} ∙ {!ap (tr P)!}
+
 -- Contractible
 module _ {a}(A : ★_ a) where
     Is-contr : ★_ a
@@ -184,10 +209,9 @@ module Equivalences where
 
       open Biinv has-biinv public
 
-    postulate
-        HAE : {f : A → B} → Qinv f → ★₀
---    HAE {f} f-qinv = {!F.is-linv!}
---      where module F = Qinv f-qinv
+    HAE : {f : A → B} → Qinv f → ★_(a ⊔ b)
+    HAE {f} f-qinv = ∀ x → ap f (F.inv-is-linv x) ≡ F.inv-is-rinv (f x)
+      where module F = Qinv f-qinv
 
     record Is-equiv (f : A → B) : ★_(a ⊔ b) where
       field
@@ -207,13 +231,15 @@ module Equivalences where
     module _ {f : A → B}(g : B → A)
              (f-g : (y : B) → f (g y) ≡ y)
              (g-f : (x : A) → g (f x) ≡ x) where
-      postulate
-        g-f' : (x : A) → g (f x) ≡ x
+      f-g' : (x : B) → f (g x) ≡ x
+      f-g' x = ! ap (f ∘ g) (f-g x) ∙ ap f (g-f (g x)) ∙ f-g x
       -- g-f' x = ap g {!f-g ?!} ∙ {!!}
-        hae : HAE (qinv g f-g g-f')
+
+      postulate hae : HAE (qinv g f-g' g-f)
+
       is-equiv : Is-equiv f
       is-equiv = record
-        { has-qinv = qinv g f-g g-f'
+        { has-qinv = qinv g f-g' g-f
         ; is-hae   = hae }
 
   module Biinv-inv {a b}{A : ★_ a}{B : ★_ b}{f : A → B}
@@ -479,7 +505,7 @@ module _ {ℓ}{A : ★_ ℓ} where
     coe∘coe p idp m = idp
 
     coe-same : ∀ {B}{p q : A ≡ B}(e : p ≡ q)(x : A) → coe p x ≡ coe q x
-    coe-same idp x = idp
+    coe-same p x = ap (λ X → coe X x) p
 
     coe-inj : ∀ {B}{x y : A}(p : A ≡ B) → coe p x ≡ coe p y → x ≡ y
     coe-inj idp = id
@@ -501,6 +527,9 @@ module _ {ℓ}{A B : ★_ ℓ}{{_ : UA}} where
 
   coe-β : (e : A ≃ B) (a : A) → coe (ua e) a ≡ –> e a
   coe-β e a = ap (λ e → –> e a) (coe-equiv-β e)
+
+  postulate
+    coe!-β : (e : A ≃ B) (b : B) → coe! (ua e) b ≡ <– e b
 
   module _ (e : A ≃ B){x y : A} where
     –>-paths-equiv : (x ≡ y) ≡ (–> e x ≡ –> e y)
