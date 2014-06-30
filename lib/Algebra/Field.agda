@@ -94,11 +94,21 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   *= : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x * y ≡ x' * y'
   *= {x} {y' = y'} p q = ap (_*_ x) q ∙ ap (λ z → z * y') p
 
+  −= : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x − y ≡ x' − y'
+  −= {x} {y' = y'} p q = ap (_−_ x) q ∙ ap (λ z → z − y') p
+
+  /= : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x / y ≡ x' / y'
+  /= {x} {y' = y'} p q = ap (_/_ x) q ∙ ap (λ z → z / y') p
+
   0-= : ∀ {x x'} → x ≡ x' → 0- x ≡ 0- x'
   0-= = ap 0-_
 
+
   +-*-distr : _*_ DistributesOverʳ _+_
   +-*-distr = *-comm ∙ *-+-distr ∙ += *-comm *-comm
+
+  +-/-distr : _/_ DistributesOverʳ _+_
+  +-/-distr = +-*-distr
 
   0-c+c+x : ∀ {c x} → 0- c + c + x ≡ x
   0-c+c+x = += 0--inverse refl ∙ 0+-identity
@@ -118,6 +128,9 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   0*-zero : LeftZero 0ᶠ _*_
   0*-zero = *-comm ∙ *0-zero
 
+  ⁻¹-notZero : ∀ {x} → x ≢ 0ᶠ → x ⁻¹ ≢ 0ᶠ
+  ⁻¹-notZero x/=0 = λ p → 0≢1 (! 0*-zero ∙ *= (! p) refl ∙ ⁻¹-inverse x/=0)
+
   -- name ?
   *-0- : ∀ {x y} → 0- (x * y) ≡ (0- x) * y
   *-0- = +-right-cancel (0--inverse ∙ ! 0*-zero ∙ *= (! 0--inverse) refl ∙ +-*-distr)
@@ -129,8 +142,12 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   0--involutive : Involutive 0-_
   0--involutive = +-left-cancel (0--right-inverse ∙ ! 0--inverse)
 
+
   -0≡0 : -0ᶠ ≡ 0ᶠ
   -0≡0 = +-left-cancel (0--right-inverse ∙ ! 0+-identity)
+
+  1⁻¹≡1 : 1ᶠ ⁻¹ ≡ 1ᶠ
+  1⁻¹≡1 = ! *1-identity ∙ ⁻¹-inverse (λ p → 0≢1 (! p))
 
   noZeroDivisor : ∀ {x y} → x ≢ 0ᶠ → y ≢ 0ᶠ → x * y ≢ 0ᶠ
   noZeroDivisor nx ny x*y≡0ᶠ = ny (! *1-identity ∙ *= refl (! ⁻¹-inverse nx)
@@ -146,6 +163,37 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
 
   *-interchange : Interchange _*_ _*_
   *-interchange = InterchangeFromAssocComm.·-interchange _*_ *-assoc *-comm
+
+  *-unique-inverse : ∀ {x y} → x ≢ 0ᶠ → x * y ≡ 1ᶠ → y ≡ x ⁻¹
+  *-unique-inverse x/=0 xy=1 = ! 1*-identity ∙ *= (! ⁻¹-inverse x/=0) refl ∙ *-assoc ∙ *= refl xy=1 ∙ *1-identity
+
+  ⁻¹-involutive : ∀ {x} → x ≢ 0ᶠ → x ⁻¹ ⁻¹ ≡ x
+  ⁻¹-involutive x/=0 = ! *-unique-inverse (⁻¹-notZero x/=0) (⁻¹-inverse x/=0)
+
+  ⁻¹*-distr : ∀ {x y} → x ≢ 0ᶠ → y ≢ 0ᶠ → (x * y)⁻¹ ≡ x ⁻¹  / y
+  ⁻¹*-distr x/=0 y/=0 =
+    ! (*-unique-inverse (noZeroDivisor x/=0 y/=0) (*= refl *-comm ∙ *-assoc ∙ *= refl (! *-assoc ∙ *= (⁻¹-right-inverse y/=0) refl ∙ 1*-identity) ∙ ⁻¹-right-inverse x/=0))
+
+  +-quotient : ∀ {a b a' b'} → b ≢ 0ᶠ → b' ≢ 0ᶠ
+    →(a / b) + (a' / b') ≡ (a * b' + a' * b) / (b * b')
+  +-quotient b b'
+    = += (/= (! *1-identity ∙ *= refl (! ⁻¹-inverse b')) refl) (/= (! *1-identity ∙ *= refl (! ⁻¹-inverse b)) refl)
+    ∙ (+= (/= (*= refl *-comm) refl) (/= (*= refl *-comm) refl)
+    ∙ += (*= (! *-assoc) refl ∙ *-assoc ∙ *= refl (! ⁻¹*-distr b' b ∙ ap _⁻¹ *-comm)) (*-assoc ∙ *= refl *-assoc ∙ ! *-assoc ∙ *= refl (! ⁻¹*-distr b b') ))
+    ∙ ! +-/-distr
+
+  −-quotient : ∀ {a b a' b'} → b ≢ 0ᶠ → b' ≢ 0ᶠ
+    → (a / b) − (a' / b') ≡ (a * b' − a' * b) / (b * b')
+  −-quotient b b' = += refl *-0- ∙ +-quotient b b' ∙ /= (+= refl (! *-0-)) refl
+
+  *-quotient : ∀ {a b a' b'} → b ≢ 0ᶠ → b' ≢ 0ᶠ
+    → (a / b) * (a' / b') ≡ (a * a') / (b * b')
+  *-quotient b/=0 b'/=0 = *-assoc ∙ *= refl (! *-assoc ∙ *= *-comm refl ∙ *-assoc) ∙ ! *-assoc ∙ *= refl (! ⁻¹*-distr b/=0 b'/=0)
+
+  /-quotient : ∀ {a b a' b'} → a' ≢ 0ᶠ → b ≢ 0ᶠ → b' ≢ 0ᶠ
+     → (a / b) / (a' / b') ≡ (a * b') / (b * a')
+  /-quotient a' b b' = *= refl (⁻¹*-distr a' (⁻¹-notZero b') ∙ *= refl (⁻¹-involutive b') ∙ *-comm)
+    ∙ *-interchange ∙ *= refl (! ⁻¹*-distr b a')
 
   {-
 −= : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x − y ≡ x' − y'
