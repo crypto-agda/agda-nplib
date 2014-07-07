@@ -8,6 +8,31 @@ open import Data.Sum
 open import Data.Product renaming (proj₁ to fst; proj₂ to snd)
 open import Relation.Nullary public
 
+[yes:_no:_] : ∀ {a b}{A : ★_ a}
+                {B : Dec A → ★_ b}
+                (B-yes : (x : A)   → B (yes x))
+                (B-no  : (x : ¬ A) → B (no  x))
+                (d : Dec A)
+              → B d
+[yes: B-yes no: B-no ] (yes p) = B-yes p
+[yes: B-yes no: B-no ] (no ¬p) = B-no ¬p
+
+elim-Dec : ∀ {a b}{A : ★_ a}
+             (B : Dec A → ★_ b)
+             (B-yes : (x : A)   → B (yes x))
+             (B-no  : (x : ¬ A) → B (no  x))
+             (d : Dec A)
+           → B d
+elim-Dec B = [yes:_no:_]
+
+[yes:_no:_]′ : ∀ {a b}{A : ★_ a}
+                 {B : ★_ b}
+                 (B-yes : (x : A)   → B)
+                 (B-no  : (x : ¬ A) → B)
+                 (d : Dec A)
+               → B
+[yes:_no:_]′ = [yes:_no:_]
+
 Dec-𝟘 : Dec 𝟘
 Dec-𝟘 = no id
 
@@ -35,12 +60,3 @@ module _ {a b} {A : ★_ a} {B : ★_ b} where
       map-Dec : Dec A → Dec B
       map-Dec (yes p) = yes (to p)
       map-Dec (no ¬p) = no  (¬p ∘ from)
-
-elim-Dec : ∀ {a b}{A : ★_ a}
-             (B : Dec A → ★_ b)
-             (B-yes : (x : A)   → B (yes x))
-             (B-no  : (x : ¬ A) → B (no  x))
-             (d : Dec A)
-           → B d
-elim-Dec B B-yes B-no (yes p) = B-yes p
-elim-Dec B B-yes B-no (no ¬p) = B-no ¬p

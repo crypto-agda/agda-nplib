@@ -16,6 +16,12 @@ open import Relation.Binary
 [★₁] : ∀ (A : ★₁) → ★₂
 [★₁] = [★] (suc zero)
 
+[Set₀] : Set₀ → Set₁
+[Set₀] = λ A → A → Set₀
+
+[Set₁] : Set₁ → Set₂
+[Set₁] = λ A → A → Set₁
+
 [Π] : ∀ {a aₚ} {A : ★ a} (Aₚ : A → ★ aₚ)
         {b bₚ} {B : A → ★ b} (Bₚ : ∀ {x} (xₚ : Aₚ x) → B x → ★ bₚ)
         (f : (x : A) → B x) → ★ _

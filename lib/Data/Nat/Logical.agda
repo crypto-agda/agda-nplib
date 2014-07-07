@@ -18,8 +18,8 @@ zero  ⟦+⟧ n = n
 suc m ⟦+⟧ n = suc (m ⟦+⟧ n)
 
 ⟦pred⟧ : (⟦ℕ⟧ ⟦→⟧ ⟦ℕ⟧) pred pred
-⟦pred⟧ (suc nᵣ) = nᵣ
 ⟦pred⟧ zero     = zero
+⟦pred⟧ (suc nᵣ) = nᵣ
 
 _≟_ : Decidable ⟦ℕ⟧
 zero  ≟ zero   = yes zero
