@@ -156,10 +156,10 @@ pPat  : ∀ {n} → Env' n → Arg Pattern → List (Arg Pattern)
 pPats Γ [] = []
 pPats Γ (pat ∷ ps) = pPat Γ pat ++ pPats Γ ps
 
-nodot = var
+--nodot = var
 
 pPat {n} Γ (arg (arg-info _ r) (con c pats))
-  = p^args {n} r (const nodot) (con (pCon Γ c) (pPats Γ pats)) []
+  = p^args {n} r (const dot) (con (pCon Γ c) (pPats Γ pats)) []
 pPat {n} Γ (arg (arg-info _ r) dot)
   = p^args {n} r (const dot) dot []
 pPat {n} Γ (arg (arg-info _ r) var)
@@ -171,7 +171,7 @@ pPat {n} Γ (arg (arg-info _ r) (lit l))
       where
         go : ∀ {n} → Fin n → Pattern
         go zero = lit l
-        go (suc _) = nodot
+        go (suc _) = dot
 pPat {n} Γ (arg (arg-info _ r) absurd) = p^args {n} r (const var) absurd []
 pPat {n} Γ (arg i (proj p)) = opaque "pPat/proj" []
 
@@ -351,6 +351,7 @@ unquoteDecl revelator-[→] = Revelator.fun (type (quote _[₀→₀]_))
 p-[→] = pFunName (ε 1) (quote _[₀→₀]_)
 p-[→]-type = unEl (Get-type.from-fun-def p-[→])
 
+{-
 p-[→]' : (x0 : Set) → (x1 : (x1 : x0) → Set) → (x2 : (x2 : x0) → Set) → (x3 : (x3 : x0) → (x4 : x1 x3) → (x5 : x2 x3) → Set) → (x4 : Set) → (x5 : (x5 : x4) → Set) → (x6 : (x6 : x4) → Set) → (x7 : (x7 : x4) → (x8 : x5 x7) → (x9 : x6 x7) → Set) → (x8 : (x8 : x0) → x4) → (x9 : (x9 : x0) → (x10 : x1 x9) → x5 (x8 x9)) → (x10 : _[₀→₀]_ {x0} x2 {x4} x6 x8) → Set
 {-
 p-[→]' : ∀ {A : Set₀}       (A₀ₚ : A → Set₀)
@@ -365,7 +366,7 @@ p-[→]' = {!unquote (Get-term.from-fun-def p-[→])!}
 
 test : {!showTerm p-[→]-type!}
 test = {!unquote (Get-term.from-fun-def p-[→])!}
-{-
+-}
 -- unquoteDecl _[[→]]_ = p-[→]
 
 {-
@@ -405,6 +406,11 @@ defConEnv2 (quote 1₂) = quote ⟦1₂⟧
 defConEnv2 (quote ℕ.zero) = quote ⟦ℕ⟧.zero
 defConEnv2 (quote ℕ.suc)  = quote ⟦ℕ⟧.suc
 defConEnv2 n              = opaque "defConEnv2" n
+
+defEnv0 : Env' 0
+defEnv0 = record { pVar = λ _ _ → opaque "defEnv1.pVar" 0
+                 ; pCon = id
+                 ; pDef = id }
 
 defEnv1 : Env' 1
 defEnv1 = record { pVar = λ _ _ → opaque "defEnv1.pVar" 0
@@ -455,7 +461,8 @@ _⟦+ℕ⟧_ : (⟦ℕ⟧ ⟦₀→₀⟧ ⟦ℕ⟧ ⟦₀→₀⟧ ⟦ℕ⟧) _
 test-⟦⟦Set₀⟧⟧ : quoteTerm ⟦⟦Set₀⟧⟧ ≡ quoteTerm ⟦⟦Set₀⟧⟧'
 test-⟦⟦Set₀⟧⟧ = refl
 
-test-⟦⟦Set₀⟧⟧-type : unquote (unEl (type (quote ⟦⟦Set₀⟧⟧))) ≡ unquote (unEl (type (quote ⟦⟦Set₀⟧⟧')))
+⟦⟦Set₀⟧⟧-type = unquote (unEl (type (quote ⟦⟦Set₀⟧⟧)))
+test-⟦⟦Set₀⟧⟧-type : ⟦⟦Set₀⟧⟧-type ≡ unquote (unEl (type (quote ⟦⟦Set₀⟧⟧')))
 test-⟦⟦Set₀⟧⟧-type = refl
 
 pSet₀ = pTerm defEnv2 `★₀
@@ -468,7 +475,12 @@ test-ppSet₀ = refl
 test-ppSet₀'' : ppSet₀ ≡ Get-term.from-fun-def p⟦Set₀⟧
 test-ppSet₀'' = refl
 
--- unquoteDecl ⟦⟦Set₀⟧⟧'' = p⟦Set₀⟧
+unquoteDecl ⟦⟦Set₀⟧⟧'' = p⟦Set₀⟧
+test-⟦⟦Set₀⟧⟧'' : _≡_ {A = ⟦⟦Set₀⟧⟧-type} ⟦⟦Set₀⟧⟧'' ⟦⟦Set₀⟧⟧
+test-⟦⟦Set₀⟧⟧'' = refl
+
+test-p0-⟦Set₀⟧ : pTerm defEnv0 (quoteTerm ⟦Set₀⟧) ≡ quoteTerm ⟦Set₀⟧
+test-p0-⟦Set₀⟧ = refl
 
 data ⟦⟦𝟚⟧⟧ : (⟦⟦Set₀⟧⟧ ⟦𝟚⟧ ⟦𝟚⟧) ⟦𝟚⟧ ⟦𝟚⟧ where
   ⟦⟦0₂⟧⟧ : ⟦⟦𝟚⟧⟧ ⟦0₂⟧ ⟦0₂⟧ ⟦0₂⟧ ⟦0₂⟧
@@ -539,23 +551,21 @@ module Test where
   p/2 = pFunNameRec defEnv2 (quote _/2)
   q⟦/2⟧ = definition (quote _⟦/2⟧)
   unquoteDecl _⟦/2⟧' = p/2 _⟦/2⟧'
-  {-
   test-/2 : function (p/2 (quote _⟦/2⟧)) ≡ q⟦/2⟧
   test-/2 = refl
-  -}
-  test-/2 : ∀ {n₀ n₁} (nᵣ : ⟦ℕ⟧ n₀ n₁) → nᵣ ⟦/2⟧' ≡ nᵣ ⟦/2⟧
-  test-/2 ⟦zero⟧ = refl
-  test-/2 (⟦suc⟧ ⟦zero⟧) = refl
-  test-/2 (⟦suc⟧ (⟦suc⟧ nᵣ)) = ap ⟦suc⟧ (test-/2 nᵣ)
+  test-/2' : ∀ {n₀ n₁} (nᵣ : ⟦ℕ⟧ n₀ n₁) → nᵣ ⟦/2⟧' ≡ nᵣ ⟦/2⟧
+  test-/2' ⟦zero⟧ = refl
+  test-/2' (⟦suc⟧ ⟦zero⟧) = refl
+  test-/2' (⟦suc⟧ (⟦suc⟧ nᵣ)) = ap ⟦suc⟧ (test-/2' nᵣ)
 
   p+ = pFunNameRec defEnv2 (quote _+ℕ_)
   q⟦+⟧ = definition (quote _⟦+ℕ⟧_)
   unquoteDecl _⟦+⟧'_ = p+ _⟦+⟧'_
-  -- test-+ : function (p+ (quote _⟦+ℕ⟧_)) ≡ q⟦+⟧
-  -- test-+ = refl
-  test-+ : ∀ {n₀ n₁} (nᵣ : ⟦ℕ⟧ n₀ n₁) {n'₀ n'₁} (n'ᵣ : ⟦ℕ⟧ n'₀ n'₁) → nᵣ ⟦+⟧' n'ᵣ ≡ nᵣ ⟦+ℕ⟧ n'ᵣ
-  test-+ ⟦zero⟧    n'ᵣ = refl
-  test-+ (⟦suc⟧ nᵣ) n'ᵣ = ap ⟦suc⟧ (test-+ nᵣ n'ᵣ)
+  test-+ : function (p+ (quote _⟦+ℕ⟧_)) ≡ q⟦+⟧
+  test-+ = refl
+  test-+' : ∀ {n₀ n₁} (nᵣ : ⟦ℕ⟧ n₀ n₁) {n'₀ n'₁} (n'ᵣ : ⟦ℕ⟧ n'₀ n'₁) → nᵣ ⟦+⟧' n'ᵣ ≡ nᵣ ⟦+ℕ⟧ n'ᵣ
+  test-+' ⟦zero⟧    n'ᵣ = refl
+  test-+' (⟦suc⟧ nᵣ) n'ᵣ = ap ⟦suc⟧ (test-+' nᵣ n'ᵣ)
 
   {-
   is-good : String → 𝟚
