@@ -1,12 +1,16 @@
 {-# OPTIONS --without-K #-}
 -- Like Algebra.FunctionProperties but specialized to _≡_ and using implict arguments
+-- Moreover there is some extensions such as:
+-- * interchange
+-- * non-zero inversions
+-- * cancelation and non-zero cancelation
 
 -- These properties can (for instance) be used to define algebraic
 -- structures.
 
 open import Level
 open import Data.Product
-open import Relation.Binary
+open import Relation.Binary.NP
 open import Relation.Binary.PropositionalEquality.NP
 
 -- The properties are specified using the following relation as

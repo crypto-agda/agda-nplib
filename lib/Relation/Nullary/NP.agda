@@ -55,6 +55,7 @@ module _ {a b} {A : ★_ a} {B : ★_ b} where
     Dec-→ (no ¬p) _       = yes (𝟘-elim ∘ ¬p)
     Dec-→ (yes p) (no ¬q) = no  (λ f → ¬q (f p))
 
+    -- also available as Relation.Nullary.Decidable.map′
     module _ (to : A → B)(from : B → A) where
 
       map-Dec : Dec A → Dec B
