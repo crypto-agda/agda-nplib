@@ -49,11 +49,20 @@ Zero z · = LeftZero z · × RightZero z ·
 LeftInverse : A → Op₁ A → Op₂ A → Set _
 LeftInverse e _⁻¹ _·_ = ∀ {x} → (x ⁻¹ · x) ≡ e
 
+LeftInverseNonZero : (zero e : A) → Op₁ A → Op₂ A → Set _
+LeftInverseNonZero zero e _⁻¹ _·_ = ∀ {x} → x ≢ zero → (x ⁻¹ · x) ≡ e
+
 RightInverse : A → Op₁ A → Op₂ A → Set _
 RightInverse e _⁻¹ _·_ = ∀ {x} → (x · (x ⁻¹)) ≡ e
 
+RightInverseNonZero : (zero e : A) → Op₁ A → Op₂ A → Set _
+RightInverseNonZero zero e _⁻¹ _·_ = ∀ {x} → x ≢ zero → (x · (x ⁻¹)) ≡ e
+
 Inverse : A → Op₁ A → Op₂ A → Set _
 Inverse e ⁻¹ · = LeftInverse e ⁻¹ · × RightInverse e ⁻¹ ·
+
+InverseNonZero : (zero e : A) → Op₁ A → Op₂ A → Set _
+InverseNonZero zero e ⁻¹ · = LeftInverse e ⁻¹ · × RightInverse e ⁻¹ ·
 
 _DistributesOverˡ_ : Op₂ A → Op₂ A → Set _
 _*_ DistributesOverˡ _+_ =
@@ -92,6 +101,12 @@ LeftCancel _·_ = ∀ {c x y} → c · x ≡ c · y → x ≡ y
 
 RightCancel : Op₂ A → Set _
 RightCancel _·_ = ∀ {c x y} → x · c ≡ y · c → x ≡ y
+
+LeftCancelNonZero : A → Op₂ A → Set _
+LeftCancelNonZero zero _·_ = ∀ {c x y} → c ≢ zero → c · x ≡ c · y → x ≡ y
+
+RightCancelNonZero : A → Op₂ A → Set _
+RightCancelNonZero zero _·_ = ∀ {c x y} → c ≢ zero → x · c ≡ y · c → x ≡ y
 
 module InterchangeFromAssocComm
          (_·_     : Op₂ A)

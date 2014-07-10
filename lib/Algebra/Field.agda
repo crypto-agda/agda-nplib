@@ -63,6 +63,7 @@ record Field-Ops {ℓ} (A : Set ℓ) : Set ℓ where
 record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ where
   open FP {ℓ} {A}
   open Field-Ops field-ops
+  open ≡-Reasoning
 
   field
     0≢1         : 0ᶠ ≢ 1ᶠ
@@ -73,13 +74,13 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
     0+-identity : LeftIdentity 0ᶠ _+_
     1*-identity : LeftIdentity 1ᶠ _*_
     0--inverse  : LeftInverse 0ᶠ 0-_ _+_
-    ⁻¹-inverse  : ∀ {x} → x ≢ 0ᶠ → x ⁻¹ * x ≡ 1ᶠ
+    ⁻¹-inverse  : LeftInverseNonZero 0ᶠ 1ᶠ _⁻¹ _*_
     *-+-distr   : _*_ DistributesOverˡ _+_
 
   0--right-inverse : RightInverse 0ᶠ 0-_ _+_
   0--right-inverse = +-comm ∙ 0--inverse
 
-  ⁻¹-right-inverse  : ∀ {x} → x ≢ 0ᶠ → x * x ⁻¹ ≡ 1ᶠ
+  ⁻¹-right-inverse : RightInverseNonZero 0ᶠ 1ᶠ _⁻¹ _*_
   ⁻¹-right-inverse p = *-comm ∙ ⁻¹-inverse p
 
   +0-identity : RightIdentity 0ᶠ _+_
@@ -103,7 +104,6 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   0-= : ∀ {x x'} → x ≡ x' → 0- x ≡ 0- x'
   0-= = ap 0-_
 
-
   +-*-distr : _*_ DistributesOverʳ _+_
   +-*-distr = *-comm ∙ *-+-distr ∙ += *-comm *-comm
 
@@ -121,6 +121,23 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   +-right-cancel : RightCancel _+_
   +-right-cancel p = +-left-cancel (+-comm ∙ p ∙ +-comm)
 
+  -0≡0 : -0ᶠ ≡ 0ᶠ
+  -0≡0 = +-left-cancel (0--right-inverse ∙ ! 0+-identity)
+
+  0≢-1 : 0ᶠ ≢ -1ᶠ
+  0≢-1 0≡-1 = 0≢1 (! 0--inverse ∙ +-comm ∙ ! ap sucᶠ 0≡-1 ∙ +0-identity)
+
+  c⁻¹*c*x : ∀ {c x} → c ≢ 0ᶠ → c ⁻¹ * c * x ≡ x
+  c⁻¹*c*x c≢0 = *= (⁻¹-inverse c≢0) refl ∙ 1*-identity
+
+  *-left-cancel : LeftCancelNonZero 0ᶠ _*_
+  *-left-cancel c≢0 p = ! c⁻¹*c*x c≢0 ∙ *-assoc
+                      ∙ ap (λ z → _ ⁻¹ * z) p
+                      ∙ ! *-assoc ∙ c⁻¹*c*x c≢0
+
+  *-right-cancel : RightCancelNonZero 0ᶠ _*_
+  *-right-cancel c≢0 p = *-left-cancel c≢0 (*-comm ∙ p ∙ *-comm)
+
   *0-zero : RightZero 0ᶠ _*_
   *0-zero = +-right-cancel  (+= refl (! *1-identity) ∙ ! *-+-distr
                             ∙ *= refl 0+-identity ∙ *1-identity ∙ ! 0+-identity)
@@ -131,20 +148,16 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   ⁻¹-notZero : ∀ {x} → x ≢ 0ᶠ → x ⁻¹ ≢ 0ᶠ
   ⁻¹-notZero x/=0 = λ p → 0≢1 (! 0*-zero ∙ *= (! p) refl ∙ ⁻¹-inverse x/=0)
 
-  -- name ?
-  *-0- : ∀ {x y} → 0- (x * y) ≡ (0- x) * y
-  *-0- = +-right-cancel (0--inverse ∙ ! 0*-zero ∙ *= (! 0--inverse) refl ∙ +-*-distr)
+  0--*-distr : ∀ {x y} → 0- (x * y) ≡ (0- x) * y
+  0--*-distr = +-right-cancel (0--inverse ∙ ! 0*-zero ∙ *= (! 0--inverse) refl ∙ +-*-distr)
 
   -1*-neg : ∀ {x} → -1ᶠ * x ≡ 0- x
-  -1*-neg = ! *-0- ∙ 0-= 1*-identity
+  -1*-neg = ! 0--*-distr ∙ 0-= 1*-identity
 
 
   0--involutive : Involutive 0-_
   0--involutive = +-left-cancel (0--right-inverse ∙ ! 0--inverse)
 
-
-  -0≡0 : -0ᶠ ≡ 0ᶠ
-  -0≡0 = +-left-cancel (0--right-inverse ∙ ! 0+-identity)
 
   1⁻¹≡1 : 1ᶠ ⁻¹ ≡ 1ᶠ
   1⁻¹≡1 = ! *1-identity ∙ ⁻¹-inverse (λ p → 0≢1 (! p))
@@ -184,7 +197,7 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
 
   −-quotient : ∀ {a b a' b'} → b ≢ 0ᶠ → b' ≢ 0ᶠ
     → (a / b) − (a' / b') ≡ (a * b' − a' * b) / (b * b')
-  −-quotient b b' = += refl *-0- ∙ +-quotient b b' ∙ /= (+= refl (! *-0-)) refl
+  −-quotient b b' = += refl 0--*-distr ∙ +-quotient b b' ∙ /= (+= refl (! 0--*-distr)) refl
 
   *-quotient : ∀ {a b a' b'} → b ≢ 0ᶠ → b' ≢ 0ᶠ
     → (a / b) * (a' / b') ≡ (a * a') / (b * b')
@@ -195,49 +208,46 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   /-quotient a' b b' = *= refl (⁻¹*-distr a' (⁻¹-notZero b') ∙ *= refl (⁻¹-involutive b') ∙ *-comm)
     ∙ *-interchange ∙ *= refl (! ⁻¹*-distr b a')
 
-  {-
-−= : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x − y ≡ x' − y'
-−= {x} {y' = y'} p q = ap (_−_ x) q ∙ ap (λ z → z − y') p
+  0--*-distr' : ∀ {x y} → 0-(x * y) ≡ x * (0- y)
+  0--*-distr' = ap 0-_ *-comm ∙ 0--*-distr ∙ *-comm
 
-/= : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x / y ≡ x' / y'
-/= {x} {y' = y'} p q = ap (_/_ x) q ∙ ap (λ z → z / y') p
+  *-−-distr : ∀ {x y z} → x * (y − z) ≡ x * y − x * z
+  *-−-distr = *-+-distr ∙ += refl (! 0--*-distr')
 
-0--cancel : ∀ {x y} → 0- x ≡ 0- y → x ≡ y
-0--cancel {x} {y} p = {!!}
+  0--+-distr : ∀ {x y} → 0-(x + y) ≡ 0- x − y
+  0--+-distr =
+      +-left-cancel
+         (0--right-inverse
+          ∙ (! 0+-identity ∙ += (! 0--right-inverse)
+                                (! 0--right-inverse))
+                           ∙ +-interchange)
 
--1*-spec : ∀ {x} → -1ᶠ * x ≡ - x
--1*-spec {x} = {!!}
+  ²-*-distr : ∀ {x y} → (x * y)² ≡ x ² * y ²
+  ²-*-distr = *-interchange
 
--*-distr : ∀ {x y} → -(x * y) ≡ (- x) * y
--*-distr = ! -1*-spec ∙ ! *-assoc ∙ *= -1*-spec refl
+  0--cancel : ∀ {x y} → 0- x ≡ 0- y → x ≡ y
+  0--cancel {x} {y} p = *-left-cancel (λ e → 0≢-1 (! e)) (-1*-neg ∙ p ∙ ! -1*-neg)
 
--*-distr' : ∀ {x y} → -(x * y) ≡ x * (- y)
--*-distr' = ap -_ *-comm ∙ -*-distr ∙ *-comm
+  ²-0--distr : ∀ {x} → (0- x)² ≡ x ²
+  ²-0--distr {x} = ! 0--*-distr ∙ ap 0-_ (! 0--*-distr') ∙ 0--involutive
 
-*-−-distr : ∀ {x y z} → x * (y − z) ≡ x * y − x * z
-*-−-distr = *-+-distr ∙ += refl (! -*-distr')
+  2*-*-distr : ∀ {x y} → 2*(x * y) ≡ 2* x * y
+  2*-*-distr = ! +-*-distr
 
--+-distr : ∀ {x y} → -(x + y) ≡ - x − y
--+-distr =
-  +-left-cancel
-     (0--right-inverse
-      ∙ (! 0+-identity ∙ += (! 0--right-inverse)
-                            (! 0--right-inverse))
-                       ∙ +-interchange)
+  ²-+-distr : ∀ {x y} → (x + y)² ≡ x ² + y ² + 2* x * y
+  ²-+-distr {x} {y} = (x + y)²
+                    ≡⟨ *-+-distr ⟩
+                      (x + y) * x + (x + y) * y
+                    ≡⟨ += +-*-distr +-*-distr ⟩
+                      x ² + y * x + (x * y + y ²)
+                    ≡⟨ += (+= refl *-comm) +-comm ∙ +-interchange ⟩
+                      x ² + y ² + 2*(x * y)
+                    ≡⟨ += refl 2*-*-distr ⟩
+                       x ² + y ² + 2* x * y
+                    ∎
 
-²-*-distr : ∀ {x y} → (x * y)² ≡ x ² * y ²
-²-*-distr = *-interchange
-
-²-−-distr : ∀ {x y} → (x − y)² ≡ x ² + y ² − 2* x * y
-²-−-distr {x} {y} = {!!}
--- = (x - y)*(x - y) = x*(x - y) - y*(x - y) = x ² - xy - yx + y ²
-
-²-+-distr : ∀ {x y} → (x + y)² ≡ x ² + y ² + 2* x * y
-²-+-distr = {!!}
-
-²--distr : ∀ {x} → (- x)² ≡ x ²
-²--distr {x} = ! -*-distr ∙ ap -_ (! -*-distr') ∙ 0--involutive
--}
+  ²-−-distr : ∀ {x y} → (x − y)² ≡ x ² + y ² − 2* x * y
+  ²-−-distr = ²-+-distr ∙ += (+= refl ²-0--distr) (*-comm ∙ ! 0--*-distr ∙ ap 0-_ *-comm)
 
   open Field-Ops field-ops public
 
