@@ -248,30 +248,35 @@ t `→ᵛʳ u = `Πᵛʳ t (liftType u)
 ηᵛⁿ : ℕ → Name → Term
 ηᵛⁿ n = ηᵛ n ∘ def
 
-arityOfTerm : Term → List Arg-info
-arityOfType : Type → List Arg-info
+term-arg-infos : Term → List Arg-info
+type-arg-infos : Type → List Arg-info
 
-arityOfType (el _ u) = arityOfTerm u
-arityOfTerm (pi (arg ai _) t) = ai ∷ arityOfType t
+type-arg-infos (el _ u) = term-arg-infos u
+term-arg-infos (pi (arg ai _) t) = ai ∷ type-arg-infos t
 
 -- no more arguments
-arityOfTerm (var _ _) = []
+term-arg-infos (var _ _) = []
+term-arg-infos (sort s)  = []
 
 -- TODO
-arityOfTerm (con c args) = []
-arityOfTerm (def f args) = []
-arityOfTerm (sort s)     = []
-arityOfTerm (lit _)      = []
+term-arg-infos (def f args) = []
 
 -- fail
-arityOfTerm unknown = []
+term-arg-infos unknown      = []
 
--- absurd cases
-arityOfTerm (lam _ _) = []
-arityOfTerm (pat-lam _ _) = []
+-- absurd/ill-typed cases
+term-arg-infos (con c args)  = []
+term-arg-infos (lit _)       = []
+term-arg-infos (lam _ _)     = []
+term-arg-infos (pat-lam _ _) = []
+
+term-arity : Term → ℕ
+term-arity = length ∘ term-arg-infos
+type-arity : Type → ℕ
+type-arity = length ∘ type-arg-infos
 
 ηⁿ : Name → Term
-ηⁿ nm = η (arityOfType (type nm)) (def nm)
+ηⁿ nm = η (type-arg-infos (type nm)) (def nm)
 
 Decode-Term : ∀ {a} → ★_ a → ★_ a
 Decode-Term A = Term → Maybe A

@@ -247,8 +247,8 @@ pName : Env' 2 → Name → Definition
 pName Γ n = pDefinition Γ n (definition n)
 -}
 
-open import Data.String using (String)
-open import Data.Float  using (Float)
+open import Data.String.Core using (String)
+open import Data.Float       using (Float)
 
 infixr 1 _[₀→₀]_
 _[₀→₀]_ : ∀ {A : Set₀} (Aₚ : A → Set₀)
