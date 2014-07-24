@@ -29,12 +29,16 @@ i →ᵇ o = Bits i → Bits o
 1ⁿ : ∀ {n} → Bits n
 1ⁿ = replicate 1₂
 
+pattern 0∷_ xs = 0₂ ∷ xs
+pattern 1∷_ xs = 1₂ ∷ xs
+{-
 0∷_ : ∀ {n} → Bits n → Bits (suc n)
 0∷ xs = 0₂ ∷ xs
 
 -- can't we make these pattern aliases?
 1∷_ : ∀ {n} → Bits n → Bits (suc n)
 1∷ xs = 1₂ ∷ xs
+-}
 
 _!_ : ∀ {a n} {A : ★ a} → Vec A n → Fin n → A
 _!_ = flip lookup
@@ -82,14 +86,14 @@ lsb₂ = reverse ∘ msb 2 ∘ reverse
 
 #1 : ∀ {n} → Bits n → Fin (suc n)
 #1 [] = zero
-#1 (0₂ ∷ bs) = inject₁ (#1 bs)
-#1 (1₂ ∷ bs) = suc (#1 bs)
+#1 (0∷ bs) = inject₁ (#1 bs)
+#1 (1∷ bs) = suc (#1 bs)
 
 #0 : ∀ {n} → Bits n → Fin (suc n)
 #0 = #1 ∘ map not
 
 allBitsL : ∀ n → L.List (Bits n)
-allBitsL _ = replicateM (toList (0₂ ∷ 1₂ ∷ []))
+allBitsL _ = replicateM (toList (0∷ 1∷ []))
   where open L.Monad
 
 allBits : ∀ n → Vec (Bits n) (2^ n)
@@ -116,9 +120,9 @@ view∷ : ∀ {n a b} {A : ★ a} {B : ★ b} → (A → Vec A n → B) → Vec 
 view∷ f (x ∷ xs) = f x xs
 
 sucBCarry : ∀ {n} → Bits n → Bits (1 + n)
-sucBCarry []        = 0₂ ∷ []
-sucBCarry (0₂ ∷ xs) = 0₂ ∷ sucBCarry xs
-sucBCarry (1₂ ∷ xs) = view∷ (λ x xs → x ∷ not x ∷ xs) (sucBCarry xs)
+sucBCarry []      = 0∷ []
+sucBCarry (0∷ xs) = 0∷ sucBCarry xs
+sucBCarry (1∷ xs) = view∷ (λ x xs → x ∷ not x ∷ xs) (sucBCarry xs)
 
 sucB : ∀ {n} → Bits n → Bits n
 sucB = tail ∘ sucBCarry
@@ -129,18 +133,18 @@ sucB = tail ∘ sucBCarry
 module ReversedBits where
   sucRB : ∀ {n} → Bits n → Bits n
   sucRB [] = []
-  sucRB (0₂ ∷ xs) = 1₂ ∷ xs
-  sucRB (1₂ ∷ xs) = 0₂ ∷ sucRB xs
+  sucRB (0∷ xs) = 1∷ xs
+  sucRB (1∷ xs) = 0∷ sucRB xs
 
 toFin : ∀ {n} → Bits n → Fin (2^ n)
-toFin         []        = zero
-toFin         (0₂ ∷ xs) = inject+ _ (toFin xs)
-toFin {suc n} (1₂ ∷ xs) = raise (2^ n) (toFin xs)
+toFin         []      = zero
+toFin         (0∷ xs) = inject+ _ (toFin xs)
+toFin {suc n} (1∷ xs) = raise (2^ n) (toFin xs)
 
 Bits▹ℕ : ∀ {n} → Bits n → ℕ
-Bits▹ℕ         []        = zero
-Bits▹ℕ         (0₂ ∷ xs) = Bits▹ℕ xs
-Bits▹ℕ {suc n} (1₂ ∷ xs) = 2^ n + Bits▹ℕ xs
+Bits▹ℕ         []      = zero
+Bits▹ℕ         (0∷ xs) = Bits▹ℕ xs
+Bits▹ℕ {suc n} (1∷ xs) = 2^ n + Bits▹ℕ xs
 
 ℕ▹Bits : ∀ {n} → ℕ → Bits n
 ℕ▹Bits {zero}  _ = []
@@ -155,9 +159,9 @@ fromFin : ∀ {n} → Fin (2^ n) → Bits n
 fromFin = ℕ▹Bits ∘ Fin▹ℕ
 
 lookupTbl : ∀ {n a} {A : ★ a} → Bits n → Vec A (2^ n) → A
-lookupTbl         []         (x ∷ []) = x
-lookupTbl         (0₂ ∷ key) tbl      = lookupTbl key (take _ tbl)
-lookupTbl {suc n} (1₂ ∷ key) tbl      = lookupTbl key (drop (2^ n) tbl)
+lookupTbl         []       = head
+lookupTbl         (0∷ key) = lookupTbl key ∘ take _
+lookupTbl {suc n} (1∷ key) = lookupTbl key ∘ drop (2^ n)
 
 funFromTbl : ∀ {n a} {A : ★ a} → Vec A (2^ n) → (Bits n → A)
 funFromTbl = flip lookupTbl
@@ -165,4 +169,5 @@ funFromTbl = flip lookupTbl
 tblFromFun : ∀ {n a} {A : ★ a} → (Bits n → A) → Vec A (2^ n)
 -- tblFromFun f = tabulate (f ∘ fromFin)
 tblFromFun {zero}  f = f [] ∷ []
-tblFromFun {suc n} f = tblFromFun {n} (f ∘ 0∷_) ++ tblFromFun {n} (f ∘ 1∷_)
+tblFromFun {suc n} f = tblFromFun {n} (f ∘ 0∷_)
+                    ++ tblFromFun {n} (f ∘ 1∷_)
