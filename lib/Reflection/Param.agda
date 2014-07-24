@@ -17,7 +17,7 @@ open import Relation.Binary.Logical
 open import Relation.Nullary.NP
 open import Relation.Binary.PropositionalEquality.NP
 
-module Param where
+module Reflection.Param where
 
 module Revelator (tyH : Type) where
     tm : Term → ℕ → Args → Term

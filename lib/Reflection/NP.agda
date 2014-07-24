@@ -5,13 +5,13 @@ open import Opaque
 open import Type
 open import Level.NP
 open import Data.Nat using (ℕ; zero; suc; _+_) renaming (_⊔_ to _⊔ℕ_)
-open import Data.Maybe.NP
+open import Data.Maybe.NP hiding (map)
 open import Data.Zero using (𝟘)
 open import Data.One using (𝟙; 0₁)
 open import Data.Two using (𝟚; 0₂; 1₂; [0:_1:_])
 open import Data.List
 open import Data.Vec using (Vec) -- ; []; _∷_)
-open import Data.Product.NP
+open import Data.Product.NP hiding (map)
 open import Function.NP
 
 open import Reflection public
@@ -211,10 +211,10 @@ pattern piʰʳ t u = pi (argʰʳ t) u
 `Π t u = el (getSort (unArg t) `⊔` getSort u) (pi t u)
 
 `Πᵛʳ : Type → Type → Type
-`Πᵛʳ t u = el (getSort t `⊔` getSort u) (piᵛʳ t u)
+`Πᵛʳ t u = `Π (argᵛʳ t) u
 
 `Πʰʳ : Type → Type → Type
-`Πʰʳ t u = el (getSort t `⊔` getSort u) (piʰʳ t u)
+`Πʰʳ t u = `Π (argʰʳ t) u
 
 _`→_ : Arg Type → Type → Type
 t `→ u = `Π t (liftType u)
@@ -224,6 +224,16 @@ t `→ʰʳ u = `Πʰʳ t (liftType u)
 
 _`→ᵛʳ_ : Type → Type → Type
 t `→ᵛʳ u = `Πᵛʳ t (liftType u)
+
+`Πⁿ : List (Arg Type) → Type → Type
+`Πⁿ []       u = u
+`Πⁿ (t ∷ ts) u = `Π t (`Πⁿ ts u)
+
+`Πᵛʳⁿ : List Type → Type → Type
+`Πᵛʳⁿ ts u = `Πⁿ (map argᵛʳ ts) u
+
+`Πʰʳⁿ : List Type → Type → Type
+`Πʰʳⁿ ts u = `Πⁿ (map argʰʳ ts) u
 
 -- η vs mk: performs no shifting of the result of mk.
 -- Safe values of mk are def and con for instance
