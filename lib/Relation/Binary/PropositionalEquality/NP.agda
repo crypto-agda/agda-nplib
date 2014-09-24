@@ -67,10 +67,12 @@ module _ {ℓ ℓp}
          {A : Set ℓ}
          (P : A → Set ℓp)
          {x y : A}
-         (p : x ≡ y)
          where
-    tr : P x → P y
-    tr = coe (ap P p)
+    tr : (p : x ≡ y) → P x → P y
+    tr p = coe (ap P p)
+
+    tr! : (p : y ≡ x) → P x → P y
+    tr! p = tr (! p)
 
 cong₃ : ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : Set d}
           (f : A → B → C → D) {a₀ a₁ b₀ b₁ c₀ c₁}

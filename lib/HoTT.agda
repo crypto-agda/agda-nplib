@@ -91,7 +91,15 @@ tr-∘ : ∀ {a b p}{A : Set a}{B : Set b}(P : B → Set p)(f : A → B){x y}(p 
   → tr (P ∘ f) p ≡ tr P (ap f p)
 tr-∘ P f idp = idp
 
---tr-∘ P (λ f → f _) {!!} ∙ {!ap (tr P)!}
+module _ {a}{A : ★_ a} where
+    tr-∙′ : ∀ {ℓ}(P : A → ★_ ℓ) {x y z} (p : x ≡ y) (q : y ≡ z) →
+             tr P (p ∙ q) ∼ tr P q ∘ tr P p
+    tr-∙′ P idp _ _ = idp
+
+    tr-∙ : ∀ {ℓ}(P : A → ★_ ℓ) {x y z} (p : x ≡ y) (q : y ≡ z) (pq : x ≡ z) →
+             pq ≡ p ∙ q →
+             tr P pq ∼ tr P q ∘ tr P p
+    tr-∙ P p q ._ idp = tr-∙′ P p q
 
 -- Contractible
 module _ {a}(A : ★_ a) where
