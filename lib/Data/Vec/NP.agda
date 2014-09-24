@@ -4,7 +4,8 @@ module Data.Vec.NP where
 
 open import Algebra
 open import Algebra.Structures
-open import Algebra.FunctionProperties
+import Algebra.FunctionProperties
+import Algebra.FunctionProperties.Eq
 open import Type hiding (★)
 import Level as L
 open import Category.Applicative
@@ -89,6 +90,7 @@ module WithSetoid {c ℓ} (S : Setoid c ℓ) where
   open Setoid S
   V = Vec A
   module V≈ = Data.Vec.Equality.Equality S
+  open Algebra.FunctionProperties
   open V≈ hiding (_≈_)
   _≈ᵛ_ : ∀ {n} → V n → V n → ★ _
   xs ≈ᵛ ys = V≈._≈_ xs ys
@@ -316,11 +318,11 @@ module Here {a} {A : ★ a} where
   ... | (q₁ , q₂) = x¹≈x² ∷-cong q₁ , q₂
 -}
 
-++-inj₁ : ∀ {m n} {a} {A : ★ a} (xs ys : Vec A m) {zs ts : Vec A n} → xs ++ zs ≡ ys ++ ts → xs ≡ ys
-++-inj₁ xs ys eq = fst (++-decomp eq)
+++-inj₁ : ∀ {m n} {a} {A : ★ a} {xs ys : Vec A m} {zs ts : Vec A n} → xs ++ zs ≡ ys ++ ts → xs ≡ ys
+++-inj₁ eq = fst (++-decomp eq)
 
 ++-inj₂ : ∀ {m n} {a} {A : ★ a} (xs ys : Vec A m) {zs ts : Vec A n} → xs ++ zs ≡ ys ++ ts → zs ≡ ts
-++-inj₂ xs ys eq = snd (++-decomp {xs = xs} {ys} eq)
+++-inj₂ xs ys eq = snd (++-decomp {xs = xs} {zs = ys} eq)
 
 take-∷ : ∀ {m a} {A : ★ a} n x (xs : Vec A (n + m)) → take (suc n) (x ∷ xs) ≡ x ∷ take n xs
 take-∷ n x xs with splitAt n xs
@@ -333,7 +335,7 @@ drop-∷ _ _ ._ | _ , _ , ≡.refl = ≡.refl
 take-++ : ∀ m {n} {a} {A : ★ a} (xs : Vec A m) (ys : Vec A n) → take m (xs ++ ys) ≡ xs
 take-++ m xs ys with xs ++ ys | ≡.inspect (_++_ xs) ys
 ... | zs | eq with splitAt m zs
-take-++ m xs₁ ys₁ | .(xs ++ ys) | ≡.[ eq ] | xs , ys , ≡.refl = !(++-inj₁ xs₁ xs eq)
+take-++ m xs₁ ys₁ | .(xs ++ ys) | ≡.[ eq ] | xs , ys , ≡.refl = !(++-inj₁ eq)
 
 drop-++ : ∀ m {n} {a} {A : ★ a} (xs : Vec A m) (ys : Vec A n) → drop m (xs ++ ys) ≡ ys
 drop-++ m xs ys with xs ++ ys | ≡.inspect (_++_ xs) ys
@@ -448,6 +450,14 @@ sum-map-rot₁ f (x ∷ xs) = ap sum (map-∷ʳ f x xs)
                         ∙ ℕ°.+-comm (sum (map f xs)) (f x)
 
 open import Data.Vec public hiding (_⊛_; zipWith; zip; map; applicative)
+open Algebra.FunctionProperties.Eq
+
+module _ {a} {A : ★ a} where
+    dup : ∀ {n} → Vec A n → Vec A (n + n)
+    dup xs = xs ++ xs
+
+    dup-inj : ∀ {n} → Injective (dup {n})
+    dup-inj = ++-inj₁
 -- -}
 -- -}
 -- -}
