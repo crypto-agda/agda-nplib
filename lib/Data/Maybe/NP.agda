@@ -316,19 +316,15 @@ Is-nothing-≡nothing (just ())
 module FunctorLemmas {a} where
   open M? a
 
-  {-
   <$>-injective₁ : ∀ {A B}
                      {f : A → B} {x y : Maybe A}
                      (f-inj : ∀ {x y} → f x ≡ f y → x ≡ y)
                    → f <$> x ≡ f <$> y → x ≡ y
-  <$>-injective₁ {f = f} {x}  {y} f-inj =
-    maybe {B = {!λ x → f <$> x ≡ f <$> y → x ≡ y!} {!!} x
   <$>-injective₁ {x = just _}  {just _}  f-inj eq = ≡.cong just (f-inj (just-injective eq))
   <$>-injective₁ {x = nothing} {nothing} _     _  = ≡.refl
   <$>-injective₁ {x = just _}  {nothing} _     ()
   <$>-injective₁ {x = nothing} {just _}  _     ()
-  -}
-  
+
   <$>-assoc : ∀ {A B C} {f : A → B} {g : C → A} (x : Maybe C) → f ∘ g <$> x ≡ f <$> (g <$> x)
   <$>-assoc (just _) = ≡.refl
   <$>-assoc nothing  = ≡.refl
