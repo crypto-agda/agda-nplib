@@ -24,6 +24,10 @@ inl-inj ≡.refl = ≡.refl
 inr-inj : ∀ {a b} {A : ★ a} {B : ★ b} {x y : B} → inr {A = A} x ≡ inr y → x ≡ y
 inr-inj ≡.refl = ≡.refl
 
+module _ {a} {A : ★ a} where
+    untag : A ⊎ A → A
+    untag = [inl: id ,inr: id ]
+
 module _ {a₁ a₂ b₁ b₂}
          {A₁ : ★ a₁} {A₂ : ★ a₂}
          {B₁ : ★ b₁} {B₂ : ★ b₂}
