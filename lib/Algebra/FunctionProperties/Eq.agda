@@ -9,7 +9,9 @@
 -- structures.
 
 open import Level
+open import Function using (flip)
 open import Data.Product
+open import Relation.Nullary
 open import Relation.Binary.NP
 open import Relation.Binary.PropositionalEquality.NP
 
@@ -137,6 +139,21 @@ module InterchangeFromAssocComm
                 ≡⟨ ! ·-assoc ⟩
                   (x · z) · (y · t)
                 ∎
+
+module _ {b} {B : Set b} (f : A → B) where
+
+    Injective : Set (b ⊔ a)
+    Injective = ∀ {x y} → f x ≡ f y → x ≡ y
+
+    Conflict : Set (b ⊔ a)
+    Conflict = ∃ λ x → ∃ λ y → (x ≢ y) × f x ≡ f y
+
+module _ {b} {B : Set b} {f : A → B} where
+    Injective-¬Conflict : Injective f → ¬ (Conflict f)
+    Injective-¬Conflict inj (x , y , x≢y , fx≡fy) = x≢y (inj fx≡fy)
+
+    Conflict-¬Injective : Conflict f → ¬ (Injective f)
+    Conflict-¬Injective = flip Injective-¬Conflict
 -- -}
 -- -}
 -- -}
