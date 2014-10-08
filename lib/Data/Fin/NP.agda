@@ -4,15 +4,17 @@ module Data.Fin.NP where
 open import Type hiding (★)
 open import Function
 open import Data.Zero
-open import Data.One
+open import Data.One using (𝟙)
 open import Data.Fin public renaming (toℕ to Fin▹ℕ)
 open import Data.Nat.NP using (ℕ; zero; suc; _<=_; module ℕ°) renaming (_+_ to _+ℕ_)
-open import Data.Two hiding (_==_)
+open import Data.Two using (𝟚; 0₂; 1₂; [0:_1:_]; case_0:_1:_)
 import Data.Vec.NP as Vec
-open Vec using (Vec; []; _∷_; _∷ʳ_; allFin; lookup; rot₁) renaming (map to vmap)
+open Vec using (Vec; []; _∷_; _∷ʳ_; allFin; lookup; rot₁; tabulate; foldr) renaming (map to vmap)
 import Data.Vec.Properties as Vec
 open import Data.Maybe.NP
 open import Data.Sum as Sum
+open import Relation.Nullary
+open import Relation.Nullary.Decidable
 open import Relation.Binary.PropositionalEquality as ≡
 
 suc-injective : ∀ {m}{i j : Fin m} → Fin.suc i ≡ suc j → i ≡ j
@@ -43,14 +45,42 @@ _+′_ : ∀ {m n} (x : Fin m) (y : Fin n) → Fin (m +ℕ n)
 _+′_ {suc m} {n} zero y rewrite ℕ°.+-comm (suc m) n = inject+ _ y
 suc x +′ y = suc (x +′ y)
 
+_≟_ : ∀ {n} (i j : Fin n) → Dec (i ≡ j)
+zero ≟ zero = yes refl
+zero ≟ suc j = no (λ())
+suc i ≟ zero = no (λ())
+suc i ≟ suc j with i ≟ j
+suc i ≟ suc j | yes p = yes (cong suc p)
+suc i ≟ suc j | no ¬p = no (¬p ∘ suc-injective)
+
 _==_ : ∀ {n} (x y : Fin n) → 𝟚
-x == y = helper (compare x y) where
+x == y = ⌊ x ≟ y ⌋
+{-helper (compare x y) where
   helper : ∀ {n} {i j : Fin n} → Ordering i j → 𝟚
   helper (equal _) = 1₂
-  helper _         = 0₂
+  helper _         = 0₂-}
 
 swap : ∀ {i} (x y : Fin i) → Fin i → Fin i
 swap x y z = case x == z 0: (case y == z 0: z 1: x) 1: y
+
+module _ {a} {A : ★ a}
+         (B : ℕ → ★₀)
+         (_◅_ : ∀ {n} → A → B n → B (suc n))
+         (ε : B zero) where
+  iterate : ∀ {n} (f : Fin n → A) → B n
+  iterate {zero}  f = ε
+  iterate {suc n} f = f zero ◅ iterate (f ∘ suc)
+
+  iterate-foldr∘tabulate :
+    ∀ {n} (f : Fin n → A) → iterate f ≡ foldr B _◅_ ε (tabulate f)
+  iterate-foldr∘tabulate {zero} f = refl
+  iterate-foldr∘tabulate {suc n} f = cong (_◅_ (f zero)) (iterate-foldr∘tabulate (f ∘ suc))
+
+module _ {a} {A : ★ a} (B : ★₀)
+         (_◅_ : A → B → B)
+         (ε : B) where
+  iterate′ : ∀ {n} (f : Fin n → A) → B
+  iterate′ f = iterate _ _◅_ ε f
 
 data FinSum m n : Fin (m +ℕ n) → ★₀ where
   bound : (x : Fin m) → FinSum m n (inject+ n x)
