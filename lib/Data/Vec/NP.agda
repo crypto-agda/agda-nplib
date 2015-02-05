@@ -13,7 +13,7 @@ open import Data.Nat.NP using (ℕ; suc; zero; _+_; _*_; module ℕ° ; +-interc
 open import Data.Nat.Properties using (_+-mono_)
 open import Data.Fin hiding (_≤_) renaming (_+_ to _+ᶠ_)
 open import Data.Vec using (Vec; []; _∷_; head; tail; replicate; tabulate; foldr; _++_; lookup; splitAt; take; drop; sum; _∷ʳ_)
-import Data.Fin.Props as F
+import Data.Fin.Properties as F
 open import Data.Bool
 open import Data.Product hiding (map; zip; swap) renaming (proj₁ to fst; proj₂ to snd)
 open import Function.NP

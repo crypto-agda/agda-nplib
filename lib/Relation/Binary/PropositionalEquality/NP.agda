@@ -5,10 +5,12 @@ module Relation.Binary.PropositionalEquality.NP where
 open import Type hiding (★)
 open import Data.One using (𝟙)
 open import Data.Product using (Σ; _,_)
-open import Relation.Binary.PropositionalEquality public hiding (module ≡-Reasoning; subst) renaming (cong₂ to ap₂)
+open import Relation.Binary.PropositionalEquality
+  public
+  hiding (module ≡-Reasoning; subst)
+  renaming (cong₂ to ap₂)
 open import Relation.Binary.NP
 open import Relation.Binary.Bijection
-open import Relation.Binary.Logical
 open import Relation.Nullary
 
 private
@@ -120,18 +122,3 @@ module ≗-Reasoning {a b} {A : ★ a} {B : ★ b} where
   open Setoid-Reasoning (A →-setoid B) public
     renaming (_≈⟨_⟩_ to _≗⟨_⟩_;
                     _≈⟨by-definition⟩_ to _≗⟨by-definition⟩_)
-
-data ⟦≡⟧ {a₀ a₁ aᵣ}
-         {A₀ A₁} (Aᵣ : ⟦★⟧ {a₀} {a₁} aᵣ A₀ A₁)
-         {x₀ x₁} (xᵣ : Aᵣ x₀ x₁)
-       : (Aᵣ ⟦→⟧ ⟦★⟧ aᵣ) (_≡_ x₀) (_≡_ x₁) where
-    -- : ∀ {y₀ y₁} (yᵣ : Aᵣ y₀ y₁) → x₀ ≡ y₀ → x₁ ≡ y₁ → ★
-  ⟦refl⟧ : ⟦≡⟧ Aᵣ xᵣ xᵣ refl refl
-
--- Double checking level 0 with a direct ⟦_⟧ encoding
-private
-  ⟦≡⟧′ : (∀⟨ Aᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ Aᵣ ⟦→⟧ Aᵣ ⟦→⟧ ⟦★₀⟧) _≡_ _≡_
-  ⟦≡⟧′ = ⟦≡⟧
-
-  ⟦refl⟧′ : (∀⟨ Aᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ ∀⟨ xᵣ ∶ Aᵣ ⟩⟦→⟧ ⟦≡⟧ Aᵣ xᵣ xᵣ) refl refl
-  ⟦refl⟧′ _ _ = ⟦refl⟧

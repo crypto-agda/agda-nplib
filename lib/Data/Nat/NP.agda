@@ -1,5 +1,4 @@
--- NOTE with-K so far
--- TODO {-# OPTIONS --without-K #-}
+{-# OPTIONS --with-K #-}
 module Data.Nat.NP where
 
 open import Type hiding (★)
@@ -7,9 +6,7 @@ import Algebra
 open import Algebra.FunctionProperties.NP
 open import Data.Nat public hiding (module GeneralisedArithmetic; module ≤-Reasoning; fold)
 open import Data.Nat.Properties
-open import Data.Nat.Logical
 open import Data.Two hiding (_==_;_²)
-import Data.Two.Equality as 𝟚==
 open import Data.Product using (∃; _,_) renaming (proj₂ to snd)
 open import Data.Sum renaming (map to ⊎-map)
 open import Data.Zero using (𝟘-elim; 𝟘)
@@ -253,21 +250,6 @@ a⊓b≡a (s≤s a≤b) rewrite a⊓b≡a a≤b = idp
 2^-+ : ∀ x y z → ⟨2^ x * ⟨2^ y * z ⟩ ⟩ ≡ ⟨2^ (x + y) * z ⟩
 2^-+ zero    y z = idp
 2^-+ (suc x) y z = ap 2*_ (2^-+ x y z)
-
-2*′-inj : ∀ {m n} → ⟦ℕ⟧ (2*′ m) (2*′ n) → ⟦ℕ⟧ m n
-2*′-inj {zero}  {zero}  _ = zero
-2*′-inj {zero}  {suc _} ()
-2*′-inj {suc _} {zero}  ()
-2*′-inj {suc m} {suc n} (suc (suc p)) = suc (2*′-inj p)
-
-2*-inj : ∀ {m n} → 2* m ≡ 2* n → m ≡ n
-2*-inj {m} {n} p rewrite ! 2*′-spec m
-                       | ! 2*′-spec n
-                       = ⟦ℕ⟧⇒≡ (2*′-inj (⟦ℕ⟧ˢ.reflexive p))
-
-2^-inj : ∀ k {m n} → ⟨2^ k * m ⟩ ≡ ⟨2^ k * n ⟩ → m ≡ n
-2^-inj zero    = id
-2^-inj (suc k) = 2^-inj k ∘ 2*-inj
 
 cancel-*-left : ∀ i j {k} → suc k * i ≡ suc k * j → i ≡ j
 cancel-*-left i j {k}

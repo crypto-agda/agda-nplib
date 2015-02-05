@@ -1,14 +1,15 @@
 {-# OPTIONS --without-K #-}
-open import Type
-open import Function.NP
+open import Type hiding (★)
+open import Function
 open import Level.NP
+open import Relation.Binary.PropositionalEquality
 
 module Data.ShapePolymorphism where
 
 data ☐ {a}(A : ★_ a) : ★_ a where
   [_] : ..(x : A) → ☐ A
 
-un☐ : ∀ {a b}{A : ★_ a}{B : ☐ A → ★_ b} → (..(x : A) → B [ x ]) → Π (☐ A) B
+un☐ : ∀ {a b}{A : ★_ a}{B : ☐ A → ★_ b} → (..(x : A) → B [ x ]) → (x : ☐ A) → B x
 un☐ f [ x ] = f x
 
 Π☐ : ∀ {a b}(A : ★_ a) → (B : ☐ A → ★_ b) → ★_ (a ⊔ b)
@@ -44,3 +45,10 @@ pattern S[_] x = S[ x ∥ refl ]
 S[_] : ∀ {a}{A : ★_ a} (x : A) → S⟨ x ⟩
 S[ x ] = S[ x ∥ refl ]
 -}
+
+ap☐ : ∀ {i j} {A : ★ i} {B : ★ j} (f : A → B) {x : A} ..{y : A}
+  → (x ≡☐ y → f x ≡☐ f y)
+ap☐ f refl = refl
+
+≡→≡☐ : ∀ {i} {A : ★ i} {x y : A} (p : x ≡ y) → x ≡☐ y
+≡→≡☐ refl = refl

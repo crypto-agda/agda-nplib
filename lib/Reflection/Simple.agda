@@ -96,3 +96,5 @@ module Printer where
 
 showTerm : Term → String
 showTerm t = prTm topᴸ (simple t) "" where open Printer
+
+showType = showTerm ∘ unEl

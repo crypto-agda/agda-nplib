@@ -1,4 +1,7 @@
 module agda-nplib where
+import Algebra.Field
+import Algebra.Field.Solver
+import Algebra.FunctionProperties.Eq
 import Algebra.FunctionProperties.NP
 import Algebra.NP
 import Category
@@ -26,6 +29,7 @@ import Data.Fin.NP
 import Data.Fin.Store
 import Data.Indexed
 import Data.Indexed.Vec
+import Data.LR
 import Data.Label
 import Data.List.NP
 import Data.List.Properties.NP
@@ -41,11 +45,15 @@ import Data.Nat.Positive
 import Data.One
 import Data.Product.K
 import Data.Product.NP
+import Data.RGB
+import Data.ShapePolymorphism
 import Data.Star.NP
 import Data.Stream.NP
+import Data.Sum.Logical
 import Data.Sum.NP
 import Data.Tree.Binary
---import Data.Tree.Binary.Perfect.Any
+import Data.Tree.Binary.Perfect
+import Data.Tree.Binary.Perfect.Any
 import Data.Two
 import Data.Two.Equality
 import Data.Two.Logical
@@ -56,12 +64,14 @@ import Data.Vec.Permutation
 import Data.Zero
 import Function.Bijection.NP
 import Function.Bijection.SyntaxKit
+import Function.Extensionality
 import Function.Im
 import Function.Injection.NP
 import Function.InstanceArguments
 import Function.Inverse.NP
 import Function.NP
 import Function.Related.TypeIsomorphisms.NP
+import HoTT
 import Irrelevance.NP
 import Lens.Getter
 import Lens.Internal
@@ -71,8 +81,14 @@ import Lens.Setter
 import Lens.Structures
 import Lens.Type
 import Level.NP
---import Reflection.Decoding
---import Reflection.NP
+import Opaque
+import Reflection.Decoding
+import Reflection.NP
+import Reflection.Param
+import Reflection.Scoped
+import Reflection.Scoped.Param
+import Reflection.Scoped.Translation
+import Reflection.Simple
 import Relation.Binary.Bijection
 import Relation.Binary.Equivalence
 import Relation.Binary.Logical
@@ -85,9 +101,12 @@ import Relation.Binary.PropositionalEquality.K
 import Relation.Binary.PropositionalEquality.NP
 import Relation.Binary.Sum.NP
 import Relation.Binary.ToNat
+import Relation.Nullary.NP
 import Relation.Unary.Logical
 import Relation.Unary.NP
 import Text.Parser
 import Text.Parser.Partial
 import Text.Printer
 import Type
+import Type.Identities
+import Universe.NP

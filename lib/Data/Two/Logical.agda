@@ -1,17 +1,14 @@
-open import Type
+module Data.Two.Logical where
+
+open import Data.Two.Param.Binary
+
+open import Function
 open import Data.Two hiding (_≟_; decSetoid)
 open import Data.Bool using (if_then_else_)
 open import Data.Bool.NP using (If′_then_else_)
-open import Function
 open import Relation.Nullary
 open import Relation.Binary.NP
 open import Relation.Binary.Logical
-
-module Data.Two.Logical where
-
-data ⟦𝟚⟧ : ⟦★₀⟧ 𝟚 𝟚 where
-  ⟦0₂⟧ : ⟦𝟚⟧ 0₂ 0₂
-  ⟦1₂⟧ : ⟦𝟚⟧ 1₂ 1₂
 
 private
  module ⟦𝟚⟧-Internals where
@@ -67,22 +64,6 @@ module ⟦𝟚⟧-Props where
                        If′_then_else_ If′_then_else_
 ⟦If′⟨_,_⟩_then_else_⟧ _ _ ⟦1₂⟧  xᵣ _ = xᵣ
 ⟦If′⟨_,_⟩_then_else_⟧ _ _ ⟦0₂⟧ _ xᵣ = xᵣ
-
-⟦not⟧ : (⟦𝟚⟧ ⟦→⟧ ⟦𝟚⟧) not not
-⟦not⟧ ⟦1₂⟧ = ⟦0₂⟧
-⟦not⟧ ⟦0₂⟧ = ⟦1₂⟧
-
-_⟦∧⟧_ : (⟦𝟚⟧ ⟦→⟧ ⟦𝟚⟧ ⟦→⟧ ⟦𝟚⟧) _∧_ _∧_
-⟦1₂⟧ ⟦∧⟧ x = x
-⟦0₂⟧ ⟦∧⟧ _ = ⟦0₂⟧
-
-_⟦∨⟧_ : (⟦𝟚⟧ ⟦→⟧ ⟦𝟚⟧ ⟦→⟧ ⟦𝟚⟧) _∨_ _∨_
-⟦1₂⟧ ⟦∨⟧ _ = ⟦1₂⟧
-⟦0₂⟧ ⟦∨⟧ x = x
-
-_⟦xor⟧_ : (⟦𝟚⟧ ⟦→⟧ ⟦𝟚⟧ ⟦→⟧ ⟦𝟚⟧) _xor_ _xor_
-⟦1₂⟧ ⟦xor⟧ x = ⟦not⟧ x
-⟦0₂⟧ ⟦xor⟧ x = x
 
 ⟦1₂⟧′ : ∀ {b} → ✓ b → ⟦𝟚⟧ 1₂ b
 ⟦1₂⟧′ {1₂} _ = ⟦1₂⟧

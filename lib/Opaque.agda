@@ -1,17 +1,17 @@
 open import Data.String using (String)
 open import Relation.Binary.PropositionalEquality
 
-module Opaque {a} {A : Set a} where
+module Opaque {a b} {A : Set a} {B : Set b} where
 
 {-
 abstract
-  opaque : String → A → A
+  opaque : A → B → B
   opaque _ = λ x → x
 
-  opaque-rule : ∀ {s} x → opaque s x ≡ x
-  opaque-rule x = refl
+  opaque-rule : ∀ {x} y → opaque x y ≡ y
+  opaque-rule _ = refl
 -}
 
 postulate
-  opaque : String → A → A
-  opaque-rule : ∀ {s} x → opaque s x ≡ x
+  opaque : A → B → B
+  opaque-rule : ∀ {x} y → opaque x y ≡ y

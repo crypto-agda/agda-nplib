@@ -66,9 +66,8 @@ record Div {m} ρ (tm : Tm F-Op m) : Set f where
     .nonZero-D : eval R-Op-eval ρ D ≢ 𝔽.0ᶠ
     .is-Correct : eval F-Op-eval ρ tm ≡ eval R-Op-eval ρ N 𝔽./ eval R-Op-eval ρ D
 
-
 module _ (FS : Field.Field-Struct 𝔽) where
-  open Field.Field-Struct {{...}}
+  open Field.Field-Struct FS -- {{...}}
 
   {-
   toRingOp : ∀ {m} → F-Op → Div {m} → Div {m} → Div {m}

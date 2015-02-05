@@ -12,6 +12,7 @@ open import Function
 open import Function.Injection using (Injection; module Injection)
 open import Relation.Unary.Logical
 open import Relation.Binary.Logical
+open import Data.Product.Param.Binary public
 
 ∃ : ∀ {a b} {A : ★ a} → (A → ★ b) → ★ (a ⊔ b)
 ∃ = Σ _
@@ -39,31 +40,6 @@ second′ f = second f
 
 syntax ∃ (λ x → e) = ∃[ x ] e
 
-record [Σ] {a b aₚ bₚ}
-           {A : ★ a}
-           {B : A → ★ b}
-           (Aₚ : A → ★ aₚ)
-           (Bₚ : {x : A} (xₚ : Aₚ x)
-                 → B x → ★ bₚ)
-           (p : Σ A B) : ★ (aₚ ⊔ bₚ) where
-  constructor _[,]_
-  field
-    [fst] : Aₚ (fst p)
-    [snd] : Bₚ [fst] (snd p)
-open [Σ] public
-infixr 4 _[,]_
-
-syntax [Σ] Aₚ (λ xₚ → e) = [ xₚ ∶ Aₚ ][×][ e ]
-
-[∃] : ∀ {a aₚ b bₚ} →
-        (∀i⟨ Aₚ ∶ [★] {a} aₚ ⟩[→] ((Aₚ [→] [★] {b} bₚ) [→] [★] _)) ∃
-[∃] {xₚ = Aₚ} = [Σ] Aₚ
-
-syntax [∃] (λ Aₚ → f) = [∃][ Aₚ ] f
-
-_[×]_ : ∀ {a b aₚ bₚ} → ([★] {a} aₚ [→] [★] {b} bₚ [→] [★] _) _×_
-_[×]_ Aₚ Bₚ = [Σ] Aₚ (λ _ → Bₚ)
-
 private
 
   Dec⟦★⟧ : ∀ {a₁ a₂ aᵣ} {A₁ : ★ a₁} {A₂ : ★ a₂}
@@ -76,75 +52,6 @@ private
                 {P₁ : Pred p₁ A₁} {P₂ : Pred p₂ A₂} {pᵣ}
               → (Pᵣ : ⟦Pred⟧ pᵣ Aᵣ P₁ P₂) → ★ _
   Dec⟦Pred⟧ {A₁ = A₁} {A₂} Aᵣ {P₁} {P₂} Pᵣ = ∀ {x₁ x₂} (xᵣ : Aᵣ x₁ x₂) y₁ y₂ → Dec (Pᵣ xᵣ y₁ y₂) -- Dec⟦★⟧ Aᵣ ⇒ Dec⟦★⟧ Pᵣ
-
-record ⟦Σ⟧ {a₁ a₂ b₂ b₁ aᵣ bᵣ}
-           {A₁ : ★ a₁} {A₂ : ★ a₂}
-           {B₁ : A₁ → ★ b₁}
-           {B₂ : A₂ → ★ b₂}
-           (Aᵣ : A₁ → A₂ → ★ aᵣ)
-           (Bᵣ : {x₁ : A₁} {x₂ : A₂} (xᵣ : Aᵣ x₁ x₂)
-                → B₁ x₁ → B₂ x₂ → ★ bᵣ)
-           (p₁ : Σ A₁ B₁) (p₂ : Σ A₂ B₂) : ★ (aᵣ ⊔ bᵣ) where
-  constructor _⟦,⟧_
-  field
-    ⟦fst⟧ : Aᵣ (fst p₁) (fst p₂)
-    ⟦snd⟧ : Bᵣ ⟦fst⟧ (snd p₁) (snd p₂)
-open ⟦Σ⟧ public
-infixr 4 _⟦,⟧_
-
-syntax ⟦Σ⟧ Aᵣ (λ xᵣ → e) = [ xᵣ ∶ Aᵣ ]⟦×⟧[ e ]
-
-⟦∃⟧ : ∀ {a₁ a₂ b₂ b₁ aᵣ bᵣ}
-        {A₁ : ★ a₁} {A₂ : ★ a₂}
-        {Aᵣ : A₁ → A₂ → ★ aᵣ}
-        {B₁ : A₁ → ★ b₁}
-        {B₂ : A₂ → ★ b₂}
-        (Bᵣ : ⟦Pred⟧ bᵣ Aᵣ B₁ B₂)
-        (p₁ : Σ A₁ B₁) (p₂ : Σ A₂ B₂) → ★ _
-⟦∃⟧ = ⟦Σ⟧ _
-
-syntax ⟦∃⟧ (λ xᵣ → e) = ⟦∃⟧[ xᵣ ] e
-
-_⟦×⟧_ : ∀ {a₁ a₂ b₂ b₁ aᵣ bᵣ}
-          {A₁ : ★ a₁} {A₂ : ★ a₂}
-          {B₁ : ★ b₁} {B₂ : ★ b₂}
-          (Aᵣ : A₁ → A₂ → ★ aᵣ)
-          (Bᵣ : B₁ → B₂ → ★ bᵣ)
-          (p₁ : A₁ × B₁) (p₂ : A₂ × B₂) → ★ (aᵣ ⊔ bᵣ)
-_⟦×⟧_ Aᵣ Bᵣ = ⟦Σ⟧ Aᵣ (λ _ → Bᵣ)
-
-{-
-_⟦×⟧_ : ∀ {a₁ a₂ aᵣ} {A₁ : ★ a₁} {A₂ : ★ a₂} (Aᵣ : A₁ → A₂ → ★ aᵣ)
-          {b₁ b₂ bᵣ} {B₁ : ★ b₁} {B₂ : ★ b₂} (Bᵣ : B₁ → B₂ → ★ bᵣ)
-          (p₁ : A₁ × B₁) (p₂ : A₂ × B₂) → ★ _
-_⟦×⟧_ Aᵣ Bᵣ = λ p₁ p₂ → Aᵣ (fst p₁) (fst p₂) ×
-                        Bᵣ (snd p₁) (snd p₂)
--}
-
-{- One can give these two types to ⟦_,_⟧:
-
-⟦_,_⟧' : ∀ {a₁ a₂ b₁ b₂ aᵣ bᵣ}
-       {A₁ : ★ a₁} {A₂ : ★ a₂}
-       {B₁ : A₁ → ★ b₁} {B₂ : A₂ → ★ b₂}
-       {Aᵣ : ⟦★⟧ aᵣ A₁ A₂}
-       {Bᵣ : ⟦Pred⟧ Aᵣ bᵣ B₁ B₂}
-       {x₁ x₂ y₁ y₂}
-       (xᵣ : Aᵣ x₁ x₂)
-       (yᵣ : Bᵣ xᵣ y₁ y₂)
-     → ⟦Σ⟧ Aᵣ Bᵣ (x₁ , y₁) (x₂ , y₂)
-⟦_,_⟧' = ⟦_,_⟧
-
-⟦_,_⟧'' : ∀ {a₁ a₂ b₁ b₂ aᵣ bᵣ}
-       {A₁ : ★ a₁} {A₂ : ★ a₂}
-       {B₁ : A₁ → ★ b₁} {B₂ : A₂ → ★ b₂}
-       {Aᵣ : ⟦★⟧ aᵣ A₁ A₂}
-       {Bᵣ : ⟦Pred⟧ Aᵣ bᵣ B₁ B₂}
-       {p₁ p₂}
-       (⟦fst⟧ : Aᵣ (fst p₁) (fst p₂))
-       (⟦snd⟧ : Bᵣ ⟦fst⟧ (snd p₁) (snd p₂))
-     → ⟦Σ⟧ Aᵣ Bᵣ p₁ p₂
-⟦_,_⟧'' = ⟦_,_⟧
--}
 
 dec⟦Σ⟧ : ∀ {a₁ a₂ b₁ b₂ aᵣ bᵣ A₁ A₂ B₁ B₂}
        {Aᵣ : ⟦★⟧ {a₁} {a₂} aᵣ A₁ A₂}

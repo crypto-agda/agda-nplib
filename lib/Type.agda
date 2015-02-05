@@ -17,3 +17,18 @@ open import Level
 
 ★_ : ∀ ℓ → Set (suc ℓ)
 ★_ ℓ = Set ℓ
+
+Type₂ : Set₃
+Type₂ = Set₂
+
+Type₁ : Type₂
+Type₁ = Set₁
+
+Type₀ : Type₁
+Type₀ = Set
+
+Type : Type₁
+Type = Type₀
+
+Type_ : ∀ ℓ → Set (suc ℓ)
+Type_ ℓ = Set ℓ

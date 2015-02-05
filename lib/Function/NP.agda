@@ -108,8 +108,8 @@ _$⟨_⟩_ f n = nest n f
 
 -- If you run a version of Agda without the support of instance
 -- arguments, simply comment this definition, very little code rely on it.
-… : ∀ {a} {A : ★ a} ⦃ x : A ⦄ → A
-… ⦃ x ⦄ = x
+it : ∀ {a} {A : ★ a} ⦃ x : A ⦄ → A
+it ⦃ x ⦄ = x
 
 _⟨_⟩°_ : ∀ {i a b c} {Ix : ★ i} {A : ★ a} {B : A → ★ b} {C : (x : A) → B x → ★ c}
          → (f  : Ix → A)

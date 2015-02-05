@@ -105,7 +105,7 @@ reverse {suc n} (suc x) = inject₁ (reverse {n} x)
 
 open import Data.Nat
 open import Data.Nat.Properties
-open import Data.Fin.Props renaming (reverse to reverse-old)
+open import Data.Fin.Properties renaming (reverse to reverse-old)
 
 reverse-fromℕ : ∀ n → reverse (fromℕ n) ≡ zero
 reverse-fromℕ zero = refl

@@ -7,28 +7,7 @@ open import Relation.Binary.Logical
 
 module Data.Sum.Logical where
 
-infixr 4 _⟦⊎⟧_
-
-data _⟦⊎⟧_ {a₁ a₂ b₁ b₂ aᵣ bᵣ}
-            {A₁ : ★ a₁} {A₂ : ★ a₂}
-            (Aᵣ : A₁ → A₂ → ★ aᵣ)
-            {B₁ : ★ b₁} {B₂ : ★ b₂}
-            (Bᵣ : B₁ → B₂ → ★ bᵣ) : A₁ ⊎ B₁ → A₂ ⊎ B₂ → ★ (a₁ ⊔ a₂ ⊔ b₁ ⊔ b₂ ⊔ aᵣ ⊔ bᵣ) where
-  ⟦inl⟧ : ∀ {x₁ x₂} (xᵣ : Aᵣ x₁ x₂) → (Aᵣ ⟦⊎⟧ Bᵣ) (inl x₁) (inl x₂)
-  ⟦inr⟧ : ∀ {x₁ x₂} (xᵣ : Bᵣ x₁ x₂) → (Aᵣ ⟦⊎⟧ Bᵣ) (inr x₁) (inr x₂)
-
-⟦[_,_]′⟧ : ∀ {a b c} →
-             (∀⟨ A ∶ ⟦★⟧ a ⟩⟦→⟧ ∀⟨ B ∶ ⟦★⟧ b ⟩⟦→⟧ ∀⟨ C ∶ ⟦★⟧ c ⟩⟦→⟧
-                (A ⟦→⟧ C) ⟦→⟧ (B ⟦→⟧ C) ⟦→⟧ (A ⟦⊎⟧ B) ⟦→⟧ C)
-             ([_,_]′ {a} {b} {c}) ([_,_]′ {a} {b} {c})
-⟦[_,_]′⟧ _ _ _ f _ (⟦inl⟧ xᵣ) = f xᵣ
-⟦[_,_]′⟧ _ _ _ _ g (⟦inr⟧ xᵣ) = g xᵣ
-
-⟦map⟧ : ∀ {a b c d} →
-        (∀⟨ A ∶ ⟦★⟧ a ⟩⟦→⟧ ∀⟨ B ∶ ⟦★⟧ b ⟩⟦→⟧ ∀⟨ C ∶ ⟦★⟧ c ⟩⟦→⟧ ∀⟨ D ∶ ⟦★⟧ d ⟩⟦→⟧
-            (A ⟦→⟧ C) ⟦→⟧ (B ⟦→⟧ D) ⟦→⟧ (A ⟦⊎⟧ B ⟦→⟧ C ⟦⊎⟧ D))
-        (map {a} {b} {c} {d}) (map {a} {b} {c} {d})
-⟦map⟧ A B C D f g = ⟦[_,_]′⟧ A B (C ⟦⊎⟧ D) (⟦inl⟧ ∘′ f) (⟦inr⟧ ∘′ g)
+open import Data.Sum.Param.Binary public
 
 ⟦⊎⟧-refl : ∀ {a b aᵣ bᵣ}
              {A : ★ a} (Aᵣ : A → A → ★ aᵣ) (Aᵣ-refl : Reflexive Aᵣ)
