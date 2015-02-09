@@ -1,4 +1,4 @@
--- NOTE with-K
+{-# OPTIONS --without-K #-}
 module Data.Sum.NP where
 
 open import Data.Sum public renaming (inj₁ to inl; inj₂ to inr)
@@ -6,15 +6,12 @@ open import Data.Sum public renaming (inj₁ to inl; inj₂ to inr)
 open import Type hiding (★)
 open import Level.NP
 open import Function
-open import Data.Nat using (ℕ; zero; suc)
+open import Data.Nat.Base using (ℕ; zero; suc)
 open import Data.Zero
 open import Data.One
 open import Relation.Binary
-open import Relation.Binary.Logical
 import Relation.Binary.PropositionalEquality as ≡
-open ≡ using (_≡_;_≢_;_≗_)
-open import Data.Two hiding (twist)
-open ≡ using (→-to-⟶)
+open ≡ using (_≡_;_≗_)
 
 [inl:_,inr:_] = [_,_]
 

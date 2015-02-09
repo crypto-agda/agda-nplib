@@ -1,5 +1,4 @@
 {-# OPTIONS --without-K #-}
-{-# OPTIONS --universe-polymorphism #-}
 module Function.NP where
 
 import Level as L
@@ -17,11 +16,6 @@ open import Category.Applicative renaming (module RawApplicative to Applicative;
 open import Relation.Binary
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡ using (_≡_; _≗_)
-open import Relation.Unary.Logical
-open import Relation.Binary.Logical
-open Relation.Unary.Logical public using (_[→]_; [Π]; [Π]e; [∀])
-open Relation.Binary.Logical public using (_⟦→⟧_; ⟦Π⟧; ⟦Π⟧e; ⟦∀⟧)
-
 
 id-app : ∀ {f} → Applicative {f} id
 id-app = rawIApplicative
@@ -44,23 +38,8 @@ A →⟨ suc n ⟩₁ B = A → A →⟨ n ⟩₁ B
 Endo : ∀ {a} → ★ a → ★ a
 Endo A = A → A
 
-[Endo] : ∀ {a} → ([★] {a} a [→] [★] _) Endo
-[Endo] Aₚ = Aₚ [→] Aₚ
-
-⟦Endo⟧ : ∀ {a} → (⟦★⟧ {a} {a} a ⟦→⟧ ⟦★⟧ _) Endo Endo
-⟦Endo⟧ Aᵣ = Aᵣ ⟦→⟧ Aᵣ
-
 Cmp : ∀ {a} → ★ a → ★ a
 Cmp A = A → A → 𝟚
-
-{- needs [𝟚] and ⟦𝟚⟧ potentially move these to Data.Two
-
-[Cmp] : ∀ {a} → ([★] {a} a [→] [★] _ [→] [★] _) Cmp
-[Cmp] Aₚ = Aₚ [→] Aₚ [→] [𝟚]
-
-⟦Cmp⟧ : ∀ {a} → (⟦★⟧ {a} {a} a ⟦→⟧ ⟦★⟧ _) Endo Endo
-⟦Cmp⟧ Aᵣ = Aᵣ ⟦→⟧ Aᵣ ⟦→⟧ ⟦𝟚⟧
--}
 
 -- More properties about fold are in Data.Nat.NP
 nest : ∀ {a} {A : ★ a} → ℕ → Endo (Endo A)
@@ -157,12 +136,6 @@ module EndoMonoid-≡ {a} (A : ★ a) = EndoMonoid-≈ {A = A} ≡.isEquivalence
 
 module EndoMonoid-≗ {a} (A : ★ a) = EndoMonoid-≈ (Setoid.isEquivalence (A ≡.→-setoid A))
                                                    (λ {f} {g} {h} {i} p q x → ≡.trans (p (h x)) (≡.cong g (q x)))
-
-⟦id⟧ : (∀⟨ Aᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ Aᵣ ⟦→⟧ Aᵣ) id id
-⟦id⟧ _ xᵣ = xᵣ
-
-⟦∘′⟧ : (∀⟨ Aᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ ∀⟨ Bᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ ∀⟨ Cᵣ ∶ ⟦★₀⟧ ⟩⟦→⟧ (Bᵣ ⟦→⟧ Cᵣ) ⟦→⟧ (Aᵣ ⟦→⟧ Bᵣ) ⟦→⟧ (Aᵣ ⟦→⟧ Cᵣ)) _∘′_ _∘′_
-⟦∘′⟧ _ _ _ fᵣ gᵣ xᵣ = fᵣ (gᵣ xᵣ)
 
 Π : ∀ {a b} (A : ★ a) → (B : A → ★ b) → ★ _
 Π A B = (x : A) → B x
