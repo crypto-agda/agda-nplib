@@ -1,12 +1,10 @@
-{-# OPTIONS --with-K #-}
+{-# OPTIONS --without-K #-}
 module Data.Nat.NP where
 
 open import Type hiding (★)
 import Algebra
 open import Algebra.FunctionProperties.NP
-open import Data.Nat public hiding (module GeneralisedArithmetic; module ≤-Reasoning; fold)
-open import Data.Nat.Properties
-open import Data.Two hiding (_==_;_²)
+open import Data.Two.Base hiding (_==_; _²)
 open import Data.Product using (∃; _,_) renaming (proj₂ to snd)
 open import Data.Sum renaming (map to ⊎-map)
 open import Data.Zero using (𝟘-elim; 𝟘)
@@ -16,9 +14,13 @@ open import Function.Extensionality
 open import Relation.Nullary
 open import Relation.Binary.NP
 import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_; _≢_; _≗_; module ≡-Reasoning; !_; _∙_; ap; coe) renaming (refl to idp)
+open ≡ using (_≡_; _≢_; _≗_; module ≡-Reasoning; !_; _∙_; ap; ap₂; coe)
+       renaming (refl to idp)
 open import HoTT
 open Equivalences
+
+open import Data.Nat public hiding (module GeneralisedArithmetic; module ≤-Reasoning; fold)
+open import Data.Nat.Properties
 
 pattern 1+_ x = suc x
 pattern 2+_ x = 1+ suc x
@@ -164,6 +166,41 @@ a≡a⊓b+a∸b (suc a) (suc b) rewrite ! a≡a⊓b+a∸b a b = idp
 fold : ∀ {a} {A : ★ a} → A → Endo A → ℕ → A
 fold x f n = nest n f x
 
+module nest-Properties {a} {A : ★ a} (f : Endo A) where
+  nest₀ : nest 0 f ≡ id
+  nest₀ = idp
+  nest₁ : nest 1 f ≡ f
+  nest₁ = idp
+  nest₂ : nest 2 f ≡ f ∘ f
+  nest₂ = idp
+  nest₃ : nest 3 f ≡ f ∘ f ∘ f
+  nest₃ = idp
+
+  nest-+ : ∀ m n → nest (m + n) f ≡ nest m f ∘ nest n f
+  nest-+ zero    n = idp
+  nest-+ (suc m) n = ap (_∘_ f) (nest-+ m n)
+
+  nest-+' : ∀ m n → nest (m + n) f ≗ nest m f ∘ nest n f
+  nest-+' m n x = ap (flip _$_ x) (nest-+ m n)
+
+  nest-* : ∀ m n → nest (m * n) f ≗ nest m (nest n f)
+  nest-* zero n x = idp
+  nest-* (suc m) n x =
+    nest (suc m * n) f x             ≡⟨ idp ⟩
+    nest (n + m * n) f x             ≡⟨ nest-+' n (m * n) x ⟩
+    (nest n f ∘ nest (m * n) f) x    ≡⟨ ap (nest n f) (nest-* m n x) ⟩
+    (nest n f ∘ nest m (nest n f)) x ≡⟨ idp ⟩
+    nest n f (nest m (nest n f) x)   ≡⟨ idp ⟩
+    nest (suc m) (nest n f) x ∎
+   where open ≡-Reasoning
+
+{- WRONG
+module more-nest-Properties {a} {A : ★ a} where
+  nest-+'' : ∀ (f : Endo (Endo A)) g m n → nest m f g ∘ nest n f g ≗ nest (m + n) f g
+  nest-+'' f g zero n = {!!}
+  nest-+'' f g (suc m) n = {!!}
+-}
+
 +-inj-over-∸ : ∀ x y z → (x + y) ∸ (x + z) ≡ y ∸ z
 +-inj-over-∸ = [i+j]∸[i+k]≡j∸k 
 
@@ -258,7 +295,7 @@ cancel-*-left i j {k}
 
 2ⁿ*0≡0 : ∀ n → ⟨2^ n * 0 ⟩ ≡ 0
 2ⁿ*0≡0 zero    = idp
-2ⁿ*0≡0 (suc n) = ≡.ap₂ _+_ (2ⁿ*0≡0 n) (2ⁿ*0≡0 n)
+2ⁿ*0≡0 (suc n) = ap₂ _+_ (2ⁿ*0≡0 n) (2ⁿ*0≡0 n)
 
 0∸_≡0 : ∀ x → 0 ∸ x ≡ 0
 0∸ zero  ≡0 = idp

@@ -16,7 +16,7 @@ open import Data.Product.NP renaming (map to map×)
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_]; map to map⊎)
 
 import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_; _≢_ ; ap; coe; coe!; !_; _∙_; J ; inspect ; Reveal_is_ ; [_]; tr; ap₂; apd) renaming (refl to idp; _≗_ to _∼_; J-orig to J')
+open ≡ using (_≡_; _≢_ ; ap; coe; coe!; !_; _∙_; J ; inspect ; [_]; tr; ap₂; apd) renaming (refl to idp; _≗_ to _∼_; J-orig to J')
 
 module Type.Identities where
 

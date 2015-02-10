@@ -2,10 +2,11 @@
 open import Relation.Binary.NP
 open import Type hiding (★)
 import Algebra.FunctionProperties
+open Algebra.FunctionProperties using (Op₂)
 
 module Algebra.FunctionProperties.NP {a ℓ} {A : ★ a} (_≈_ : Rel A ℓ) where
 
-open Algebra.FunctionProperties _≈_ public
+open Algebra.FunctionProperties _≈_ public hiding (Op₂)
 
 Interchange : Op₂ A → Op₂ A → ★ _
 Interchange _∙_ _∘_ = ∀ x y z t → ((x ∙ y) ∘ (z ∙ t)) ≈ ((x ∘ z) ∙ (y ∘ t))

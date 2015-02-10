@@ -1,6 +1,8 @@
 {-# OPTIONS --without-K #-}
 module Data.Two.Base where
 
+open import Data.Zero
+
 open import Data.Bool
   public
   hiding (if_then_else_)
@@ -12,12 +14,15 @@ open import Data.Product
 open import Data.Sum
   using (_⊎_) renaming (inj₁ to inl; inj₂ to inr)
 
+open import Data.Nat.Base
+  using (ℕ; _≤_; z≤n; s≤s; _⊓_; _⊔_; _∸_)
+
 open import Type using (★_)
 
-open import Relation.Nullary using (¬_)
+open import Relation.Nullary using (¬_; Dec; yes; no)
 
-import Relation.Binary.PropositionalEquality as ≡
-open ≡ using (_≡_; _≢_; refl)
+open import Relation.Binary.PropositionalEquality
+  using (_≡_; _≢_; refl)
 
 0≢1₂ : 0₂ ≢ 1₂
 0≢1₂ ()
@@ -133,3 +138,50 @@ b₀ == b₁ = (not b₀) xor b₁
 check : ∀ b → {pf : ✓ b} → ✓ b
 check 0₂ {}
 check 1₂ = _
+
+✓dec : ∀ b → Dec (✓ b)
+✓dec = [0: no (λ())
+        1: yes _ ]
+
+de-morgan : ∀ x y → not (x ∨ y) ≡ not x ∧ not y
+de-morgan 0₂ _ = refl
+de-morgan 1₂ _ = refl
+
+≢0→≡1 : ∀ {x} → x ≢ 0₂ → x ≡ 1₂
+≢0→≡1 {1₂} p = refl
+≢0→≡1 {0₂} p = 𝟘-elim (p refl)
+
+≢1→≡0 : ∀ {x} → x ≢ 1₂ → x ≡ 0₂
+≢1→≡0 {0₂} p = refl
+≢1→≡0 {1₂} p = 𝟘-elim (p refl)
+
+-- 0₂ is 0 and 1₂ is 1
+𝟚▹ℕ : 𝟚 → ℕ
+𝟚▹ℕ = [0: 0
+       1: 1 ]
+
+𝟚▹ℕ≤1 : ∀ b → 𝟚▹ℕ b ≤ 1
+𝟚▹ℕ≤1 = [0: z≤n
+         1: s≤s z≤n ]
+
+𝟚▹ℕ-⊓ : ∀ a b → 𝟚▹ℕ a ⊓ 𝟚▹ℕ b ≡ 𝟚▹ℕ (a ∧ b)
+𝟚▹ℕ-⊓ 1₂ 0₂ = refl
+𝟚▹ℕ-⊓ 1₂ 1₂ = refl
+𝟚▹ℕ-⊓ 0₂ _  = refl
+
+𝟚▹ℕ-⊔ : ∀ a b → 𝟚▹ℕ a ⊔ 𝟚▹ℕ b ≡ 𝟚▹ℕ (a ∨ b)
+𝟚▹ℕ-⊔ 1₂ 0₂ = refl
+𝟚▹ℕ-⊔ 1₂ 1₂ = refl
+𝟚▹ℕ-⊔ 0₂ _  = refl
+
+𝟚▹ℕ-∸ : ∀ a b → 𝟚▹ℕ a ∸ 𝟚▹ℕ b ≡ 𝟚▹ℕ (a ∧ not b)
+𝟚▹ℕ-∸ 0₂ 0₂ = refl
+𝟚▹ℕ-∸ 0₂ 1₂ = refl
+𝟚▹ℕ-∸ 1₂ 0₂ = refl
+𝟚▹ℕ-∸ 1₂ 1₂ = refl
+
+not-inj : ∀ {x y} → not x ≡ not y → x ≡ y
+not-inj {0₂} {0₂} _ = refl
+not-inj {1₂} {1₂} _ = refl
+not-inj {0₂} {1₂} ()
+not-inj {1₂} {0₂} ()

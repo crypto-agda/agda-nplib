@@ -1,27 +1,42 @@
 {-# OPTIONS --without-K #-}
 module Function.NP where
 
-import Level as L
-open import Type hiding (★)
+open import Level
+  using (_⊔_)
+open import Type
+  hiding (★)
 open import Algebra
+  using (module Monoid; Monoid)
 open import Algebra.Structures
-open import Function       public
-open import Data.Nat       using (ℕ; zero; suc; _+_; _*_; fold)
-open import Data.Bool      renaming (Bool to 𝟚)
+  using (IsSemigroup)
+open import Data.Nat.Base
+  using (ℕ; zero; suc)
+open import Data.Bool.Base
+  renaming (Bool to 𝟚)
 open import Data.Product
-open import Data.Vec.N-ary using (N-ary; N-ary-level)
-import Category.Monad.Identity as Id
-open import Category.Monad renaming (module RawMonad to Monad; RawMonad to Monad)
-open import Category.Applicative renaming (module RawApplicative to Applicative; RawApplicative to Applicative)
+  using (Σ; _,_)
+open import Data.Vec.N-ary
+  using (N-ary; N-ary-level)
+open import Category.Monad
+  using () renaming (module RawMonad to Monad; RawMonad to Monad)
+open import Category.Monad.Identity
+  using (IdentityMonad)
+open import Category.Applicative
+  renaming (module RawApplicative to Applicative;
+            RawApplicative to Applicative)
 open import Relation.Binary
-import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_; _≗_)
+  using (IsEquivalence; module IsEquivalence; _Preserves₂_⟶_⟶_;
+         module Setoid)
+open import Relation.Binary.PropositionalEquality.NP
+  using (_≡_; _≗_; refl; ap; ap₂; module ≡-Reasoning; _→-setoid_; _∙_)
+  renaming (isEquivalence to ≡-isEquivalence)
+
+open import Function public
 
 id-app : ∀ {f} → Applicative {f} id
-id-app = rawIApplicative
-  where open Monad Id.IdentityMonad
+id-app = Monad.rawIApplicative IdentityMonad
 
--→- : ∀ {a b} (A : ★ a) (B : ★ b) → ★ (a L.⊔ b)
+-→- : ∀ {a b} (A : ★ a) (B : ★ b) → ★ (a ⊔ b)
 -→- A B = A → B
 
 _→⟨_⟩_ : ∀ {a b} (A : ★ a) (n : ℕ) (B : ★ b) → ★ (N-ary-level a b n)
@@ -41,46 +56,11 @@ Endo A = A → A
 Cmp : ∀ {a} → ★ a → ★ a
 Cmp A = A → A → 𝟚
 
--- More properties about fold are in Data.Nat.NP
+-- More properties about nest/fold are in Data.Nat.NP
 nest : ∀ {a} {A : ★ a} → ℕ → Endo (Endo A)
 -- TMP nest n f x = fold x f n
-nest zero f x = x
+nest zero    f x = x
 nest (suc n) f x = f (nest n f x)
-
-module nest-Properties {a} {A : ★ a} (f : Endo A) where
-  nest₀ : nest 0 f ≡ id
-  nest₀ = ≡.refl
-  nest₁ : nest 1 f ≡ f
-  nest₁ = ≡.refl
-  nest₂ : nest 2 f ≡ f ∘ f
-  nest₂ = ≡.refl
-  nest₃ : nest 3 f ≡ f ∘ f ∘ f
-  nest₃ = ≡.refl
-
-  nest-+ : ∀ m n → nest (m + n) f ≡ nest m f ∘ nest n f
-  nest-+ zero    n = ≡.refl
-  nest-+ (suc m) n = ≡.cong (_∘_ f) (nest-+ m n)
-
-  nest-+' : ∀ m n → nest (m + n) f ≗ nest m f ∘ nest n f
-  nest-+' m n x = ≡.cong (flip _$_ x) (nest-+ m n)
-
-  nest-* : ∀ m n → nest (m * n) f ≗ nest m (nest n f)
-  nest-* zero n x = ≡.refl
-  nest-* (suc m) n x =
-    nest (suc m * n) f x             ≡⟨ ≡.refl ⟩
-    nest (n + m * n) f x             ≡⟨ nest-+' n (m * n) x ⟩
-    (nest n f ∘ nest (m * n) f) x    ≡⟨ ≡.cong (nest n f) (nest-* m n x) ⟩
-    (nest n f ∘ nest m (nest n f)) x ≡⟨ ≡.refl ⟩
-    nest n f (nest m (nest n f) x)   ≡⟨ ≡.refl ⟩
-    nest (suc m) (nest n f) x ∎
-   where open ≡.≡-Reasoning
-
-{- WRONG
-module more-nest-Properties {a} {A : ★ a} where
-  nest-+'' : ∀ (f : Endo (Endo A)) g m n → nest m f g ∘ nest n f g ≗ nest (m + n) f g
-  nest-+'' f g zero n = {!!}
-  nest-+'' f g (suc m) n = {!!}
--}
 
 _$⟨_⟩_ : ∀ {a} {A : ★ a} → Endo A → ℕ → Endo A
 _$⟨_⟩_ f n = nest n f
@@ -132,10 +112,10 @@ module EndoMonoid-≈ {a ℓ} {A : ★ a}
 
   open Monoid monoid public
 
-module EndoMonoid-≡ {a} (A : ★ a) = EndoMonoid-≈ {A = A} ≡.isEquivalence (≡.ap₂ _∘′_)
+module EndoMonoid-≡ {a} (A : ★ a) = EndoMonoid-≈ {A = A} ≡-isEquivalence (ap₂ _∘′_)
 
-module EndoMonoid-≗ {a} (A : ★ a) = EndoMonoid-≈ (Setoid.isEquivalence (A ≡.→-setoid A))
-                                                   (λ {f} {g} {h} {i} p q x → ≡.trans (p (h x)) (≡.cong g (q x)))
+module EndoMonoid-≗ {a} (A : ★ a) = EndoMonoid-≈ (Setoid.isEquivalence (A →-setoid A))
+                                                   (λ {f} {g} {h} {i} p q x → p (h x) ∙ ap g (q x))
 
 Π : ∀ {a b} (A : ★ a) → (B : A → ★ b) → ★ _
 Π A B = (x : A) → B x
@@ -168,3 +148,4 @@ module EndoMonoid-≗ {a} (A : ★ a) = EndoMonoid-≈ (Setoid.isEquivalence (A 
 ΣΠΠ : ∀ {a b c d} (A : ★ a) (B : A → ★ b)
                   (C : Σ A B → ★ c) (D : Σ (Σ A B) C → ★ d) → ★ _
 ΣΠΠ A B C D = Σ A λ x → Π (B x) λ y → Π (C (x , y)) λ z → D ((x , y) , z)
+-- -}
