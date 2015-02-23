@@ -1,10 +1,9 @@
 {-# OPTIONS --without-K #-}
-{-# OPTIONS --universe-polymorphism #-}
 module Function.Bijection.NP where
 
 open import Function.Bijection public
 open import Function.Surjection
-open import Function.Equality
+open import Function.Equality hiding (flip)
 open import Relation.Binary
 open import Data.Product
 open import Level
@@ -38,12 +37,3 @@ flip bij =
                         record { from = to
                                ; right-inverse-of = left-inverse-of } } }
   where open Bijection bij
-
-{-
-wip : ∀  {a₁ a₂}
-         {A₁ A₂  : Setoid a₁ a₂}
-         (xᵢ     : Setoid.Carrier A₁ × Setoid.Carrier A₂)
-         (bij    : Bijection A₁ A₂)
-      → xᵢ ∈ bij → swap xᵢ ∈ flip bij
-wip (x₁ , x₂) bij x = ?
--}
