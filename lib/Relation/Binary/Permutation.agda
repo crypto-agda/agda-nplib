@@ -49,7 +49,7 @@ module PermComm {a} {A : Set a} {R : Rel A a} where
   lem : ∀ {x y} → R [ x ↔ y ] ⇔ R [ y ↔ x ]
   lem = (λ {_} → ⟹) , (λ {_} → ⟹)
 
-module PermIdem {a} {A : Set a} (_≟_ : Decidable {A = A} _≡_) {x y : A} {R : Rel A a} where
+module PermIdem {a} {A : Set a} (_≟_ : Decidable {A = A} _≡_) {R : Rel A a} where
   ⇐ : ∀ {x y} → R [ x ↔ y ] [ x ↔ y ] ⇒ R
   ⇐ (here₁ (here₁ yRj))          = yRj
   ⇐ (here₁ (here₂ xRj))          = xRj
@@ -61,14 +61,14 @@ module PermIdem {a} {A : Set a} (_≟_ : Decidable {A = A} _≡_) {x y : A} {R :
   ⇐ (there _ y≢y (here₂ _))      = 𝟘-elim (y≢y ≡.refl)
   ⇐ (there _ _ (there _ _ iRj))  = iRj
 
-  ⟹ : R ⇒ R [ x ↔ y ] [ x ↔ y ]
-  ⟹ {i} {j} R
+  ⟹ : ∀ {x y} → R ⇒ R [ x ↔ y ] [ x ↔ y ]
+  ⟹ {x} {y} {i} {j} R
    with x ≟ i     | y ≟ i
   ... | yes x≡i   | _       rewrite x≡i = here₁ (here₂ R)
   ... | _         | yes y≡i rewrite y≡i = here₂ (here₁ R)
   ... | no x≢i    | no y≢i              = there x≢i y≢i (there x≢i y≢i R)
 
-  lem : R ⇔ R [ x ↔ y ] [ x ↔ y ]
+  lem : ∀ {x y} → R ⇔ R [ x ↔ y ] [ x ↔ y ]
   lem = (λ {_} → ⟹) , λ {_} → ⇐
 
 Permutation : ∀ {a} → Set a → Set a
