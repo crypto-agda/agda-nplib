@@ -8,6 +8,6 @@ explicitize : ∀ {a b} {A : ★ a} {B : A → ★ b} →
                 (⦃ x : A ⦄ → B x) → (x : A) → B x
 explicitize f x = f ⦃ x ⦄
 
-… : ∀ {a} {A : ★ a} ⦃ x : A ⦄ → A
-… ⦃ x ⦄ = x
+it : ∀ {a} {A : ★ a} ⦃ x : A ⦄ → A
+it ⦃ x ⦄ = x
 
