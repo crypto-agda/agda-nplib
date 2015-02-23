@@ -21,7 +21,6 @@ import Data.Bits.Bits4
 import Data.Bits.OperationSyntax
 import Data.Bits.Properties
 import Data.Bool.NP
-import Data.Bool.NatBool
 import Data.Bool.So
 import Data.Char.NP
 import Data.Fin.Logical
