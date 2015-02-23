@@ -74,7 +74,7 @@ dist-sum (suc x) (suc y) zero
   rewrite ℕ°.+-comm (dist x y) (suc y)
         | dist-sym x y = s≤s (dist-sum zero y x)
 dist-sum (suc x) zero    (suc z) = dist-sum x zero z
-                                ∙≤ ℕ≤.reflexive (cong₂ _+_ (dist-sym x 0) idp)
+                                ∙≤ ℕ≤.reflexive (ap₂ _+_ (dist-sym x 0) idp)
                                 ∙≤ ≤-step (ℕ≤.refl {x} +-mono ≤-step ℕ≤.refl)
 dist-sum (suc x) (suc y) (suc z) = dist-sum x y z
 
