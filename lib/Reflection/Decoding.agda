@@ -10,12 +10,12 @@ open import Data.Bool
 open import Function
 open import Relation.Nullary
 open import Relation.Nullary.Decidable
-open import Level
+open import Level.NP
 import Category.Monad as Cat
 
 module Reflection.Decoding where
 
-module M? = Cat.RawMonad (Data.Maybe.monad {zero})
+module M? = Cat.RawMonad (Data.Maybe.monad {₀})
 open M? using () renaming (_⊛_ to _⊛?_)
 
 D : ★ → ★
