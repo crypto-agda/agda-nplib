@@ -23,6 +23,7 @@ import Data.Bits.Properties
 import Data.Bool.NP
 import Data.Bool.So
 import Data.Char.NP
+import Data.Default
 import Data.Fin.Logical
 import Data.Fin.NP
 import Data.Fin.Store
