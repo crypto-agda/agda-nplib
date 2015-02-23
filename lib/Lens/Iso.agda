@@ -7,6 +7,7 @@ open import Category.Profunctor
 open import Data.Bool
 open import Data.Product
 open import Data.Maybe
+open import Data.Default
 
 module Lens.Iso where
 
@@ -32,33 +33,33 @@ AnIso S T A B = Exchange A A B → Exchange A S T
 AnIso′ : (S A : ★) → ★
 AnIso′ = Simple AnIso
 
-withIso : ∀ {S T A B R : ★} {{dflt : B}} → ((S → A) → (B → T) → R) → AnIso S T A B → R
+withIso : ∀ {S T A B R : ★} {{_ : Default B}} → ((S → A) → (B → T) → R) → AnIso S T A B → R
 withIso {B = B} k ai = k sa bt
   where open Exchanges
         postulate
           -- this postulate is safe since an input B is asked for
           -- and so B cannot be the empty type
-          bad-use-of-withIso : {{_ : B}} → B
+          bad-use-of-withIso : {{_ : Default B}} → B
         go = ai ∘ _,_ id
         sa = exchange (go bad-use-of-withIso)
         bt = extract ∘ go
 
-from : ∀ {S T A B} {{dflt : B}} → AnIso S T A B → Iso B A T S
+from : ∀ {S T A B} {{_ : Default B}} → AnIso S T A B → Iso B A T S
 from η = withIso (λ f g → iso g f) η
 
-cloneIso : ∀ {S T A B} {{dflt : B}} → AnIso S T A B → Iso S T A B
+cloneIso : ∀ {S T A B} {{_ : Default B}} → AnIso S T A B → Iso S T A B
 cloneIso η = withIso (λ f g → iso f g) η
 
-au : ∀ {S T A B E} {{dflt : B}} → AnIso S T A B → ((S → A) → E → B) → E → T
+au : ∀ {S T A B E} {{_ : Default B}} → AnIso S T A B → ((S → A) → E → B) → E → T
 au η = withIso (λ sa bt f e → bt (f sa e)) η
 
-auf : ∀ {S T A B R E} {{dflt : B}} → AnIso S T A B → ((R → A) → E → B) → (R → S) → E → T
+auf : ∀ {S T A B R E} {{_ : Default B}} → AnIso S T A B → ((R → A) → E → B) → (R → S) → E → T
 auf η = withIso (λ sa bt f g e → bt (f (sa ∘ g) e)) η
 
-under : ∀ {S T A B} {{dflt : B}} → AnIso S T A B → (T → S) → (B → A)
+under : ∀ {S T A B} {{_ : Default B}} → AnIso S T A B → (T → S) → (B → A)
 under η = withIso (λ f g h → f ∘ h ∘ g) η
 
-mapping : ∀ {F S T A B} {{dflt : B}} {{Ffun : RawFunctor F}}
+mapping : ∀ {F S T A B} {{_ : Default B}} {{Ffun : RawFunctor F}}
           → AnIso S T A B → Iso (F S) (F T) (F A) (F B)
 mapping η = withIso (λ f g → iso (_<$>_ f) (_<$>_ g)) η
   where open RawFunctor {{...}}

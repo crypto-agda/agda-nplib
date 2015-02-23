@@ -17,8 +17,8 @@ record Prismatic {i} (_↝_ : ★_ i → ★_ i → ★_ ℓ) : ★_ (ℓ L.⊔ 
                  → (A ↝ F T) → (S ↝ F T)
   open Profunctor profunctor public
 
-→Prismatic : Prismatic -→-
-→Prismatic = mk →Profunctor (λ st+a aft → [ pure , aft ] ∘ st+a)
+→-Prismatic : Prismatic -→-
+→-Prismatic = mk →-Profunctor (λ st+a aft → [ pure , aft ] ∘ st+a)
   where open RawApplicative {{...}}
 
 record Indexable {i} (_↝_ : ★_ i → ★_ i → ★_ ℓ) : ★_ (ℓ L.⊔ L.suc i) where
@@ -28,5 +28,5 @@ record Indexable {i} (_↝_ : ★_ i → ★_ i → ★_ ℓ) : ★_ (ℓ L.⊔ 
     indexed    : ∀ {I : ★_ i} {A B} → A ↝ B → I → A → B
   open Profunctor profunctor public
 
-→Indexable : Indexable -→-
-→Indexable = mk →Profunctor const
+→-Indexable : Indexable -→-
+→-Indexable = mk →-Profunctor const

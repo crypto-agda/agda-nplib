@@ -8,7 +8,7 @@ open import Type
 open import Category.Functor
 open import Category.Applicative
 open import Data.Product using (_×_; _,_)
-open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
+open import Data.Sum using (_⊎_; [_,_]) renaming (inj₁ to inl; inj₂ to inr)
 open import Relation.Binary.PropositionalEquality using (_≗_; _≡_; refl)
 
 Overloading : (_↝₀_ _↝₁_ : ★ → ★ → ★) (F : ★ → ★) (S T A B : ★) → ★
@@ -135,7 +135,7 @@ private
         FunList = λ A B → Bazaar A A B
 
         getB : ∀ {A B} → FunList A B → B
-        getB = bazaar id
+        getB = bazaar {{id-app}} id
 
         getAs : ∀ {A B} → FunList A B → List A
         getAs (buy _)       = []
@@ -211,8 +211,8 @@ choosing : ∀ {F S S′ T T′ A B} {{_ : RawFunctor F}} →
              LensLike F S T A B →
              LensLike F S′ T′ A B →
              LensLike F (S ⊎ S′) (T ⊎ T′) A B
-choosing ℓ r f = [ _<$>_ inj₁ ∘ ℓ f
-                 , _<$>_ inj₂ ∘ r f ]
+choosing ℓ r f = [ _<$>_ inl ∘ ℓ f
+                 , _<$>_ inr ∘ r f ]
   where open RawFunctor {{...}}
 
 choosen : ∀ {A B} → Lens (A ⊎ A) (B ⊎ B) A B
@@ -235,7 +235,7 @@ alongside l r f (s , s′) = case l (_,_ id) s of λ
   { (bt , a) → case r (_,_ id) s′ of λ
                  { (bt′ , a′) → f (a , a′) <&> λ { (b , b′) → (bt b , bt′ b′) }
                  } }
-                  where _<&>_ = flip (RawFunctor._<$>_ …)
+                  where _<&>_ = flip (RawFunctor._<$>_ it)
 
 cloneLens : ∀ {S T A B} → Loupe S T A B → Lens S T A B
 cloneLens f afb s = case f (_,_ id) s of λ { (bt , a) → bt <$> afb a }
