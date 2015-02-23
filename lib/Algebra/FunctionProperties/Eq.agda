@@ -9,7 +9,8 @@
 -- structures.
 
 open import Level
-open import Function using (flip)
+open import Function.NP using (_$⟨_⟩_; flip)
+open import Data.Nat.Base using (ℕ)
 open import Data.Product
 open import Relation.Nullary
 open import Relation.Binary.NP
@@ -154,6 +155,12 @@ module _ {b} {B : Set b} {f : A → B} where
 
     Conflict-¬Injective : Conflict f → ¬ (Injective f)
     Conflict-¬Injective = flip Injective-¬Conflict
+
+module Endo {f : A → A} where
+    Cycle^ : ℕ → Set _
+    Cycle^ n = ∃ λ x → f $⟨ n ⟩ x ≡ x
+
+    Cycle = ∃ Cycle^
 -- -}
 -- -}
 -- -}
