@@ -68,19 +68,4 @@ _⟦≤?⟧_ : ⟦Decidable⟧ ⟦ℕ⟧ ⟦ℕ⟧ ⟦≤⟧ _≤?_ _≤?_
 ... | no _      | no _       | no ¬m≤nᵣ = no (¬m≤nᵣ ∘ ⟦≤-pred⟧)
 ... | yes _     | no _       | ()
 ... | no _      | yes _      | ()
-
-2*′-inj : ∀ {m n} → ⟦ℕ⟧ (2*′ m) (2*′ n) → ⟦ℕ⟧ m n
-2*′-inj {zero}  {zero}  _ = ⟦zero⟧
-2*′-inj {zero}  {suc _} ()
-2*′-inj {suc _} {zero}  ()
-2*′-inj {suc m} {suc n} (⟦suc⟧ (⟦suc⟧ p)) = ⟦suc⟧ (2*′-inj p)
-
-2*-inj : ∀ {m n} → 2* m ≡ 2* n → m ≡ n
-2*-inj {m} {n} p rewrite ! 2*′-spec m
-                       | ! 2*′-spec n
-                       = ⟦ℕ⟧⇒≡ (2*′-inj (⟦ℕ⟧ˢ.reflexive p))
-
-2^-inj : ∀ k {m n} → ⟨2^ k * m ⟩ ≡ ⟨2^ k * n ⟩ → m ≡ n
-2^-inj zero    = id
-2^-inj (suc k) = 2^-inj k ∘ 2*-inj
 -- -}

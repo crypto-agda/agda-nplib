@@ -253,6 +253,21 @@ a⊓b≡a (s≤s a≤b) rewrite a⊓b≡a a≤b = idp
 ⟨2^_*_⟩ : ℕ → ℕ → ℕ
 ⟨2^ n * x ⟩ = 2^⟨ n ⟩* x
 
+2*′-inj : ∀ {m n} → 2*′ m ≡ 2*′ n → m ≡ n
+2*′-inj {zero}  {zero}  _ = idp
+2*′-inj {zero}  {suc _} ()
+2*′-inj {suc _} {zero}  ()
+2*′-inj {suc m} {suc n} p = ap suc (2*′-inj (suc-injective (suc-injective p)))
+
+2*-inj : ∀ {m n} → 2* m ≡ 2* n → m ≡ n
+2*-inj {m} {n} p rewrite ! 2*′-spec m
+                       | ! 2*′-spec n
+                       = 2*′-inj p
+
+2^-inj : ∀ k {m n} → ⟨2^ k * m ⟩ ≡ ⟨2^ k * n ⟩ → m ≡ n
+2^-inj zero    = id
+2^-inj (suc k) = 2^-inj k ∘ 2*-inj
+
 2*-distrib : ∀ x y → 2* x + 2* y ≡ 2* (x + y) 
 2*-distrib x y = +-interchange x x y y
 
