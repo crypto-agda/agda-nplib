@@ -229,21 +229,21 @@ module _ {a b} {A : ★ a} {B : ★ b} (f₀ f₁ : A ↔ B) where
 module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c} where
   private
     S = Σ (A ⊎ B) C
-    T = Σ A (C F.∘ inj₁) ⊎ Σ B (C F.∘ inj₂)
+    T = Σ A (C F.∘ inl) ⊎ Σ B (C F.∘ inr)
     ⇒ : S → T
-    ⇒ (inj₁ x , y) = inj₁ (x , y)
-    ⇒ (inj₂ x , y) = inj₂ (x , y)
+    ⇒ (inl x , y) = inl (x , y)
+    ⇒ (inr x , y) = inr (x , y)
     ⇐ : T → S
-    ⇐ (inj₁ (x , y)) = inj₁ x , y
-    ⇐ (inj₂ (x , y)) = inj₂ x , y
+    ⇐ (inl (x , y)) = inl x , y
+    ⇐ (inr (x , y)) = inr x , y
     ⇐⇒ : ∀ x → ⇐ (⇒ x) ≡ x
-    ⇐⇒ (inj₁ _ , _) = ≡.refl
-    ⇐⇒ (inj₂ _ , _) = ≡.refl
+    ⇐⇒ (inl _ , _) = ≡.refl
+    ⇐⇒ (inr _ , _) = ≡.refl
     ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
-    ⇒⇐ (inj₁ _) = ≡.refl
-    ⇒⇐ (inj₂ _) = ≡.refl
+    ⇒⇐ (inl _) = ≡.refl
+    ⇒⇐ (inr _) = ≡.refl
 
-  Σ⊎-distrib : (Σ (A ⊎ B) C) ↔ (Σ A (C F.∘ inj₁) ⊎ Σ B (C F.∘ inj₂))
+  Σ⊎-distrib : (Σ (A ⊎ B) C) ↔ (Σ A (C F.∘ inl) ⊎ Σ B (C F.∘ inr))
   Σ⊎-distrib = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
 
 module _ {a b c} {A : ★ a} {B : A → ★ b} {C : A → ★ c} where
@@ -251,17 +251,17 @@ module _ {a b c} {A : ★ a} {B : A → ★ b} {C : A → ★ c} where
     S = Σ A (B ⊎° C)
     T = Σ A B ⊎ Σ A C
     ⇒ : S → T
-    ⇒ (x , inj₁ y) = inj₁ (x , y)
-    ⇒ (x , inj₂ y) = inj₂ (x , y)
+    ⇒ (x , inl y) = inl (x , y)
+    ⇒ (x , inr y) = inr (x , y)
     ⇐ : T → S
-    ⇐ (inj₁ (x , y)) = x , inj₁ y
-    ⇐ (inj₂ (x , y)) = x , inj₂ y
+    ⇐ (inl (x , y)) = x , inl y
+    ⇐ (inr (x , y)) = x , inr y
     ⇐⇒ : ∀ x → ⇐ (⇒ x) ≡ x
-    ⇐⇒ (_ , inj₁ _) = ≡.refl
-    ⇐⇒ (_ , inj₂ _) = ≡.refl
+    ⇐⇒ (_ , inl _) = ≡.refl
+    ⇐⇒ (_ , inr _) = ≡.refl
     ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
-    ⇒⇐ (inj₁ _) = ≡.refl
-    ⇒⇐ (inj₂ _) = ≡.refl
+    ⇒⇐ (inl _) = ≡.refl
+    ⇒⇐ (inr _) = ≡.refl
 
   Σ-⊎-hom : Σ A (B ⊎° C) ↔ (Σ A B ⊎ Σ A C)
   Σ-⊎-hom = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
@@ -272,18 +272,18 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c}
          where
   private
     S = Π (A ⊎ B) C
-    T = Π A (C F.∘ inj₁) × Π B (C F.∘ inj₂)
+    T = Π A (C F.∘ inl) × Π B (C F.∘ inr)
     ⇒ : S → T
-    ⇒ f = f F.∘ inj₁ , f F.∘ inj₂
+    ⇒ f = f F.∘ inl , f F.∘ inr
     ⇐ : T → S
     ⇐ (f , g) = [ f , g ]
     ⇐⇒ : ∀ f x → ⇐ (⇒ f) x ≡ f x
-    ⇐⇒ f (inj₁ x) = ≡.refl
-    ⇐⇒ f (inj₂ y) = ≡.refl
+    ⇐⇒ f (inl x) = ≡.refl
+    ⇐⇒ f (inr y) = ≡.refl
     ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
     ⇒⇐ (f , g) = ≡.refl
 
-  Π×-distrib : Π (A ⊎ B) C ↔ (Π A (C F.∘ inj₁) × Π B (C F.∘ inj₂))
+  Π×-distrib : Π (A ⊎ B) C ↔ (Π A (C F.∘ inl) × Π B (C F.∘ inr))
   Π×-distrib = inverses (⇒) (⇐) (λ f → ext (⇐⇒ f)) ⇒⇐
 
 ⊎-ICommutativeMonoid : CommutativeMonoid _ _
@@ -311,7 +311,7 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c}
       ; cong  = cong-to
       }
     ; from = record
-      { _⟨$⟩_ = inj₂
+      { _⟨$⟩_ = inr
       ; cong = ₂∼₂
       }
     ; inverse-of = record
@@ -327,11 +327,11 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c}
   assoc : Associative _⊎-setoid_
   assoc A B C = record
     { to = record
-      { _⟨$⟩_ = [ [ inj₁ , inj₂ F.∘ inj₁ ] , inj₂ F.∘ inj₂ ]
+      { _⟨$⟩_ = [ [ inl , inr F.∘ inl ] , inr F.∘ inr ]
       ; cong = cong-to
       }
     ; from = record
-      { _⟨$⟩_ = [ inj₁ F.∘ inj₁ , [ inj₁ F.∘ inj₂ , inj₂ ] ]
+      { _⟨$⟩_ = [ inl F.∘ inl , [ inl F.∘ inr , inr ] ]
       ; cong = cong-from
       }
     ; inverse-of = record
@@ -365,7 +365,7 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c}
     } where
       swap' : ∀ {A B} → A ⊎-setoid B FE.⟶ B ⊎-setoid A
       swap' {A} {B} = record
-        { _⟨$⟩_ = [ inj₂ , inj₁ ]
+        { _⟨$⟩_ = [ inr , inl ]
         ; cong = cong
         } where
           cong : Setoid._≈_ (A ⊎-setoid B) =[ _ ]⇒ Setoid._≈_ (B ⊎-setoid A)
@@ -461,7 +461,7 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c}
   distribʳ : _×-setoid_ DistributesOverʳ _⊎-setoid_
   distribʳ A B C = record
     { to = record
-      { _⟨$⟩_ = uncurry [ curry inj₁ , curry inj₂ ]
+      { _⟨$⟩_ = uncurry [ curry inl , curry inr ]
       ; cong = cong-to
       }
     ; from = record
@@ -485,7 +485,7 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A ⊎ B → ★ c}
       cong-to (₂∼₂ x∼₂y , A-rel) = ₂∼₂ (x∼₂y , A-rel)
 
       frm : B' × A' ⊎ C' × A' → (B' ⊎ C') × A'
-      frm = [ map× inj₁ F.id , map× inj₂ F.id ]
+      frm = [ map× inl F.id , map× inr F.id ]
 
       cong-from : _≈_ ((B ×-setoid A) ⊎-setoid (C ×-setoid A)) =[ _ ]⇒ _≈_ ((B ⊎-setoid C) ×-setoid A)
       cong-from (₁∼₂ ())
@@ -533,8 +533,8 @@ lift-⊎ {A}{B} = record
   } where
     cong : Setoid._≈_ (≡.setoid A ⊎-setoid ≡.setoid B)  =[ _ ]⇒ Setoid._≈_ (≡.setoid (A ⊎ B))
     cong (₁∼₂ ())
-    cong (₁∼₁ x∼₁y) = ≡.cong inj₁ x∼₁y
-    cong (₂∼₂ x∼₂y) = ≡.cong inj₂ x∼₂y
+    cong (₁∼₁ x∼₁y) = ≡.cong inl x∼₁y
+    cong (₂∼₂ x∼₂y) = ≡.cong inr x∼₂y
 
 swap-iso : ∀ {a b} {A : ★ a} {B : ★ b} → (A × B) ↔ (B × A)
 swap-iso = inverses swap swap (λ _ → ≡.refl) (λ _ → ≡.refl)
@@ -546,14 +546,14 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A × B → ★ c} where
 {- PORTED TO HoTT -}
 Maybe↔Lift𝟙⊎ : ∀ {ℓ a} {A : ★ a} → Maybe A ↔ (Lift {ℓ = ℓ} 𝟙 ⊎ A)
 Maybe↔Lift𝟙⊎
-  = inverses (maybe inj₂ (inj₁ _))
+  = inverses (maybe inr (inl _))
              [ F.const nothing , just ]
              (maybe (λ _ → ≡.refl) ≡.refl)
              [ (λ _ → ≡.refl) , (λ _ → ≡.refl) ]
 
 Maybe↔𝟙⊎ : ∀ {a} {A : ★ a} → Maybe A ↔ (𝟙 ⊎ A)
 Maybe↔𝟙⊎
-  = inverses (maybe inj₂ (inj₁ _))
+  = inverses (maybe inr (inl _))
              [ F.const nothing , just ]
              (maybe (λ _ → ≡.refl) ≡.refl)
              [ (λ _ → ≡.refl) , (λ _ → ≡.refl) ]
@@ -722,46 +722,46 @@ Maybe^-⊎-+ (suc m) n = Maybe-cong (Maybe^-⊎-+ m n) ∘ Maybe-⊎
 Σ𝟚↔⊎ F = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
   where
     ⇒ : (x : Σ _ _) → _
-    ⇒ (0₂ , p) = inj₁ p
-    ⇒ (1₂ , p) = inj₂ p
+    ⇒ (0₂ , p) = inl p
+    ⇒ (1₂ , p) = inr p
     ⇐ : (x : _ ⊎ _) → _
-    ⇐ (inj₁ x) = 0₂ , x
-    ⇐ (inj₂ y) = 1₂ , y
+    ⇐ (inl x) = 0₂ , x
+    ⇐ (inr y) = 1₂ , y
 
     ⇐⇒ : (_ : Σ _ _) → _
     ⇐⇒ (0₂ , p) = ≡.refl
     ⇐⇒ (1₂ , p) = ≡.refl
     ⇒⇐ : (_ : _ ⊎ _) → _
-    ⇒⇐ (inj₁ _) = ≡.refl
-    ⇒⇐ (inj₂ _) = ≡.refl
+    ⇒⇐ (inl _) = ≡.refl
+    ⇒⇐ (inr _) = ≡.refl
 
 -- PORTED to HoTT
 ⊎⇿Σ2 : ∀ {ℓ} {A B : ★ ℓ} → (A ⊎ B) ↔ Σ 𝟚 [0: A 1: B ]
 ⊎⇿Σ2 {A = A} {B} = inverses (⇒) (⇐) ⇐⇒ ⇒⇐
   where
     ⇒ : A ⊎ B → _
-    ⇒ (inj₁ x) = 0₂ , x
-    ⇒ (inj₂ x) = 1₂ , x
+    ⇒ (inl x) = 0₂ , x
+    ⇒ (inr x) = 1₂ , x
     ⇐ : Σ _ _ → A ⊎ B
-    ⇐ (0₂ , x) = inj₁ x
-    ⇐ (1₂ , x) = inj₂ x
+    ⇐ (0₂ , x) = inl x
+    ⇐ (1₂ , x) = inr x
     ⇐⇒ : (_ : _ ⊎ _) → _
-    ⇐⇒ (inj₁ x) = ≡.refl
-    ⇐⇒ (inj₂ x) = ≡.refl
+    ⇐⇒ (inl x) = ≡.refl
+    ⇐⇒ (inr x) = ≡.refl
     ⇒⇐ : (_ : Σ _ _) → _
     ⇒⇐ (0₂ , x) = ≡.refl
     ⇒⇐ (1₂ , x) = ≡.refl
 
 -- PORTED to HoTT
 𝟚↔𝟙⊎𝟙 : 𝟚 ↔ (𝟙 ⊎ 𝟙)
-𝟚↔𝟙⊎𝟙 = inverses (proj (inj₁ _ , inj₂ _)) [ F.const 0₂ , F.const 1₂ ] ⇐⇒ ⇒⇐
+𝟚↔𝟙⊎𝟙 = inverses (proj (inl _ , inr _)) [ F.const 0₂ , F.const 1₂ ] ⇐⇒ ⇒⇐
   where
   ⇐⇒ : (_ : 𝟚) → _
   ⇐⇒ 0₂ = ≡.refl
   ⇐⇒ 1₂ = ≡.refl
   ⇒⇐ : (_ : 𝟙 ⊎ 𝟙) → _
-  ⇒⇐ (inj₁ _) = ≡.refl
-  ⇒⇐ (inj₂ _) = ≡.refl
+  ⇒⇐ (inl _) = ≡.refl
+  ⇒⇐ (inr _) = ≡.refl
 
 Fin-⊎-+ : ∀ m n → (Fin m ⊎ Fin n) ↔ Fin (m + n)
 Fin-⊎-+ m n = Maybe^𝟘↔Fin (m + n)
