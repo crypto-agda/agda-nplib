@@ -282,8 +282,11 @@ vap : ∀ {m a b} {A : ★ a} {B : ★ b} (f : Vec A m → B)
         → ∀ {n} → Vec (Vec A n) m → Vec B n
 vap f = map f ∘ transpose
 
+_‼_ : ∀ {n a} {A : ★ a} → Vec A n → Fin n → A
+_‼_ = flip lookup
+
 η : ∀ {n a} {A : ★ a} → Vec A n → Vec A n
-η = tabulate ∘ flip lookup
+η = tabulate ∘ _‼_
 
 η′ : ∀ {n a} {A : ★ a} → Vec A n → Vec A n
 η′ {zero}  = λ _ → []
@@ -373,13 +376,13 @@ swap-++ : ∀ m {n} {a} {A : ★ a} (xs : Vec A m) (ys : Vec A n) → swap m (xs
 swap-++ m xs ys = ≡.ap₂ _++_ (drop-++ m xs ys) (take-++ m xs ys)
 
 rewire : ∀ {a i o} {A : ★ a} → (Fin o → Fin i) → Vec A i → Vec A o
-rewire f v = tabulate (flip lookup v ∘ f)
+rewire f v = tabulate (_‼_ v ∘ f)
 
 RewireTbl : (i o : ℕ) → ★₀
 RewireTbl i o = Vec (Fin i) o
 
 rewireTbl : ∀ {a i o} {A : ★ a} → RewireTbl i o → Vec A i → Vec A o
-rewireTbl tbl v = map (flip lookup v) tbl
+rewireTbl tbl v = map (_‼_ v) tbl
 
 onᵢ : ∀ {a} {A : ★ a} (f : A → A) {n} (i : Fin n) → Vec A n → Vec A n
 onᵢ f zero    (x ∷ xs) = f x ∷ xs
