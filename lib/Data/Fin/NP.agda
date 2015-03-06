@@ -5,7 +5,7 @@ open import Type hiding (★)
 open import Function
 open import Data.Zero
 open import Data.One using (𝟙)
-open import Data.Fin public renaming (toℕ to Fin▹ℕ)
+open import Data.Fin public renaming (toℕ to Fin▹ℕ; fromℕ to ℕ▹Fin)
 open import Data.Nat.NP using (ℕ; zero; suc; _<=_; module ℕ°) renaming (_+_ to _+ℕ_)
 open import Data.Two using (𝟚; 0₂; 1₂; [0:_1:_]; case_0:_1:_)
 import Data.Vec.NP as Vec
@@ -40,6 +40,12 @@ Fin▹𝟚 (suc _) = 1₂
 
 𝟚▹Fin : 𝟚 → Fin 2
 𝟚▹Fin = [0: # 0 1: # 1 ]
+
+[zero:_,suc:_] : ∀ {n a}{A : Fin (suc n) → Set a}
+                   (z : A zero)(s : (x : Fin n) → A (suc x))
+                   (x : Fin (suc n)) → A x
+[zero: z ,suc: s ] zero    = z
+[zero: z ,suc: s ] (suc x) = s x
 
 _+′_ : ∀ {m n} (x : Fin m) (y : Fin n) → Fin (m +ℕ n)
 _+′_ {suc m} {n} zero y rewrite ℕ°.+-comm (suc m) n = inject+ _ y
@@ -96,18 +102,18 @@ cmp (suc m) n (suc .(inject+ n x)) | bound x = bound (suc x)
 cmp (suc m) n (suc .(raise m x))   | free x  = free x
 
 max : ∀ n → Fin (suc n)
-max = fromℕ
+max = ℕ▹Fin
 
 -- reverse x = n ∸ (1 + x)
 reverse : ∀ {n} → Fin n → Fin n
-reverse {suc n} zero    = fromℕ n
+reverse {suc n} zero    = ℕ▹Fin n
 reverse {suc n} (suc x) = inject₁ (reverse {n} x)
 
 open import Data.Nat
 open import Data.Nat.Properties
 open import Data.Fin.Properties renaming (reverse to reverse-old)
 
-reverse-fromℕ : ∀ n → reverse (fromℕ n) ≡ zero
+reverse-fromℕ : ∀ n → reverse (ℕ▹Fin n) ≡ zero
 reverse-fromℕ zero = refl
 reverse-fromℕ (suc n) rewrite reverse-fromℕ n = refl
 
@@ -135,7 +141,7 @@ reverse-old-lem {zero} ()
 reverse-old-lem {suc n} x rewrite inject≤-lemma (n ℕ- x) (n∸m≤n (Fin▹ℕ x) (suc n)) = Fin▹ℕ-ℕ-lem x
 
 data FinView {n} : Fin (suc n) → ★₀ where
-  `fromℕ   : FinView (fromℕ n)
+  `fromℕ   : FinView (ℕ▹Fin n)
   `inject₁ : ∀ x → FinView (inject₁ x)
 
 sucFinView : ∀ {n} {i : Fin (suc n)} → FinView i → FinView (suc i)
@@ -210,7 +216,7 @@ module Modulo where
   sucmod-inj eq | just _  | nothing | _ | p | _ = 𝟘-elim (p (cong Maybe.just eq))
   sucmod-inj eq | nothing | just _  | _ | _ | p = 𝟘-elim (p (cong Maybe.just (sym eq)))
 
-  modq-fromℕ : ∀ q → modq (fromℕ q) ≡ nothing
+  modq-fromℕ : ∀ q → modq (ℕ▹Fin q) ≡ nothing
   modq-fromℕ zero = refl
   modq-fromℕ (suc q) rewrite modq-fromℕ q = refl
 
@@ -218,7 +224,7 @@ module Modulo where
   modq-inject₁ zero = refl
   modq-inject₁ (suc i) rewrite modq-inject₁ i = refl
 
-  sucmod-fromℕ : ∀ q → sucmod (fromℕ q) ≡ zero
+  sucmod-fromℕ : ∀ q → sucmod (ℕ▹Fin q) ≡ zero
   sucmod-fromℕ q rewrite modq-fromℕ q = refl
 
   sucmod-inject₁ : ∀ {n} (i : Fin n) → sucmod (inject₁ i) ≡ suc i
@@ -228,14 +234,14 @@ module Modulo where
   lem-inject₁ zero    (x₀ ∷ xs) x₁ = refl
   lem-inject₁ (suc i) (x₀ ∷ xs) x₁ = lem-inject₁ i xs x₁
 
-  lem-fromℕ : ∀ {n a} {A : ★ a} (xs : Vec A n) x → lookup (fromℕ n) (xs ∷ʳ x) ≡ x
+  lem-fromℕ : ∀ {n a} {A : ★ a} (xs : Vec A n) x → lookup (ℕ▹Fin n) (xs ∷ʳ x) ≡ x
   lem-fromℕ {zero}  []       x = refl
   lem-fromℕ {suc n} (_ ∷ xs) x = lem-fromℕ xs x
 
   lookup-sucmod : ∀ {n a} {A : ★ a} (i : Fin (suc n)) (x : A) xs
                  → lookup i (xs ∷ʳ x) ≡ lookup (sucmod i) (x ∷ xs)
   lookup-sucmod i x xs with finView i
-  lookup-sucmod {n} .(fromℕ n) x xs | `fromℕ rewrite sucmod-fromℕ n = lem-fromℕ xs x
+  lookup-sucmod {n} .(ℕ▹Fin n) x xs | `fromℕ rewrite sucmod-fromℕ n = lem-fromℕ xs x
   lookup-sucmod .(inject₁ x) x₁ xs | `inject₁ x rewrite sucmod-inject₁ x = lem-inject₁ x xs x₁
 
   lookup-map : ∀ {n a b} {A : ★ a} {B : ★ b} (f : A → B) i (xs : Vec A n)
