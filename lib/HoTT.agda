@@ -101,6 +101,10 @@ module _ {a}{A : ★_ a} where
              tr P pq ∼ tr P q ∘ tr P p
     tr-∙ P p q ._ idp = tr-∙′ P p q
 
+module _ {k} {K : ★_ k} {a} {A : ★_ a} {x y : A} (p : x ≡ y) where
+    tr-const : tr (const K) p ≡ id
+    tr-const = J (λ _ p₁ → tr (const K) p₁ ≡ id) idp p
+
 -- Contractible
 module _ {a}(A : ★_ a) where
     Is-contr : ★_ a
@@ -317,31 +321,25 @@ module Equivalences where
         module G = Biinv gᴮ
         module F = Biinv fᴮ
 
-  module _ {a b}{A : ★_ a}{B : ★_ b} where
-    ·→ : (e : A ≃ B) → (A → B)
-    ·→ e = fst e
+  module Equiv {a b}{A : ★_ a}{B : ★_ b}(e : A ≃ B) where
+    ·→ : A → B
+    ·→ = fst e
 
-    ·← : (e : A ≃ B) → (B → A)
-    ·← e = Is-equiv.linv (snd e)
+    open Is-equiv (snd e) public
+      renaming (linv to ·←; rinv to ·←′; is-linv to ·←-inv-l; is-rinv to ·←-inv-r)
+
+    -- Equivalences are "injective"
+    equiv-inj : {x y : A} → (·→ x ≡ ·→ y → x ≡ y)
+    equiv-inj p = ! ·←-inv-l _ ∙ ap ·← p ∙ ·←-inv-l _
 
     –> = ·→
     <– = ·←
+    <–' = ·←′
 
-    <–' : (e : A ≃ B) → (B → A)
-    <–' e = Is-equiv.rinv (snd e)
+    <–-inv-l = ·←-inv-l
+    <–-inv-r = ·←-inv-r
 
-    <–-inv-l : (e : A ≃ B) (a : A)
-              → (<– e (–> e a) ≡ a)
-    <–-inv-l = Is-equiv.is-linv ∘ snd
-
-    <–-inv-r : (e : A ≃ B) (b : B)
-                → (–> e (<–' e b) ≡ b)
-    <–-inv-r = Is-equiv.is-rinv ∘ snd
-
-    -- Equivalences are "injective"
-    equiv-inj : (e : A ≃ B) {x y : A}
-                → (–> e x ≡ –> e y → x ≡ y)
-    equiv-inj e p = ! <–-inv-l e _ ∙ ap (<– e) p ∙ <–-inv-l e _
+  open Equiv public
 
   module _ {ℓ} where
     ≃-refl : Reflexive (_≃_ {ℓ})
@@ -533,15 +531,17 @@ module _ {ℓ}{A B : ★_ ℓ}{{_ : UA}} where
   ua-equiv : (A ≃ B) ≃ (A ≡ B)
   ua-equiv = equiv ua coe-equiv ua-η coe-equiv-β
 
-  coe-β : (e : A ≃ B) (a : A) → coe (ua e) a ≡ –> e a
-  coe-β e a = ap (λ e → –> e a) (coe-equiv-β e)
+  coe-β : (e : A ≃ B) (a : A) → coe (ua e) a ≡ ·→ e a
+  coe-β e a = ap (λ e → ·→ e a) (coe-equiv-β e)
 
   postulate
-    coe!-β : (e : A ≃ B) (b : B) → coe! (ua e) b ≡ <– e b
+    coe!-β : (e : A ≃ B) (b : B) → coe! (ua e) b ≡ ·← e b
 
   module _ (e : A ≃ B){x y : A} where
-    –>-paths-equiv : (x ≡ y) ≡ (–> e x ≡ –> e y)
-    –>-paths-equiv = coe-paths-equiv (ua e) ∙ ap₂ _≡_ (coe-β e x) (coe-β e y)
+    ·→-paths-equiv : (x ≡ y) ≡ (·→ e x ≡ ·→ e y)
+    ·→-paths-equiv = coe-paths-equiv (ua e) ∙ ap₂ _≡_ (coe-β e x) (coe-β e y)
+
+    –>-paths-equiv = ·→-paths-equiv
 
 -- -}
 -- -}
