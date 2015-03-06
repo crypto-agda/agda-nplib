@@ -5,7 +5,7 @@ open import Type hiding (★)
 import Algebra
 open import Algebra.FunctionProperties.NP
 open import Data.Two.Base hiding (_==_; _²)
-open import Data.Product using (∃; _,_) renaming (proj₂ to snd)
+open import Data.Product using (∃; _,_) renaming (proj₁ to fst; proj₂ to snd)
 open import Data.Sum renaming (map to ⊎-map)
 open import Data.Zero using (𝟘-elim; 𝟘)
 open import Data.One using (𝟙)
@@ -376,6 +376,12 @@ infix 8 _^_
 _^_ : ℕ → ℕ → ℕ
 b ^ zero  = 1
 b ^ suc n = b * b ^ n
+
+_^2 : ℕ → ℕ
+n ^2 = n * n
+
+^2-spec : ∀ n → n ^2 ≡ n ^ 2
+^2-spec n rewrite snd ℕ°.*-identity n = idp
 
 2^_ : ℕ → ℕ
 2^ n = ⟨2^ n * 1 ⟩
