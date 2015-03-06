@@ -171,3 +171,14 @@ tblFromFun : ∀ {n a} {A : ★ a} → (Bits n → A) → Vec A (2^ n)
 tblFromFun {zero}  f = f [] ∷ []
 tblFromFun {suc n} f = tblFromFun {n} (f ∘ 0∷_)
                     ++ tblFromFun {n} (f ∘ 1∷_)
+
+and : ∀ {n} → Bits n → 𝟚
+and = foldr _ _∧_ 1₂
+
+✓-and : ∀ {n}{xs : Bits n} → (∀ l → ✓(xs ‼ l)) → ✓(and xs)
+✓-and {xs = []}     p = _
+✓-and {xs = x ∷ xs} p = ✓∧ (p zero) (✓-and (p ∘ suc))
+
+✓-and' : ∀ {n}{xs : Bits n} → ✓(and xs) → ∀ l → ✓(xs ‼ l)
+✓-and' {xs = x ∷ xs} e zero = ✓∧₁ {x} e
+✓-and' {xs = x ∷ xs} e (suc l) = ✓-and' (✓∧₂ {x} e) l
