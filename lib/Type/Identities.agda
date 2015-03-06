@@ -10,7 +10,7 @@ open import Data.Maybe.NP using (Maybe ; just ; nothing ; maybe ; maybe′ ; jus
 open import Data.Zero using (𝟘 ; 𝟘-elim)
 open import Data.One using (𝟙)
 open import Data.Two
-open import Data.Fin as Fin using (Fin ; suc ; zero)
+open import Data.Fin.NP as Fin using (Fin; suc; zero; [zero:_,suc:_])
 open import Data.Nat.NP as ℕ using (ℕ ; suc ; zero; _+_)
 open import Data.Product.NP renaming (map to map×)
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_]; map to map⊎)
@@ -531,19 +531,13 @@ module _ {{_ : UA}} where
     Fin1≡𝟙 : Fin 1 ≡ 𝟙
     Fin1≡𝟙 = ua Fin1≃𝟙
 
-module _ where
-  isZero? : ∀ {n}{A : Fin (suc n) → Set} → ((i : Fin n) → A (suc i)) → A zero
-    → (i : Fin (suc n)) → A i
-  isZero? f x zero = x
-  isZero? f x (suc i) = f i
+Fin∘suc≃𝟙⊎Fin : ∀ {n} → Fin (suc n) ≃ (𝟙 ⊎ Fin n)
+Fin∘suc≃𝟙⊎Fin = equiv [zero: inl _ ,suc: inr ] [inl: (λ _ → zero) ,inr: suc ]
+  [inl: (λ _ → idp) ,inr: (λ _ → idp) ]
+  [zero: idp ,suc: (λ _ → idp) ]
 
-  Fin∘suc≃𝟙⊎Fin : ∀ {n} → Fin (suc n) ≃ (𝟙 ⊎ Fin n)
-  Fin∘suc≃𝟙⊎Fin = equiv (isZero? inr (inl _)) [inl: (λ _ → zero) ,inr: suc ]
-    [inl: (λ _ → idp) ,inr: (λ _ → idp) ]
-    (isZero? (λ _ → idp) idp)
-
-  Fin∘suc≡𝟙⊎Fin : ∀ {{_ : UA}}{n} → Fin (suc n) ≡ (𝟙 ⊎ Fin n)
-  Fin∘suc≡𝟙⊎Fin = ua Fin∘suc≃𝟙⊎Fin
+Fin∘suc≡𝟙⊎Fin : ∀ {{_ : UA}}{n} → Fin (suc n) ≡ (𝟙 ⊎ Fin n)
+Fin∘suc≡𝟙⊎Fin = ua Fin∘suc≃𝟙⊎Fin
 
 Fin-⊎-+ : ∀ {{_ : UA}} {m n} → (Fin m ⊎ Fin n) ≡ Fin (m ℕ.+ n)
 Fin-⊎-+ {zero}  = ⊎= Fin0≡𝟘 idp ∙ ⊎-comm ∙ ! ⊎𝟘-inl
@@ -593,7 +587,6 @@ module _ {{_ : UA}} where
 
     count-≡ : ∀ {a} {A : ★_ a} (p : A → 𝟚) x → Fin (𝟚▹ℕ (p x)) ≡ (p x ≡ 1₂)
     count-≡ p x = Fin-≡-≡1₂ (p x)
-
 
     Lift≡id : ∀ {a} {A : ★_ a} → Lift {a} {a} A ≡ A
     Lift≡id = ua Lift≃id
