@@ -26,11 +26,9 @@ record Group-Struct {ℓ} {G : Set ℓ} (grp-ops : Group-Ops G) : Set ℓ where
     identity : Identity ε _∙_
     inverse  : Inverse ε _⁻¹ _∙_
 
-  ∙= : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x ∙ y ≡ x' ∙ y'
-  ∙= {x} {y' = y'} p q = ap (_∙_ x) q ♦ ap (λ z → z ∙ y') p
-
-  /= : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x / y ≡ x' / y'
-  /= {x} {y' = y'} p q = ap (_/_ x) q ♦ ap (λ z → z / y') p
+  open FromOp₂ _∙_ public renaming (op= to ∙=)
+  open FromOp₂ _/_ public renaming (op= to /=)
+  open FromAssoc _∙_ assoc public
 
   ∙-/ : ∀ {x y} → x ≡ (x ∙ y) / y
   ∙-/ {x} {y}
@@ -64,9 +62,7 @@ record Group-Struct {ℓ} {G : Set ℓ} (grp-ops : Group-Ops G) : Set ℓ where
   cancels-∙ {x} {y} {z} e
     = y              ≡⟨ ! fst identity ⟩
       ε ∙ y          ≡⟨ ∙= (! fst inverse) idp ⟩
-      x ⁻¹ ∙ x ∙ y   ≡⟨ assoc ⟩
-      x ⁻¹ ∙ (x ∙ y) ≡⟨ ∙= idp e ⟩
-      x ⁻¹ ∙ (x ∙ z) ≡⟨ ! assoc ⟩
+      x ⁻¹ ∙ x ∙ y   ≡⟨ !assoc= e ⟩
       x ⁻¹ ∙ x ∙ z   ≡⟨ ∙= (fst inverse) idp ⟩
       ε ∙ z          ≡⟨ fst identity ⟩
       z ∎
@@ -95,29 +91,21 @@ record Abelian-Group-Struct {ℓ} {G : Set ℓ} (grp-ops : Group-Ops G) : Set �
     comm : Commutative _∙_
   open Group-Struct grp-struct
 
-  assoc-comm : ∀ {x y z} → x ∙ (y ∙ z) ≡ y ∙ (x ∙ z)
-  assoc-comm = ! assoc ♦ ∙= comm idp ♦ assoc
-
-  interchange : Interchange _∙_ _∙_
-  interchange = InterchangeFromAssocComm.·-interchange _∙_ assoc comm
+  open FromAssocComm _∙_ assoc comm public
 
   ⁻¹-hom : ∀ {x y} → (x ∙ y)⁻¹ ≡ x ⁻¹ ∙ y ⁻¹
   ⁻¹-hom = ⁻¹-hom′ ♦ comm
 
   split-/-∙ : ∀ {x y z t} → (x ∙ y) / (z ∙ t) ≡ (x / z) ∙ (y / t)
   split-/-∙ {x} {y} {z} {t}
-    = (x ∙ y)    / (z ∙ t)       ≡⟨by-definition⟩
-      (x ∙ y)    ∙ (z ∙ t)⁻¹     ≡⟨ ∙= idp ⁻¹-hom ⟩
-      (x ∙ y)    ∙ (z ⁻¹ ∙ t ⁻¹) ≡⟨ assoc ⟩
-      x ∙ (y    ∙ (z ⁻¹ ∙ t ⁻¹)) ≡⟨ ∙= idp assoc-comm ⟩
-      x ∙ (z ⁻¹ ∙ (y ∙ t ⁻¹))    ≡⟨ ! assoc ⟩
-      (x ∙ z ⁻¹) ∙ (y ∙ t ⁻¹)    ≡⟨by-definition⟩
-      (x / z) ∙ (y / t) ∎
+    = (x ∙ y) ∙ (z ∙ t)⁻¹      ≡⟨ ∙= idp ⁻¹-hom ⟩
+      (x ∙ y) ∙ (z ⁻¹ ∙ t ⁻¹)  ≡⟨  interchange  ⟩
+      (x / z) ∙ (y / t)        ∎
 
   cancels-/ : ∀ {x y z} → (x ∙ y) / (x ∙ z) ≡ y / z
   cancels-/ {x} {y} {z}
     = (x ∙ y) / (x ∙ z) ≡⟨ split-/-∙ ⟩
-      (x / x) ∙ (y / z) ≡⟨ ap (λ u →  u ∙ (y / z)) (snd inverse) ⟩
+      (x / x) ∙ (y / z) ≡⟨ ∙= (snd inverse) idp ⟩
       ε ∙ (y / z)       ≡⟨ fst identity ⟩
       y / z ∎
 
