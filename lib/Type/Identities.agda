@@ -68,6 +68,20 @@ module _ {a}{A₀ A₁ : ★_ a}{b}{B₀ B₁ : ★_ b}(A≃ : A₀ ≃ A₁)(B�
                (λ f → λ= (λ x → B≃.·←-inv-r _ ∙ ap f (A≃.·←-inv-r x))) 
                (λ f → λ= (λ x → B≃.·←-inv-l _ ∙ ap f (A≃.·←-inv-l x)))
 
+module _ {a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≃ B₁ x) where
+  private
+      module B≃ {x} = Equiv (B x)
+      B→ = B≃.·→
+      B← = B≃.·←
+  Σ≃-second : (Σ A B₀) ≃ (Σ A B₁)
+  Σ≃-second = equiv (second B→) (second B←)
+                    (λ { (x , y) → ap (_,_ x) (B≃.·←-inv-r y) })
+                    (λ { (x , y) → ap (_,_ x) (B≃.·←-inv-l y) })
+
+module _ {a}(A : ★_ a){b}{B₀ B₁ : ★_ b}(B : B₀ ≃ B₁) where
+  ×≃-second : (A × B₀) ≃ (A × B₁)
+  ×≃-second = Σ≃-second A (λ _ → B)
+
 module _ {{_ : FunExt}}{a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x) where
     Σ=′ : Σ A B₀ ≡ Σ A B₁
     Σ=′ = ap (Σ A) (λ= B)
