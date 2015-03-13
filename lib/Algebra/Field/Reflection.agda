@@ -2,6 +2,8 @@ open import Reflection.NP
 open import Reflection.Decode
 open import Data.List
 open import Data.Maybe.NP
+open import Algebra.Field
+open import Relation.Binary.PropositionalEquality
 
 module Algebra.Field.Reflection where
 

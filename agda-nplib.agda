@@ -1,8 +1,10 @@
 module agda-nplib where
 import Algebra.Field
+-- TODO import Algebra.Field.Reflection
 import Algebra.Field.Solver
 import Algebra.FunctionProperties.Eq
 import Algebra.FunctionProperties.NP
+import Algebra.Group
 import Algebra.NP
 import Category
 import Category.Applicative.NP
@@ -34,6 +36,7 @@ import Data.Label
 import Data.List.NP
 import Data.List.Properties.NP
 import Data.Maybe.NP
+import Data.Maybe.Param.Binary.NP
 import Data.Nat.Ack
 import Data.Nat.BoundedMonoInj-is-Id
 import Data.Nat.Distance
@@ -45,6 +48,7 @@ import Data.Nat.Positive
 import Data.One
 import Data.Product.K
 import Data.Product.NP
+import Data.Product.Param.Binary.NP
 import Data.RGB
 import Data.ShapePolymorphism
 import Data.Star.NP
@@ -55,6 +59,7 @@ import Data.Tree.Binary
 import Data.Tree.Binary.Perfect
 import Data.Tree.Binary.Perfect.Any
 import Data.Two
+import Data.Two.Base
 import Data.Two.Equality
 import Data.Two.Logical
 import Data.Vec.Bijection
@@ -70,6 +75,8 @@ import Function.Injection.NP
 import Function.InstanceArguments
 import Function.Inverse.NP
 import Function.NP
+import Function.Param.Binary.NP
+import Function.Param.Unary.NP
 import Function.Related.TypeIsomorphisms.NP
 import HoTT
 import Irrelevance.NP
@@ -82,13 +89,15 @@ import Lens.Structures
 import Lens.Type
 import Level.NP
 import Opaque
+{- TODO
+import Reflection.Decode
 import Reflection.Decoding
-import Reflection.NP
-import Reflection.Param
+import Reflection.Printer
 import Reflection.Scoped
 import Reflection.Scoped.Param
 import Reflection.Scoped.Translation
 import Reflection.Simple
+-}
 import Relation.Binary.Bijection
 import Relation.Binary.Equivalence
 import Relation.Binary.Logical
@@ -107,6 +116,7 @@ import Relation.Unary.NP
 import Text.Parser
 import Text.Parser.Partial
 import Text.Printer
+import Text.Show
 import Type
 import Type.Identities
 import Universe.NP
