@@ -135,23 +135,29 @@ module FromComm
 module FromAssoc
          (_·_   : Op₂ A)
          (assoc : Associative _·_)
-         {c x y x' y' : A}
-         (e : (x · y) ≡ (x' · y'))
+
        where
   open FromOp₂ _·_
 
-  assoc= : x · (y · c) ≡ x' · (y' · c)
-  assoc= = ! assoc ∙ op= e idp ∙ assoc
+  module _ {c x y x' y' : A}
+           (e : (x · y) ≡ (x' · y')) where
+    assoc= : x · (y · c) ≡ x' · (y' · c)
+    assoc= = ! assoc ∙ op= e idp ∙ assoc
 
-  !assoc= : (c · x) · y ≡ (c · x') · y'
-  !assoc= = assoc ∙ op= idp e ∙ ! assoc
+    !assoc= : (c · x) · y ≡ (c · x') · y'
+    !assoc= = assoc ∙ op= idp e ∙ ! assoc
+
+  module _ {c d x y x' y' : A}
+           (e : (x · y) ≡ (x' · y')) where
+    inner= : (c · x) · (y · d) ≡ (c · x') · (y' · d)
+    inner= = assoc= (!assoc= e)
 
 module FromAssocComm
          (_·_   : Op₂ A)
          (assoc : Associative _·_)
          (comm  : Commutative _·_)
        where
-  open FromOp₂   _·_       public
+  open FromOp₂   _·_       renaming (op= to ∙=)
   open FromAssoc _·_ assoc public
   open FromComm  _·_ comm  public
 
@@ -163,6 +169,11 @@ module FromAssocComm
 
   interchange : Interchange _·_ _·_
   interchange = assoc= (!assoc= comm)
+
+  module _ {c d x y x' y' : A}
+           (e : (x · y) ≡ (x' · y')) where
+    outer= : (x · c) · (d · y) ≡ (x' · c) · (d · y')
+    outer= = ∙= comm comm ∙ assoc= (!assoc= e) ∙ ∙= comm comm
 
 module _ {b} {B : Set b} (f : A → B) where
   Injective : Set (b ⊔ a)

@@ -1,23 +1,31 @@
 open import Function
 open import Data.Product.NP
+open import Data.Nat.NP using (ℕ; fold)
+open import Data.Integer hiding (_+_; _*_)
 open import Relation.Binary.PropositionalEquality.NP renaming (_∙_ to _♦_)
 open import Algebra.FunctionProperties.Eq
+open import Algebra.Monoid
 open ≡-Reasoning
 
 module Algebra.Group where
 
 record Group-Ops {ℓ} (G : Set ℓ) : Set ℓ where
-  infixl 7 _∙_ _/_
+  constructor mk
+  infixl 7 _∙_
 
   field
     _∙_ : G → G → G
     ε   : G
     _⁻¹ : G → G
 
-  _/_ : G → G → G
-  x / y = x ∙ y ⁻¹
+  mon-ops : Monoid-Ops G
+  mon-ops = record { _∙_ = _∙_; ε = ε }
+
+  open Monoid-Ops mon-ops public hiding (_∙_; ε)
+  open FromInverseOp _⁻¹  public
 
 record Group-Struct {ℓ} {G : Set ℓ} (grp-ops : Group-Ops G) : Set ℓ where
+  constructor mk
   open Group-Ops grp-ops
 
   -- laws
@@ -26,56 +34,12 @@ record Group-Struct {ℓ} {G : Set ℓ} (grp-ops : Group-Ops G) : Set ℓ where
     identity : Identity ε _∙_
     inverse  : Inverse ε _⁻¹ _∙_
 
-  open FromOp₂ _∙_ public renaming (op= to ∙=)
-  open FromOp₂ _/_ public renaming (op= to /=)
-  open FromAssoc _∙_ assoc public
+  mon-struct : Monoid-Struct mon-ops
+  mon-struct = record { assoc = assoc ; identity = identity }
 
-  ∙-/ : ∀ {x y} → x ≡ (x ∙ y) / y
-  ∙-/ {x} {y}
-    = x            ≡⟨ ! snd identity ⟩
-      x ∙ ε        ≡⟨ ap (_∙_ x) (! snd inverse) ⟩
-      x ∙ (y / y)  ≡⟨ ! assoc ⟩
-      (x ∙ y) / y  ∎
-
-  /-∙ : ∀ {x y} → x ≡ (x / y) ∙ y
-  /-∙ {x} {y}
-    = x               ≡⟨ ! snd identity ⟩
-      x ∙ ε           ≡⟨ ap (_∙_ x) (! fst inverse) ⟩
-      x ∙ (y ⁻¹ ∙ y)  ≡⟨ ! assoc ⟩
-      (x / y) ∙ y     ∎
-
-  unique-ε : ∀ {x y} → x ∙ y ≡ y → x ≡ ε
-  unique-ε {x} {y} eq
-    = x            ≡⟨ ∙-/ ⟩
-      (x ∙ y) / y  ≡⟨ /= eq idp ⟩
-      y / y        ≡⟨ snd inverse ⟩
-      ε            ∎
-
-  unique-⁻¹ : ∀ {x y} → x ∙ y ≡ ε → x ≡ y ⁻¹
-  unique-⁻¹ {x} {y} eq
-    = x            ≡⟨ ∙-/ ⟩
-      (x ∙ y) / y  ≡⟨ /= eq idp ⟩
-      ε / y        ≡⟨ fst identity ⟩
-      y ⁻¹         ∎
-
-  cancels-∙ : ∀ {x y z} → x ∙ y ≡ x ∙ z → y ≡ z
-  cancels-∙ {x} {y} {z} e
-    = y              ≡⟨ ! fst identity ⟩
-      ε ∙ y          ≡⟨ ∙= (! fst inverse) idp ⟩
-      x ⁻¹ ∙ x ∙ y   ≡⟨ !assoc= e ⟩
-      x ⁻¹ ∙ x ∙ z   ≡⟨ ∙= (fst inverse) idp ⟩
-      ε ∙ z          ≡⟨ fst identity ⟩
-      z ∎
-
-  ⁻¹-hom′ : ∀ {x y} → (x ∙ y)⁻¹ ≡ y ⁻¹ ∙ x ⁻¹
-  ⁻¹-hom′ {x} {y} = cancels-∙ {x ∙ y}
-     ((x ∙ y) ∙ (x ∙ y)⁻¹     ≡⟨ snd inverse ⟩
-      ε                       ≡⟨ ! snd inverse ⟩
-      x ∙ x ⁻¹                ≡⟨ ap (_∙_ x) (! fst identity) ⟩
-      x ∙ (ε ∙ x ⁻¹)          ≡⟨ ∙= idp (∙= (! snd inverse) idp) ⟩
-      x ∙ ((y ∙ y ⁻¹) ∙ x ⁻¹) ≡⟨ ap (_∙_ x) assoc ⟩
-      x ∙ (y ∙ (y ⁻¹ ∙ x ⁻¹)) ≡⟨ ! assoc ⟩
-      (x ∙ y) ∙ (y ⁻¹ ∙ x ⁻¹) ∎)
+  open Monoid-Struct mon-struct public hiding (assoc; identity)
+  open FromRightInverse _⁻¹ (snd inverse) public
+  open FromLeftInverse  _⁻¹ (fst inverse) public
 
 record Group (G : Set) : Set where
   field
@@ -89,9 +53,10 @@ record Abelian-Group-Struct {ℓ} {G : Set ℓ} (grp-ops : Group-Ops G) : Set �
   field
     grp-struct : Group-Struct grp-ops
     comm : Commutative _∙_
-  open Group-Struct grp-struct
+  open Group-Struct grp-struct public
 
   open FromAssocComm _∙_ assoc comm public
+    hiding (assoc=; !assoc=; inner=)
 
   ⁻¹-hom : ∀ {x y} → (x ∙ y)⁻¹ ≡ x ⁻¹ ∙ y ⁻¹
   ⁻¹-hom = ⁻¹-hom′ ♦ comm
@@ -102,8 +67,8 @@ record Abelian-Group-Struct {ℓ} {G : Set ℓ} (grp-ops : Group-Ops G) : Set �
       (x ∙ y) ∙ (z ⁻¹ ∙ t ⁻¹)  ≡⟨  interchange  ⟩
       (x / z) ∙ (y / t)        ∎
 
-  cancels-/ : ∀ {x y z} → (x ∙ y) / (x ∙ z) ≡ y / z
-  cancels-/ {x} {y} {z}
+  elim-∙-left-/ : ∀ {x y z} → (x ∙ y) / (x ∙ z) ≡ y / z
+  elim-∙-left-/ {x} {y} {z}
     = (x ∙ y) / (x ∙ z) ≡⟨ split-/-∙ ⟩
       (x / x) ∙ (y / z) ≡⟨ ∙= (snd inverse) idp ⟩
       ε ∙ (y / z)       ≡⟨ fst identity ⟩
@@ -115,56 +80,117 @@ record Abelian-Group (G : Set) : Set where
     grp-comm   : Abelian-Group-Struct grp-ops
   open Group-Ops    grp-ops    public
   open Abelian-Group-Struct grp-comm public
-  open Group-Struct grp-struct public
   grp : Group G
   grp = record { grp-struct = grp-struct }
 
 -- A renaming of Group with additive notation
 module Additive-Group {G} (grp : Group G) = Group grp
     renaming ( _∙_ to _+_; ε to 0ᵍ; _⁻¹ to 0-_; _/_ to _−_
+             ; _^⁺_ to _⊗⁺_
+             ; _^⁻_ to _⊗⁻_
+             ; _^_ to _⊗_
              ; assoc to +-assoc; identity to +-identity
+             ; assoc= to +-assoc=
+             ; !assoc= to +-!assoc=
+             ; inner= to +-inner=
              ; inverse to 0--inverse
-             ; ∙-/ to +-−; /-∙ to −-+; unique-ε to unique-0ᵍ; unique-⁻¹ to unique-0-
-             ; cancels-∙ to cancels-+
+             ; ∙-/ to +-−; /-∙ to −-+
+             ; unique-ε-left to unique-0ᵍ-left
+             ; unique-ε-right to unique-0ᵍ-right
+             ; is-ε-left to is-0ᵍ-left
+             ; is-ε-right to is-0ᵍ-right
+             ; unique-⁻¹ to unique-0-
+             ; cancels-∙-left to cancels-+-left
+             ; cancels-∙-right to cancels-+-right
+             ; elim-∙-right-/ to elim-+-right-−
+             ; elim-assoc= to elim-+-assoc=
+             ; elim-!assoc= to elim-+-!assoc=
+             ; elim-inner= to elim-+-inner=
              ; ⁻¹-hom′ to 0--hom′
              ; ∙= to +=; /= to −=)
 
 -- A renaming of Group with multiplicative notation
 module Multiplicative-Group {G} (grp : Group G) = Group grp
-    using    ( _⁻¹; unique-⁻¹; _/_; /=; ⁻¹-hom′ )
+    using    ( _⁻¹; unique-⁻¹; _/_; /=; ⁻¹-hom′
+             ; _^⁺_ ; _^⁻_; _^_ )
     renaming ( _∙_ to _*_; ε to 1ᵍ
              ; assoc to *-assoc; identity to *-identity
              ; inverse to ⁻¹-inverse
-             ; ∙-/ to *-/; /-∙ to /-*; unique-ε to unique-1ᵍ
-             ; cancels-∙ to cancels-*
+             ; ∙-/ to *-/; /-∙ to /-*
+             ; unique-ε-left to unique-1ᵍ-left
+             ; unique-ε-right to unique-1ᵍ-right
+             ; is-ε-left to is-1ᵍ-left
+             ; is-ε-right to is-1ᵍ-right
+             ; cancels-∙-left to cancels-*-left
+             ; cancels-∙-right to cancels-*-right
+             ; assoc= to *-assoc=
+             ; !assoc= to *-!assoc=
+             ; inner= to *-inner=
+             ; elim-∙-right-/ to elim-*-right-/
+             ; elim-assoc= to elim-*-assoc=
+             ; elim-!assoc= to elim-*-!assoc=
+             ; elim-inner= to elim-*-inner=
              ; ∙= to *= )
 
 module Additive-Abelian-Group {G} (grp-comm : Abelian-Group G)
   = Abelian-Group grp-comm
     renaming ( _∙_ to _+_; ε to 0ᵍ; _⁻¹ to 0-_; _/_ to _−_
+             ; _^⁺_ to _⊗⁺_
+             ; _^⁻_ to _⊗⁻_
+             ; _^_ to _⊗_
              ; assoc to +-assoc; identity to +-identity
              ; inverse to 0--inverse
-             ; ∙-/ to +-−; /-∙ to −-+; unique-ε to unique-0ᵍ; unique-⁻¹ to unique-0-
+             ; ∙-/ to +-−; /-∙ to −-+
+             ; unique-ε-left to unique-0ᵍ-left
+             ; unique-ε-right to unique-0ᵍ-right
+             ; is-ε-left to is-0ᵍ-left
+             ; is-ε-right to is-0ᵍ-right
              ; ∙= to +=; /= to −=
              ; assoc-comm to +-assoc-comm
              ; interchange to +-interchange
              ; ⁻¹-hom to 0--hom
              ; split-/-∙ to split-−-+
-             ; cancels-/ to cancels-−)
+             ; elim-∙-right-/ to elim-+-right-−
+             ; elim-∙-left-/ to elim-+-left-−
+             ; elim-assoc= to elim-+-assoc=
+             ; elim-!assoc= to elim-+-!assoc=
+             ; elim-inner= to elim-+-inner=
+             )
 
 module Multiplicative-Abelian-Group {G} (grp : Abelian-Group G) = Abelian-Group grp
-    using    ( _⁻¹; unique-⁻¹; _/_; /=; ⁻¹-hom′
+    using    ( _⁻¹; unique-⁻¹
+             ; _/_
+             ; /=
+             ; ⁻¹-hom′
              ; ⁻¹-hom
-             ; cancels-/ )
-    renaming ( _∙_ to _*_; ε to 1ᵍ
-             ; assoc to *-assoc; identity to *-identity
+             ; _^⁺_ ; _^⁻_; _^_
+             )
+    renaming ( _∙_ to _*_
+             ; ε to 1ᵍ
+             ; assoc to *-assoc
+             ; identity to *-identity
              ; inverse to ⁻¹-inverse
-             ; ∙-/ to *-/; /-∙ to /-*; unique-ε to unique-1ᵍ
-             ; cancels-∙ to cancels-*
+             ; ∙-/ to *-/
+             ; /-∙ to /-*
+             ; unique-ε-left to unique-1ᵍ-left
+             ; unique-ε-right to unique-1ᵍ-right
+             ; is-ε-left to is-1ᵍ-left
+             ; is-ε-right to is-1ᵍ-right
+             ; cancels-∙-left to cancels-*-left
              ; ∙= to *=
+             ; assoc= to *-assoc=
+             ; !assoc= to *-!assoc=
+             ; inner= to *-inner=
+             ; outer= to *-outer=
              ; assoc-comm to *-assoc-comm
              ; interchange to *-interchange
-             ; split-/-∙ to split-/-* )
+             ; split-/-∙ to split-/-*
+             ; elim-∙-left-/ to elim-*-left-/
+             ; elim-∙-right-/ to elim-*-right-/
+             ; elim-assoc= to elim-*-assoc=
+             ; elim-!assoc= to elim-*-!assoc=
+             ; elim-inner= to elim-*-inner=
+             )
 
 module _ {A B : Set}(grpA0+ : Group A)(grpB1* : Group B) where
   open Additive-Group grpA0+
@@ -181,7 +207,7 @@ module _ {A B : Set}(grpA0+ : Group A)(grpB1* : Group B) where
 
   module GroupHomomorphismProp {f}(f-homo : GroupHomomorphism f) where
     f-pres-unit : f 0ᵍ ≡ 1ᵍ
-    f-pres-unit = unique-1ᵍ part
+    f-pres-unit = unique-1ᵍ-left part
       where part = f 0ᵍ * f 0ᵍ  ≡⟨ ! f-homo ⟩
                    f (0ᵍ + 0ᵍ)  ≡⟨ ap f (fst +-identity) ⟩
                    f 0ᵍ         ∎
