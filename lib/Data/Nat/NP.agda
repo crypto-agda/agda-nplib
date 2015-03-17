@@ -221,12 +221,10 @@ open FromAssocComm _+_ (λ {x}{y}{z} → ℕ°.+-assoc x y z) (λ {x}{y} → ℕ
            ; interchange to +-interchange
            )
 
-*-assoc-comm : ∀ x y z → x * (y * z) ≡ y * (x * z)
-*-assoc-comm x y z = ! ℕ°.*-assoc x y z ∙ ap (flip _*_ z) (ℕ°.*-comm x y) ∙ ℕ°.*-assoc y x z
-
-*-interchange : Interchange _≡_ _*_ _*_
-*-interchange = InterchangeFromAssocCommCong.∙-interchange _≡_ ≡.isEquivalence
-                                                           _*_ ℕ°.*-assoc ℕ°.*-comm (λ z → ap (flip _*_ z))
+open FromAssocComm _*_ (λ {x}{y}{z} → ℕ°.*-assoc x y z) (λ {x}{y} → ℕ°.*-comm x y)
+  renaming ( assoc-comm to *-assoc-comm
+           ; interchange to *-interchange
+           )
 
 a+b≡a⊔b+a⊓b : ∀ a b → a + b ≡ a ⊔ b + a ⊓ b
 a+b≡a⊔b+a⊓b zero    b       rewrite ℕ°.+-comm b 0 = idp
