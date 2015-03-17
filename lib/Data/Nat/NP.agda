@@ -219,12 +219,26 @@ suc m  == suc n  = m == n
 open FromAssocComm _+_ (λ {x}{y}{z} → ℕ°.+-assoc x y z) (λ {x}{y} → ℕ°.+-comm x y)
   renaming ( assoc-comm to +-assoc-comm
            ; interchange to +-interchange
+           ; !assoc-comm to +-!assoc-comm
+           ; comm= to +-comm=
+           ; assoc= to +-assoc=
+           ; !assoc= to +-!assoc=
+           ; inner= to +-inner=
+           ; outer= to +-outer=
            )
+  public
 
 open FromAssocComm _*_ (λ {x}{y}{z} → ℕ°.*-assoc x y z) (λ {x}{y} → ℕ°.*-comm x y)
   renaming ( assoc-comm to *-assoc-comm
            ; interchange to *-interchange
+           ; !assoc-comm to *-!assoc-comm
+           ; comm= to *-comm=
+           ; inner= to *-inner=
+           ; outer= to *-outer=
+           ; assoc= to *-assoc=
+           ; !assoc= to *-!assoc=
            )
+  public
 
 a+b≡a⊔b+a⊓b : ∀ a b → a + b ≡ a ⊔ b + a ⊓ b
 a+b≡a⊔b+a⊓b zero    b       rewrite ℕ°.+-comm b 0 = idp
