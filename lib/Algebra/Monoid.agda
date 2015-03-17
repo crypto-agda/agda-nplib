@@ -1,7 +1,7 @@
 open import Function.NP
 open import Data.Product.NP
 open import Data.Nat
-  using    (ℕ; fold; zero)
+  using    (ℕ; zero)
   renaming (_+_ to _+ℕ_; _*_ to _*ℕ_; suc to 1+_)
 open import Data.Integer
   using    (ℤ; +_; -[1+_]; _⊖_)
@@ -21,7 +21,7 @@ record Monoid-Ops {ℓ} (M : Set ℓ) : Set ℓ where
     ε   : M
 
   _^⁺_ : M → ℕ → M
-  x ^⁺ n = fold ε (_∙_ x) n
+  x ^⁺ n = nest n (_∙_ x) ε
 
   module FromInverseOp
          (_⁻¹   : Op₁ M)
