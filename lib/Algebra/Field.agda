@@ -89,12 +89,13 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   *1-identity : RightIdentity 1ᶠ _*_
   *1-identity = *-comm ∙ 1*-identity
 
+  open FromOp₂ _+_ renaming ( op= to += )
+  open FromOp₂ _*_ renaming ( op= to *= )
   open FromOp₂ _−_ renaming ( op= to −= )
   open FromOp₂ _/_ renaming ( op= to /= )
 
   open FromAssocComm _+_ +-assoc +-comm
-    renaming ( op=         to +=
-             ; comm=       to +-comm=
+    renaming ( comm=       to +-comm=
              ; assoc=      to +-assoc=
              ; !assoc=     to +-!assoc=
              ; assoc-comm  to +-assoc-comm
@@ -103,8 +104,7 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
              )
 
   open FromAssocComm _*_ *-assoc *-comm
-    renaming ( op=         to *=
-             ; comm=       to *-comm=
+    renaming ( comm=       to *-comm=
              ; assoc=      to *-assoc=
              ; !assoc=     to *-!assoc=
              ; assoc-comm  to *-assoc-comm
