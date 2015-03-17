@@ -89,17 +89,28 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   *1-identity : RightIdentity 1ᶠ _*_
   *1-identity = *-comm ∙ 1*-identity
 
-  += : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x + y ≡ x' + y'
-  += {x} {y' = y'} p q = ap (_+_ x) q ∙ ap (λ z → z + y') p
+  open FromOp₂ _−_ renaming ( op= to −= )
+  open FromOp₂ _/_ renaming ( op= to /= )
 
-  *= : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x * y ≡ x' * y'
-  *= {x} {y' = y'} p q = ap (_*_ x) q ∙ ap (λ z → z * y') p
+  open FromAssocComm _+_ +-assoc +-comm
+    renaming ( op=         to +=
+             ; comm=       to +-comm=
+             ; assoc=      to +-assoc=
+             ; !assoc=     to +-!assoc=
+             ; assoc-comm  to +-assoc-comm
+             ; !assoc-comm to +-!assoc-comm
+             ; interchange to +-interchange
+             )
 
-  −= : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x − y ≡ x' − y'
-  −= {x} {y' = y'} p q = ap (_−_ x) q ∙ ap (λ z → z − y') p
-
-  /= : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x / y ≡ x' / y'
-  /= {x} {y' = y'} p q = ap (_/_ x) q ∙ ap (λ z → z / y') p
+  open FromAssocComm _*_ *-assoc *-comm
+    renaming ( op=         to *=
+             ; comm=       to *-comm=
+             ; assoc=      to *-assoc=
+             ; !assoc=     to *-!assoc=
+             ; assoc-comm  to *-assoc-comm
+             ; !assoc-comm to *-!assoc-comm
+             ; interchange to *-interchange
+             )
 
   0-= : ∀ {x x'} → x ≡ x' → 0- x ≡ 0- x'
   0-= = ap 0-_
@@ -114,9 +125,7 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   0-c+c+x = += 0--inverse refl ∙ 0+-identity
 
   +-left-cancel : LeftCancel _+_
-  +-left-cancel p = ! 0-c+c+x ∙ +-assoc
-                  ∙ ap (λ z → 0- _ + z) p
-                  ∙ ! +-assoc ∙ 0-c+c+x
+  +-left-cancel p = ! 0-c+c+x ∙ +-!assoc= p ∙ 0-c+c+x
 
   +-right-cancel : RightCancel _+_
   +-right-cancel p = +-left-cancel (+-comm ∙ p ∙ +-comm)
@@ -131,12 +140,10 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   c⁻¹*c*x c≢0 = *= (⁻¹-inverse c≢0) refl ∙ 1*-identity
 
   *-left-cancel : LeftCancelNonZero 0ᶠ _*_
-  *-left-cancel c≢0 p = ! c⁻¹*c*x c≢0 ∙ *-assoc
-                      ∙ ap (λ z → _ ⁻¹ * z) p
-                      ∙ ! *-assoc ∙ c⁻¹*c*x c≢0
+  *-left-cancel c≢0 p = ! c⁻¹*c*x c≢0 ∙ *-!assoc= p ∙ c⁻¹*c*x c≢0
 
   *-right-cancel : RightCancelNonZero 0ᶠ _*_
-  *-right-cancel c≢0 p = *-left-cancel c≢0 (*-comm ∙ p ∙ *-comm)
+  *-right-cancel c≢0 p = *-left-cancel c≢0 (*-comm= p)
 
   *0-zero : RightZero 0ᶠ _*_
   *0-zero = +-right-cancel  (+= refl (! *1-identity) ∙ ! *-+-distr
@@ -171,12 +178,6 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   2*-spec : ∀ {n} → 2* n ≡ 2ᶠ * n
   2*-spec = ! += 1*-identity 1*-identity ∙ ! +-*-distr
 
-  +-interchange : Interchange _+_ _+_
-  +-interchange = InterchangeFromAssocComm.·-interchange _+_ +-assoc +-comm
-
-  *-interchange : Interchange _*_ _*_
-  *-interchange = InterchangeFromAssocComm.·-interchange _*_ *-assoc *-comm
-
   *-unique-inverse : ∀ {x y} → x ≢ 0ᶠ → x * y ≡ 1ᶠ → y ≡ x ⁻¹
   *-unique-inverse x/=0 xy=1 = ! 1*-identity ∙ *= (! ⁻¹-inverse x/=0) refl ∙ *-assoc ∙ *= refl xy=1 ∙ *1-identity
 
@@ -190,9 +191,10 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   +-quotient : ∀ {a b a' b'} → b ≢ 0ᶠ → b' ≢ 0ᶠ
     →(a / b) + (a' / b') ≡ (a * b' + a' * b) / (b * b')
   +-quotient b b'
-    = += (/= (! *1-identity ∙ *= refl (! ⁻¹-inverse b')) refl) (/= (! *1-identity ∙ *= refl (! ⁻¹-inverse b)) refl)
-    ∙ (+= (/= (*= refl *-comm) refl) (/= (*= refl *-comm) refl)
-    ∙ += (*= (! *-assoc) refl ∙ *-assoc ∙ *= refl (! ⁻¹*-distr b' b ∙ ap _⁻¹ *-comm)) (*-assoc ∙ *= refl *-assoc ∙ ! *-assoc ∙ *= refl (! ⁻¹*-distr b b') ))
+    = += (*= (! *1-identity ∙ *= refl (! ⁻¹-inverse b') ∙ *= refl *-comm ∙ ! *-assoc) refl ∙
+          *-assoc ∙ *= refl (! ⁻¹*-distr b' b ∙ ap _⁻¹ *-comm))
+         (*= (! *1-identity ∙ *= refl (! ⁻¹-inverse b ) ∙ *= refl *-comm) refl ∙
+          *-!assoc= *-assoc ∙ *= refl (! ⁻¹*-distr b b'))
     ∙ ! +-/-distr
 
   −-quotient : ∀ {a b a' b'} → b ≢ 0ᶠ → b' ≢ 0ᶠ
@@ -201,7 +203,7 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
 
   *-quotient : ∀ {a b a' b'} → b ≢ 0ᶠ → b' ≢ 0ᶠ
     → (a / b) * (a' / b') ≡ (a * a') / (b * b')
-  *-quotient b/=0 b'/=0 = *-assoc ∙ *= refl (! *-assoc ∙ *= *-comm refl ∙ *-assoc) ∙ ! *-assoc ∙ *= refl (! ⁻¹*-distr b/=0 b'/=0)
+  *-quotient b/=0 b'/=0 = *-interchange ∙ *= refl (! ⁻¹*-distr b/=0 b'/=0)
 
   /-quotient : ∀ {a b a' b'} → a' ≢ 0ᶠ → b ≢ 0ᶠ → b' ≢ 0ᶠ
      → (a / b) / (a' / b') ≡ (a * b') / (b * a')

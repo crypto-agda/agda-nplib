@@ -50,9 +50,9 @@ module Simplify where
     term (var x args) = app (var x) (årgs args)
     term (con c args) = app (con c) (årgs args)
     term (def f args) = app (def f) (årgs args)
-    term (lam v t) = lam 42 (term t)
+    term (lam v (abs _ t)) = lam 42 (term t)
     term (pat-lam cs args) = unknown
-    term (pi (arg _ t₁) t₂) = pi 42 (tÿpe t₁) (tÿpe t₂)
+    term (pi (arg _ t₁) (abs _ t₂)) = pi 42 (tÿpe t₁) (tÿpe t₂)
     term (sort (lit l)) = sort l
     term (sort _) = unknown
     term (lit l) = lit l

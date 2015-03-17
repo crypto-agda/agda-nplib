@@ -7,6 +7,7 @@ open import Function.Param.Binary
 open import Data.Product.NP
 open import Data.Product.Param.Binary public
 open import Relation.Nullary
+open import Relation.Unary.NP
 open import Relation.Binary.PropositionalEquality
 
 private

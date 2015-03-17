@@ -11,6 +11,7 @@ open import Data.Zero using (𝟘 ; 𝟘-elim)
 open import Data.One using (𝟙)
 open import Data.Two
 open import Data.Fin.NP as Fin using (Fin; suc; zero; [zero:_,suc:_])
+open import Data.Vec as Vec using (Vec; []; _∷_)
 open import Data.Nat.NP as ℕ using (ℕ ; suc ; zero; _+_)
 open import Data.Product.NP renaming (map to map×)
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_]; map to map⊎)
@@ -41,23 +42,45 @@ coe×= idp idp = idp
 
 
 module _ {a}{A₀ A₁ : ★_ a}{b}{B₀ B₁ : ★_ b}(A≃ : A₀ ≃ A₁)(B≃ : B₀ ≃ B₁) where
-{-
+    private
+      module A≃ = Equiv A≃
+      A→ = A≃.·→
+      A← = A≃.·←
+      module B≃ = Equiv B≃
+      B→ = B≃.·→
+      B← = B≃.·←
+
+    {-
     ×≃ : (A₀ × B₀) ≃ (A₁ × B₁)
-    ×≃ = equiv (map× (–> A≃) (–> B≃)) (map× (<– A≃) (<– B≃))
-               (λ y → pair= (<–-inv-r A≃ (fst y)) ({!!} ∙ <–-inv-r B≃ (snd y)))
-               {!!}
-               -}
+    ×≃ = equiv (map× A→ B→) (map× A← B←)
+               (λ { (x , y) → pair= (A≃.·←-inv-r x) ({!coe-β!} ∙ B≃.·←-inv-r y) })
+               (λ { (x , y) → pair= (A≃.·←-inv-l x) {!!} })
+    -}
 
     ⊎≃ : (A₀ ⊎ B₀) ≃ (A₁ ⊎ B₁)
-    ⊎≃ = equiv (map⊎ (–> A≃) (–> B≃)) (map⊎ (<– A≃) (<– B≃))
-               [inl: (λ x → ap inl (<–-inv-r A≃ x)) ,inr: ap inr ∘ <–-inv-r B≃ ]
-               [inl: (λ x → ap inl (<–-inv-l A≃ x)) ,inr: ap inr ∘ <–-inv-l B≃ ]
+    ⊎≃ = equiv (map⊎ A→ B→) (map⊎ A← B←)
+               [inl: (λ x → ap inl (A≃.·←-inv-r x)) ,inr: ap inr ∘ B≃.·←-inv-r ]
+               [inl: (λ x → ap inl (A≃.·←-inv-l x)) ,inr: ap inr ∘ B≃.·←-inv-l ]
 
     →≃ : {{_ : FunExt}} → (A₀ → B₀) ≃ (A₁ → B₁)
-    →≃ = equiv (λ f → –> B≃ ∘ f ∘ <– A≃)
-               (λ f → <– B≃ ∘ f ∘ –> A≃)
-               (λ f → λ= (λ x → <–-inv-r B≃ _ ∙ ap f (<–-inv-r A≃ x)))
-               (λ f → λ= (λ x → <–-inv-l B≃ _ ∙ ap f (<–-inv-l A≃ x)))
+    →≃ = equiv (λ f → B→ ∘ f ∘ A←)
+               (λ f → B← ∘ f ∘ A→)
+               (λ f → λ= (λ x → B≃.·←-inv-r _ ∙ ap f (A≃.·←-inv-r x))) 
+               (λ f → λ= (λ x → B≃.·←-inv-l _ ∙ ap f (A≃.·←-inv-l x)))
+
+module _ {a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≃ B₁ x) where
+  private
+      module B≃ {x} = Equiv (B x)
+      B→ = B≃.·→
+      B← = B≃.·←
+  Σ≃-second : (Σ A B₀) ≃ (Σ A B₁)
+  Σ≃-second = equiv (second B→) (second B←)
+                    (λ { (x , y) → ap (_,_ x) (B≃.·←-inv-r y) })
+                    (λ { (x , y) → ap (_,_ x) (B≃.·←-inv-l y) })
+
+module _ {a}(A : ★_ a){b}{B₀ B₁ : ★_ b}(B : B₀ ≃ B₁) where
+  ×≃-second : (A × B₀) ≃ (A × B₁)
+  ×≃-second = Σ≃-second A (λ _ → B)
 
 module _ {{_ : FunExt}}{a}(A : ★_ a){b}{B₀ B₁ : A → ★_ b}(B : (x : A) → B₀ x ≡ B₁ x) where
     Σ=′ : Σ A B₀ ≡ Σ A B₁
@@ -504,16 +527,39 @@ module _ {a}{A : ★_ a} where
      [inl: (λ x → idp) ,inr: (λ x → idp) ]
      (maybe (λ x → idp) idp)
 
+  Maybe≃Lift𝟙⊎ : Maybe A ≃ (Lift {ℓ = a} 𝟙 ⊎ A)
+  Maybe≃Lift𝟙⊎ = equiv (maybe inr (inl _))
+                        [inl: const nothing ,inr: just ]
+                        [inl: (λ _ → idp)   ,inr: (λ _ → idp) ]
+                        (maybe (λ _ → idp) idp)
+
+  Vec0≃𝟙 : Vec A 0 ≃ 𝟙
+  Vec0≃𝟙 = equiv _ (const []) (λ _ → idp) (λ { [] → idp })
+
+  Vec0≃Lift𝟙 : Vec A 0 ≃ Lift {ℓ = a} 𝟙
+  Vec0≃Lift𝟙 = equiv _ (const []) (λ _ → idp) (λ { [] → idp })
+
+  Vec∘suc≃× : ∀ {n} → Vec A (suc n) ≃ (A × Vec A n)
+  Vec∘suc≃× = equiv (λ { (x ∷ xs) → x , xs }) (λ { (x , xs) → x ∷ xs })
+                    (λ { (x , xs) → idp }) (λ { (x ∷ xs) → idp })
+
   module _ {{_ : UA}} where
 
     Maybe≡𝟙⊎ : Maybe A ≡ (𝟙 ⊎ A)
     Maybe≡𝟙⊎ = ua Maybe≃𝟙⊎
 
     Maybe≡Lift𝟙⊎ : Maybe A ≡ (Lift {ℓ = a} 𝟙 ⊎ A)
-    Maybe≡Lift𝟙⊎ = ua (equiv (maybe inr (inl _))
-                      [inl: const nothing ,inr: just ]
-                      [inl: (λ _ → idp)   ,inr: (λ _ → idp) ]
-                      (maybe (λ _ → idp) idp))
+    Maybe≡Lift𝟙⊎ = ua Maybe≃Lift𝟙⊎
+
+    Vec0≡Lift𝟙 : Vec A 0 ≡ Lift {ℓ = a} 𝟙
+    Vec0≡Lift𝟙 = ua Vec0≃Lift𝟙
+
+    Vec∘suc≡× : ∀ {n} → Vec A (suc n) ≡ (A × Vec A n)
+    Vec∘suc≡× = ua Vec∘suc≃×
+
+module _ {A : ★}{{_ : UA}} where
+    Vec0≡𝟙 : Vec A 0 ≡ 𝟙
+    Vec0≡𝟙 = ua Vec0≃𝟙
 
 Fin0≃𝟘 : Fin 0 ≃ 𝟘
 Fin0≃𝟘 = equiv (λ ()) (λ ()) (λ ()) (λ ())

@@ -115,52 +115,74 @@ LeftCancelNonZero zero _·_ = ∀ {c x y} → c ≢ zero → c · x ≡ c · y �
 RightCancelNonZero : A → Op₂ A → Set _
 RightCancelNonZero zero _·_ = ∀ {c x y} → c ≢ zero → x · c ≡ y · c → x ≡ y
 
-module InterchangeFromAssocComm
-         (_·_     : Op₂ A)
-         (·-assoc : Associative _·_)
-         (·-comm  : Commutative _·_)
-         where
+module FromOp₂
+         (_·_ : Op₂ A){x x' y y'}(p : x ≡ x')(q : y ≡ y')
+       where
+  op= : x · y ≡ x' · y'
+  op= = ap (_·_ x) q ∙ ap (λ z → z · y') p
 
-    open ≡-Reasoning
+module FromComm
+         (_·_   : Op₂ A)
+         (comm  : Commutative _·_)
+         {x y x' y' : A}
+         (e : (y · x) ≡ (y' · x'))
+       where
+  open FromOp₂ _·_
 
-    ·= : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → (x · y) ≡ (x' · y')
-    ·= refl refl = refl
+  comm= : x · y ≡ x' · y'
+  comm= = comm ∙ e ∙ comm
 
-    ·-interchange : Interchange _·_ _·_
-    ·-interchange {x} {y} {z} {t}
-                = (x · y) · (z · t)
-                ≡⟨ ·-assoc ⟩
-                  x · (y · (z · t))
-                ≡⟨ ·= refl (! ·-assoc) ⟩
-                  x · ((y · z) · t)
-                ≡⟨ ·= refl (·= ·-comm refl) ⟩
-                  x · ((z · y) · t)
-                ≡⟨ ·= refl ·-assoc ⟩
-                  x · (z · (y · t))
-                ≡⟨ ! ·-assoc ⟩
-                  (x · z) · (y · t)
-                ∎
+module FromAssoc
+         (_·_   : Op₂ A)
+         (assoc : Associative _·_)
+         {c x y x' y' : A}
+         (e : (x · y) ≡ (x' · y'))
+       where
+  open FromOp₂ _·_
+
+  assoc= : x · (y · c) ≡ x' · (y' · c)
+  assoc= = ! assoc ∙ op= e idp ∙ assoc
+
+  !assoc= : (c · x) · y ≡ (c · x') · y'
+  !assoc= = assoc ∙ op= idp e ∙ ! assoc
+
+module FromAssocComm
+         (_·_   : Op₂ A)
+         (assoc : Associative _·_)
+         (comm  : Commutative _·_)
+       where
+  open FromOp₂   _·_       public
+  open FromAssoc _·_ assoc public
+  open FromComm  _·_ comm  public
+
+  assoc-comm : ∀ {x y z} → x · (y · z) ≡ y · (x · z)
+  assoc-comm = assoc= comm
+
+  !assoc-comm : ∀ {x y z} → (x · y) · z ≡ (x · z) · y
+  !assoc-comm = !assoc= comm
+
+  interchange : Interchange _·_ _·_
+  interchange = assoc= (!assoc= comm)
 
 module _ {b} {B : Set b} (f : A → B) where
+  Injective : Set (b ⊔ a)
+  Injective = ∀ {x y} → f x ≡ f y → x ≡ y
 
-    Injective : Set (b ⊔ a)
-    Injective = ∀ {x y} → f x ≡ f y → x ≡ y
-
-    Conflict : Set (b ⊔ a)
-    Conflict = ∃ λ x → ∃ λ y → (x ≢ y) × f x ≡ f y
+  Conflict : Set (b ⊔ a)
+  Conflict = ∃ λ x → ∃ λ y → (x ≢ y) × f x ≡ f y
 
 module _ {b} {B : Set b} {f : A → B} where
-    Injective-¬Conflict : Injective f → ¬ (Conflict f)
-    Injective-¬Conflict inj (x , y , x≢y , fx≡fy) = x≢y (inj fx≡fy)
+  Injective-¬Conflict : Injective f → ¬ (Conflict f)
+  Injective-¬Conflict inj (x , y , x≢y , fx≡fy) = x≢y (inj fx≡fy)
 
-    Conflict-¬Injective : Conflict f → ¬ (Injective f)
-    Conflict-¬Injective = flip Injective-¬Conflict
+  Conflict-¬Injective : Conflict f → ¬ (Injective f)
+  Conflict-¬Injective = flip Injective-¬Conflict
 
 module Endo {f : A → A} where
-    Cycle^ : ℕ → Set _
-    Cycle^ n = ∃ λ x → f $⟨ n ⟩ x ≡ x
+  Cycle^ : ℕ → Set _
+  Cycle^ n = ∃ λ x → f $⟨ n ⟩ x ≡ x
 
-    Cycle = ∃ Cycle^
+  Cycle = ∃ Cycle^
 -- -}
 -- -}
 -- -}
