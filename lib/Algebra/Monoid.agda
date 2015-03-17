@@ -1,8 +1,8 @@
 open import Function.NP
 open import Data.Product.NP
-open import Data.Nat.NP
-  using    (ℕ; fold; zero; suc; 1+_)
-  renaming (_+_ to _+ℕ_; _*_ to _*ℕ_)
+open import Data.Nat
+  using    (ℕ; fold; zero)
+  renaming (_+_ to _+ℕ_; _*_ to _*ℕ_; suc to 1+_)
 open import Data.Integer
   using    (ℤ; +_; -[1+_]; _⊖_)
   renaming (_+_ to _+ℤ_; _*_ to _*ℤ_)
@@ -188,6 +188,12 @@ record Monoid-Struct {ℓ} {M : Set ℓ} (mon-ops : Monoid-Ops M) : Set ℓ wher
         x ∙ ((y ∙ y ⁻¹) ∙ x ⁻¹) ≡⟨ ap (_∙_ x) assoc ⟩
         x ∙ (y ∙ (y ⁻¹ ∙ x ⁻¹)) ≡⟨ ! assoc ⟩
         (x ∙ y) ∙ (y ⁻¹ ∙ x ⁻¹) ∎)
+
+    elim-∙-left-⁻¹∙ : ∀ {c x y} → (c ∙ x)⁻¹ ∙ (c ∙ y) ≡ x ⁻¹ ∙ y
+    elim-∙-left-⁻¹∙ {c} {x} {y}
+      = (c ∙ x)⁻¹   ∙ (c ∙ y)  ≡⟨ ∙= ⁻¹-hom′ idp ⟩
+        x ⁻¹ ∙ c ⁻¹ ∙ (c ∙ y)  ≡⟨ elim-inner= inv-l ⟩
+        x ⁻¹ ∙ y               ∎
 
     elim-∙-right-/ : ∀ {c x y} → (x ∙ c) / (y ∙ c) ≡ x / y
     elim-∙-right-/ {c} {x} {y}
