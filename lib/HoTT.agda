@@ -14,6 +14,7 @@ open import Relation.Binary using (Reflexive; Symmetric; Transitive)
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡ using (_≡_; ap; coe; coe!; !_; _∙_; J; ap↓; PathOver; tr; ap₂)
        renaming (refl to idp; _≗_ to _∼_; J-orig to J')
+open ≡.≡-Reasoning
 
 import Function.Inverse.NP as Inv
 open Inv using (_↔_; inverses; module Inverse) renaming (_$₁_ to to; _$₂_ to from)
@@ -28,55 +29,84 @@ module _ {a} {A : ★_ a} where
   ∙-refl : ∀ {x y : A} (p : x ≡ y) → p ∙ idp_ y ≡ p
   ∙-refl = J' (λ (x y : A) (p : x ≡ y) → (p ∙ idp_ y) ≡ p) (λ x → idp)
 
+  -- could be derived in any groupoid
   hom-!-∙ : ∀ {x y z : A} (p : x ≡ y)(q : y ≡ z) → !(p ∙ q) ≡ ! q ∙ ! p
   hom-!-∙ p q = J' (λ x y p → ∀ z → (q : y ≡ z) → !(p ∙ q) ≡ ! q ∙ ! p) (λ x z q → ! ∙-refl (! q)) p _ q
 
-  !-inv : ∀ {x y : A} (p : x ≡ y) → ! (! p) ≡ p
-  !-inv = J' (λ x y p → ! (! p) ≡ p) (λ x → idp)
+  module _ {x y : A} where
 
-  !-∙ : ∀ {x y : A} (p : x ≡ y) → ! p ∙ p ≡ idp_ y
-  !-∙ = J' (λ x y p → (! p ∙ p) ≡ idp_ y) (λ x → idp)
+    ∙-assoc : (p : x ≡ y) {z : A} (q : y ≡ z) {t : A} (r : z ≡ t) → p ∙ q ∙ r ≡ (p ∙ q) ∙ r
+    ∙-assoc = J' (λ x y p → ∀ {z} (q : y ≡ z) {t} (r : z ≡ t) → p ∙ (q ∙ r) ≡ (p ∙ q) ∙ r)
+                 (λ x q r → idp)
 
-  ∙-! : ∀ {x y : A} (p : x ≡ y) → p ∙ ! p ≡ idp_ x
-  ∙-! = J' (λ x y p → (p ∙ ! p) ≡ idp_ x) (λ x → idp)
+    module _ (p : x ≡ y) where
+      -- ! is a left-inverse for _∙_
+      !-∙ : ! p ∙ p ≡ idp_ y
+      !-∙ = J' (λ x y p → (! p ∙ p) ≡ idp_ y) (λ x → idp) p
 
-  !p∙p = !-∙
-  p∙!p = ∙-!
+      -- ! is a right-inverse for _∙_
+      ∙-! : p ∙ ! p ≡ idp_ x
+      ∙-! = J' (λ x y p → (p ∙ ! p) ≡ idp_ x) (λ x → idp) p
 
-  ∙-assoc : ∀ {x y : A} (p : x ≡ y) {z : A} (q : y ≡ z) {t : A} (r : z ≡ t) → p ∙ q ∙ r ≡ (p ∙ q) ∙ r
-  ∙-assoc = J' (λ x y p → ∀ {z} (q : y ≡ z) {t} (r : z ≡ t) → p ∙ (q ∙ r) ≡ (p ∙ q) ∙ r)
-               (λ x q r → idp)
+      -- ! is involutive
+      !-involutive : ! (! p) ≡ p
+      !-involutive = J' (λ x y p → ! (! p) ≡ p) (λ x → idp) p
 
-  ==-refl-∙ :  {x y : A} (p : x ≡ y) {q : x ≡ x} → q ≡ idp_ x → q ∙ p ≡ p
-  ==-refl-∙ p = ap (flip _∙_ p)
+      !p∙p = !-∙
+      p∙!p = ∙-!
 
-  ∙-==-refl :  {x y : A} (p : x ≡ y) {q : y ≡ y} → q ≡ idp_ y → p ∙ q ≡ p
-  ∙-==-refl p qr = ap (_∙_ p) qr ∙ ∙-refl p
+      ==-refl-∙ : {q : x ≡ x} → q ≡ idp_ x → q ∙ p ≡ p
+      ==-refl-∙ = ap (flip _∙_ p)
 
-  ∙-∙-==-refl :  {x y z : A} (p : x ≡ y) (q : y ≡ z) {r : z ≡ z} → r ≡ idp_ z → p ∙ q ∙ r ≡ p ∙ q
-  ∙-∙-==-refl p q rr = ∙-assoc p q _ ∙ ∙-==-refl (p ∙ q) rr
+      ∙-==-refl : {q : y ≡ y} → q ≡ idp_ y → p ∙ q ≡ p
+      ∙-==-refl qr = ap (_∙_ p) qr ∙ ∙-refl p
 
-  !p∙p∙q : {x y z : A} (p : x ≡ y) (q : y ≡ z) → ! p ∙ p ∙ q ≡ q
-  !p∙p∙q p q = ∙-assoc (! p) p q ∙ ==-refl-∙ q (!-∙ p)
+  module _ {x y : A} where
+    module _ (p : x ≡ x)(q : x ≡ y)(e : p ∙ q ≡ q) where
+      unique-idp-left : p ≡ idp
+      unique-idp-left
+        = p              ≡⟨ ! ∙-refl p ⟩
+          p ∙ idp        ≡⟨ ap (_∙_ p) (! ∙-! q) ⟩
+          p ∙ (q ∙ ! q)  ≡⟨ ∙-assoc p q (! q) ⟩
+          (p ∙ q) ∙ ! q  ≡⟨ ap (flip _∙_ (! q)) e ⟩
+          q ∙ ! q        ≡⟨ ∙-! q ⟩
+          idp            ∎
 
-  p∙!p∙q : {x y z : A} (p : y ≡ x) (q : y ≡ z) → p ∙ ! p ∙ q ≡ q
-  p∙!p∙q p q = ∙-assoc p _ q ∙ ==-refl-∙ q (∙-! p)
+  module _ {x y z : A}{p₀ p₁ : x ≡ y}{q₀ q₁ : y ≡ z}(p : p₀ ≡ p₁)(q : q₀ ≡ q₁) where
+      ∙= : p₀ ∙ q₀ ≡ p₁ ∙ q₁
+      ∙= = ap (flip _∙_ q₀) p ∙ ap (_∙_ p₁) q
 
-  p∙!q∙q : {x y z : A} (p : x ≡ y) (q : z ≡ y) → p ∙ ! q ∙ q ≡ p
-  p∙!q∙q p q = ∙-==-refl p (!-∙ q)
+  module _ {x y z : A} where
+    module _ (p : x ≡ y)(q : y ≡ z) where
+      ∙-∙-==-refl : {r : z ≡ z} → r ≡ idp_ z → p ∙ q ∙ r ≡ p ∙ q
+      ∙-∙-==-refl rr = ∙-assoc p q _ ∙ ∙-==-refl (p ∙ q) rr
 
-  p∙q∙!q : {x y z : A} (p : x ≡ y) (q : y ≡ z) → p ∙ q ∙ ! q ≡ p
-  p∙q∙!q p q = ∙-==-refl p (∙-! q)
+      !p∙p∙q : ! p ∙ p ∙ q ≡ q
+      !p∙p∙q = ∙-assoc (! p) p q ∙ ==-refl-∙ q (!-∙ p)
 
-  ∙-cancel : {x y z : A}{p q : x ≡ y}(r : y ≡ z) → p ∙ r ≡ q ∙ r → p ≡ q
-  ∙-cancel {p = p} {q} idp p∙id=q∙id = ! ∙-refl p ∙ p∙id=q∙id ∙ ∙-refl q
+    p∙!p∙q : (p : y ≡ x) (q : y ≡ z) → p ∙ ! p ∙ q ≡ q
+    p∙!p∙q p q = ∙-assoc p _ q ∙ ==-refl-∙ q (∙-! p)
+
+    p∙!q∙q : (p : x ≡ y) (q : z ≡ y) → p ∙ ! q ∙ q ≡ p
+    p∙!q∙q p q = ∙-==-refl p (!-∙ q)
+
+    p∙q∙!q : (p : x ≡ y) (q : y ≡ z) → p ∙ q ∙ ! q ≡ p
+    p∙q∙!q p q = ∙-==-refl p (∙-! q)
+
+    ∙-cancel : {p q : x ≡ y}(r : y ≡ z) → p ∙ r ≡ q ∙ r → p ≡ q
+    ∙-cancel {p = p} {q} r e
+      = p               ≡⟨ ! p∙q∙!q p r ⟩
+         p ∙ r  ∙ ! r   ≡⟨ ∙-assoc p r (! r) ⟩
+        (p ∙ r) ∙ ! r   ≡⟨ ∙= e idp ⟩
+        (q ∙ r) ∙ ! r   ≡⟨ ! ∙-assoc q r (! r) ⟩
+        q ∙ (r  ∙ ! r)  ≡⟨ p∙q∙!q q r ⟩
+        q               ∎
 
 !-ap : ∀ {a b}{A : Set a}{B : Set b}(f : A → B){x y}(p : x ≡ y)
-  → ! (ap f p) ≡ ap f (! p)
+       → ! (ap f p) ≡ ap f (! p)
 !-ap f idp = idp
 
-ap-id : ∀ {a}{A : Set a}{x y : A}(p : x ≡ y)
-  → ap id p ≡ p
+ap-id : ∀ {a}{A : Set a}{x y : A}(p : x ≡ y) → ap id p ≡ p
 ap-id idp = idp
 
 module _ {a b}{A : Set a}{B : Set b}{f g : A → B}(H : ∀ x → f x ≡ g x) where
@@ -113,6 +143,7 @@ module _ {a}(A : ★_ a) where
 module _ {a}{b}{A : ★_ a}{B : A → ★_ b} where
     pair= : ∀ {x y : Σ A B} → (p : fst x ≡ fst y) → tr B p (snd x) ≡ snd y → x ≡ y
     pair= idp = ap (_,_ _)
+
     snd= : ∀ {x : A} {y y' : B x} → y ≡ y' → _≡_ {A = Σ A B} (x , y) (x , y')
     snd= = pair= idp
 
