@@ -409,7 +409,7 @@ module _ {a}{A : ★_ a} where
 
   Σx≡≃𝟙 : ∀ x → (Σ A (flip _≡_ x)) ≃ 𝟙
   Σx≡≃𝟙 x = equiv (λ _ → _) (λ _ → x , idp) (λ _ → idp) (λ p →  pair= (! snd p)  ( tr-l≡ (! snd p) idp ∙
-    ∙-refl (! (! (snd p))) ∙ !-inv (snd p)))
+    ∙-refl (! (! (snd p))) ∙ !-involutive (snd p)))
 
 module _ {ab c}{A B : ★_ ab}{C : A → B → ★_ c}{{_ : UA}}{{_ : FunExt}} where
 
