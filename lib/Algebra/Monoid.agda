@@ -3,9 +3,12 @@ open import Data.Product.NP
 open import Data.Nat
   using    (ℕ; zero)
   renaming (_+_ to _+ℕ_; _*_ to _*ℕ_; suc to 1+_)
+import Data.Nat.Properties.Simple as ℕ°
 open import Data.Integer
-  using    (ℤ; +_; -[1+_]; _⊖_)
-  renaming (_+_ to _+ℤ_; _*_ to _*ℤ_)
+  using    (ℤ; +_; -[1+_]; _⊖_; -_)
+  renaming ( _+_ to _+ℤ_; _-_ to _−ℤ_; _*_ to _*ℤ_
+           ; suc to sucℤ; pred to predℤ
+           )
 open import Relation.Binary.PropositionalEquality.NP renaming (_∙_ to _♦_)
 open import Algebra.FunctionProperties.Eq
 open ≡-Reasoning
@@ -172,8 +175,8 @@ record Monoid-Struct {ℓ} {M : Set ℓ} (mon-ops : Monoid-Ops M) : Set ℓ wher
     ε⁻¹-ε : ε ⁻¹ ≡ ε
     ε⁻¹-ε = unique-ε-left inv-l
 
-    involutive : Involutive _⁻¹
-    involutive {x}
+    ⁻¹-involutive : Involutive _⁻¹
+    ⁻¹-involutive {x}
       = cancels-∙-right
         (x ⁻¹ ⁻¹ ∙ x ⁻¹ ≡⟨ inv-l ⟩
          ε              ≡⟨ ! inv-r ⟩
@@ -189,6 +192,9 @@ record Monoid-Struct {ℓ} {M : Set ℓ} (mon-ops : Monoid-Ops M) : Set ℓ wher
         x ∙ (y ∙ (y ⁻¹ ∙ x ⁻¹)) ≡⟨ ! assoc ⟩
         (x ∙ y) ∙ (y ⁻¹ ∙ x ⁻¹) ∎)
 
+    ⁻¹-hom′= : ∀ {x y z t} → x ∙ y ≡ z ∙ t → y ⁻¹ ∙ x ⁻¹ ≡ t ⁻¹ ∙ z ⁻¹
+    ⁻¹-hom′= e = ! ⁻¹-hom′ ♦ ap _⁻¹ e ♦ ⁻¹-hom′
+
     elim-∙-left-⁻¹∙ : ∀ {c x y} → (c ∙ x)⁻¹ ∙ (c ∙ y) ≡ x ⁻¹ ∙ y
     elim-∙-left-⁻¹∙ {c} {x} {y}
       = (c ∙ x)⁻¹   ∙ (c ∙ y)  ≡⟨ ∙= ⁻¹-hom′ idp ⟩
@@ -202,21 +208,57 @@ record Monoid-Struct {ℓ} {M : Set ℓ} (mon-ops : Monoid-Ops M) : Set ℓ wher
         x / y ∎ 
 
     module _ {b} where
-      ^⁺suc : ∀ n → b ^⁺(1+ n) ≡ b ^⁺ n ∙ b
-      ^⁺suc 0 = comm-ε
-      ^⁺suc (1+ n) = ap (_∙_ b) (^⁺suc n) ♦ ! assoc
+      ^⁺-1+ : ∀ n → b ^⁺(1+ n) ≡ b ^⁺ n ∙ b
+      ^⁺-1+ 0 = comm-ε
+      ^⁺-1+ (1+ n) = ap (_∙_ b) (^⁺-1+ n) ♦ ! assoc
 
-      ^⁺-comm : ∀ n → b ∙ b ^⁺ n ≡ b ^⁺ n ∙ b
-      ^⁺-comm = ^⁺suc
+      ^-⊖ : ∀ m n → b ^(m ⊖ n) ≡ b ^⁺ m ∙ b ^⁻ n
+      ^-⊖ m      0      = ! is-ε-right ε⁻¹-ε
+      ^-⊖ 0      (1+ n) = ! fst identity
+      ^-⊖ (1+ m) (1+ n) =
+         b ^(m ⊖ n)                      ≡⟨ ^-⊖ m n ⟩
+         (b ^⁺ m ∙ b ^⁻ n)               ≡⟨ ! elim-inner= inv-r ⟩
+         (b ^⁺ m ∙ b) ∙ (b ⁻¹ ∙ b ^⁻ n)  ≡⟨ ∙= idp (! ⁻¹-hom′) ⟩
+         (b ^⁺ m ∙ b) ∙ (b ^⁺ n ∙ b)⁻¹   ≡⟨ ∙= (! ^⁺-1+ m) (ap _⁻¹ (! ^⁺-1+ n)) ⟩
+         (b ∙ b ^⁺ m) ∙ (b ∙ b ^⁺ n)⁻¹   ∎
 
-      ^⁻suc : ∀ n → b ^⁻(1+ n) ≡ b ⁻¹ ∙ b ^⁻ n
-      ^⁻suc n = ap _⁻¹ (^⁺suc n) ♦ ⁻¹-hom′
+      ^-⊖' : ∀ m n → b ^(m ⊖ n) ≡ b ^⁻ n ∙ b ^⁺ m
+      ^-⊖' m      0      = ! is-ε-left ε⁻¹-ε
+      ^-⊖' 0      (1+ n) = ! snd identity
+      ^-⊖' (1+ m) (1+ n) =
+         b ^(m ⊖ n)                      ≡⟨ ^-⊖' m n ⟩
+         (b ^⁻ n ∙ b ^⁺ m)               ≡⟨ ! elim-inner= inv-l ⟩
+         (b ^⁻ n ∙ b ⁻¹) ∙ (b ∙ b ^⁺ m)  ≡⟨ ∙= (! ⁻¹-hom′) idp ⟩
+         (b ∙ b ^⁺ n)⁻¹ ∙ (b ∙ b ^⁺ m)   ∎
+
+      ^⁺-comm : ∀ m n → b ^⁺ m ∙ b ^⁺ n ≡ b ^⁺ n ∙ b ^⁺ m
+      ^⁺-comm 0      n = ! comm-ε
+      ^⁺-comm (1+ m) n =
+        b ∙ bᵐ ∙ bⁿ   ≡⟨ !assoc= (^⁺-comm m n) ⟩
+        b ∙ bⁿ ∙ bᵐ   ≡⟨ ∙= (^⁺-1+ n) idp ⟩
+        bⁿ ∙ b ∙ bᵐ   ≡⟨ assoc ⟩
+        bⁿ ∙ (b ∙ bᵐ) ∎
+        where
+          bⁿ = b ^⁺ n
+          bᵐ = b ^⁺ m
+
+      ^⁺-^⁻-comm : ∀ m n → b ^⁺ m ∙ b ^⁻ n ≡ b ^⁻ n ∙ b ^⁺ m
+      ^⁺-^⁻-comm m n = ! ^-⊖ m n ♦ ^-⊖' m n
+
+      ^⁻-^⁺-comm : ∀ m n → b ^⁻ n ∙ b ^⁺ m ≡ b ^⁺ m ∙ b ^⁻ n
+      ^⁻-^⁺-comm m n = ! ^-⊖' m n ♦ ^-⊖ m n
+
+      ^⁻-comm : ∀ m n → b ^⁻ m ∙ b ^⁻ n ≡ b ^⁻ n ∙ b ^⁻ m
+      ^⁻-comm m n = ⁻¹-hom′= (^⁺-comm n m)
+
+      ^⁻-1+ : ∀ n → b ^⁻(1+ n) ≡ b ⁻¹ ∙ b ^⁻ n
+      ^⁻-1+ n = ap _⁻¹ (^⁺-1+ n) ♦ ⁻¹-hom′
 
       ^⁻′-spec : ∀ n → b ^⁻′ n ≡ b ^⁻ n
       ^⁻′-spec 0 = ! ε⁻¹-ε
       ^⁻′-spec (1+ n) = ap (_∙_ (b ⁻¹)) (^⁻′-spec n)
                       ♦ ! ⁻¹-hom′
-                      ♦ ap _⁻¹ (! ^⁺suc n)
+                      ♦ ap _⁻¹ (! ^⁺-1+ n)
 
       ^⁻′1-id : b ^⁻′ 1 ≡ b ⁻¹
       ^⁻′1-id = snd identity
@@ -229,6 +271,34 @@ record Monoid-Struct {ℓ} {M : Set ℓ} (mon-ops : Monoid-Ops M) : Set ℓ wher
 
       ^⁻2-∙ : b ^⁻ 2 ≡ b ⁻¹ ∙ b ⁻¹
       ^⁻2-∙ = ! ^⁻′-spec 2 ♦ ^⁻′2-∙
+
+      ^-+ : ∀ i j → b ^(i +ℤ j) ≡ b ^ i ∙ b ^ j
+      ^-+ -[1+ m ] -[1+ n ] = ap _⁻¹
+                               (ap (λ z → b ^⁺(1+ z)) (ℕ°.+-comm (1+ m) n)
+                            ♦ ^⁺-+ {b} (1+ n) {1+ m}) ♦ ⁻¹-hom′
+      ^-+ -[1+ m ]   (+ n)  = ^-⊖' n (1+ m)
+      ^-+   (+ m)  -[1+ n ] = ^-⊖ m (1+ n)
+      ^-+   (+ m)    (+ n)  = ^⁺-+ m
+
+      ^-- : ∀ i → b ^(- i) ≡ (b ^ i)⁻¹
+      ^-- -[1+ n ] = ! ⁻¹-involutive
+      ^-- (+ 0)    = ! ε⁻¹-ε
+      ^-- (+ 1+ n) = idp
+
+      ^-− : ∀ i j → b ^(i −ℤ j) ≡ b ^ i / b ^ j
+      ^-− i j = ^-+ i (- j) ♦ ∙= idp (^-- j)
+
+      ^-suc : ∀ i → b ^(sucℤ i) ≡ b ∙ b ^ i
+      ^-suc i = ^-+ (+ 1) i ♦ ∙= (snd identity) idp
+
+      ^-pred : ∀ i → b ^(predℤ i) ≡ b ⁻¹ ∙ b ^ i
+      ^-pred i = ^-+ (- + 1) i ♦ ap (λ z → z ⁻¹ ∙ b ^ i) (snd identity)
+
+      ^-comm : ∀ i j → b ^ i ∙ b ^ j ≡ b ^ j ∙ b ^ i
+      ^-comm -[1+ m ] -[1+ n ] = ^⁻-comm (1+ m) (1+ n)
+      ^-comm -[1+ m ]   (+ n)  = ! ^⁺-^⁻-comm n (1+ m)
+      ^-comm   (+ m)  -[1+ n ] = ^⁺-^⁻-comm m (1+ n)
+      ^-comm   (+ m)    (+ n)  = ^⁺-comm m n
 
 record Monoid (M : Set) : Set where
   field

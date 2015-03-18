@@ -1,6 +1,6 @@
 open import Function
 open import Data.Product.NP
-open import Data.Nat.NP using (ℕ; fold)
+open import Data.Nat.NP using (ℕ; zero; suc; 1+_)
 open import Data.Integer hiding (_+_; _*_)
 open import Relation.Binary.PropositionalEquality.NP renaming (_∙_ to _♦_)
 open import Algebra.FunctionProperties.Eq
@@ -205,10 +205,10 @@ module _ {A B : Set}(grpA0+ : Group A)(grpB1* : Group B) where
   -- Have a look to:
   --   https://github.com/crypto-agda/explore/blob/master/lib/Explore/GroupHomomorphism.agda
 
-  module GroupHomomorphismProp {f}(f-homo : GroupHomomorphism f) where
+  module GroupHomomorphismProp {f}(f-hom : GroupHomomorphism f) where
     f-pres-unit : f 0ᵍ ≡ 1ᵍ
     f-pres-unit = unique-1ᵍ-left part
-      where part = f 0ᵍ * f 0ᵍ  ≡⟨ ! f-homo ⟩
+      where part = f 0ᵍ * f 0ᵍ  ≡⟨ ! f-hom ⟩
                    f (0ᵍ + 0ᵍ)  ≡⟨ ap f (fst +-identity) ⟩
                    f 0ᵍ         ∎
 
@@ -216,7 +216,7 @@ module _ {A B : Set}(grpA0+ : Group A)(grpB1* : Group B) where
 
     f-pres-inv : ∀ {x} → f (0- x) ≡ (f x)⁻¹
     f-pres-inv {x} = unique-⁻¹ part
-      where part = f (0- x) * f x  ≡⟨ ! f-homo ⟩
+      where part = f (0- x) * f x  ≡⟨ ! f-hom ⟩
                    f (0- x + x)    ≡⟨ ap f (fst 0--inverse) ⟩
                    f 0ᵍ            ≡⟨ f-pres-unit ⟩
                    1ᵍ              ∎
@@ -224,9 +224,25 @@ module _ {A B : Set}(grpA0+ : Group A)(grpB1* : Group B) where
     f-0--⁻¹ = f-pres-inv
 
     f-−-/ : ∀ {x y} → f (x − y) ≡ f x / f y
-    f-−-/ {x} {y} = f (x − y)       ≡⟨ f-homo ⟩
+    f-−-/ {x} {y} = f (x − y)       ≡⟨ f-hom ⟩
                     f x * f (0- y)  ≡⟨ ap (_*_ (f x)) f-pres-inv ⟩
                     f x / f y       ∎
+
+    f-hom-iterated⁺ : ∀ {x} n → f (x ⊗⁺ n) ≡ f x ^⁺ n
+    f-hom-iterated⁺ zero    = f-pres-unit
+    f-hom-iterated⁺ (suc n) = f-hom ♦ *= idp (f-hom-iterated⁺ n)
+
+    f-hom-iterated⁻ : ∀ {x} n → f (x ⊗⁻ n) ≡ f x ^⁻ n
+    f-hom-iterated⁻ {x} n =
+      f (x ⊗⁻ n)      ≡⟨by-definition⟩
+      f (0- (x ⊗⁺ n)) ≡⟨ f-pres-inv ⟩
+      f(x ⊗⁺ n)⁻¹     ≡⟨ ap _⁻¹ (f-hom-iterated⁺ n) ⟩
+      (f x ^⁺ n)⁻¹    ≡⟨by-definition⟩
+      f x ^⁻ n ∎
+
+    f-hom-iterated : ∀ {x} i → f (x ⊗ i) ≡ f x ^ i
+    f-hom-iterated -[1+ n ] = f-hom-iterated⁻ (1+ n)
+    f-hom-iterated (+ n)    = f-hom-iterated⁺ n
 
 -- -}
 -- -}
