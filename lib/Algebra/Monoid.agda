@@ -1,11 +1,14 @@
+{-# OPTIONS --without-K #-}
+open import Type using () renaming (Type_ to Type)
+open import Level.NP
 open import Function.NP
 open import Data.Product.NP
 open import Data.Nat
   using    (ℕ; zero)
   renaming (_+_ to _+ℕ_; _*_ to _*ℕ_; suc to 1+_)
 import Data.Nat.Properties.Simple as ℕ°
-open import Data.Integer
-  using    (ℤ; +_; -[1+_]; _⊖_; -_)
+open import Data.Integer.NP
+  using    (ℤ; +_; -[1+_]; _⊖_; -_; module ℤ°)
   renaming ( _+_ to _+ℤ_; _-_ to _−ℤ_; _*_ to _*ℤ_
            ; suc to sucℤ; pred to predℤ
            )
@@ -15,8 +18,8 @@ open ≡-Reasoning
 
 module Algebra.Monoid where
 
-record Monoid-Ops {ℓ} (M : Set ℓ) : Set ℓ where
-  constructor mk
+record Monoid-Ops {ℓ} (M : Type ℓ) : Type ℓ where
+  constructor _,_
   infixl 7 _∙_
 
   field
@@ -44,16 +47,20 @@ record Monoid-Ops {ℓ} (M : Set ℓ) : Set ℓ where
     x ^ -[1+ n ] = x ^⁻(1+ n)
     x ^ (+ n)    = x ^⁺ n
 
-record Monoid-Struct {ℓ} {M : Set ℓ} (mon-ops : Monoid-Ops M) : Set ℓ where
+record Monoid-Struct {ℓ} {M : Type ℓ} (mon-ops : Monoid-Ops M) : Type ℓ where
+  constructor _,_
   open Monoid-Ops mon-ops
 
   -- laws
   field
-    assoc    : Associative _∙_
+    assocs   : Associative _∙_ × Associative (flip _∙_)
     identity : Identity  ε _∙_
 
+  assoc = fst assocs
+  !assoc = snd assocs
+
   open FromOp₂ _∙_ public renaming (op= to ∙=)
-  open FromAssoc _∙_ assoc public
+  open FromAssoc _∙_ assoc public hiding (assocs)
 
   module _ {b} where
     ^⁺0-ε : b ^⁺ 0 ≡ ε
@@ -65,10 +72,14 @@ record Monoid-Struct {ℓ} {M : Set ℓ} (mon-ops : Monoid-Ops M) : Set ℓ wher
     ^⁺2-∙ : b ^⁺ 2 ≡ b ∙ b
     ^⁺2-∙ = ap (_∙_ _) ^⁺1-id
 
+    -- Together with ^⁺0-ε, ^⁺-+ shows that (b ^⁺_) is a
+    -- monoid homomorphism from (ℕ,+,0) to (M,∙,ε)
+    -- therefore also a group homomorphism
     ^⁺-+ : ∀ m {n} → b ^⁺ (m +ℕ n) ≡ b ^⁺ m ∙ b ^⁺ n
     ^⁺-+ 0      = ! fst identity
     ^⁺-+ (1+ m) = ap (_∙_ b) (^⁺-+ m) ♦ ! assoc
 
+    -- Derived from ^⁺-+ in Algebra.Group
     ^⁺-* : ∀ m {n} → b ^⁺(m *ℕ n) ≡ (b ^⁺ n)^⁺ m
     ^⁺-* 0 = idp
     ^⁺-* (1+ m) {n}
@@ -182,6 +193,7 @@ record Monoid-Struct {ℓ} {M : Set ℓ} (mon-ops : Monoid-Ops M) : Set ℓ wher
          ε              ≡⟨ ! inv-r ⟩
          x ∙ x ⁻¹ ∎)
 
+    -- _⁻¹ is a group homomorphism, see Algebra.Group._ᵒᵖ
     ⁻¹-hom′ : ∀ {x y} → (x ∙ y)⁻¹ ≡ y ⁻¹ ∙ x ⁻¹
     ⁻¹-hom′ {x} {y} = cancels-∙-left {x ∙ y}
        ((x ∙ y) ∙ (x ∙ y)⁻¹     ≡⟨ inv-r ⟩
@@ -205,7 +217,7 @@ record Monoid-Struct {ℓ} {M : Set ℓ} (mon-ops : Monoid-Ops M) : Set ℓ wher
     elim-∙-right-/ {c} {x} {y}
       = x ∙ c ∙ (y ∙ c)⁻¹  ≡⟨ ap (_∙_ _) ⁻¹-hom′  ⟩
         x ∙ c ∙ (c ⁻¹ / y) ≡⟨ elim-inner= inv-r ⟩
-        x / y ∎ 
+        x / y ∎
 
     module _ {b} where
       ^⁺-1+ : ∀ n → b ^⁺(1+ n) ≡ b ^⁺ n ∙ b
@@ -272,6 +284,8 @@ record Monoid-Struct {ℓ} {M : Set ℓ} (mon-ops : Monoid-Ops M) : Set ℓ wher
       ^⁻2-∙ : b ^⁻ 2 ≡ b ⁻¹ ∙ b ⁻¹
       ^⁻2-∙ = ! ^⁻′-spec 2 ♦ ^⁻′2-∙
 
+      -- ^-+ is a group homomorphism defined in Algebra.Group
+      -- Some properties can be derived from it.
       ^-+ : ∀ i j → b ^(i +ℤ j) ≡ b ^ i ∙ b ^ j
       ^-+ -[1+ m ] -[1+ n ] = ap _⁻¹
                                (ap (λ z → b ^⁺(1+ z)) (ℕ°.+-comm (1+ m) n)
@@ -280,11 +294,13 @@ record Monoid-Struct {ℓ} {M : Set ℓ} (mon-ops : Monoid-Ops M) : Set ℓ wher
       ^-+   (+ m)  -[1+ n ] = ^-⊖ m (1+ n)
       ^-+   (+ m)    (+ n)  = ^⁺-+ m
 
+      -- GroupHomomorphism.f-pres-inv
       ^-- : ∀ i → b ^(- i) ≡ (b ^ i)⁻¹
       ^-- -[1+ n ] = ! ⁻¹-involutive
       ^-- (+ 0)    = ! ε⁻¹-ε
       ^-- (+ 1+ n) = idp
 
+      -- GroupHomomorphism.f-−-/
       ^-− : ∀ i j → b ^(i −ℤ j) ≡ b ^ i / b ^ j
       ^-− i j = ^-+ i (- j) ♦ ∙= idp (^-- j)
 
@@ -300,23 +316,31 @@ record Monoid-Struct {ℓ} {M : Set ℓ} (mon-ops : Monoid-Ops M) : Set ℓ wher
       ^-comm   (+ m)  -[1+ n ] = ^⁺-^⁻-comm m (1+ n)
       ^-comm   (+ m)    (+ n)  = ^⁺-comm m n
 
-record Monoid (M : Set) : Set where
+{-
+      ^-* : ∀ i j → b ^(i *ℤ j) ≡ (b ^ j)^ i
+      ^-* i j = {!!}
+      -}
+
+record Monoid {ℓ}(M : Type ℓ) : Type ℓ where
+  constructor _,_
   field
     mon-ops    : Monoid-Ops M
     mon-struct : Monoid-Struct mon-ops
   open Monoid-Ops    mon-ops    public
   open Monoid-Struct mon-struct public
 
-record Commutative-Monoid-Struct {ℓ} {M : Set ℓ} (mon-ops : Monoid-Ops M) : Set ℓ where
+record Commutative-Monoid-Struct {ℓ} {M : Type ℓ} (mon-ops : Monoid-Ops M) : Type ℓ where
+  constructor _,_
   open Monoid-Ops mon-ops
   field
     mon-struct : Monoid-Struct mon-ops
     comm : Commutative _∙_
   open Monoid-Struct mon-struct public
   open FromAssocComm _∙_ assoc comm public
-    hiding (!assoc=; assoc=; inner=)
+    hiding (!assoc=; assoc=; inner=; assocs)
 
-record Commutative-Monoid (M : Set) : Set where
+record Commutative-Monoid {ℓ}(M : Type ℓ) : Type ℓ where
+  constructor _,_
   field
     mon-ops    : Monoid-Ops M
     mon-comm   : Commutative-Monoid-Struct mon-ops
@@ -326,23 +350,27 @@ record Commutative-Monoid (M : Set) : Set where
   mon = record { mon-struct = mon-struct }
 
 -- A renaming of Monoid with additive notation
-module Additive-Monoid {M} (mon : Monoid M) = Monoid mon
+module Additive-Monoid {ℓ}{M : Type ℓ} (mon : Monoid M) = Monoid mon
     renaming ( _∙_ to _+_; ε to 0ᵐ
              ; assoc to +-assoc; identity to +-identity
+             ; !assoc to +-!assoc
              ; ∙= to +=
+             ; _^⁺_ to _⊗⁺_
              )
 
 -- A renaming of Monoid with multiplicative notation
-module Multiplicative-Monoid {M} (mon : Monoid M) = Monoid mon
+module Multiplicative-Monoid {ℓ}{M : Type ℓ} (mon : Monoid M) = Monoid mon
     renaming ( _∙_ to _*_; ε to 1ᵐ
              ; assoc to *-assoc; identity to *-identity
+             ; !assoc to *-!assoc
              ; ∙= to *=
              )
 
-module Additive-Commutative-Monoid {M} (mon-comm : Commutative-Monoid M)
+module Additive-Commutative-Monoid {ℓ}{M : Type ℓ} (mon-comm : Commutative-Monoid M)
   = Commutative-Monoid mon-comm
     renaming ( _∙_ to _+_; ε to 0ᵐ
              ; assoc to +-assoc; identity to +-identity
+             ; !assoc to +-!assoc
              ; ∙= to +=
              ; assoc= to +-assoc=
              ; !assoc= to +-!assoc=
@@ -352,9 +380,11 @@ module Additive-Commutative-Monoid {M} (mon-comm : Commutative-Monoid M)
              ; outer= to +-outer=
              )
 
-module Multiplicative-Commutative-Monoid {M} (mon : Commutative-Monoid M) = Commutative-Monoid mon
+module Multiplicative-Commutative-Monoid
+     {ℓ}{M : Type ℓ} (mon : Commutative-Monoid M) = Commutative-Monoid mon
     renaming ( _∙_ to _*_; ε to 1ᵐ
              ; assoc to *-assoc; identity to *-identity
+             ; !assoc to *-!assoc
              ; ∙= to *=
              ; assoc= to *-assoc=
              ; !assoc= to *-!assoc=
@@ -364,15 +394,115 @@ module Multiplicative-Commutative-Monoid {M} (mon : Commutative-Monoid M) = Comm
              ; outer= to *-outer=
              )
 
-record MonoidHomomorphism {A B : Set}
+record MonoidHomomorphism {a}{A : Type a}{b}{B : Type b}
                           (monA0+ : Monoid A)
                           (monB1* : Monoid B)
-                          (f : A → B) : Set where
+                          (f : A → B) : Type(a ⊔ b) where
+  constructor _,_
   open Additive-Monoid monA0+
   open Multiplicative-Monoid monB1*
   field
     0-hom-1 : f 0ᵐ ≡ 1ᵐ
     +-hom-* : ∀ {x y} → f (x + y) ≡ f x * f y
+
+  hom-iterated⁺ : ∀ {x} n → f (x ⊗⁺ n) ≡ f x ^⁺ n
+  hom-iterated⁺ 0      = 0-hom-1
+  hom-iterated⁺ (1+ n) = +-hom-* ♦ *= idp (hom-iterated⁺ n)
+
+module Monoidᵒᵖ {ℓ}{M : Type ℓ} where
+  _ᵒᵖ-ops : Monoid-Ops M → Monoid-Ops M
+  (_∙_ , ε) ᵒᵖ-ops = flip _∙_ , ε
+
+  _ᵒᵖ-struct : {mon : Monoid-Ops M} → Monoid-Struct mon → Monoid-Struct (mon ᵒᵖ-ops)
+  (assocs , identities) ᵒᵖ-struct = (swap assocs , swap identities)
+
+  _ᵒᵖ : Monoid M → Monoid M
+  (ops , struct)ᵒᵖ = _ , struct ᵒᵖ-struct
+
+  ᵒᵖ∘ᵒᵖ-id : ∀ {mon} → (mon ᵒᵖ) ᵒᵖ ≡ mon
+  ᵒᵖ∘ᵒᵖ-id = idp
+
+module _ {a}{A : Type a}(_∙_ : Op₂ A)(assoc : Associative _∙_) where
+  from-assoc = FromAssoc.assocs _∙_ assoc
+
+ℕ+-mon-ops : Monoid-Ops ℕ
+ℕ+-mon-ops = _+ℕ_ , 0
+
+ℕ+-mon-struct : Monoid-Struct ℕ+-mon-ops
+ℕ+-mon-struct = from-assoc _+ℕ_ (λ {x}{y}{z} → ℕ°.+-assoc x y z)
+              , ((λ{x} → idp) , (λ{x} → ℕ°.+-right-identity x))
+
+ℕ+-mon : Monoid ℕ
+ℕ+-mon = ℕ+-mon-ops , ℕ+-mon-struct
+
+module ℕ+-mon = Additive-Monoid ℕ+-mon
+
+ℕ*-mon-ops : Monoid-Ops ℕ
+ℕ*-mon-ops = _*ℕ_ , 1
+
+ℕ*-mon-struct : Monoid-Struct ℕ*-mon-ops
+ℕ*-mon-struct = (from-assoc _*ℕ_ (λ {x}{y}{z} → ℕ°.*-assoc x y z))
+              , ( (λ{x} → ℕ°.+-comm x 0)
+                , (λ{x} → ℕ°.*-comm x 1 ♦ ℕ°.+-comm x 0))
+
+ℕ*-mon : Monoid ℕ
+ℕ*-mon = _ , ℕ*-mon-struct
+
+module ℕ*-mon = Multiplicative-Monoid ℕ*-mon
+
+ℤ+-mon-ops : Monoid-Ops ℤ
+ℤ+-mon-ops = _+ℤ_ , + 0
+
+ℤ+-mon-struct : Monoid-Struct ℤ+-mon-ops
+ℤ+-mon-struct = (from-assoc _+ℤ_ (λ {x}{y}{z} → ℤ°.+-assoc x y z))
+              , (λ{x} → fst ℤ°.+-identity x)
+              , (λ{x} → snd ℤ°.+-identity x)
+
+ℤ+-mon : Monoid ℤ
+ℤ+-mon = _ , ℤ+-mon-struct
+
+module ℤ+-mon = Additive-Monoid ℤ+-mon
+
+module MonoidHomomorphism^ {ℓ}{M : Type ℓ} (mon : Monoid M) where
+  open Monoid mon
+
+  ^⁺-hom : ∀ {b} → MonoidHomomorphism ℕ+-mon mon (_^⁺_ b)
+  ^⁺-hom = idp , λ {x}{y} → ^⁺-+ x
+
+--import Data.Vec.NP as V
+{-
+module _ {A B : Type} where
+  (f : Vec  : Vec M n) → f ⊛ x (∀ i → )
+
+module VecMonoid {M : Type} (mon : Monoid M) where
+  open V
+  open Monoid mon
+
+  module _ n where
+    ×-mon-ops : Monoid-Ops (Vec M n)
+    ×-mon-ops = zipWith _∙_ , replicate ε
+
+    ×-mon-struct : Monoid-Struct ×-mon-ops
+    ×-mon-struct = (λ {x}{y}{z} → {!replicate ? ⊛ ?!}) , {!!} , {!!}
+-}
+
+module MonoidProduct {a}{A : Type a}{b}{B : Type b}
+                     (monA0+ : Monoid A)(monB1* : Monoid B) where
+  open Additive-Monoid monA0+
+  open Multiplicative-Monoid monB1*
+
+  ×-mon-ops    : Monoid-Ops (A × B)
+  ×-mon-ops    = zip _+_ _*_ , 0ᵐ , 1ᵐ
+
+  ×-mon-struct : Monoid-Struct ×-mon-ops
+  ×-mon-struct = (ap₂ _,_ +-assoc *-assoc , ap₂ _,_ +-!assoc *-!assoc)
+               , ap₂ _,_ (fst +-identity) (fst *-identity)
+               , ap₂ _,_ (snd +-identity) (snd *-identity)
+
+  ×-mon : Monoid (A × B)
+  ×-mon = ×-mon-ops , ×-mon-struct
+
+  open Monoid ×-mon public
 -- -}
 -- -}
 -- -}

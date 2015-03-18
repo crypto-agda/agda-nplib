@@ -139,6 +139,9 @@ module FromAssoc
        where
   open FromOp₂ _·_
 
+  assocs : Associative _·_ × Associative (flip _·_)
+  assocs = assoc , ! assoc
+
   module _ {c x y x' y' : A}
            (e : (x · y) ≡ (x' · y')) where
     assoc= : x · (y · c) ≡ x' · (y' · c)

@@ -218,6 +218,7 @@ suc m  == suc n  = m == n
 
 open FromAssocComm _+_ (λ {x}{y}{z} → ℕ°.+-assoc x y z) (λ {x}{y} → ℕ°.+-comm x y)
   renaming ( assoc-comm to +-assoc-comm
+           ; assocs to +-assocs
            ; interchange to +-interchange
            ; !assoc-comm to +-!assoc-comm
            ; comm= to +-comm=
@@ -230,6 +231,7 @@ open FromAssocComm _+_ (λ {x}{y}{z} → ℕ°.+-assoc x y z) (λ {x}{y} → ℕ
 
 open FromAssocComm _*_ (λ {x}{y}{z} → ℕ°.*-assoc x y z) (λ {x}{y} → ℕ°.*-comm x y)
   renaming ( assoc-comm to *-assoc-comm
+           ; assocs to *-assocs
            ; interchange to *-interchange
            ; !assoc-comm to *-!assoc-comm
            ; comm= to *-comm=
