@@ -78,7 +78,11 @@ dist-sum (suc x) zero    (suc z) = dist-sum x zero z
                                 ∙≤ ≤-step (ℕ≤.refl {x} +-mono ≤-step ℕ≤.refl)
 dist-sum (suc x) (suc y) (suc z) = dist-sum x y z
 
-
+dist≡0 : ∀ x y → dist x y ≡ 0 → x ≡ y
+dist≡0 zero zero d≡0 = refl
+dist≡0 zero (suc y) ()
+dist≡0 (suc x) zero ()
+dist≡0 (suc x) (suc y) d≡0 = ap suc (dist≡0 x y d≡0)
 {-
 post--ulate
   dist-≤     : ∀ x y → dist x y ≤ x
