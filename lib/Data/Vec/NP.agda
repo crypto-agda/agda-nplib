@@ -85,6 +85,58 @@ module waiting-for-a-fix-in-the-stdlib where
 
 open waiting-for-a-fix-in-the-stdlib public
 
+module With≈
+    {a ℓ ℓ'}{A : ★ a}
+    (_≈_ : A → A → ★ ℓ)
+    {_≈ᵛ_ : ∀ {n}(xs ys : Vec A n) → ★ ℓ'}
+    ([]-cong  : [] ≈ᵛ [])
+    (_∷-cong_ : ∀ {n} {x¹} {xs¹ : Vec A n} {x²} {xs² : Vec A n}
+                  (x¹≈x² : x¹ ≈ x²) (xs¹≈xs² : xs¹ ≈ᵛ xs²) →
+                  (x¹ ∷ xs¹) ≈ᵛ (x² ∷ xs²))
+  where
+  open Algebra.FunctionProperties
+
+  module _ {_∙_ _∙∙_ : A → A → A}
+           (assoc : ∀ x y z → ((x ∙ y) ∙∙ z) ≈ (x ∙ (y ∙∙ z))) where
+    private
+      _∙ᵛ_ _∙∙ᵛ_ : ∀ {n}(xs ys : Vec A n) → Vec A n
+      _∙ᵛ_  = zipWith _∙_
+      _∙∙ᵛ_ = zipWith _∙∙_
+
+    zipWith-assoc : ∀ {n} (xs ys zs : Vec A n) → ((xs ∙ᵛ ys) ∙∙ᵛ zs) ≈ᵛ (xs ∙ᵛ (ys ∙∙ᵛ zs))
+    zipWith-assoc [] [] [] = []-cong
+    zipWith-assoc (x ∷ xs) (y ∷ ys) (z ∷ zs)
+       = assoc x y z ∷-cong (zipWith-assoc xs ys zs)
+
+  module _ {_∙_ : A → A → A} where
+    module _ (∙-comm : Commutative _≈_ _∙_) where
+      zipWith-comm : ∀ {n} → Commutative _≈ᵛ_ (zipWith {n = n} _∙_)
+      zipWith-comm [] [] = []-cong
+      zipWith-comm (x ∷ xs) (y ∷ ys) = ∙-comm x y ∷-cong zipWith-comm xs ys
+
+    module _ {ε : A} where
+      module _ (∙-id-left : LeftIdentity _≈_ ε _∙_) where
+        zipWith-id-left : ∀ {n} → LeftIdentity _≈ᵛ_ (replicate ε) (zipWith {n = n} _∙_)
+        zipWith-id-left [] = []-cong
+        zipWith-id-left (x ∷ xs) = ∙-id-left x ∷-cong zipWith-id-left xs
+
+      module _ (∙-id-right : RightIdentity _≈_ ε _∙_) where
+        zipWith-id-right : ∀ {n} → RightIdentity _≈ᵛ_ (replicate ε) (zipWith {n = n} _∙_)
+        zipWith-id-right [] = []-cong
+        zipWith-id-right (x ∷ xs) = ∙-id-right x ∷-cong zipWith-id-right xs
+
+      module _ {_⁻¹ : A → A}
+               (inverse : LeftInverse _≈_ ε _⁻¹ _∙_) where
+        zipWith-left-inverse : ∀ {n} → LeftInverse _≈ᵛ_ (replicate ε) (map _⁻¹) (zipWith {n = n} _∙_)
+        zipWith-left-inverse [] = []-cong
+        zipWith-left-inverse (x ∷ xs) = inverse x ∷-cong zipWith-left-inverse xs
+
+      module _ {_⁻¹ : A → A}
+               (inverse : RightInverse _≈_ ε _⁻¹ _∙_) where
+        zipWith-right-inverse : ∀ {n} → RightInverse _≈ᵛ_ (replicate ε) (map _⁻¹) (zipWith {n = n} _∙_)
+        zipWith-right-inverse [] = []-cong
+        zipWith-right-inverse (x ∷ xs) = inverse x ∷-cong zipWith-right-inverse xs
+
 module WithSetoid {c ℓ} (S : Setoid c ℓ) where
   A = Setoid.Carrier S
   open Setoid S
@@ -95,51 +147,25 @@ module WithSetoid {c ℓ} (S : Setoid c ℓ) where
   _≈ᵛ_ : ∀ {n} → V n → V n → ★ _
   xs ≈ᵛ ys = V≈._≈_ xs ys
 
+  open With≈ _≈_ {_≈ᵛ_} []-cong (λ x y → x ∷-cong y) public
+
   module _ {f : A → A} (f-cong : f Preserves _≈_ ⟶ _≈_) where
     map-cong : ∀ {n} → map {n = n} f Preserves _≈ᵛ_ ⟶ _≈ᵛ_
     map-cong []-cong = []-cong
     map-cong (x≈y ∷-cong xs≈ys) = f-cong x≈y ∷-cong map-cong xs≈ys
-
-  module _ {f g : A → A → A}
-                 (f-g : ∀ x y z → f (g x y) z ≈ f x (g y z)) where
-    zipWith-assoc :
-      ∀ {n} (xs ys zs : Vec A n) →
-      zipWith f (zipWith g xs ys) zs ≈ᵛ zipWith f xs (zipWith g ys zs)
-    zipWith-assoc [] [] [] = []-cong
-    zipWith-assoc (x ∷ xs) (y ∷ ys) (z ∷ zs)
-       = f-g x y z ∷-cong (zipWith-assoc xs ys zs)
 
   module _ {f : A → A → A} (f-cong : f Preserves₂ _≈_ ⟶ _≈_ ⟶ _≈_) where
     zipWith-cong : ∀ {n} → zipWith {n = n} f Preserves₂ _≈ᵛ_ ⟶ _≈ᵛ_ ⟶ _≈ᵛ_
     zipWith-cong []-cong []-cong = []-cong
     zipWith-cong (x≈y ∷-cong xs≈ys) (z≈t ∷-cong zs≈ts) = f-cong x≈y z≈t ∷-cong zipWith-cong xs≈ys zs≈ts
 
-  module _ {_∙_ : A → A → A} {ε : A} (∙-id-left : LeftIdentity _≈_ ε _∙_) where
-    zipWith-id-left : ∀ {n} → LeftIdentity _≈ᵛ_ (replicate ε) (zipWith {n = n} _∙_)
-    zipWith-id-left [] = []-cong
-    zipWith-id-left (x ∷ xs) = ∙-id-left x ∷-cong zipWith-id-left xs
+∷= : ∀ {a}{A : ★ a}{n x} {xs : Vec A n} {y} {ys : Vec A n}
+       (p : x ≡ y) (q : xs ≡ ys) →
+        x ∷ xs ≡ y ∷ ys
+∷= ≡.refl ≡.refl = ≡.refl
 
-  module _ {_∙_ : A → A → A} {ε : A} (∙-id-right : RightIdentity _≈_ ε _∙_) where
-    zipWith-id-right : ∀ {n} → RightIdentity _≈ᵛ_ (replicate ε) (zipWith {n = n} _∙_)
-    zipWith-id-right [] = []-cong
-    zipWith-id-right (x ∷ xs) = ∙-id-right x ∷-cong zipWith-id-right xs
-
-  module _ {_∙_ : A → A → A} (∙-comm : Commutative _≈_ _∙_) where
-    zipWith-comm : ∀ {n} → Commutative _≈ᵛ_ (zipWith {n = n} _∙_)
-    zipWith-comm [] [] = []-cong
-    zipWith-comm (x ∷ xs) (y ∷ ys) = ∙-comm x y ∷-cong zipWith-comm xs ys
-
-  module _ {ε : A} {_⁻¹ : A → A} {_∙_ : A → A → A}
-                 (inverse : LeftInverse _≈_ ε _⁻¹ _∙_) where
-     zipWith-left-inverse : ∀ {n} → LeftInverse _≈ᵛ_ (replicate ε) (map _⁻¹) (zipWith {n = n} _∙_)
-     zipWith-left-inverse [] = []-cong
-     zipWith-left-inverse (x ∷ xs) = inverse x ∷-cong zipWith-left-inverse xs
-
-  module _ {ε : A} {_⁻¹ : A → A} {_∙_ : A → A → A}
-                 (inverse : RightInverse _≈_ ε _⁻¹ _∙_) where
-     zipWith-right-inverse : ∀ {n} → RightInverse _≈ᵛ_ (replicate ε) (map _⁻¹) (zipWith {n = n} _∙_)
-     zipWith-right-inverse [] = []-cong
-     zipWith-right-inverse (x ∷ xs) = inverse x ∷-cong zipWith-right-inverse xs
+module With≡ {a}{A : ★ a} where
+  open With≈ (_≡_ {A = A}) {_≡_} idp (λ x¹≈x² xs¹≈xs² → ∷= x¹≈x² xs¹≈xs²) public
 
 module LiftSemigroup {c ℓ} (Sg : Semigroup c ℓ) where
     module Sg = Semigroup Sg

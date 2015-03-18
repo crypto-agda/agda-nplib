@@ -73,7 +73,7 @@ onᵢ-xor-⊕ b (suc i) (x ∷ xs) rewrite onᵢ-xor-⊕ b i xs = refl
 
 Bits▹ℕ-bound : ∀ {n} (xs : Bits n) → Bits▹ℕ xs < 2^ n 
 Bits▹ℕ-bound         [] = s≤s z≤n
-Bits▹ℕ-bound {suc n} (1₂ ∷ xs) rewrite +-assoc-comm 1 (2^ n) (Bits▹ℕ xs) = ℕ≤.refl {2^ n} +-mono Bits▹ℕ-bound xs
+Bits▹ℕ-bound {suc n} (1₂ ∷ xs) rewrite +-assoc-comm {1} {2^ n} {Bits▹ℕ xs} = ℕ≤.refl {2^ n} +-mono Bits▹ℕ-bound xs
 Bits▹ℕ-bound {suc n} (0₂ ∷ xs) = ≤-steps (2^ n) (Bits▹ℕ-bound xs)
 
 Bits▹ℕ≤2ⁿ+ : ∀ {n} (x : Bits n) {y} → Bits▹ℕ {n} x ≤ 2^ n + y
