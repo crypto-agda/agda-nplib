@@ -206,8 +206,8 @@ module Implicits where
       x ^ (+ n)    = x ^⁺ n
 
       module FromIdentitiesAssoc
-             (idr : RightIdentity ε _∙_)
              (idl : LeftIdentity ε _∙_)
+             (idr : RightIdentity ε _∙_)
              (assoc : Associative _∙_)
            where
         open FromAssoc assoc
