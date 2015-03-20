@@ -1,14 +1,17 @@
 module agda-nplib where
--- import Algebra.Field
--- TODO import Algebra.Field.Reflection
--- import Algebra.Field.Solver
+{-
+import Algebra.Field
+import Algebra.Field.Reflection
+import Algebra.Field.Solver
+-}
+import Algebra.FunctionProperties.Derived
 import Algebra.FunctionProperties.Eq
 import Algebra.FunctionProperties.NP
-import Algebra.Monoid
-import Algebra.Monoid.Homomorphism
 import Algebra.Group
 import Algebra.Group.Abelian
 import Algebra.Group.Homomorphism
+import Algebra.Monoid
+import Algebra.Monoid.Homomorphism
 import Algebra.NP
 import Category
 import Category.Applicative.NP
@@ -94,7 +97,7 @@ import Lens.Structures
 import Lens.Type
 import Level.NP
 import Opaque
-{- TODO
+{-
 import Reflection.Decode
 import Reflection.Decoding
 import Reflection.Printer
