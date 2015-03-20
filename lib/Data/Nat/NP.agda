@@ -3,7 +3,8 @@ module Data.Nat.NP where
 
 open import Type hiding (★)
 import Algebra
-open import Algebra.FunctionProperties.Eq
+import Algebra.FunctionProperties.Eq
+open Algebra.FunctionProperties.Eq.Explicits
 open import Data.Two.Base hiding (_==_; _²)
 open import Data.Product using (∃; _,_) renaming (proj₁ to fst; proj₂ to snd)
 open import Data.Sum renaming (map to ⊎-map)
@@ -216,7 +217,7 @@ zero   == suc _  = 0₂
 suc _  == zero   = 0₂
 suc m  == suc n  = m == n
 
-open FromAssocComm _+_ (λ {x}{y}{z} → ℕ°.+-assoc x y z) (λ {x}{y} → ℕ°.+-comm x y)
+open FromAssocComm _+_ ℕ°.+-assoc ℕ°.+-comm
   renaming ( assoc-comm to +-assoc-comm
            ; assocs to +-assocs
            ; interchange to +-interchange
@@ -229,7 +230,7 @@ open FromAssocComm _+_ (λ {x}{y}{z} → ℕ°.+-assoc x y z) (λ {x}{y} → ℕ
            )
   public
 
-open FromAssocComm _*_ (λ {x}{y}{z} → ℕ°.*-assoc x y z) (λ {x}{y} → ℕ°.*-comm x y)
+open FromAssocComm _*_ ℕ°.*-assoc ℕ°.*-comm
   renaming ( assoc-comm to *-assoc-comm
            ; assocs to *-assocs
            ; interchange to *-interchange
@@ -245,8 +246,8 @@ open FromAssocComm _*_ (λ {x}{y}{z} → ℕ°.*-assoc x y z) (λ {x}{y} → ℕ
 a+b≡a⊔b+a⊓b : ∀ a b → a + b ≡ a ⊔ b + a ⊓ b
 a+b≡a⊔b+a⊓b zero    b       rewrite ℕ°.+-comm b 0 = idp
 a+b≡a⊔b+a⊓b (suc a) zero    = idp
-a+b≡a⊔b+a⊓b (suc a) (suc b) rewrite +-assoc-comm {a} {1} {b}
-                                  | +-assoc-comm {a ⊔ b} {1} {a ⊓ b}
+a+b≡a⊔b+a⊓b (suc a) (suc b) rewrite +-assoc-comm a 1 b
+                                  | +-assoc-comm (a ⊔ b) 1 (a ⊓ b)
                                   | a+b≡a⊔b+a⊓b a b
                                   = idp
 
@@ -257,14 +258,14 @@ a⊓b≡a (s≤s a≤b) rewrite a⊓b≡a a≤b = idp
 ⊔≤+ : ∀ a b → a ⊔ b ≤ a + b
 ⊔≤+ zero b          = ℕ≤.refl
 ⊔≤+ (suc a) zero    = s≤s (ℕ≤.reflexive (ℕ°.+-comm 0 a))
-⊔≤+ (suc a) (suc b) = s≤s (⊔≤+ a b ∙≤ ≤-step ℕ≤.refl ∙≤ ℕ≤.reflexive (+-assoc-comm {1} {a} {b}))
+⊔≤+ (suc a) (suc b) = s≤s (⊔≤+ a b ∙≤ ≤-step ℕ≤.refl ∙≤ ℕ≤.reflexive (+-assoc-comm 1 a b))
 
 2*′_ : ℕ → ℕ
 2*′_ = fold 0 (suc ∘′ suc)
 
 2*′-spec : ∀ n → 2*′ n ≡ 2* n
 2*′-spec zero = idp
-2*′-spec (suc n) rewrite 2*′-spec n | +-assoc-comm {1} {n} {n} = idp
+2*′-spec (suc n) rewrite 2*′-spec n | +-assoc-comm 1 n n = idp
 
 2^⟨_⟩* : ℕ → ℕ → ℕ
 2^⟨ n ⟩* x = fold x 2*_ n
@@ -288,7 +289,7 @@ a⊓b≡a (s≤s a≤b) rewrite a⊓b≡a a≤b = idp
 2^-inj (suc k) = 2^-inj k ∘ 2*-inj
 
 2*-distrib : ∀ x y → 2* x + 2* y ≡ 2* (x + y) 
-2*-distrib x y = +-interchange {x} {x} {y} {y}
+2*-distrib x y = +-interchange x x y y
 
 2^*-distrib : ∀ k x y → ⟨2^ k * (x + y)⟩ ≡ ⟨2^ k * x ⟩ + ⟨2^ k * y ⟩
 2^*-distrib zero x y = idp
@@ -307,8 +308,8 @@ a⊓b≡a (s≤s a≤b) rewrite a⊓b≡a a≤b = idp
 2*-mono′ : ∀ {a b} → 2* a ≤ 2* b → a ≤ b
 2*-mono′ {zero} pf = z≤n
 2*-mono′ {suc a} {zero} ()
-2*-mono′ {suc a} {suc b} pf rewrite +-assoc-comm {a} {1} {a}
-                                  | +-assoc-comm {b} {1} {b} = s≤s (2*-mono′ (≤-pred (≤-pred pf)))
+2*-mono′ {suc a} {suc b} pf rewrite +-assoc-comm a 1 a
+                                  | +-assoc-comm b 1 b = s≤s (2*-mono′ (≤-pred (≤-pred pf)))
 
 2^*-mono′ : ∀ k {a b} → ⟨2^ k * a ⟩ ≤ ⟨2^ k * b ⟩ → a ≤ b
 2^*-mono′ zero    = id

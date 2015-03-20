@@ -27,10 +27,9 @@ open import Type using (★_)
 
 open import Algebra
   using (module CommutativeRing; module CommutativeSemiring)
-open import Algebra.FunctionProperties using (Op₁; Op₂)
 
 open import Function.Equivalence using (module Equivalence)
-open import Function.NP          using (id; _∘_; _⟨_⟩°_)
+open import Function.NP          using (id; _∘_; _⟨_⟩°_; Op₁; Op₂)
 
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡ using (_≡_; refl; _∙_)

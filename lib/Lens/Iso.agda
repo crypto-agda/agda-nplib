@@ -8,6 +8,7 @@ open import Data.Bool
 open import Data.Product
 open import Data.Maybe
 open import Data.Default
+open        Function.NP.Explicits
 
 module Lens.Iso where
 

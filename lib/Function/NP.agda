@@ -56,6 +56,12 @@ Endo A = A → A
 Cmp : ∀ {a} → ★ a → ★ a
 Cmp A = A → A → 𝟚
 
+Op₁ : ∀ {a} → ★ a → ★ a
+Op₁ A = A → A
+
+Op₂ : ∀ {a} → ★ a → ★ a
+Op₂ A = A → A → A
+
 -- More properties about nest/fold are in Data.Nat.NP
 nest : ∀ {a} {A : ★ a} → ℕ → Endo (Endo A)
 -- TMP nest n f x = fold x f n
@@ -120,32 +126,58 @@ module EndoMonoid-≗ {a} (A : ★ a) = EndoMonoid-≈ (Setoid.isEquivalence (A 
 Π : ∀ {a b} (A : ★ a) → (B : A → ★ b) → ★ _
 Π A B = (x : A) → B x
 
-ΠΠ : ∀ {a b c} (A : ★ a) (B : A → ★ b) (C : Σ A B → ★ c) → ★ _
-ΠΠ A B C = Π A λ x → Π (B x) λ y → C (x , y)
+Πⁱ : ∀ {a b} (A : ★ a) → (B : A → ★ b) → ★ _
+Πⁱ A B = {x : A} → B x
 
-ΠΣ : ∀ {a b c} (A : ★ a) (B : A → ★ b) (C : Σ A B → ★ c) → ★ _
-ΠΣ A B C = Π A λ x → Σ (B x) λ y → C (x , y)
+module FromΠ (Π : ∀ {a b}(A : ★ a)(B : A → ★ b) → ★(a ⊔ b)) where
 
-ΣΠ : ∀ {a b c} (A : ★ a) (B : A → ★ b) (C : Σ A B → ★ c) → ★ _
-ΣΠ A B C = Σ A λ x → Π (B x) λ y → C (x , y)
+  module _ {a b}{A : ★ a}(B : A → ★ b) where
+    ∀₁ : ★(a ⊔ b)
+    ∀₁ = Π A B
 
-ΠΠΠ : ∀ {a b c d} (A : ★ a) (B : A → ★ b)
-                  (C : Σ A B → ★ c) (D : Σ (Σ A B) C → ★ d) → ★ _
-ΠΠΠ A B C D = Π A λ x → Π (B x) λ y → Π (C (x , y)) λ z → D ((x , y) , z)
+  module _ {a b c}{A : ★ a}{B : A → ★ b}(C : (x : A)(y : B x) → ★ c) where
+    ∀₂ : ★(a ⊔ b ⊔ c)
+    ∀₂ = Π A λ x → Π (B x) (C _)
 
-ΠΣΠ : ∀ {a b c d} (A : ★ a) (B : A → ★ b)
-                  (C : Σ A B → ★ c) (D : Σ (Σ A B) C → ★ d) → ★ _
-ΠΣΠ A B C D = Π A λ x → Σ (B x) λ y → Π (C (x , y)) λ z → D ((x , y) , z)
+  module _ {a b c d}{A : ★ a}{B : A → ★ b}{C : {x : A}(y : B x) → ★ c}
+           (D : (x : A)(y : B x)(z : C y) → ★ d) where
+    ∀₃ : ★(a ⊔ b ⊔ c ⊔ d)
+    ∀₃ = Π A λ x → Π (B x) λ y → Π (C y) (D _ _)
 
-ΠΣΣ : ∀ {a b c d} (A : ★ a) (B : A → ★ b)
-                  (C : Σ A B → ★ c) (D : Σ (Σ A B) C → ★ d) → ★ _
-ΠΣΣ A B C D = Π A λ x → Σ (B x) λ y → Σ (C (x , y)) λ z → D ((x , y) , z)
+  module _ {a b c d e}{A : ★ a}{B : A → ★ b}{C : {x : A}(y : B x) → ★ c}
+           {D : {x : A}{y : B x}(z : C y) → ★ d}
+           (E : (x : A)(y : B x)(z : C y)(t : D z) → ★ e)
+           where
+    ∀₄ : ★(a ⊔ b ⊔ c ⊔ d ⊔ e)
+    ∀₄ = Π A λ x → Π (B x) λ y → Π (C y) λ z → Π (D z) (E _ _ _)
 
-ΣΠΣ : ∀ {a b c d} (A : ★ a) (B : A → ★ b)
-                  (C : Σ A B → ★ c) (D : Σ (Σ A B) C → ★ d) → ★ _
-ΣΠΣ A B C D = Σ A λ x → Π (B x) λ y → Σ (C (x , y)) λ z → D ((x , y) , z)
+module FromΣ (Σ : ∀ {a b}(A : ★ a)(B : A → ★ b) → ★(a ⊔ b)) =
+  FromΠ Σ renaming (∀₁ to ∃₁; ∀₂ to ∃₂; ∀₃ to ∃₃; ∀₄ to ∃₄)
 
-ΣΠΠ : ∀ {a b c d} (A : ★ a) (B : A → ★ b)
-                  (C : Σ A B → ★ c) (D : Σ (Σ A B) C → ★ d) → ★ _
-ΣΠΠ A B C D = Σ A λ x → Π (B x) λ y → Π (C (x , y)) λ z → D ((x , y) , z)
+module FromΠΣ (Π Σ : ∀ {a b}(A : ★ a)(B : A → ★ b) → ★(a ⊔ b))
+              (_,_ : ∀ {a b}{A : ★ a}{B : A → ★ b}(x : A)(y : B x) → Σ A B) where
+  module _ {a b c}(A : ★ a)(B : A → ★ b)(C : Σ A B → ★ c) where
+    ΠΠ ΠΣ ΣΠ : ★ _
+    ΠΠ = Π A λ x → Π (B x) λ y → C (x , y)
+    ΠΣ = Π A λ x → Σ (B x) λ y → C (x , y)
+    ΣΠ = Σ A λ x → Π (B x) λ y → C (x , y)
+    ΣΣ = Σ A λ x → Σ (B x) λ y → C (x , y)
+
+  module _ {a b c d}(A : ★ a)(B : A → ★ b)(C : Σ A B → ★ c)
+           (D : Σ (Σ A B) C → ★ d) where
+    ΠΠΠ ΠΣΠ ΠΣΣ ΣΠΣ ΣΠΠ : ★ _
+    ΠΠΠ = Π A λ x → Π (B x) λ y → Π (C (x , y)) λ z → D ((x , y) , z)
+    ΠΣΠ = Π A λ x → Σ (B x) λ y → Π (C (x , y)) λ z → D ((x , y) , z)
+    ΠΣΣ = Π A λ x → Σ (B x) λ y → Σ (C (x , y)) λ z → D ((x , y) , z)
+    ΣΠΣ = Σ A λ x → Π (B x) λ y → Σ (C (x , y)) λ z → D ((x , y) , z)
+    ΣΠΠ = Σ A λ x → Π (B x) λ y → Π (C (x , y)) λ z → D ((x , y) , z)
+
+module Implicits where
+  open FromΠ  Πⁱ       public
+  open FromΠΣ Πⁱ Σ _,_ public
+
+module Explicits where
+  open FromΠ  Π       public
+  open FromΣ  Σ       public
+  open FromΠΣ Π Σ _,_ public
 -- -}

@@ -1,7 +1,6 @@
 module Data.Bits.Properties where
 
-open import Algebra.FunctionProperties.NP
-open import Function
+open import Function.NP
 open import Type hiding (★)
 open import Data.Zero using (𝟘; 𝟘-elim)
 open import Data.Bit using (Bit)
@@ -14,6 +13,8 @@ open import Data.Product
 open import Data.Fin using (Fin; zero; suc)
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡
+module _ {a}{A : Set a} where
+    open import Algebra.FunctionProperties.NP Π {A = A} _≡_ public
 open import Data.Vec.NP
 
 ==-comm : ∀ {n} (xs ys : Bits n) → xs == ys ≡ ys == xs
@@ -29,19 +30,19 @@ vnot∘vnot≗id : ∀ {n} → vnot {n} ∘ vnot ≗ id
 vnot∘vnot≗id [] = refl
 vnot∘vnot≗id (x ∷ xs) rewrite not-involutive x | vnot∘vnot≗id xs = refl
 
-⊕-assoc : ∀ {n} → Associative _≡_ (_⊕_ {n})
+⊕-assoc : ∀ {n} → Associative (_⊕_ {n})
 ⊕-assoc [] [] [] = refl
 ⊕-assoc (x ∷ xs) (y ∷ ys) (z ∷ zs) rewrite ⊕-assoc xs ys zs | Xor°.+-assoc x y z = refl
 
-⊕-comm  : ∀ {n} → Commutative _≡_ (_⊕_ {n})
+⊕-comm  : ∀ {n} → Commutative (_⊕_ {n})
 ⊕-comm [] [] = refl
 ⊕-comm (x ∷ xs) (y ∷ ys) rewrite ⊕-comm xs ys | Xor°.+-comm x y = refl
 
-⊕-left-identity : ∀ {n} → LeftIdentity _≡_ 0ⁿ (_⊕_ {n})
+⊕-left-identity : ∀ {n} → LeftIdentity 0ⁿ (_⊕_ {n})
 ⊕-left-identity [] = refl
 ⊕-left-identity (x ∷ xs) rewrite ⊕-left-identity xs = refl
 
-⊕-right-identity : ∀ {n} → RightIdentity _≡_ 0ⁿ (_⊕_ {n})
+⊕-right-identity : ∀ {n} → RightIdentity 0ⁿ (_⊕_ {n})
 ⊕-right-identity [] = refl
 ⊕-right-identity (x ∷ xs) rewrite ⊕-right-identity xs | proj₂ Xor°.+-identity x = refl
 
@@ -73,7 +74,7 @@ onᵢ-xor-⊕ b (suc i) (x ∷ xs) rewrite onᵢ-xor-⊕ b i xs = refl
 
 Bits▹ℕ-bound : ∀ {n} (xs : Bits n) → Bits▹ℕ xs < 2^ n 
 Bits▹ℕ-bound         [] = s≤s z≤n
-Bits▹ℕ-bound {suc n} (1₂ ∷ xs) rewrite +-assoc-comm {1} {2^ n} {Bits▹ℕ xs} = ℕ≤.refl {2^ n} +-mono Bits▹ℕ-bound xs
+Bits▹ℕ-bound {suc n} (1₂ ∷ xs) rewrite +-assoc-comm 1 (2^ n) (Bits▹ℕ xs) = ℕ≤.refl {2^ n} +-mono Bits▹ℕ-bound xs
 Bits▹ℕ-bound {suc n} (0₂ ∷ xs) = ≤-steps (2^ n) (Bits▹ℕ-bound xs)
 
 Bits▹ℕ≤2ⁿ+ : ∀ {n} (x : Bits n) {y} → Bits▹ℕ {n} x ≤ 2^ n + y

@@ -34,7 +34,7 @@ dist-x+ (suc x) y z = dist-x+ x y z
 dist-2* : ∀ x y → dist (2* x) (2* y) ≡ 2* dist x y
 dist-2* zero y = idp
 dist-2* (suc x) zero = idp
-dist-2* (suc x) (suc y) rewrite +-assoc-comm {x} {1} {x} | +-assoc-comm {y} {1} {y} = dist-2* x y
+dist-2* (suc x) (suc y) rewrite +-assoc-comm x 1 x | +-assoc-comm y 1 y = dist-2* x y
 
 dist-asym-def : ∀ {x y} → x ≤ y → x + dist x y ≡ y
 dist-asym-def z≤n = idp
@@ -43,11 +43,11 @@ dist-asym-def (s≤s pf) = ap suc (dist-asym-def pf)
 dist-sym-wlog : ∀ (f : ℕ → ℕ) → (∀ x k → dist (f x) (f (x + k)) ≡ f k) → ∀ x y → dist (f x) (f y) ≡ f (dist x y)
 dist-sym-wlog f pf x y with compare x y
 dist-sym-wlog f pf x .(suc (x + k)) | less .x k with pf x (suc k)
-... | q rewrite +-assoc-comm {x} {1} {k} | q | ! +-assoc-comm {x} {1} {k} | dist-x-x+y≡y x (suc k) = idp
+... | q rewrite +-assoc-comm x 1 k | q | ! +-assoc-comm x 1 k | dist-x-x+y≡y x (suc k) = idp
 dist-sym-wlog f pf .y y | equal .y with pf y 0
 ... | q rewrite ℕ°.+-comm y 0 | dist-refl y = q
 dist-sym-wlog f pf .(suc (y + k)) y | greater .y k with pf y (suc k)
-... | q rewrite +-assoc-comm {1} {y} {k} | dist-sym (y + suc k) y | dist-x-x+y≡y y (suc k) | dist-sym (f (y + suc k)) (f y) = q
+... | q rewrite +-assoc-comm 1 y k | dist-sym (y + suc k) y | dist-x-x+y≡y y (suc k) | dist-sym (f (y + suc k)) (f y) = q
 
 dist-x* : ∀ x y z → dist (x * y) (x * z) ≡ x * dist y z
 dist-x* x = dist-sym-wlog (_*_ x) pf

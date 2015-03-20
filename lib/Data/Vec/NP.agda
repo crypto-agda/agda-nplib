@@ -458,7 +458,7 @@ sum-distribˡ f k (x ∷ xs) rewrite sum-distribˡ f k xs = !(fst ℕ°.distrib 
 
 sum-linear : ∀ {A : ★₀} {n} f g (xs : Vec A n) → sum (map (λ x → f x + g x) xs) ≡ sum (map f xs) + sum (map g xs)
 sum-linear f g [] = idp
-sum-linear f g (x ∷ xs) rewrite sum-linear f g xs = +-interchange {f x} {g x} {sum (map f xs)} {sum (map g xs)}
+sum-linear f g (x ∷ xs) rewrite sum-linear f g xs = +-interchange (f x) (g x) (sum (map f xs)) (sum (map g xs))
 
 sum-mono : ∀ {A : ★₀} {n f g} (mono : ∀ x → f x ≤ g x)(xs : Vec A n) → sum (map f xs) ≤ sum (map g xs)
 sum-mono f≤°g [] = Data.Nat.NP.z≤n
@@ -479,7 +479,7 @@ sum-map-rot₁ f (x ∷ xs) = ap sum (map-∷ʳ f x xs)
                         ∙ ℕ°.+-comm (sum (map f xs)) (f x)
 
 open import Data.Vec public hiding (_⊛_; zipWith; zip; map; applicative)
-open Algebra.FunctionProperties.Eq
+open Algebra.FunctionProperties.Eq.Implicits
 
 module _ {a} {A : ★ a} where
     dup : ∀ {n} → Vec A n → Vec A (n + n)

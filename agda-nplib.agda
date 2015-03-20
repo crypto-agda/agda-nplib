@@ -1,10 +1,14 @@
 module agda-nplib where
-import Algebra.Field
+-- import Algebra.Field
 -- TODO import Algebra.Field.Reflection
-import Algebra.Field.Solver
+-- import Algebra.Field.Solver
 import Algebra.FunctionProperties.Eq
 import Algebra.FunctionProperties.NP
+import Algebra.Monoid
+import Algebra.Monoid.Homomorphism
 import Algebra.Group
+import Algebra.Group.Abelian
+import Algebra.Group.Homomorphism
 import Algebra.NP
 import Category
 import Category.Applicative.NP
@@ -31,6 +35,7 @@ import Data.Fin.NP
 import Data.Fin.Store
 import Data.Indexed
 import Data.Indexed.Vec
+import Data.Integer.NP
 import Data.LR
 import Data.Label
 import Data.List.NP

@@ -1,7 +1,8 @@
 {-# OPTIONS --without-K #-}
 module Data.List.Properties.NP where
 
-open import Algebra.FunctionProperties.Eq
+import Algebra.FunctionProperties.Eq
+open Algebra.FunctionProperties.Eq.Implicits
 open import Type hiding (★)
 open import Data.List.Properties public
 open import Data.List.NP
