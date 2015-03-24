@@ -49,20 +49,17 @@ module Additive-Group-Ops {ℓ}{G : Set ℓ} (grp : Group-Ops G) where
   private
    module M = Group-Ops grp
     using    ()
-    renaming ( _∙_ to _+_; ε to `0; _⁻¹ to 0−_; _/_ to _−_
-             ; _^¹⁺_ to _⊗¹⁺_
-             ; _^⁺_ to _⊗⁺_
+    renaming ( _⁻¹ to 0−_
+             ; _/_ to _−_
              ; _^⁻_ to _⊗⁻_
              ; _^_ to _⊗_
              ; mon-ops to +-mon-ops
-             ; ∙= to +=; /= to −=)
-  open M public using (`0; 0−_; +-mon-ops; +=; −=)
-  infixl 6 _+_ _−_
-  infixl 7 _⊗¹⁺_ _⊗⁺_ _⊗⁻_ _⊗_
-  _+_   = M._+_
+             ; /= to −=)
+  open M public using (0−_; +-mon-ops; −=)
+  open Additive-Monoid-Ops +-mon-ops public
+  infixl 6 _−_
+  infixl 7 _⊗⁻_ _⊗_
   _−_   = M._−_
-  _⊗¹⁺_ = M._⊗¹⁺_
-  _⊗⁺_  = M._⊗⁺_
   _⊗⁻_  = M._⊗⁻_
   _⊗_   = M._⊗_
 
@@ -106,7 +103,7 @@ module Additive-Group {ℓ}{G : Set ℓ}(mon : Group G) where
 
 -- A renaming of Group-Ops with multiplicative notation
 module Multiplicative-Group-Ops {ℓ}{G : Set ℓ} (grp : Group-Ops G) = Group-Ops grp
-    using    ( _⁻¹; _/_; /=; _^⁺_ ; _^⁻_; _^_ )
+    using    ( _⁻¹; _/_; /=; _^⁺_ ; _^⁻_; _^_; _²; _³; _⁴ )
     renaming ( _∙_ to _*_; ε to `1; mon-ops to *-mon-ops; ∙= to *= )
 
 -- A renaming of Group-Struct with multiplicative notation

@@ -44,6 +44,17 @@ module Implicits where
     private
       ∙= = op=
 
+    infix 8 _² _³ _⁴
+
+    _² : A → A
+    x ² = x ∙ x
+
+    _³ : A → A
+    x ³ = x ² ∙ x
+
+    _⁴ : A → A
+    x ⁴ = x ³ ∙ x
+
     infix 8 _^¹⁺_
     _^¹⁺_ : A → ℕ → A
     x ^¹⁺ n = nest n (_∙_ x) x
