@@ -17,7 +17,7 @@ record Group-Ops {ℓ} (G : Set ℓ) : Set ℓ where
     _⁻¹     : G → G
 
   open Monoid-Ops mon-ops public
-  open FromInverseOp _⁻¹  public
+  open From-Group-Ops ε _∙_ _⁻¹  public
 
 record Group-Struct {ℓ} {G : Set ℓ} (grp-ops : Group-Ops G) : Set ℓ where
   constructor _,_
@@ -31,10 +31,8 @@ record Group-Struct {ℓ} {G : Set ℓ} (grp-ops : Group-Ops G) : Set ℓ where
   mon : Monoid G
   mon = mon-ops , mon-struct
 
-  open Monoid-Struct mon-struct           public
-  open FromIdentitiesAssoc idl idr assoc  public
-  open FromRightInverse (snd inverse) public
-  open FromLeftInverse  (fst inverse) public
+  open Monoid-Struct mon-struct                             public
+  open From-Assoc-Identities-Inverse assoc identity inverse public
 
 -- TODO Monoid+LeftInverse → Group
 
@@ -47,63 +45,91 @@ record Group {ℓ}(G : Set ℓ) : Set ℓ where
   open Group-Struct grp-struct public
 
 -- A renaming of Group-Ops with additive notation
-module Additive-Group-Ops {ℓ}{G : Set ℓ} (grp : Group-Ops G) = Group-Ops grp
-    renaming ( _∙_ to _+_; ε to 0ᵍ; _⁻¹ to 0-_; _/_ to _−_
+module Additive-Group-Ops {ℓ}{G : Set ℓ} (grp : Group-Ops G) where
+  private
+   module M = Group-Ops grp
+    using    ()
+    renaming ( _∙_ to _+_; ε to `0; _⁻¹ to 0−_; _/_ to _−_
+             ; _^¹⁺_ to _⊗¹⁺_
              ; _^⁺_ to _⊗⁺_
              ; _^⁻_ to _⊗⁻_
              ; _^_ to _⊗_
              ; mon-ops to +-mon-ops
              ; ∙= to +=; /= to −=)
+  open M public using (`0; 0−_; +-mon-ops; +=; −=)
+  infixl 6 _+_ _−_
+  infixl 7 _⊗¹⁺_ _⊗⁺_ _⊗⁻_ _⊗_
+  _+_   = M._+_
+  _−_   = M._−_
+  _⊗¹⁺_ = M._⊗¹⁺_
+  _⊗⁺_  = M._⊗⁺_
+  _⊗⁻_  = M._⊗⁻_
+  _⊗_   = M._⊗_
 
--- A renaming of Group with additive notation
-module Additive-Group {ℓ}{G : Set ℓ} (grp : Group G) = Group grp
-    renaming ( _∙_ to _+_; ε to 0ᵍ; _⁻¹ to 0-_; _/_ to _−_
-             ; _^⁺_ to _⊗⁺_
-             ; _^⁻_ to _⊗⁻_
-             ; _^_ to _⊗_
-             ; mon-ops to +-mon-ops
-             ; mon-struct to +-mon-struct
+-- A renaming of Group-Struct with additive notation
+module Additive-Group-Struct {ℓ}{G : Set ℓ}{grp-ops : Group-Ops G}
+                             (grp-struct : Group-Struct grp-ops)
+    = Group-Struct grp-struct
+    using    ()
+    renaming ( mon-struct to +-mon-struct
              ; mon to +-mon
-             ; assoc to +-assoc; identity to +-identity
+             ; assoc to +-assoc
+             ; identity to +-identity
+             ; ε∙-identity to 0+-identity
+             ; ∙ε-identity to +0-identity
              ; assoc= to +-assoc=
              ; !assoc= to +-!assoc=
              ; inner= to +-inner=
-             ; inverse to 0--inverse
+             ; inverse to 0−-inverse
              ; ∙-/ to +-−; /-∙ to −-+
-             ; unique-ε-left to unique-0ᵍ-left
-             ; unique-ε-right to unique-0ᵍ-right
-             ; is-ε-left to is-0ᵍ-left
-             ; is-ε-right to is-0ᵍ-right
-             ; unique-⁻¹ to unique-0-
+             ; unique-ε-left to unique-0-left
+             ; unique-ε-right to unique-0-right
+             ; is-ε-left to is-0-left
+             ; is-ε-right to is-0-right
+             ; unique-⁻¹ to unique-0−
              ; cancels-∙-left to cancels-+-left
              ; cancels-∙-right to cancels-+-right
              ; elim-∙-right-/ to elim-+-right-−
              ; elim-assoc= to elim-+-assoc=
              ; elim-!assoc= to elim-+-!assoc=
              ; elim-inner= to elim-+-inner=
-             ; ⁻¹-hom′ to 0--hom′
-             ; ∙= to +=; /= to −=)
+             ; ⁻¹-hom′ to 0−-hom′
+             ; ⁻¹-inj to 0−-inj
+             ; ⁻¹-involutive to 0−-involutive
+             ; ε⁻¹≡ε to 0−0≡0
+             )
 
--- A renaming of Group with multiplicative notation
+-- A renaming of Group with additive notation
+module Additive-Group {ℓ}{G : Set ℓ}(mon : Group G) where
+  open Additive-Group-Ops    (Group.grp-ops    mon) public
+  open Additive-Group-Struct (Group.grp-struct mon) public
+
+-- A renaming of Group-Ops with multiplicative notation
 module Multiplicative-Group-Ops {ℓ}{G : Set ℓ} (grp : Group-Ops G) = Group-Ops grp
     using    ( _⁻¹; _/_; /=; _^⁺_ ; _^⁻_; _^_ )
-    renaming ( _∙_ to _*_; ε to 1ᵍ; mon-ops to *-mon-ops; ∙= to *= )
+    renaming ( _∙_ to _*_; ε to `1; mon-ops to *-mon-ops; ∙= to *= )
 
--- A renaming of Group with multiplicative notation
-module Multiplicative-Group {ℓ}{G : Set ℓ} (grp : Group G) = Group grp
-    using    ( _⁻¹; unique-⁻¹; _/_; /=; ⁻¹-hom′
-             ; _^⁺_ ; _^⁻_; _^_ )
-    renaming ( _∙_ to _*_; ε to 1ᵍ
-             ; assoc to *-assoc; identity to *-identity
+-- A renaming of Group-Struct with multiplicative notation
+module Multiplicative-Group-Struct {ℓ}{G : Set ℓ}{grp-ops : Group-Ops G}
+                                   (grp-struct : Group-Struct grp-ops)
+  = Group-Struct grp-struct
+    using    ( unique-⁻¹
+             ; ⁻¹-hom′
+             ; ⁻¹-inj
+             ; ⁻¹-involutive
+             )
+    renaming ( assoc to *-assoc
+             ; identity to *-identity
+             ; ε∙-identity to 1*-identity
+             ; ∙ε-identity to *1-identity
              ; inverse to ⁻¹-inverse
              ; ∙-/ to *-/; /-∙ to /-*
-             ; mon-ops to *-mon-ops
              ; mon-struct to *-mon-struct
              ; mon to *-mon
-             ; unique-ε-left to unique-1ᵍ-left
-             ; unique-ε-right to unique-1ᵍ-right
-             ; is-ε-left to is-1ᵍ-left
-             ; is-ε-right to is-1ᵍ-right
+             ; unique-ε-left to unique-1-left
+             ; unique-ε-right to unique-1-right
+             ; is-ε-left to is-1-left
+             ; is-ε-right to is-1-right
              ; cancels-∙-left to cancels-*-left
              ; cancels-∙-right to cancels-*-right
              ; assoc= to *-assoc=
@@ -113,7 +139,13 @@ module Multiplicative-Group {ℓ}{G : Set ℓ} (grp : Group G) = Group grp
              ; elim-assoc= to elim-*-assoc=
              ; elim-!assoc= to elim-*-!assoc=
              ; elim-inner= to elim-*-inner=
-             ; ∙= to *= )
+             ; ε⁻¹≡ε to 1⁻¹≡1
+             )
+
+-- A renaming of Group with multiplicative notation
+module Multiplicative-Group {ℓ}{G : Set ℓ}(mon : Group G) where
+  open Multiplicative-Group-Ops    (Group.grp-ops    mon) public
+  open Multiplicative-Group-Struct (Group.grp-struct mon) public
 
 module Groupᵒᵖ {ℓ}{G : Set ℓ} where
   _ᵒᵖ-ops : Group-Ops G → Group-Ops G
@@ -136,12 +168,12 @@ module GroupProduct {a}{A : Set a}{b}{B : Set b}
   open MonoidProduct +-mon *-mon
 
   ×-grp-ops : Group-Ops (A × B)
-  ×-grp-ops = ×-mon-ops , map 0-_ _⁻¹
+  ×-grp-ops = ×-mon-ops , map 0−_ _⁻¹
 
   ×-grp-struct : Group-Struct ×-grp-ops
   ×-grp-struct = ×-mon-struct
-               , ( ap₂ _,_ (fst 0--inverse) (fst ⁻¹-inverse)
-                 , ap₂ _,_ (snd 0--inverse) (snd ⁻¹-inverse))
+               , ( ap₂ _,_ (fst 0−-inverse) (fst ⁻¹-inverse)
+                 , ap₂ _,_ (snd 0−-inverse) (snd ⁻¹-inverse))
 
   ×-grp : Group (A × B)
   ×-grp = ×-grp-ops , ×-grp-struct

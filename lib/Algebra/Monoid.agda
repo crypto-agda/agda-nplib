@@ -27,8 +27,8 @@ record Monoid-Ops {ℓ} (M : Type ℓ) : Type ℓ where
     _∙_ : M → M → M
     ε   : M
 
-  open FromOp₂ _∙_ public renaming (op= to ∙=)
-  open FromMonoidOps ε _∙_ public
+  open From-Op₂ _∙_ public renaming (op= to ∙=)
+  open From-Monoid-Ops ε _∙_ public
 
 record Monoid-Struct {ℓ} {M : Type ℓ} (mon-ops : Monoid-Ops M) : Type ℓ where
   constructor _,_
@@ -39,18 +39,18 @@ record Monoid-Struct {ℓ} {M : Type ℓ} (mon-ops : Monoid-Ops M) : Type ℓ wh
     assocs   : Associative _∙_ × Associative (flip _∙_)
     identity : Identity  ε _∙_
 
-  idl : LeftIdentity ε _∙_
-  idl = fst identity
+  ε∙-identity : LeftIdentity ε _∙_
+  ε∙-identity = fst identity
 
-  idr : RightIdentity ε _∙_
-  idr = snd identity
+  ∙ε-identity : RightIdentity ε _∙_
+  ∙ε-identity = snd identity
 
-  assoc = fst assocs
+  assoc  = fst assocs
   !assoc = snd assocs
 
-  open FromAssoc assoc public hiding (assocs)
-  open FromLeftIdentityAssoc  idl assoc public
-  open FromRightIdentityAssoc idr assoc public
+  open From-Assoc assoc public hiding (assocs)
+  open From-Assoc-LeftIdentity  assoc ε∙-identity public
+  open From-Assoc-RightIdentity assoc ∙ε-identity public
 
 record Monoid {ℓ}(M : Type ℓ) : Type ℓ where
   constructor _,_
@@ -60,70 +60,70 @@ record Monoid {ℓ}(M : Type ℓ) : Type ℓ where
   open Monoid-Ops    mon-ops    public
   open Monoid-Struct mon-struct public
 
-record Commutative-Monoid-Struct {ℓ} {M : Type ℓ} (mon-ops : Monoid-Ops M) : Type ℓ where
-  constructor _,_
-  open Monoid-Ops mon-ops
-  field
-    mon-struct : Monoid-Struct mon-ops
-    comm : Commutative _∙_
-  open Monoid-Struct mon-struct public
-  open FromAssocComm assoc comm public
-    hiding (!assoc=; assoc=; inner=; assocs)
-
-record Commutative-Monoid {ℓ}(M : Type ℓ) : Type ℓ where
-  constructor _,_
-  field
-    mon-ops    : Monoid-Ops M
-    mon-comm   : Commutative-Monoid-Struct mon-ops
-  open Monoid-Ops    mon-ops    public
-  open Commutative-Monoid-Struct mon-comm public
-  mon : Monoid M
-  mon = record { mon-struct = mon-struct }
-
--- A renaming of Monoid with additive notation
-module Additive-Monoid {ℓ}{M : Type ℓ} (mon : Monoid M) = Monoid mon
-    renaming ( _∙_ to _+_; ε to 0ᵐ
-             ; assoc to +-assoc; identity to +-identity
-             ; !assoc to +-!assoc
-             ; ∙= to +=
+-- A renaming of Monoid-Ops with additive notation
+module Additive-Monoid-Ops {ℓ}{M : Set ℓ} (mon : Monoid-Ops M) where
+  private
+   module M = Monoid-Ops mon
+    using    ()
+    renaming ( _∙_ to _+_; ε to `0
+             ; _^¹⁺_ to _⊗¹⁺_
              ; _^⁺_ to _⊗⁺_
-             )
-
--- A renaming of Monoid with multiplicative notation
-module Multiplicative-Monoid {ℓ}{M : Type ℓ} (mon : Monoid M) = Monoid mon
-    renaming ( _∙_ to _*_; ε to 1ᵐ
-             ; assoc to *-assoc; identity to *-identity
-             ; !assoc to *-!assoc
-             ; ∙= to *=
-             )
-
-module Additive-Commutative-Monoid {ℓ}{M : Type ℓ} (mon-comm : Commutative-Monoid M)
-  = Commutative-Monoid mon-comm
-    renaming ( _∙_ to _+_; ε to 0ᵐ
-             ; assoc to +-assoc; identity to +-identity
-             ; !assoc to +-!assoc
              ; ∙= to +=
+             )
+  open M public using (`0; +=)
+  infixl 6 _+_
+  infixl 7 _⊗¹⁺_ _⊗⁺_
+  _+_   = M._+_
+  _⊗¹⁺_ = M._⊗¹⁺_
+  _⊗⁺_  = M._⊗⁺_
+
+-- A renaming of Monoid-Struct with additive notation
+module Additive-Monoid-Struct {ℓ}{M : Type ℓ}{mon-ops : Monoid-Ops M}
+                              (mon-struct : Monoid-Struct mon-ops)
+  = Monoid-Struct mon-struct
+    renaming ( identity to +-identity
+             ; ε∙-identity to 0+-identity
+             ; ∙ε-identity to +0-identity
+             ; assocs to +-assocs
+             ; assoc to +-assoc
+             ; !assoc to +-!assoc
              ; assoc= to +-assoc=
              ; !assoc= to +-!assoc=
              ; inner= to +-inner=
-             ; assoc-comm to +-assoc-comm
-             ; interchange to +-interchange
-             ; outer= to +-outer=
              )
 
-module Multiplicative-Commutative-Monoid
-     {ℓ}{M : Type ℓ} (mon : Commutative-Monoid M) = Commutative-Monoid mon
-    renaming ( _∙_ to _*_; ε to 1ᵐ
-             ; assoc to *-assoc; identity to *-identity
-             ; !assoc to *-!assoc
+-- A renaming of Monoid with additive notation
+module Additive-Monoid {ℓ}{M : Type ℓ} (mon : Monoid M) where
+  open Additive-Monoid-Ops    (Monoid.mon-ops    mon) public
+  open Additive-Monoid-Struct (Monoid.mon-struct mon) public
+
+-- A renaming of Monoid-Ops with multiplicative notation
+module Multiplicative-Monoid-Ops {ℓ}{M : Type ℓ} (mon-ops : Monoid-Ops M)
+  = Monoid-Ops mon-ops
+    renaming ( _∙_ to _*_
+             ; ε to `1
              ; ∙= to *=
+             )
+
+-- A renaming of Monoid-Struct with multiplicative notation
+module Multiplicative-Monoid-Struct {ℓ}{M : Type ℓ}{mon-ops : Monoid-Ops M}
+                                    (mon-struct : Monoid-Struct mon-ops)
+  = Monoid-Struct mon-struct
+    renaming ( identity to *-identity
+             ; ε∙-identity to 1*-identity
+             ; ∙ε-identity to *1-identity
+             ; assocs to *-assocs
+             ; assoc to *-assoc
+             ; !assoc to *-!assoc
              ; assoc= to *-assoc=
              ; !assoc= to *-!assoc=
              ; inner= to *-inner=
-             ; assoc-comm to *-assoc-comm
-             ; interchange to *-interchange
-             ; outer= to *-outer=
              )
+
+-- A renaming of Monoid with multiplicative notation
+module Multiplicative-Monoid {ℓ}{M : Type ℓ} (mon : Monoid M) where
+  open Multiplicative-Monoid-Ops    (Monoid.mon-ops    mon) public
+  open Multiplicative-Monoid-Struct (Monoid.mon-struct mon) public
 
 module Monoidᵒᵖ {ℓ}{M : Type ℓ} where
   _ᵒᵖ-ops : Monoid-Ops M → Monoid-Ops M
@@ -139,7 +139,7 @@ module Monoidᵒᵖ {ℓ}{M : Type ℓ} where
   ᵒᵖ∘ᵒᵖ-id = idp
 
 module _ {a}{A : Type a}(_∙_ : Op₂ A)(assoc : Associative _∙_) where
-  from-assoc = FromOp₂.FromAssoc.assocs _∙_ assoc
+  from-assoc = From-Op₂.From-Assoc.assocs _∙_ assoc
 
 --import Data.Vec.NP as V
 {-
@@ -164,7 +164,7 @@ module MonoidProduct {a}{A : Type a}{b}{B : Type b}
   open Multiplicative-Monoid monB1*
 
   ×-mon-ops    : Monoid-Ops (A × B)
-  ×-mon-ops    = zip _+_ _*_ , 0ᵐ , 1ᵐ
+  ×-mon-ops    = zip _+_ _*_ , `0 , `1
 
   ×-mon-struct : Monoid-Struct ×-mon-ops
   ×-mon-struct = (ap₂ _,_ +-assoc *-assoc , ap₂ _,_ +-!assoc *-!assoc)

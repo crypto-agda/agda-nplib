@@ -25,40 +25,38 @@ record GroupHomomorphism {a}{A : Set a}{b}{B : Set b}
   field
     hom : Homomorphic₂ f _+_ _*_
 
-  pres-unit : f 0ᵍ ≡ 1ᵍ
-  pres-unit = unique-1ᵍ-left part
-    where part = f 0ᵍ * f 0ᵍ  ≡⟨ ! hom ⟩
-                 f (0ᵍ + 0ᵍ)  ≡⟨ ap f (fst +-identity) ⟩
-                 f 0ᵍ         ∎
-
-  0ᵍ-hom-1ᵍ = pres-unit
+  pres-unit : f `0 ≡ `1
+  pres-unit = unique-1-left part
+    where part = f `0 * f `0  ≡⟨ ! hom ⟩
+                 f (`0 + `0)  ≡⟨ ap f (fst +-identity) ⟩
+                 f `0         ∎
 
   mon-hom : MonoidHomomorphism +-mon *-mon f
-  mon-hom = 0ᵍ-hom-1ᵍ , hom
+  mon-hom = pres-unit , hom
 
   open MonoidHomomorphism mon-hom public
 
-  pres-inv : ∀ {x} → f (0- x) ≡ (f x)⁻¹
+  pres-inv : ∀ {x} → f (0− x) ≡ (f x)⁻¹
   pres-inv {x} = unique-⁻¹ part
-    where part = f (0- x) * f x  ≡⟨ ! hom ⟩
-                 f (0- x + x)    ≡⟨ ap f (fst 0--inverse) ⟩
-                 f 0ᵍ            ≡⟨ pres-unit ⟩
-                 1ᵍ              ∎
+    where part = f (0− x) * f x  ≡⟨ ! hom ⟩
+                 f (0− x + x)    ≡⟨ ap f (fst 0−-inverse) ⟩
+                 f `0            ≡⟨ pres-unit ⟩
+                 `1              ∎
 
-  0--⁻¹ = pres-inv
+  0−-⁻¹ = pres-inv
 
   −-/ : ∀ {x y} → f (x − y) ≡ f x / f y
   −-/ {x} {y} = f (x − y)       ≡⟨ hom ⟩
-                f x * f (0- y)  ≡⟨ ap (_*_ (f x)) pres-inv ⟩
+                f x * f (0− y)  ≡⟨ ap (_*_ (f x)) pres-inv ⟩
                 f x / f y       ∎
 
   hom-iterated⁻ : ∀ {x} n → f (x ⊗⁻ n) ≡ f x ^⁻ n
   hom-iterated⁻ {x} n =
     f (x ⊗⁻ n)      ≡⟨by-definition⟩
-    f (0- (x ⊗⁺ n)) ≡⟨ pres-inv ⟩
+    f (0−(x ⊗⁺ n))  ≡⟨ pres-inv ⟩
     f(x ⊗⁺ n)⁻¹     ≡⟨ ap _⁻¹ (hom-iterated⁺ n) ⟩
     (f x ^⁺ n)⁻¹    ≡⟨by-definition⟩
-    f x ^⁻ n ∎
+    f x ^⁻ n        ∎
 
   hom-iterated : ∀ {x} i → f (x ⊗ i) ≡ f x ^ i
   hom-iterated -[1+ n ] = hom-iterated⁻ (1+ n)
@@ -92,3 +90,7 @@ module _ {ℓ}{G : Set ℓ}(grp : Group G) where
     ^-+-hom = mk (λ {i} {j} → ^-+ i j)
 
     open GroupHomomorphism ^-+-hom public
+-- -}
+-- -}
+-- -}
+-- -}
