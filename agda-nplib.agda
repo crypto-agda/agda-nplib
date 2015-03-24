@@ -1,6 +1,6 @@
 module agda-nplib where
-{-
 import Algebra.Field
+{-
 import Algebra.Field.Reflection
 import Algebra.Field.Solver
 -}
