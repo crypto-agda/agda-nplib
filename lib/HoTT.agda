@@ -476,19 +476,66 @@ module _ {a} where
       UIP-check = idp
 
     module _ {A : U} where
-        prop-has-all-paths : is-prop A → has-all-paths A
-        prop-has-all-paths A-prop x y = fst (A-prop x y)
+      prop-has-all-paths : is-prop A → has-all-paths A
+      prop-has-all-paths A-prop x y = fst (A-prop x y)
 
-        all-paths-is-prop : has-all-paths A → is-prop A
-        all-paths-is-prop c x y = c x y , canon-path
-          where
-          lemma : {x y : A} (p : x ≡ y) → c x y ≡ p ∙ c y y
-          lemma = J' (λ x y p → c x y ≡ p ∙ c y y) (λ x → idp)
+      all-paths-is-prop : has-all-paths A → is-prop A
+      all-paths-is-prop c x y = c x y , canon-path
+        where
+        lemma : {x y : A} (p : x ≡ y) → c x y ≡ p ∙ c y y
+        lemma = J' (λ x y p → c x y ≡ p ∙ c y y) (λ x → idp)
 
-          canon-path : {x y : A} (p : x ≡ y) → c x y ≡ p
-          canon-path = J' (λ x y p → c x y ≡ p)
-                          (λ x → lemma (! c x x) ∙ !-∙ (c x x))
+        canon-path : {x y : A} (p : x ≡ y) → c x y ≡ p
+        canon-path = J' (λ x y p → c x y ≡ p)
+                        (λ x → lemma (! c x x) ∙ !-∙ (c x x))
 
+      Is-contr→is-prop : Is-contr A → is-prop A
+      Is-contr→is-prop (x , p) y z
+         = ! p y ∙ p z
+         , J' (λ y₁ z₁ q → ! p y₁ ∙ p z₁ ≡ q) (!-∙ ∘ p)
+
+      {-
+      has-level-up : ∀ {n} → has-level n A → has-level ⟨S n ⟩ A
+      has-level-up {⟨-2⟩} = Is-contr→is-prop
+      has-level-up {⟨S n ⟩} π x y p q = {!!}
+
+      Is-contr-is-prop : is-prop (Is-contr A)
+      Is-contr-is-prop (x , p) (y , q) = ?
+
+      module _ {{_ : FunExt}} where
+        is-prop-is-prop : has-all-paths (has-all-paths A)
+        is-prop-is-prop h0 h1 = λ= λ x → λ= λ y → {!!}
+      -}
+
+𝟘-is-prop : is-prop 𝟘
+𝟘-is-prop () _
+
+𝟘-has-all-paths : has-all-paths 𝟘
+𝟘-has-all-paths () _
+
+𝟙-is-contr : Is-contr 𝟙
+𝟙-is-contr = _ , λ _ → idp
+
+𝟙-is-prop : is-prop 𝟙
+𝟙-is-prop = Is-contr→is-prop 𝟙-is-contr
+
+𝟙-has-all-paths : has-all-paths 𝟙
+𝟙-has-all-paths _ _ = idp
+
+module _ {{_ : FunExt}}{a b}{A : ★_ a}{B : A → ★_ b} where
+  Π-has-all-paths : (∀ x → has-all-paths (B x)) → has-all-paths (Π A B)
+  Π-has-all-paths B-has-all-paths f g
+    = λ= λ _ → B-has-all-paths _ _ _
+
+  Π-is-prop : (∀ x → is-prop (B x)) → is-prop (Π A B)
+  Π-is-prop B-is-prop = all-paths-is-prop (Π-has-all-paths (prop-has-all-paths ∘ B-is-prop))
+
+module _ {{_ : FunExt}}{a}{A : ★_ a} where
+    ¬-has-all-paths : has-all-paths (¬ A)
+    ¬-has-all-paths = Π-has-all-paths (λ _ → 𝟘-has-all-paths)
+
+    ¬-is-prop : is-prop (¬ A)
+    ¬-is-prop = Π-is-prop (λ _ → 𝟘-is-prop)
 
 module _ {a} (A : ★_ a) where
     has-dec-eq : ★_ a
