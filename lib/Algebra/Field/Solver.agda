@@ -1,22 +1,17 @@
-import Algebra.Field as Field renaming (Field-Ops to RawField ; module Field-Ops to RawField)
+import Algebra.Field as Field
 import Algebra.RingSolver as RS
 
 open import Relation.Binary.PropositionalEquality.NP
 
 open import Level
-open import Data.Nat as Nat using (ℕ ; suc ; zero)
+open import Data.Nat as Nat using (ℕ)
 open import Data.Fin
 open import Data.One
 open import Data.Product
 
 open import Function
 
-module Algebra.Field.Solver
-  {f}{F : Set f}
-  (𝔽 : Field.RawField F) where
-
-module 𝔽 = Field.RawField 𝔽
-
+module Algebra.Field.Solver where
 
 data R-Op : Set where
   [+] [*] [-] : R-Op
@@ -24,25 +19,10 @@ data R-Op : Set where
 data F-Op : Set where
   [+] [*] [-] [/] : F-Op
 
-F-Op-eval : F-Op → F → F → F
-F-Op-eval [+] x y = x 𝔽.+ y
-F-Op-eval [*] x y = x 𝔽.* y
-F-Op-eval [-] x y = x 𝔽.− y
-F-Op-eval [/] x y = x 𝔽./ y
-
-R-include : R-Op → F-Op
-R-include [+] = [+]
-R-include [*] = [*]
-R-include [-] = [-]
-
-R-Op-eval : R-Op → F → F → F
-R-Op-eval op = F-Op-eval (R-include op)
-
-
-data Tm (Op : Set)(m : ℕ) : Set f where
-  op : (o : Op) (t₁ t₂ : Tm Op m) → Tm Op m
-  con : F → Tm Op m
-  var : Fin m → Tm Op m
+data Tm (F Op Var : Set) : Set where
+  op  : (o : Op) (t₁ t₂ : Tm F Op Var) → Tm F Op Var
+  con : F → Tm F Op Var
+  var : Var → Tm F Op Var
 
 infixl 6 _:+_ _:-_
 infixl 7 _:*_ _:/_
@@ -51,61 +31,102 @@ pattern _:*_ x y = op [*] x y
 pattern _:-_ x y = op [-] x y
 pattern _:/_ x y = op [/] x y
 
-module _ {m}{Op : Set}(evalOp : Op → F → F → F)(ρ : Fin m → F) where
-  eval : Tm Op m → F
-  eval (op o tm tm₁) = evalOp o (eval tm) (eval tm₁)
+R-include : R-Op → F-Op
+R-include [+] = [+]
+R-include [*] = [*]
+R-include [-] = [-]
+
+module _ {F Op Var : Set}(evalOp : Op → F → F → F)(ρ : Var → F) where
+  eval : Tm F Op Var → F
+  eval (op o t u) = evalOp o (eval t) (eval u)
   eval (con x) = x
   eval (var x) = ρ x
 
-infix 2 _/_:[_,_]
-record Div {m} ρ (tm : Tm F-Op m) : Set f where
-  constructor _/_:[_,_]
-  field
-    N : Tm R-Op m
-    D : Tm R-Op m
-    .nonZero-D : eval R-Op-eval ρ D ≢ 𝔽.0ᶠ
-    .is-Correct : eval F-Op-eval ρ tm ≡ eval R-Op-eval ρ N 𝔽./ eval R-Op-eval ρ D
+module _
+  {Var : Set}
+  {F : Set}
+  (𝔽 : Field.Field-Ops F)
+  where
 
-module _ (FS : Field.Field-Struct 𝔽) where
-  open Field.Field-Struct FS -- {{...}}
+  module 𝔽 = Field.Field-Ops 𝔽
 
-  {-
-  toRingOp : ∀ {m} → F-Op → Div {m} → Div {m} → Div {m}
-  toRingOp [+] (N / D :[ P ]) (N' / D' :[ P' ]) = N :* D' :+ N' :* D  / D :* D'
-                                                :[ (λ ρ → noZeroDivisor (P ρ) (P' ρ) ) ]
-  toRingOp [*] (N / D :[ P ]) (N' / D' :[ P' ]) = N :* N' / D :* D' :[ (λ ρ → noZeroDivisor (P ρ) (P' ρ)) ]
-  toRingOp [-] (N / D :[ P ]) (N' / D' :[ P' ]) = N :* D' :- N' :* D / D :* D'
-                                                :[ (λ ρ → noZeroDivisor (P ρ) (P' ρ)) ]
-  toRingOp [/] (N / D :[ P ]) (N' / D' :[ P' ]) = N :* D' / N' :* D :[ {!!} ]
-  -}
+  F-Op-eval : F-Op → F → F → F
+  F-Op-eval [+] x y = x 𝔽.+ y
+  F-Op-eval [*] x y = x 𝔽.* y
+  F-Op-eval [-] x y = x 𝔽.− y
+  F-Op-eval [/] x y = x 𝔽./ y
 
+  R-Op-eval : R-Op → F → F → F
+  R-Op-eval o = F-Op-eval (R-include o)
 
-  module _ {m} (ρ : Fin m → F) where
-    Assumptions : Tm F-Op m → Set f
-    Assumptions (op [+] tm tm₁) = Assumptions tm × Assumptions tm₁
-    Assumptions (op [*] tm tm₁) = Assumptions tm × Assumptions tm₁
-    Assumptions (op [-] tm tm₁) = Assumptions tm × Assumptions tm₁
-    Assumptions (op [/] tm tm₁) = Assumptions tm × Assumptions tm₁ × eval F-Op-eval ρ tm₁ ≢ 0ᶠ
+  evalF : (ρ : Var → F) → Tm F F-Op Var → F
+  evalR : (ρ : Var → F) → Tm F R-Op Var → F
+  evalF = eval F-Op-eval
+  evalR = eval R-Op-eval
+
+  infix 2 _/_:[_,_]
+  record Div ρ (t : Tm F F-Op Var) : Set where
+    constructor _/_:[_,_]
+    field
+      N : Tm F R-Op Var
+      D : Tm F R-Op Var
+      .non-zero-D : evalR ρ D ≢ 𝔽.`0
+      .is-correct : evalF ρ t ≡ evalR ρ N 𝔽./ evalR ρ D
+
+  module _ (FS : Field.Field-Struct 𝔽)(ρ : Var → F) where
+    open Field.Field-Struct FS
+
+    private
+      TmF = Tm F F-Op Var
+      TmR = Tm F R-Op Var
+
+      Div' = Div ρ
+      ev = evalF ρ
+
+    _+Div_ : ∀ {t u} → Div' t → Div' u → Div' (t :+ u)
+    (N / D :[ nD , ok ]) +Div (N₁ / D₁ :[ nD₁ , ok₁ ])
+       = N :* D₁ :+ N₁ :* D / D :* D₁
+       :[ no-zero-divisor nD nD₁ , += ok ok₁ ∙ +-quotient nD nD₁ ]
+
+    _*Div_ : ∀ {t u} → Div' t → Div' u → Div' (t :* u)
+    (N / D :[ nD , ok ]) *Div (N₁ / D₁ :[ nD₁ , ok₁ ])
+       = N :* N₁ / D :* D₁
+       :[ no-zero-divisor nD nD₁ , *= ok ok₁ ∙ *-quotient nD nD₁ ]
+
+    _−Div_ : ∀ {t u} → Div' t → Div' u → Div' (t :- u)
+    (N / D :[ nD , ok ]) −Div (N₁ / D₁ :[ nD₁ , ok₁ ])
+       = N :* D₁ :- N₁ :* D / D :* D₁
+       :[ no-zero-divisor nD nD₁ , −= ok ok₁ ∙ −-quotient nD nD₁ ]
+
+    _/Div_:[_] : ∀ {t u} → Div' t → Div' u → ev u ≢ `0 → Div' (t :/ u)
+    (N / D :[ nD , ok ]) /Div (N₁ / D₁ :[ nD₁ , ok₁ ]) :[ u≢0 ]
+      = (N :* D₁) / (D :* N₁)
+      :[ no-zero-divisor nD nN₁ , /= ok ok₁ ∙ /-quotient nN₁ nD nD₁ ]
+      where .nN₁ : evalR ρ N₁ ≢ `0
+            nN₁ p = u≢0 (ok₁ ∙ *= p idp ∙ 0*-zero)
+
+    -- con-Div and var-Div are basically the same but not so convenient to unify
+    con-Div : ∀ x → Div' (con x)
+    var-Div : ∀ x → Div' (var x)
+
+    con-Div x = con x / con 𝔽.`1 :[ 1≢0 , ! /1-id ]
+    var-Div x = var x / con 𝔽.`1 :[ 1≢0 , ! /1-id ]
+
+    Assumptions : TmF → Set
+    Assumptions (op [+] t u) = Assumptions t × Assumptions u
+    Assumptions (op [*] t u) = Assumptions t × Assumptions u
+    Assumptions (op [-] t u) = Assumptions t × Assumptions u
+    Assumptions (op [/] t u) = Assumptions t × Assumptions u × ev u ≢ `0
     Assumptions (con x) = Lift 𝟙
     Assumptions (var x) = Lift 𝟙
 
-    toRing : ∀ (tm : Tm F-Op m) → Assumptions tm → Div {m} ρ tm
-    toRing (op [+] tm tm₁) (atm , atm₁) with toRing tm atm | toRing tm₁ atm₁
-    ... | N / D :[ nD , isC ] | N₁ / D₁ :[ nD₁ , isC₁ ] = N :* D₁ :+ N₁ :* D / D :* D₁
-                                               :[ noZeroDivisor nD nD₁ , += isC isC₁ ∙ +-quotient nD nD₁ ]
-    toRing (op [*] tm tm₁) (atm , atm₁) with toRing tm atm | toRing tm₁ atm₁
-    ... | N / D :[ nD , isC ] | N₁ / D₁ :[ nD₁ , isC₁ ] = N :* N₁ / D :* D₁
-                                               :[ noZeroDivisor nD nD₁ , *= isC isC₁ ∙ *-quotient nD nD₁ ]
-    toRing (op [-] tm tm₁) (atm , atm₁) with toRing tm atm | toRing tm₁ atm₁
-    ... | N / D :[ nD , isC ] | N₁ / D₁ :[ nD₁ , isC₁ ] = N :* D₁ :- N₁ :* D / D :* D₁
-                                               :[ noZeroDivisor nD nD₁ , −= isC isC₁ ∙ −-quotient nD nD₁ ]
-    toRing (op [/] tm tm₁) (atm , atm₁ , tm₁/=0) with toRing tm atm | toRing tm₁ atm₁
-    ... | N / D :[ nD , isC ] | N₁ / D₁ :[ nD₁ , isC₁ ] = (N :* D₁) / (D :* N₁)
-                                               :[ noZeroDivisor nD nN₁ , /= isC isC₁ ∙ /-quotient nN₁ nD nD₁ ]
-      where .nN₁ : eval R-Op-eval ρ N₁ ≢ 0ᶠ
-            nN₁ p = tm₁/=0 (isC₁ ∙ *= p refl ∙ 0*-zero)
-    toRing (con x) _ = con x / con 𝔽.1ᶠ :[ 0≢1 ∘ !_ , ! (*= refl 1⁻¹≡1 ∙ *1-identity) ]
-    toRing (var x) _ = var x / con 𝔽.1ᶠ :[ 0≢1 ∘ !_ , ! (*= refl 1⁻¹≡1 ∙ *1-identity) ]
+    to-ring : ∀ (t : TmF) → Assumptions t → Div' t
+    to-ring (op [+] t u) (at , au)       = to-ring t at +Div to-ring u au
+    to-ring (op [*] t u) (at , au)       = to-ring t at *Div to-ring u au
+    to-ring (op [-] t u) (at , au)       = to-ring t at −Div to-ring u au
+    to-ring (op [/] t u) (at , au , u≢0) = to-ring t at /Div to-ring u au :[ u≢0 ]
+    to-ring (con x) _                    = con-Div x
+    to-ring (var x) _                    = var-Div x
 
 -- -}
 -- -}
