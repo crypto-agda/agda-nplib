@@ -220,6 +220,9 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   1⁻¹≡1 : `1 ⁻¹ ≡ `1
   1⁻¹≡1 = ! *1-identity ∙ ⁻¹-left-inverse (λ p → 0≢1 (! p))
 
+  /1-id : ∀ {x} → x / `1 ≡ x
+  /1-id = *= idp 1⁻¹≡1 ∙ *1-identity
+
   2*-spec : ∀ {n} → 2* n ≡ `2 * n
   2*-spec = ! += 1*-identity 1*-identity ∙ ! *-+-distrʳ
 
