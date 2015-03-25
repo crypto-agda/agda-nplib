@@ -81,6 +81,8 @@ module Additive-Group-Struct {ℓ}{G : Set ℓ}{grp-ops : Group-Ops G}
              ; ∙-/ to +-−; /-∙ to −-+
              ; unique-ε-left to unique-0-left
              ; unique-ε-right to unique-0-right
+             ; x/y≡ε→x≡y to x−y≡0→x≡y
+             ; x/y≢ε to x−y≢0
              ; is-ε-left to is-0-left
              ; is-ε-right to is-0-right
              ; unique-⁻¹ to unique-0−
@@ -125,6 +127,8 @@ module Multiplicative-Group-Struct {ℓ}{G : Set ℓ}{grp-ops : Group-Ops G}
              ; mon to *-mon
              ; unique-ε-left to unique-1-left
              ; unique-ε-right to unique-1-right
+             ; x/y≡ε→x≡y to x/y≡1→x≡y
+             ; x/y≢ε to x/y≢1
              ; is-ε-left to is-1-left
              ; is-ε-right to is-1-right
              ; cancels-∙-left to cancels-*-left

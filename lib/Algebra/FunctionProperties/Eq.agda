@@ -339,6 +339,12 @@ module Implicits where
             y / y        ≡⟨ inv-r ⟩
             ε            ∎
 
+        x/y≡ε→x≡y : x / y ≡ ε → x ≡ y
+        x/y≡ε→x≡y x/y≡ε = cancels-∙-right (x/y≡ε ♦ ! inv-r)
+
+        x/y≢ε : x ≢ y → x / y ≢ ε
+        x/y≢ε x≢y x/y≡ε = x≢y (x/y≡ε→x≡y x/y≡ε)
+
       ε⁻¹≡ε : ε ⁻¹ ≡ ε
       ε⁻¹≡ε = unique-ε-left inv-l
 
