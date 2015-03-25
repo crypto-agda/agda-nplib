@@ -104,7 +104,7 @@ module Additive-Group {ℓ}{G : Set ℓ}(mon : Group G) where
 -- A renaming of Group-Ops with multiplicative notation
 module Multiplicative-Group-Ops {ℓ}{G : Set ℓ} (grp : Group-Ops G) = Group-Ops grp
     using    ( _⁻¹; _/_; /=; _^⁺_ ; _^⁻_; _^_; _²; _³; _⁴ )
-    renaming ( _∙_ to _*_; ε to `1; mon-ops to *-mon-ops; ∙= to *= )
+    renaming ( _∙_ to _*_; ε to 1#; mon-ops to *-mon-ops; ∙= to *= )
 
 -- A renaming of Group-Struct with multiplicative notation
 module Multiplicative-Group-Struct {ℓ}{G : Set ℓ}{grp-ops : Group-Ops G}

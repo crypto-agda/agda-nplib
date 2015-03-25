@@ -66,7 +66,7 @@ module Additive-Monoid-Ops {ℓ}{M : Set ℓ} (mon : Monoid-Ops M) where
    module M = Monoid-Ops mon
     using    ()
     renaming ( _∙_ to _+_
-             ; ε to `0
+             ; ε to 0#
              ; _² to 2⊗_
              ; _³ to 3⊗_
              ; _⁴ to 4⊗_
@@ -74,7 +74,7 @@ module Additive-Monoid-Ops {ℓ}{M : Set ℓ} (mon : Monoid-Ops M) where
              ; _^⁺_ to _⊗⁺_
              ; ∙= to +=
              )
-  open M public using (`0; +=)
+  open M public using (0#; +=)
   infixl 6 _+_
   infixl 7 _⊗¹⁺_ _⊗⁺_ 2⊗_ 3⊗_ 4⊗_
   _+_   = M._+_
@@ -108,7 +108,7 @@ module Additive-Monoid {ℓ}{M : Type ℓ} (mon : Monoid M) where
 module Multiplicative-Monoid-Ops {ℓ}{M : Type ℓ} (mon-ops : Monoid-Ops M)
   = Monoid-Ops mon-ops
     renaming ( _∙_ to _*_
-             ; ε to `1
+             ; ε to 1#
              ; ∙= to *=
              )
 
@@ -171,7 +171,7 @@ module MonoidProduct {a}{A : Type a}{b}{B : Type b}
   open Multiplicative-Monoid monB1*
 
   ×-mon-ops    : Monoid-Ops (A × B)
-  ×-mon-ops    = zip _+_ _*_ , `0 , `1
+  ×-mon-ops    = zip _+_ _*_ , 0# , 1#
 
   ×-mon-struct : Monoid-Struct ×-mon-ops
   ×-mon-struct = (ap₂ _,_ +-assoc *-assoc , ap₂ _,_ +-!assoc *-!assoc)

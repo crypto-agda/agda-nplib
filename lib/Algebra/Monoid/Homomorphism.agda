@@ -25,7 +25,7 @@ record MonoidHomomorphism {a}{A : Type a}{b}{B : Type b}
   open Additive-Monoid monA0+
   open Multiplicative-Monoid monB1*
   field
-    0-hom-1 : Homomorphic₀ f `0 `1
+    0-hom-1 : Homomorphic₀ f 0# 1#
     +-hom-* : Homomorphic₂ f _+_ _*_
 
   hom-iterated⁺ : ∀ {x} n → f (x ⊗⁺ n) ≡ f x ^⁺ n

@@ -25,11 +25,11 @@ record GroupHomomorphism {a}{A : Set a}{b}{B : Set b}
   field
     hom : Homomorphic₂ f _+_ _*_
 
-  pres-unit : f `0 ≡ `1
+  pres-unit : f 0# ≡ 1#
   pres-unit = unique-1-left part
-    where part = f `0 * f `0  ≡⟨ ! hom ⟩
-                 f (`0 + `0)  ≡⟨ ap f (fst +-identity) ⟩
-                 f `0         ∎
+    where part = f 0# * f 0#  ≡⟨ ! hom ⟩
+                 f (0# + 0#)  ≡⟨ ap f (fst +-identity) ⟩
+                 f 0#         ∎
 
   mon-hom : MonoidHomomorphism +-mon *-mon f
   mon-hom = pres-unit , hom
@@ -40,8 +40,8 @@ record GroupHomomorphism {a}{A : Set a}{b}{B : Set b}
   pres-inv {x} = unique-⁻¹ part
     where part = f (0− x) * f x  ≡⟨ ! hom ⟩
                  f (0− x + x)    ≡⟨ ap f (fst 0−-inverse) ⟩
-                 f `0            ≡⟨ pres-unit ⟩
-                 `1              ∎
+                 f 0#            ≡⟨ pres-unit ⟩
+                 1#              ∎
 
   0−-⁻¹ = pres-inv
 
