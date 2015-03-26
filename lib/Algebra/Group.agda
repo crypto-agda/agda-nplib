@@ -1,15 +1,18 @@
 {-# OPTIONS --without-K #-}
-open import Function
-open import Level.NP
-open import Data.Product.NP
+  -- TODO
+  -- If you are looking for a proof of:
+  --   f (Σ(xᵢ∈A) g(x₁)) ≡ Π(xᵢ∈A) (f(g(xᵢ)))
+  -- Have a look to:
+  --   https://github.com/crypto-agda/explore/blob/master/lib/Explore/GroupHomomorphism.agda
+open import Type using (Type_)
+open import Data.Product.NP using (_,_)
 import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Implicits
 open import Algebra.Monoid
-open import Relation.Binary.PropositionalEquality.NP hiding (_∙_)
 
 module Algebra.Group where
 
-record Group-Ops {ℓ} (G : Set ℓ) : Set ℓ where
+record Group-Ops {ℓ} (G : Type ℓ) : Type ℓ where
   constructor _,_
 
   field
@@ -19,7 +22,7 @@ record Group-Ops {ℓ} (G : Set ℓ) : Set ℓ where
   open Monoid-Ops mon-ops public
   open From-Group-Ops ε _∙_ _⁻¹  public
 
-record Group-Struct {ℓ} {G : Set ℓ} (grp-ops : Group-Ops G) : Set ℓ where
+record Group-Struct {ℓ} {G : Type ℓ} (grp-ops : Group-Ops G) : Type ℓ where
   constructor _,_
   open Group-Ops grp-ops
 
@@ -36,7 +39,7 @@ record Group-Struct {ℓ} {G : Set ℓ} (grp-ops : Group-Ops G) : Set ℓ where
 
 -- TODO Monoid+LeftInverse → Group
 
-record Group {ℓ}(G : Set ℓ) : Set ℓ where
+record Group {ℓ}(G : Type ℓ) : Type ℓ where
   constructor _,_
   field
     grp-ops    : Group-Ops G
@@ -45,7 +48,7 @@ record Group {ℓ}(G : Set ℓ) : Set ℓ where
   open Group-Struct grp-struct public
 
 -- A renaming of Group-Ops with additive notation
-module Additive-Group-Ops {ℓ}{G : Set ℓ} (grp : Group-Ops G) where
+module Additive-Group-Ops {ℓ}{G : Type ℓ} (grp : Group-Ops G) where
   private
    module M = Group-Ops grp
     using    ()
@@ -64,7 +67,7 @@ module Additive-Group-Ops {ℓ}{G : Set ℓ} (grp : Group-Ops G) where
   _⊗_   = M._⊗_
 
 -- A renaming of Group-Struct with additive notation
-module Additive-Group-Struct {ℓ}{G : Set ℓ}{grp-ops : Group-Ops G}
+module Additive-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
                              (grp-struct : Group-Struct grp-ops)
     = Group-Struct grp-struct
     using    ()
@@ -99,17 +102,17 @@ module Additive-Group-Struct {ℓ}{G : Set ℓ}{grp-ops : Group-Ops G}
              )
 
 -- A renaming of Group with additive notation
-module Additive-Group {ℓ}{G : Set ℓ}(mon : Group G) where
+module Additive-Group {ℓ}{G : Type ℓ}(mon : Group G) where
   open Additive-Group-Ops    (Group.grp-ops    mon) public
   open Additive-Group-Struct (Group.grp-struct mon) public
 
 -- A renaming of Group-Ops with multiplicative notation
-module Multiplicative-Group-Ops {ℓ}{G : Set ℓ} (grp : Group-Ops G) = Group-Ops grp
+module Multiplicative-Group-Ops {ℓ}{G : Type ℓ} (grp : Group-Ops G) = Group-Ops grp
     using    ( _⁻¹; _/_; /=; _^⁺_ ; _^⁻_; _^_; _²; _³; _⁴ )
     renaming ( _∙_ to _*_; ε to 1#; mon-ops to *-mon-ops; ∙= to *= )
 
 -- A renaming of Group-Struct with multiplicative notation
-module Multiplicative-Group-Struct {ℓ}{G : Set ℓ}{grp-ops : Group-Ops G}
+module Multiplicative-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
                                    (grp-struct : Group-Struct grp-ops)
   = Group-Struct grp-struct
     using    ( unique-⁻¹
@@ -144,59 +147,9 @@ module Multiplicative-Group-Struct {ℓ}{G : Set ℓ}{grp-ops : Group-Ops G}
              )
 
 -- A renaming of Group with multiplicative notation
-module Multiplicative-Group {ℓ}{G : Set ℓ}(mon : Group G) where
+module Multiplicative-Group {ℓ}{G : Type ℓ}(mon : Group G) where
   open Multiplicative-Group-Ops    (Group.grp-ops    mon) public
   open Multiplicative-Group-Struct (Group.grp-struct mon) public
-
-module Groupᵒᵖ {ℓ}{G : Set ℓ} where
-  _ᵒᵖ-ops : Group-Ops G → Group-Ops G
-  (mon , inv) ᵒᵖ-ops = mon Monoidᵒᵖ.ᵒᵖ-ops , inv
-
-  _ᵒᵖ-struct : {mon : Group-Ops G} → Group-Struct mon → Group-Struct (mon ᵒᵖ-ops)
-  (mon , inv) ᵒᵖ-struct = mon Monoidᵒᵖ.ᵒᵖ-struct , swap inv
-
-  _ᵒᵖ : Group G → Group G
-  (ops , struct)ᵒᵖ = _ , struct ᵒᵖ-struct
-
-  ᵒᵖ∘ᵒᵖ-id : ∀ {grp} → (grp ᵒᵖ) ᵒᵖ ≡ grp
-  ᵒᵖ∘ᵒᵖ-id = idp
-
-module GroupProduct {a}{A : Set a}{b}{B : Set b}
-                    (grpA0+ : Group A)(grpB1* : Group B) where
-  open Additive-Group grpA0+
-  open Multiplicative-Group grpB1*
-
-  open MonoidProduct +-mon *-mon
-
-  ×-grp-ops : Group-Ops (A × B)
-  ×-grp-ops = ×-mon-ops , map 0−_ _⁻¹
-
-  ×-grp-struct : Group-Struct ×-grp-ops
-  ×-grp-struct = ×-mon-struct
-               , ( ap₂ _,_ (fst 0−-inverse) (fst ⁻¹-inverse)
-                 , ap₂ _,_ (snd 0−-inverse) (snd ⁻¹-inverse))
-
-  ×-grp : Group (A × B)
-  ×-grp = ×-grp-ops , ×-grp-struct
-
-module _ {a}{A : Set a}{b}{B : Set b} where
-  open GroupProduct
-  open Groupᵒᵖ
-  ×-ᵒᵖ : (gA : Group A)(gB : Group B) → (×-grp gA gB)ᵒᵖ ≡ ×-grp (gA ᵒᵖ) (gB ᵒᵖ)
-  ×-ᵒᵖ gA gB = idp
-
-{-
-  open import Data.Vec
-  GroupVec : ∀ n → Group (Vec A n)
-  GroupVec n = record { grp-ops = {!!} ; grp-struct = {!!} }
-    module GroupVec where
--}
-
-  -- TODO
-  -- If you are looking for a proof of:
-  --   f (Σ(xᵢ∈A) g(x₁)) ≡ Π(xᵢ∈A) (f(g(xᵢ)))
-  -- Have a look to:
-  --   https://github.com/crypto-agda/explore/blob/master/lib/Explore/GroupHomomorphism.agda
 -- -}
 -- -}
 -- -}
