@@ -32,3 +32,7 @@ postulate
 !-λ= : ∀ {a b}{A : Set a}{B : A → Set b}{f g : (x : A) → B x}{{fe : FunExt}}
   (fg : ∀ x → f x ≡ g x) → ! (λ= fg) ≡ λ= (!_ ∘ fg)
 !-λ= fg = !-α-λ= (λ= fg) ∙ ap λ= (λ= (λ x → ap !_ (happly (happly-λ= fg) x)))
+
+module _ {a b}{A : Set a}{B : A → Set b}{f₀ f₁ : (x : A) → B x}{{fe : FunExt}} where
+  λ=ⁱ : (f= : ∀ {x} → f₀ x ≡ f₁ x) → f₀ ≡ f₁
+  λ=ⁱ f= = λ= λ x → f= {x}
