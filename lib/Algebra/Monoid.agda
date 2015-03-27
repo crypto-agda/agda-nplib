@@ -1,21 +1,11 @@
 {-# OPTIONS --without-K #-}
-open import Type using () renaming (Type_ to Type)
-open import Level.NP
+open import Type using (Type_)
 open import Function.NP
+open import Function.Extensionality
 open import Data.Product.NP
-open import Data.Nat
-  using    (ℕ; zero)
-  renaming (_+_ to _+ℕ_; _*_ to _*ℕ_; suc to 1+_)
-import Data.Nat.Properties.Simple as ℕ°
-open import Data.Integer.NP
-  using    (ℤ; +_; -[1+_]; _⊖_; -_; module ℤ°)
-  renaming ( _+_ to _+ℤ_; _-_ to _−ℤ_; _*_ to _*ℤ_
-           ; suc to sucℤ; pred to predℤ
-           )
-open import Relation.Binary.PropositionalEquality.NP renaming (_∙_ to _♦_)
+open import Relation.Binary.PropositionalEquality.NP using (_≡_; idp; ap; ap₂)
 import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Implicits
-open ≡-Reasoning
 
 module Algebra.Monoid where
 
@@ -66,7 +56,7 @@ module Additive-Monoid-Ops {ℓ}{M : Set ℓ} (mon : Monoid-Ops M) where
    module M = Monoid-Ops mon
     using    ()
     renaming ( _∙_ to _+_
-             ; ε to `0
+             ; ε to 0#
              ; _² to 2⊗_
              ; _³ to 3⊗_
              ; _⁴ to 4⊗_
@@ -74,7 +64,7 @@ module Additive-Monoid-Ops {ℓ}{M : Set ℓ} (mon : Monoid-Ops M) where
              ; _^⁺_ to _⊗⁺_
              ; ∙= to +=
              )
-  open M public using (`0; +=)
+  open M public using (0#; +=)
   infixl 6 _+_
   infixl 7 _⊗¹⁺_ _⊗⁺_ 2⊗_ 3⊗_ 4⊗_
   _+_   = M._+_
@@ -108,7 +98,7 @@ module Additive-Monoid {ℓ}{M : Type ℓ} (mon : Monoid M) where
 module Multiplicative-Monoid-Ops {ℓ}{M : Type ℓ} (mon-ops : Monoid-Ops M)
   = Monoid-Ops mon-ops
     renaming ( _∙_ to _*_
-             ; ε to `1
+             ; ε to 1#
              ; ∙= to *=
              )
 
@@ -165,13 +155,24 @@ module VecMonoid {M : Type} (mon : Monoid M) where
     ×-mon-struct = (λ {x}{y}{z} → {!replicate ? ⊛ ?!}) , {!!} , {!!}
 -}
 
-module MonoidProduct {a}{A : Type a}{b}{B : Type b}
-                     (monA0+ : Monoid A)(monB1* : Monoid B) where
-  open Additive-Monoid monA0+
-  open Multiplicative-Monoid monB1*
+-- The monoidal structure of endomorphisms
+module _ {a}(A : Type a) where
+  ∘-mon-ops : Monoid-Ops (Endo A)
+  ∘-mon-ops = _∘′_ , id
+
+  ∘-mon-struct : Monoid-Struct ∘-mon-ops
+  ∘-mon-struct = (idp , idp) , (idp , idp)
+
+  ∘-mon : Monoid (Endo A)
+  ∘-mon = ∘-mon-ops , ∘-mon-struct
+
+module Product {a}{A : Type a}{b}{B : Type b}
+               (𝔸 : Monoid A)(𝔹 : Monoid B) where
+  open Additive-Monoid 𝔸
+  open Multiplicative-Monoid 𝔹
 
   ×-mon-ops    : Monoid-Ops (A × B)
-  ×-mon-ops    = zip _+_ _*_ , `0 , `1
+  ×-mon-ops    = zip _+_ _*_ , 0# , 1#
 
   ×-mon-struct : Monoid-Struct ×-mon-ops
   ×-mon-struct = (ap₂ _,_ +-assoc *-assoc , ap₂ _,_ +-!assoc *-!assoc)
@@ -182,6 +183,59 @@ module MonoidProduct {a}{A : Type a}{b}{B : Type b}
   ×-mon = ×-mon-ops , ×-mon-struct
 
   open Monoid ×-mon public
+
+{-
+This module shows how properties of a monoid 𝕄 are carried on
+functions from any type A to 𝕄.
+However since the function type can be dependent, this also generalises
+the product of monoids (since Π 𝟚 [ A , B ] ≃ A × B).
+-}
+module Pointwise {{_ : FunExt}}{a}(A : Type a){m}{M : A → Type m}
+                 (𝕄 : (x : A) → Monoid (M x)) where
+  private
+    module 𝕄 {x} = Monoid (𝕄 x)
+  open 𝕄 hiding (mon-ops; mon-struct)
+
+  ⟨ε⟩ : Π A M
+  ⟨ε⟩ = λ _ → ε
+
+  _⟨∙⟩_ : Op₂ (Π A M)
+  (f ⟨∙⟩ g) x = f x ∙ g x
+
+  mon-ops : Monoid-Ops (Π A M)
+  mon-ops = _⟨∙⟩_ , ⟨ε⟩
+
+  mon-struct : Monoid-Struct mon-ops
+  mon-struct = (λ=ⁱ assoc , λ=ⁱ !assoc) , λ=ⁱ ε∙-identity , λ=ⁱ ∙ε-identity
+
+  mon : Monoid (Π A M)
+  mon = mon-ops , mon-struct
+
+  open Monoid mon public hiding (mon-ops; mon-struct)
+
+-- Non-dependent version of Pointwise′
+module Pointwise′ {{_ : FunExt}}{a}(A : Type a){m}{M : Type m}(𝕄 : Monoid M) =
+  Pointwise A (λ _ → 𝕄)
+  {- OR
+  open Monoid 𝕄 hiding (mon-ops; mon-struct)
+
+  ⟨ε⟩ : A → M
+  ⟨ε⟩ = λ _ → ε
+
+  _⟨∙⟩_ : Op₂ (A → M)
+  (f ⟨∙⟩ g) x = f x ∙ g x
+
+  mon-ops : Monoid-Ops (A → M)
+  mon-ops = _⟨∙⟩_ , ⟨ε⟩
+
+  mon-struct : Monoid-Struct mon-ops
+  mon-struct = (λ=ⁱ assoc , λ=ⁱ !assoc) , λ=ⁱ ε∙-identity , λ=ⁱ ∙ε-identity
+
+  mon : Monoid (A → M)
+  mon = mon-ops , mon-struct
+
+  open Monoid mon public hiding (mon-ops; mon-struct)
+  -}
 -- -}
 -- -}
 -- -}

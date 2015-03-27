@@ -5,13 +5,12 @@ open Algebra.FunctionProperties.Eq.Implicits
 open import Algebra.Monoid
 open import Algebra.Monoid.Homomorphism
 open import Algebra.Group
+open import Algebra.Group.Constructions
 open import Level.NP
 open import Data.Product.NP
-open import Data.Nat.NP using (ℕ; zero; suc; 1+_)
-open import Data.Integer.NP
-  hiding (module ℤ+; _⊔_)
-  renaming ( _+_ to _+ℤ_; _-_ to _−ℤ_; _*_ to _*ℤ_)
-open import Relation.Binary.PropositionalEquality.NP renaming (_∙_ to _♦_)
+open import Data.Nat.NP     using (1+_)
+open import Data.Integer.NP using (ℤ; -[1+_]; +_; -_; module ℤ°)
+open import Relation.Binary.PropositionalEquality.NP
 open ≡-Reasoning
 
 record GroupHomomorphism {a}{A : Set a}{b}{B : Set b}
@@ -25,11 +24,11 @@ record GroupHomomorphism {a}{A : Set a}{b}{B : Set b}
   field
     hom : Homomorphic₂ f _+_ _*_
 
-  pres-unit : f `0 ≡ `1
+  pres-unit : f 0# ≡ 1#
   pres-unit = unique-1-left part
-    where part = f `0 * f `0  ≡⟨ ! hom ⟩
-                 f (`0 + `0)  ≡⟨ ap f (fst +-identity) ⟩
-                 f `0         ∎
+    where part = f 0# * f 0#  ≡⟨ ! hom ⟩
+                 f (0# + 0#)  ≡⟨ ap f (fst +-identity) ⟩
+                 f 0#         ∎
 
   mon-hom : MonoidHomomorphism +-mon *-mon f
   mon-hom = pres-unit , hom
@@ -40,8 +39,8 @@ record GroupHomomorphism {a}{A : Set a}{b}{B : Set b}
   pres-inv {x} = unique-⁻¹ part
     where part = f (0− x) * f x  ≡⟨ ! hom ⟩
                  f (0− x + x)    ≡⟨ ap f (fst 0−-inverse) ⟩
-                 f `0            ≡⟨ pres-unit ⟩
-                 `1              ∎
+                 f 0#            ≡⟨ pres-unit ⟩
+                 1#              ∎
 
   0−-⁻¹ = pres-inv
 
@@ -75,18 +74,18 @@ record GroupHomomorphism {a}{A : Set a}{b}{B : Set b}
 
 module ℤ+ = Additive-Group ℤ+-grp
 
-module _ {ℓ}{G : Set ℓ}(grp : Group G) where
+module _ {ℓ}{G : Set ℓ}(𝔾 : Group G) where
   open Groupᵒᵖ
-  open Group grp
+  open Group 𝔾
 
   module ⁻¹-Hom where
     -- The proper type for ⁻¹-hom′
-    ⁻¹-hom' : GroupHomomorphism grp (grp ᵒᵖ) _⁻¹
+    ⁻¹-hom' : GroupHomomorphism 𝔾 (𝔾 ᵒᵖ) _⁻¹
     ⁻¹-hom' = mk ⁻¹-hom′
     open GroupHomomorphism ⁻¹-hom' public
 
   module ℤ+-^-Hom {b} where
-    ^-+-hom : GroupHomomorphism ℤ+-grp grp (_^_ b)
+    ^-+-hom : GroupHomomorphism ℤ+-grp 𝔾 (_^_ b)
     ^-+-hom = mk (λ {i} {j} → ^-+ i j)
 
     open GroupHomomorphism ^-+-hom public
