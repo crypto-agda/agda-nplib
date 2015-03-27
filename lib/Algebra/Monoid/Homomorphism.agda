@@ -13,6 +13,7 @@ open import Data.Integer.NP
 open import Relation.Binary.PropositionalEquality.NP renaming (_∙_ to _♦_)
 import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Implicits
+open import Algebra.Raw
 open import Algebra.Monoid
 
 module Algebra.Monoid.Homomorphism where

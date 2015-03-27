@@ -4,7 +4,7 @@ open import Data.Nat.Base using (ℕ)
   renaming (_+_ to _+ℕ_; _*_ to _*ℕ_; suc to 1+_)
 import Data.Nat.Properties.Simple as ℕ°
 open import Data.Integer.NP
-  using    (ℤ; +_; -[1+_]; _⊖_; -_; module ℤ°)
+  using    (ℤ; +_; -[1+_]; _⊖_; -_)
   renaming ( _+_ to _+ℤ_; _-_ to _−ℤ_
            ; suc to sucℤ; pred to predℤ
            )
@@ -13,6 +13,7 @@ open import Relation.Nullary using (¬_)
 open import Relation.Binary.NP
 open import Relation.Binary.PropositionalEquality.NP renaming (_∙_ to _♦_)
 import Algebra.FunctionProperties.NP
+open import Algebra.Raw
 open ≡-Reasoning
 
 module Algebra.FunctionProperties.Eq {a} {A : Set a} where
@@ -30,34 +31,9 @@ module Implicits where
       Conflict-¬Injective : Conflict f → ¬(Injective f)
       Conflict-¬Injective = flip Injective-¬Conflict
 
-  module From-Op₂ (op : Op₂ A) where
+  module From-Magma (magma : Magma A) where
 
-    private
-      infixl 7 _∙_
-      _∙_ : Op₂ A
-      _∙_ = op
-
-    module _ {x x' y y'}(p : x ≡ x')(q : y ≡ y') where
-      op= : x ∙ y ≡ x' ∙ y'
-      op= = ap (_∙_ x) q ♦ ap (λ z → z ∙ y') p
-
-    private
-      ∙= = op=
-
-    infix 8 _² _³ _⁴
-
-    _² : A → A
-    x ² = x ∙ x
-
-    _³ : A → A
-    x ³ = x ² ∙ x
-
-    _⁴ : A → A
-    x ⁴ = x ³ ∙ x
-
-    infix 8 _^¹⁺_
-    _^¹⁺_ : A → ℕ → A
-    x ^¹⁺ n = nest n (_∙_ x) x
+    open Magma magma
 
     module From-Comm
              (comm  : Commutative _∙_)
@@ -77,10 +53,10 @@ module Implicits where
       module _ {c x y x' y' : A}
                (e : (x ∙ y) ≡ (x' ∙ y')) where
         assoc= : x ∙ (y ∙ c) ≡ x' ∙ (y' ∙ c)
-        assoc= = ! assoc ♦ op= e idp ♦ assoc
+        assoc= = ! assoc ♦ ∙= e idp ♦ assoc
 
         !assoc= : (c ∙ x) ∙ y ≡ (c ∙ x') ∙ y'
-        !assoc= = assoc ♦ op= idp e ♦ ! assoc
+        !assoc= = assoc ♦ ∙= idp e ♦ ! assoc
 
       module _ {c d x y x' y' : A}
                (e : (x ∙ y) ≡ (x' ∙ y')) where
@@ -109,18 +85,11 @@ module Implicits where
         outer= : (x ∙ c) ∙ (d ∙ y) ≡ (x' ∙ c) ∙ (d ∙ y')
         outer= = ∙= comm comm ♦ assoc= (!assoc= e) ♦ ∙= comm comm
 
-  module From-Monoid-Ops (ε : A) (op : Op₂ A) where
+  module From-Op₂ (op : Op₂ A) = From-Magma ⟨ op ⟩
 
-    private
-      infixl 7 _∙_
-      _∙_ : Op₂ A
-      _∙_ = op
-
-    open From-Op₂ _∙_ renaming (op= to ∙=)
-
-    infix 8 _^⁺_
-    _^⁺_ : A → ℕ → A
-    x ^⁺ n = nest n (_∙_ x) ε
+  module From-Monoid-Ops (mon-ops : Monoid-Ops A) where
+    open Monoid-Ops mon-ops
+    open From-Op₂ _∙_ public
 
     module From-LeftIdentity (idl : LeftIdentity ε _∙_) where
       module _ {x y} where
@@ -202,72 +171,52 @@ module Implicits where
         elim-!inner= : (c ∙ x) ∙ (y ∙ d) ≡ c ∙ d
         elim-!inner= = assoc ♦ ap (_∙_ c) (elim-!assoc= e)
 
-  module From-Group-Ops (ε : A) (op : Op₂ A) (_⁻¹   : Op₁ A) where
-    open From-Op₂ op renaming (op= to ∙=)
-
-    private
-      infixl 7 _∙_
-      _∙_ : Op₂ A
-      _∙_ = op
-
-    open From-Monoid-Ops ε op
-
-    infixl 7 _/_
-
-    _/_ : A → A → A
-    x / y = x ∙ y ⁻¹
-
-    open From-Op₂ _/_ public using () renaming (op= to /=)
-
-    _^⁻_ _^⁻′_ : A → ℕ → A
-    x ^⁻ n = (x ^⁺ n)⁻¹
-    x ^⁻′ n = (x ⁻¹)^⁺ n
-
-    _^_ : A → ℤ → A
-    x ^ -[1+ n ] = x ^⁻(1+ n)
-    x ^ (+ n)    = x ^⁺ n
+  module From-Group-Ops (grp-ops : Group-Ops A) where
+    open Group-Ops grp-ops
+    open From-Monoid-Ops mon-ops public
 
     module From-Assoc-LeftIdentity-LeftInverse
              (assoc : Associative _∙_)
              (idl : LeftIdentity ε _∙_)
-             (inv-l : LeftInverse ε _⁻¹ _∙_)
+             (inverseˡ : LeftInverse ε _⁻¹ _∙_)
              where
       open From-Assoc assoc
       open From-Assoc-LeftIdentity assoc idl
 
-      inv-r : RightInverse ε _⁻¹ _∙_
-      inv-r {x} = x ∙ x ⁻¹                      ≡⟨ ! idl ⟩
-                  ε ∙ (x ∙ x ⁻¹)                ≡⟨ ∙= (! inv-l) idp ⟩
-                  (x ⁻¹ ⁻¹ ∙ x ⁻¹) ∙ (x ∙ x ⁻¹) ≡⟨ elim-!inner= inv-l ⟩
-                  (x ⁻¹ ⁻¹ ∙ x ⁻¹)              ≡⟨ inv-l ⟩
-                  ε ∎
+      ⁻¹-inverseʳ : RightInverse ε _⁻¹ _∙_
+      ⁻¹-inverseʳ {x}
+         = x ∙ x ⁻¹                      ≡⟨ ! idl ⟩
+           ε ∙ (x ∙ x ⁻¹)                ≡⟨ ∙= (! inverseˡ) idp ⟩
+           (x ⁻¹ ⁻¹ ∙ x ⁻¹) ∙ (x ∙ x ⁻¹) ≡⟨ elim-!inner= inverseˡ ⟩
+           (x ⁻¹ ⁻¹ ∙ x ⁻¹)              ≡⟨ inverseˡ ⟩
+           ε                             ∎
 
       cancels-∙-left : LeftCancel _∙_
       cancels-∙-left {c} {x} {y} e
         = x              ≡⟨ ! idl ⟩
-          ε ∙ x          ≡⟨ ∙= (! inv-l) idp ⟩
+          ε ∙ x          ≡⟨ ∙= (! inverseˡ) idp ⟩
           c ⁻¹ ∙ c ∙ x   ≡⟨ !assoc= e ⟩
-          c ⁻¹ ∙ c ∙ y   ≡⟨ ∙= inv-l idp ⟩
+          c ⁻¹ ∙ c ∙ y   ≡⟨ ∙= inverseˡ idp ⟩
           ε ∙ y          ≡⟨ idl ⟩
           y              ∎
 
       module _ {x y} where
         unique-ε-right : x ∙ y ≡ x → y ≡ ε
         unique-ε-right eq
-          = y               ≡⟨ ! is-ε-left inv-l ⟩
+          = y               ≡⟨ ! is-ε-left inverseˡ ⟩
             x ⁻¹ ∙  x ∙ y   ≡⟨ assoc ⟩
             x ⁻¹ ∙ (x ∙ y)  ≡⟨ ∙= idp eq ⟩
-            x ⁻¹ ∙ x        ≡⟨ inv-l ⟩
+            x ⁻¹ ∙ x        ≡⟨ inverseˡ ⟩
             ε               ∎
 
       module _ {x y} where
         -- _⁻¹ is a group homomorphism, see Algebra.Group._ᵒᵖ
         ⁻¹-hom′ : (x ∙ y)⁻¹ ≡ y ⁻¹ ∙ x ⁻¹
         ⁻¹-hom′ = cancels-∙-left {x ∙ y}
-           ((x ∙ y) ∙ (x ∙ y)⁻¹     ≡⟨ inv-r ⟩
-            ε                       ≡⟨ ! inv-r ⟩
+           ((x ∙ y) ∙ (x ∙ y)⁻¹     ≡⟨ ⁻¹-inverseʳ ⟩
+            ε                       ≡⟨ ! ⁻¹-inverseʳ ⟩
             x ∙ x ⁻¹                ≡⟨ ap (_∙_ x) (! idl) ⟩
-            x ∙ (ε ∙ x ⁻¹)          ≡⟨ ∙= idp (∙= (! inv-r) idp) ⟩
+            x ∙ (ε ∙ x ⁻¹)          ≡⟨ ∙= idp (∙= (! ⁻¹-inverseʳ) idp) ⟩
             x ∙ ((y ∙ y ⁻¹) ∙ x ⁻¹) ≡⟨ ap (_∙_ x) assoc ⟩
             x ∙ (y ∙ (y ⁻¹ ∙ x ⁻¹)) ≡⟨ ! assoc ⟩
             (x ∙ y) ∙ (y ⁻¹ ∙ x ⁻¹) ∎)
@@ -278,19 +227,19 @@ module Implicits where
       elim-∙-left-⁻¹∙ : ∀ {c x y} → (c ∙ x)⁻¹ ∙ (c ∙ y) ≡ x ⁻¹ ∙ y
       elim-∙-left-⁻¹∙ {c} {x} {y}
         = (c ∙ x)⁻¹   ∙ (c ∙ y)  ≡⟨ ∙= ⁻¹-hom′ idp ⟩
-          x ⁻¹ ∙ c ⁻¹ ∙ (c ∙ y)  ≡⟨ elim-!inner= inv-l ⟩
+          x ⁻¹ ∙ c ⁻¹ ∙ (c ∙ y)  ≡⟨ elim-!inner= inverseˡ ⟩
           x ⁻¹ ∙ y               ∎
 
       elim-∙-right-/ : ∀ {c x y} → (x ∙ c) / (y ∙ c) ≡ x / y
       elim-∙-right-/ {c} {x} {y}
         = x ∙ c ∙ (y ∙ c)⁻¹  ≡⟨ ap (_∙_ _) ⁻¹-hom′  ⟩
-          x ∙ c ∙ (c ⁻¹ / y) ≡⟨ elim-!inner= inv-r ⟩
+          x ∙ c ∙ (c ⁻¹ / y) ≡⟨ elim-!inner= ⁻¹-inverseʳ ⟩
           x / y ∎
 
     module From-Assoc-RightIdentity-RightInverse
              (assoc : Associative _∙_)
              (idr : RightIdentity ε _∙_)
-             (inv-r : RightInverse ε _⁻¹ _∙_)
+             (inverseʳ : RightInverse ε _⁻¹ _∙_)
              where
       open From-Assoc assoc
       open From-Assoc-RightIdentity assoc idr
@@ -298,36 +247,36 @@ module Implicits where
       cancels-∙-right : RightCancel _∙_
       cancels-∙-right {c} {x} {y} e
         = x              ≡⟨ ! idr ⟩
-          x ∙ ε          ≡⟨ ∙= idp (! inv-r) ⟩
+          x ∙ ε          ≡⟨ ∙= idp (! inverseʳ) ⟩
           x ∙ (c ∙ c ⁻¹) ≡⟨ assoc= e ⟩
-          y ∙ (c ∙ c ⁻¹) ≡⟨ ∙= idp inv-r ⟩
+          y ∙ (c ∙ c ⁻¹) ≡⟨ ∙= idp inverseʳ ⟩
           y ∙ ε          ≡⟨ idr ⟩
-          y ∎
+          y              ∎
 
-      inv-l : LeftInverse ε _⁻¹ _∙_
-      inv-l {x} = x ⁻¹ ∙ x                      ≡⟨ ! idr ⟩
-                  (x ⁻¹ ∙ x) ∙ ε                ≡⟨ ∙= idp (! inv-r) ⟩
-                  (x ⁻¹ ∙ x) ∙ (x ⁻¹ ∙ x ⁻¹ ⁻¹) ≡⟨ elim-inner= inv-r ⟩
-                  (x ⁻¹ ∙ x ⁻¹ ⁻¹)              ≡⟨ inv-r ⟩
+      inverseˡ : LeftInverse ε _⁻¹ _∙_
+      inverseˡ {x} = x ⁻¹ ∙ x                      ≡⟨ ! idr ⟩
+                  (x ⁻¹ ∙ x) ∙ ε                ≡⟨ ∙= idp (! inverseʳ) ⟩
+                  (x ⁻¹ ∙ x) ∙ (x ⁻¹ ∙ x ⁻¹ ⁻¹) ≡⟨ elim-inner= inverseʳ ⟩
+                  (x ⁻¹ ∙ x ⁻¹ ⁻¹)              ≡⟨ inverseʳ ⟩
                   ε ∎
 
       ⁻¹-involutive : Involutive _⁻¹
       ⁻¹-involutive {x}
         = cancels-∙-right
-          (x ⁻¹ ⁻¹ ∙ x ⁻¹ ≡⟨ inv-l ⟩
-           ε              ≡⟨ ! inv-r ⟩
+          (x ⁻¹ ⁻¹ ∙ x ⁻¹ ≡⟨ inverseˡ ⟩
+           ε              ≡⟨ ! inverseʳ ⟩
            x ∙ x ⁻¹ ∎)
 
       module _ {x y} where
         /-∙ : x ≡ (x / y) ∙ y
         /-∙ = x               ≡⟨ ! idr ⟩
-              x ∙ ε           ≡⟨ ap (_∙_ x) (! inv-l) ⟩
+              x ∙ ε           ≡⟨ ap (_∙_ x) (! inverseˡ) ⟩
               x ∙ (y ⁻¹ ∙ y)  ≡⟨ ! assoc ⟩
               (x / y) ∙ y     ∎
 
         ∙-/ : x ≡ (x ∙ y) / y
         ∙-/ = x            ≡⟨ ! idr ⟩
-              x ∙ ε        ≡⟨ ap (_∙_ x) (! inv-r) ⟩
+              x ∙ ε        ≡⟨ ap (_∙_ x) (! inverseʳ) ⟩
               x ∙ (y / y)  ≡⟨ ! assoc ⟩
               (x ∙ y) / y  ∎
 
@@ -336,17 +285,17 @@ module Implicits where
         unique-ε-left eq
           = x            ≡⟨ ∙-/ ⟩
             (x ∙ y) / y  ≡⟨ /= eq idp ⟩
-            y / y        ≡⟨ inv-r ⟩
+            y / y        ≡⟨ inverseʳ ⟩
             ε            ∎
 
         x/y≡ε→x≡y : x / y ≡ ε → x ≡ y
-        x/y≡ε→x≡y x/y≡ε = cancels-∙-right (x/y≡ε ♦ ! inv-r)
+        x/y≡ε→x≡y x/y≡ε = cancels-∙-right (x/y≡ε ♦ ! inverseʳ)
 
         x/y≢ε : x ≢ y → x / y ≢ ε
         x/y≢ε x≢y x/y≡ε = x≢y (x/y≡ε→x≡y x/y≡ε)
 
       ε⁻¹≡ε : ε ⁻¹ ≡ ε
-      ε⁻¹≡ε = unique-ε-left inv-l
+      ε⁻¹≡ε = unique-ε-left inverseˡ
 
     module From-Assoc-Identities-RightInverse
              (assoc : Associative _∙_)
@@ -357,13 +306,16 @@ module Implicits where
         idl = fst identities
         idr = snd identities
 
+      inverseʳ : RightInverse ε _⁻¹ _∙_
+      inverseʳ = inv-r
+
       open From-Assoc assoc
       open From-Identities identities using (comm-ε)
       open From-Assoc-RightIdentity assoc idr
       open From-Assoc-LeftIdentity  assoc idl
-      open From-Assoc-RightIdentity-RightInverse assoc idr inv-r public
-      open From-Assoc-LeftIdentity-LeftInverse assoc idl inv-l public
-        hiding (inv-r)
+      open From-Assoc-RightIdentity-RightInverse assoc idr inverseʳ public
+      open From-Assoc-LeftIdentity-LeftInverse assoc idl inverseˡ public
+        hiding (⁻¹-inverseʳ)
 
       module _ {x y} where
         unique-⁻¹ : x ∙ y ≡ ε → x ≡ y ⁻¹
@@ -376,10 +328,10 @@ module Implicits where
       ⁻¹-inj : ∀ {x y} → x ⁻¹ ≡ y ⁻¹ → x ≡ y
       ⁻¹-inj {x} {y} e
          = ! (y              ≡⟨ ! idr ⟩
-              y ∙ ε          ≡⟨ ∙= idp (ε        ≡⟨ ! inv-l  ⟩
+              y ∙ ε          ≡⟨ ∙= idp (ε        ≡⟨ ! inverseˡ  ⟩
                                         x ⁻¹ ∙ x ≡⟨ ∙= e idp ⟩
                                         y ⁻¹ ∙ x ∎) ⟩
-              y ∙ (y ⁻¹ ∙ x) ≡⟨ elim-!assoc= inv-r ⟩
+              y ∙ (y ⁻¹ ∙ x) ≡⟨ elim-!assoc= inverseʳ ⟩
               x ∎)
 
       module _ {b} where
@@ -394,7 +346,7 @@ module Implicits where
         ^-⊖ 0      (1+ n) = ! idl
         ^-⊖ (1+ m) (1+ n) =
            b ^(m ⊖ n)                      ≡⟨ ^-⊖ m n ⟩
-           (b ^⁺ m ∙ b ^⁻ n)               ≡⟨ ! elim-inner= inv-r ⟩
+           (b ^⁺ m ∙ b ^⁻ n)               ≡⟨ ! elim-inner= inverseʳ ⟩
            (b ^⁺ m ∙ b) ∙ (b ⁻¹ ∙ b ^⁻ n)  ≡⟨ ∙= idp (! ⁻¹-hom′) ⟩
            (b ^⁺ m ∙ b) ∙ (b ^⁺ n ∙ b)⁻¹   ≡⟨ ∙= (! ^⁺-1+ m) (ap _⁻¹ (! ^⁺-1+ n)) ⟩
            (b ∙ b ^⁺ m) ∙ (b ∙ b ^⁺ n)⁻¹   ∎
@@ -404,7 +356,7 @@ module Implicits where
         ^-⊖' 0      (1+ n) = ! idr
         ^-⊖' (1+ m) (1+ n) =
            b ^(m ⊖ n)                      ≡⟨ ^-⊖' m n ⟩
-           (b ^⁻ n ∙ b ^⁺ m)               ≡⟨ ! elim-inner= inv-l ⟩
+           (b ^⁻ n ∙ b ^⁺ m)               ≡⟨ ! elim-inner= inverseˡ ⟩
            (b ^⁻ n ∙ b ⁻¹) ∙ (b ∙ b ^⁺ m)  ≡⟨ ∙= (! ⁻¹-hom′) idp ⟩
            (b ∙ b ^⁺ n)⁻¹ ∙ (b ∙ b ^⁺ m)   ∎
 
@@ -492,6 +444,114 @@ module Implicits where
              (inv : Inverse ε _⁻¹ _∙_)
              where
       open From-Assoc-Identities-RightInverse assoc identities (snd inv) public
+
+  module From-Ring-Ops (rng-ops : Ring-Ops A) where
+    open Ring-Ops rng-ops
+
+    module DistributesOverʳ
+             (*-comm : Commutative _*_)
+             (*-+-distrˡ : _*_ DistributesOverˡ _+_)
+             where
+      *-+-distrʳ : _*_ DistributesOverʳ _+_
+      *-+-distrʳ = *-comm ♦ *-+-distrˡ ♦ += *-comm *-comm
+
+    module DistributesOverˡ
+             (*-comm : Commutative _*_)
+             (*-+-distrʳ : _*_ DistributesOverʳ _+_)
+             where
+      *-+-distrˡ : _*_ DistributesOverˡ _+_
+      *-+-distrˡ = *-comm ♦ *-+-distrʳ ♦ += *-comm *-comm
+
+    module From-+Group-*Identity-DistributesOver
+             (+-assoc : Associative _+_)
+             (0+-identity : LeftIdentity 0# _+_)
+             (+0-identity : RightIdentity 0# _+_)
+             (0−-inverseʳ : RightInverse 0# 0−_ _+_)
+             (1*-identity : LeftIdentity 1# _*_)
+             (*1-identity : RightIdentity 1# _*_)
+             (*-+-distrs : _*_ DistributesOver _+_)
+             where
+      open From-Group-Ops.From-Assoc-Identities-RightInverse
+             +-grp-ops
+             +-assoc (0+-identity , +0-identity) 0−-inverseʳ
+            renaming ( ⁻¹-involutive to 0−-involutive
+                     ; cancels-∙-left to cancels-+-left
+                     ; cancels-∙-right to cancels-+-right
+                     ; inverseˡ to 0−-inverseˡ
+                     ; ε⁻¹≡ε to 0−0≡0
+                     ; ⁻¹-hom′ to 0−-hom′
+                     )
+
+      *-+-distrˡ : _*_ DistributesOverˡ _+_
+      *-+-distrˡ = fst *-+-distrs
+
+      *-+-distrʳ : _*_ DistributesOverʳ _+_
+      *-+-distrʳ = snd *-+-distrs
+
+      -0≡0 : -0# ≡ 0#
+      -0≡0 = 0−0≡0
+
+      0*-zero : LeftZero 0# _*_
+      0*-zero {x} = cancels-+-left
+        (x + 0# * x      ≡⟨ += (! 1*-identity) idp ⟩
+         1# * x + 0# * x ≡⟨ ! *-+-distrʳ ⟩
+         (1# + 0#) * x   ≡⟨ *= +0-identity idp ⟩
+         1# * x          ≡⟨ 1*-identity ⟩
+         x               ≡⟨ ! +0-identity ⟩
+         x + 0#          ∎)
+
+      *0-zero : RightZero 0# _*_
+      *0-zero {x} = cancels-+-right
+        (x * 0# + x      ≡⟨ += idp (! *1-identity) ⟩
+         x * 0# + x * 1# ≡⟨ ! *-+-distrˡ ⟩
+         x * (0# + 1#)   ≡⟨ *= idp 0+-identity ⟩
+         x * 1#          ≡⟨ *1-identity ⟩
+         x               ≡⟨ ! 0+-identity ⟩
+         0# + x          ∎)
+
+      2*-spec : ∀ {n} → 2* n ≡ 2# * n
+      2*-spec = ! += 1*-identity 1*-identity ♦ ! *-+-distrʳ
+
+      0−c+c+x : ∀ {c x} → 0− c + c + x ≡ x
+      0−c+c+x = += 0−-inverseˡ idp ♦ 0+-identity
+
+      0−-*-distr : ∀ {x y} → 0−(x * y) ≡ (0− x) * y
+      0−-*-distr = cancels-+-right (0−-inverseˡ ♦ ! 0*-zero ♦ *= (! 0−-inverseˡ) idp ♦ *-+-distrʳ)
+
+      0−-*-distrʳ : ∀ {x y} → 0−(x * y) ≡ x * (0− y)
+      0−-*-distrʳ = cancels-+-right (0−-inverseˡ ♦ (! *0-zero ♦ *= idp (! 0−-inverseˡ)) ♦ *-+-distrˡ)
+
+      -1*-neg : ∀ {x} → -1# * x ≡ 0− x
+      -1*-neg = ! 0−-*-distr ♦ 0−= 1*-identity
+
+      *-−-distr : ∀ {x y z} → x * (y − z) ≡ x * y − x * z
+      *-−-distr = *-+-distrˡ ♦ += idp (! 0−-*-distrʳ)
+
+      ²-0−-distr : ∀ {x} → (0− x)² ≡ x ²
+      ²-0−-distr = ! 0−-*-distr ♦ 0−=(! 0−-*-distrʳ) ♦ 0−-involutive
+
+      2*-*-distr : ∀ {x y} → 2*(x * y) ≡ 2* x * y
+      2*-*-distr = ! *-+-distrʳ
+
+      +-comm : Commutative _+_
+      +-comm {a} {b} =
+          cancels-+-right
+            (cancels-+-left
+              (a + (a + b + b)   ≡⟨ += idp +-assoc ♦ ! +-assoc ⟩
+               (a + a) + (b + b) ≡⟨ += 2*-spec 2*-spec ⟩
+               2# * a  + 2# * b  ≡⟨ ! *-+-distrˡ ⟩
+               2# * (a + b)      ≡⟨ ! 2*-spec ⟩
+               (a + b) + (a + b) ≡⟨ +-assoc ♦ += idp (! +-assoc) ⟩
+               a + (b + a + b)   ∎))
+
+      0−-+-distr′ : ∀ {x y} → 0−(x + y) ≡ 0− y − x
+      0−-+-distr′ = 0−-hom′
+
+      0−-+-distr : ∀ {x y} → 0−(x + y) ≡ 0− x − y
+      0−-+-distr = 0−= +-comm ♦ 0−-+-distr′
+
+  module From-Field-Ops (fld-ops : Field-Ops A) where
+    open Field-Ops fld-ops
 
 module Explicits where
   open Algebra.FunctionProperties.NP Π  {a}{a}{A} _≡_ public

@@ -9,6 +9,7 @@ import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Implicits
 open ≡-Reasoning
 open import Algebra.Group
+open import Algebra.Raw
 import Algebra.Group.Constructions
 
 module Algebra.Group.Abelian where
@@ -16,6 +17,7 @@ module Algebra.Group.Abelian where
 record Abelian-Group-Struct {ℓ} {G : Type ℓ} (grp-ops : Group-Ops G) : Type ℓ where
   constructor _,_
   open Group-Ops grp-ops
+  open From-Group-Ops grp-ops
   field
     grp-struct : Group-Struct grp-ops
     comm : Commutative _∙_

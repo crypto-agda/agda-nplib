@@ -1,3 +1,4 @@
+open import Algebra.Raw
 import Algebra.Field as Field
 
 open import Relation.Binary.PropositionalEquality.NP as ≡
@@ -52,10 +53,10 @@ module _ {F Var : Set}(evF : Tm F F-Op Var → Set) where
 module _
   {Var : Set}
   {F : Set}
-  (𝔽 : Field.Field-Ops F)
+  (𝔽 : Field-Ops F)
   where
 
-  open Field.Field-Ops 𝔽
+  open Field-Ops 𝔽
 
   F-Op-eval : F-Op → F → F → F
   F-Op-eval [+] x y = x + y
