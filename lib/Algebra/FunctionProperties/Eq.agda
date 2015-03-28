@@ -1,6 +1,6 @@
 {-# OPTIONS --without-K #-}
 open import Function.NP using (flip; Π; Πⁱ; Op₁; Op₂; nest)
-open import Data.Nat.Base using (ℕ)
+open import Data.Nat.Base using (ℕ; _≤_; _∸_; z≤n; s≤s)
   renaming (_+_ to _+ℕ_; _*_ to _*ℕ_; suc to 1+_)
 import Data.Nat.Properties.Simple as ℕ°
 open import Data.Integer.NP
@@ -339,7 +339,14 @@ module Implicits where
         ^⁺-1+ 0 = comm-ε
         ^⁺-1+ (1+ n) = ap (_∙_ b) (^⁺-1+ n) ♦ ! assoc
 
-        -- ^-∸ : ∀ m n → m > n → b ^(m ∸ n) ≡ b ^⁺ m ∙ b ^⁻ n
+        ^⁺-∸ : ∀ {m n} → n ≤ m → b ^⁺(m ∸ n) ≡ b ^⁺ m ∙ b ^⁻ n
+        ^⁺-∸ z≤n = ! is-ε-right ε⁻¹≡ε
+        ^⁺-∸ (s≤s {n} {m} n≤m) =
+           b ^⁺(m ∸ n)                     ≡⟨ ^⁺-∸ n≤m ⟩
+           (b ^⁺ m ∙ b ^⁻ n)               ≡⟨ ! elim-inner= inverseʳ ⟩
+           (b ^⁺ m ∙ b) ∙ (b ⁻¹ ∙ b ^⁻ n)  ≡⟨ ∙= idp (! ⁻¹-hom′) ⟩
+           (b ^⁺ m ∙ b) ∙ (b ^⁺ n ∙ b)⁻¹   ≡⟨ ∙= (! ^⁺-1+ m) (ap _⁻¹ (! ^⁺-1+ n)) ⟩
+           (b ∙ b ^⁺ m) ∙ (b ∙ b ^⁺ n)⁻¹   ∎
 
         ^-⊖ : ∀ m n → b ^(m ⊖ n) ≡ b ^⁺ m ∙ b ^⁻ n
         ^-⊖ m      0      = ! is-ε-right ε⁻¹≡ε
