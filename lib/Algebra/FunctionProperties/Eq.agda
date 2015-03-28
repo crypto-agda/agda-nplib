@@ -469,31 +469,23 @@ module Implicits where
       *-+-distrˡ : _*_ DistributesOverˡ _+_
       *-+-distrˡ = *-comm ♦ *-+-distrʳ ♦ += *-comm *-comm
 
-    module From-+Group-*Identity-DistributesOver
+    module From-+Group-1*Identity-DistributesOverʳ
              (+-assoc : Associative _+_)
              (0+-identity : LeftIdentity 0# _+_)
              (+0-identity : RightIdentity 0# _+_)
              (0−-inverseʳ : RightInverse 0# 0−_ _+_)
              (1*-identity : LeftIdentity 1# _*_)
-             (*1-identity : RightIdentity 1# _*_)
-             (*-+-distrs : _*_ DistributesOver _+_)
+             (*-+-distrʳ : _*_ DistributesOverʳ _+_)
              where
       open From-Group-Ops.From-Assoc-Identities-RightInverse
              +-grp-ops
              +-assoc (0+-identity , +0-identity) 0−-inverseʳ
-            renaming ( ⁻¹-involutive to 0−-involutive
-                     ; cancels-∙-left to cancels-+-left
+            renaming ( cancels-∙-left to cancels-+-left
                      ; cancels-∙-right to cancels-+-right
                      ; inverseˡ to 0−-inverseˡ
                      ; ε⁻¹≡ε to 0−0≡0
                      ; ⁻¹-hom′ to 0−-hom′
                      )
-
-      *-+-distrˡ : _*_ DistributesOverˡ _+_
-      *-+-distrˡ = fst *-+-distrs
-
-      *-+-distrʳ : _*_ DistributesOverʳ _+_
-      *-+-distrʳ = snd *-+-distrs
 
       -0≡0 : -0# ≡ 0#
       -0≡0 = 0−0≡0
@@ -507,15 +499,6 @@ module Implicits where
          x               ≡⟨ ! +0-identity ⟩
          x + 0#          ∎)
 
-      *0-zero : RightZero 0# _*_
-      *0-zero {x} = cancels-+-right
-        (x * 0# + x      ≡⟨ += idp (! *1-identity) ⟩
-         x * 0# + x * 1# ≡⟨ ! *-+-distrˡ ⟩
-         x * (0# + 1#)   ≡⟨ *= idp 0+-identity ⟩
-         x * 1#          ≡⟨ *1-identity ⟩
-         x               ≡⟨ ! 0+-identity ⟩
-         0# + x          ∎)
-
       2*-spec : ∀ {n} → 2* n ≡ 2# * n
       2*-spec = ! += 1*-identity 1*-identity ♦ ! *-+-distrʳ
 
@@ -525,20 +508,61 @@ module Implicits where
       0−-*-distr : ∀ {x y} → 0−(x * y) ≡ (0− x) * y
       0−-*-distr = cancels-+-right (0−-inverseˡ ♦ ! 0*-zero ♦ *= (! 0−-inverseˡ) idp ♦ *-+-distrʳ)
 
-      0−-*-distrʳ : ∀ {x y} → 0−(x * y) ≡ x * (0− y)
-      0−-*-distrʳ = cancels-+-right (0−-inverseˡ ♦ (! *0-zero ♦ *= idp (! 0−-inverseˡ)) ♦ *-+-distrˡ)
-
       -1*-neg : ∀ {x} → -1# * x ≡ 0− x
       -1*-neg = ! 0−-*-distr ♦ 0−= 1*-identity
+
+      2*-*-distr : ∀ {x y} → 2*(x * y) ≡ 2* x * y
+      2*-*-distr = ! *-+-distrʳ
+
+      0−-+-distr′ : ∀ {x y} → 0−(x + y) ≡ 0− y − x
+      0−-+-distr′ = 0−-hom′
+
+    module From-+Group-*Identity-DistributesOver
+             (+-assoc : Associative _+_)
+             (0+-identity : LeftIdentity 0# _+_)
+             (+0-identity : RightIdentity 0# _+_)
+             (0−-inverseʳ : RightInverse 0# 0−_ _+_)
+             (1*-identity : LeftIdentity 1# _*_)
+             (*1-identity : RightIdentity 1# _*_)
+             (*-+-distrs : _*_ DistributesOver _+_)
+             where
+      *-+-distrˡ : _*_ DistributesOverˡ _+_
+      *-+-distrˡ = fst *-+-distrs
+
+      *-+-distrʳ : _*_ DistributesOverʳ _+_
+      *-+-distrʳ = snd *-+-distrs
+
+      open From-Group-Ops.From-Assoc-Identities-RightInverse
+             +-grp-ops
+             +-assoc (0+-identity , +0-identity) 0−-inverseʳ
+            renaming ( ⁻¹-involutive to 0−-involutive
+                     ; cancels-∙-left to cancels-+-left
+                     ; cancels-∙-right to cancels-+-right
+                     ; inverseˡ to 0−-inverseˡ
+                     )
+
+      open From-+Group-1*Identity-DistributesOverʳ
+             +-assoc 0+-identity +0-identity 0−-inverseʳ
+             1*-identity *-+-distrʳ
+             public
+
+      *0-zero : RightZero 0# _*_
+      *0-zero {x} = cancels-+-right
+        (x * 0# + x      ≡⟨ += idp (! *1-identity) ⟩
+         x * 0# + x * 1# ≡⟨ ! *-+-distrˡ ⟩
+         x * (0# + 1#)   ≡⟨ *= idp 0+-identity ⟩
+         x * 1#          ≡⟨ *1-identity ⟩
+         x               ≡⟨ ! 0+-identity ⟩
+         0# + x          ∎)
+
+      0−-*-distrʳ : ∀ {x y} → 0−(x * y) ≡ x * (0− y)
+      0−-*-distrʳ = cancels-+-right (0−-inverseˡ ♦ (! *0-zero ♦ *= idp (! 0−-inverseˡ)) ♦ *-+-distrˡ)
 
       *-−-distr : ∀ {x y z} → x * (y − z) ≡ x * y − x * z
       *-−-distr = *-+-distrˡ ♦ += idp (! 0−-*-distrʳ)
 
       ²-0−-distr : ∀ {x} → (0− x)² ≡ x ²
       ²-0−-distr = ! 0−-*-distr ♦ 0−=(! 0−-*-distrʳ) ♦ 0−-involutive
-
-      2*-*-distr : ∀ {x y} → 2*(x * y) ≡ 2* x * y
-      2*-*-distr = ! *-+-distrʳ
 
       +-comm : Commutative _+_
       +-comm {a} {b} =
@@ -550,9 +574,6 @@ module Implicits where
                2# * (a + b)      ≡⟨ ! 2*-spec ⟩
                (a + b) + (a + b) ≡⟨ +-assoc ♦ += idp (! +-assoc) ⟩
                a + (b + a + b)   ∎))
-
-      0−-+-distr′ : ∀ {x y} → 0−(x + y) ≡ 0− y − x
-      0−-+-distr′ = 0−-hom′
 
       0−-+-distr : ∀ {x y} → 0−(x + y) ≡ 0− x − y
       0−-+-distr = 0−= +-comm ♦ 0−-+-distr′
