@@ -50,12 +50,12 @@ module _ {a}{A₀ A₁ : ★_ a}{b}{B₀ B₁ : ★_ b}(A≃ : A₀ ≃ A₁)(B�
       B→ = B≃.·→
       B← = B≃.·←
 
-    {-
+
     ×≃ : (A₀ × B₀) ≃ (A₁ × B₁)
     ×≃ = equiv (map× A→ B→) (map× A← B←)
-               (λ { (x , y) → pair= (A≃.·←-inv-r x) ({!coe-β!} ∙ B≃.·←-inv-r y) })
-               (λ { (x , y) → pair= (A≃.·←-inv-l x) {!!} })
-    -}
+               (λ { (x , y) → pair×= (A≃.·←-inv-r x) (B≃.·←-inv-r y) })
+               (λ { (x , y) → pair×= (A≃.·←-inv-l x) (B≃.·←-inv-l y) })
+
 
     ⊎≃ : (A₀ ⊎ B₀) ≃ (A₁ ⊎ B₁)
     ⊎≃ = equiv (map⊎ A→ B→) (map⊎ A← B←)
