@@ -29,7 +29,8 @@ record Monoid-Struct {ℓ} {M : Type ℓ} (mon-ops : Monoid-Ops M) : Type ℓ wh
   !assoc = snd assocs
 
   open From-Monoid-Ops mon-ops
-  open From-Assoc assoc public hiding (assocs)
+  open From-Assoc               assoc             public hiding (assocs)
+  open From-Identities          identity          public
   open From-Assoc-LeftIdentity  assoc ε∙-identity public
   open From-Assoc-RightIdentity assoc ∙ε-identity public
 
@@ -54,6 +55,7 @@ module Additive-Monoid-Struct {ℓ}{M : Type ℓ}{mon-ops : Monoid-Ops M}
              ; assoc= to +-assoc=
              ; !assoc= to +-!assoc=
              ; inner= to +-inner=
+             ; ε^⁺ to 0⊗⁺
              )
 
 -- A renaming of Monoid with additive notation
@@ -74,6 +76,7 @@ module Multiplicative-Monoid-Struct {ℓ}{M : Type ℓ}{mon-ops : Monoid-Ops M}
              ; assoc= to *-assoc=
              ; !assoc= to *-!assoc=
              ; inner= to *-inner=
+             ; ε^⁺ to 1^⁺
              )
 
 -- A renaming of Monoid with multiplicative notation

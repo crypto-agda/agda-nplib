@@ -96,6 +96,10 @@ module Implicits where
         is-ε-left : x ≡ ε → x ∙ y ≡ y
         is-ε-left e = ap (λ z → z ∙ _) e ♦ idl
 
+      ε^⁺ : ∀ n → ε ^⁺ n ≡ ε
+      ε^⁺ 0      = idp
+      ε^⁺ (1+ n) = idl ♦ ε^⁺ n
+
     module From-RightIdentity (idr : RightIdentity ε _∙_) where
       module _ {x y} where
         is-ε-right : y ≡ ε → x ∙ y ≡ x
@@ -132,7 +136,7 @@ module Implicits where
              (assoc : Associative _∙_)
              (idr   : RightIdentity ε _∙_)
              where
-      open From-RightIdentity idr public
+      open From-RightIdentity idr
 
       module _ {c x y}(e : x ∙ y ≡ ε) where
         elim-assoc= : (c ∙ x) ∙ y ≡ c
@@ -146,7 +150,7 @@ module Implicits where
              (assoc : Associative _∙_)
              (idl : LeftIdentity ε _∙_)
              where
-      open From-LeftIdentity idl public
+      open From-LeftIdentity idl
 
       -- Together with ^⁺0-ε, ^⁺-+ shows that (b ^⁺_) is a
       -- monoid homomorphism from (ℕ,+,0) to (M,∙,ε)
@@ -181,6 +185,7 @@ module Implicits where
              (inverseˡ : LeftInverse ε _⁻¹ _∙_)
              where
       open From-Assoc assoc
+      open From-LeftIdentity idl
       open From-Assoc-LeftIdentity assoc idl
 
       ⁻¹-inverseʳ : RightInverse ε _⁻¹ _∙_
@@ -208,6 +213,13 @@ module Implicits where
             x ⁻¹ ∙ (x ∙ y)  ≡⟨ ∙= idp eq ⟩
             x ⁻¹ ∙ x        ≡⟨ inverseˡ ⟩
             ε               ∎
+
+      ε^⁻ : ∀ n → ε ^⁻ n ≡ ε
+      ε^⁻ n = ⁻¹= (ε^⁺ n) ♦ unique-ε-right ⁻¹-inverseʳ
+
+      ε^ : ∀ i → ε ^ i ≡ ε
+      ε^ -[1+ n ] = ε^⁻(1+ n)
+      ε^ (+ n)    = ε^⁺ n
 
       module _ {x y} where
         -- _⁻¹ is a group homomorphism, see Algebra.Group._ᵒᵖ
@@ -311,8 +323,10 @@ module Implicits where
 
       open From-Assoc assoc
       open From-Identities identities using (comm-ε)
-      open From-Assoc-RightIdentity assoc idr
+      open From-LeftIdentity        idl
+      open From-RightIdentity       idr
       open From-Assoc-LeftIdentity  assoc idl
+      open From-Assoc-RightIdentity assoc idr
       open From-Assoc-RightIdentity-RightInverse assoc idr inverseʳ public
       open From-Assoc-LeftIdentity-LeftInverse assoc idl inverseˡ public
         hiding (⁻¹-inverseʳ)

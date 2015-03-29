@@ -74,6 +74,9 @@ module Additive-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
              ; ⁻¹-inj to 0−-inj
              ; ⁻¹-involutive to 0−-involutive
              ; ε⁻¹≡ε to 0−0≡0
+             ; ε^⁺ to 0⊗⁺
+             ; ε^⁻ to 0⊗⁻
+             ; ε^  to 0⊗
              )
 
 -- A renaming of Group with additive notation
@@ -114,6 +117,9 @@ module Multiplicative-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
              ; elim-!assoc= to elim-*-!assoc=
              ; elim-inner= to elim-*-inner=
              ; ε⁻¹≡ε to 1⁻¹≡1
+             ; ε^⁺ to 1^⁺
+             ; ε^⁻ to 1^⁻
+             ; ε^  to 1^
              )
 
 -- A renaming of Group with multiplicative notation
