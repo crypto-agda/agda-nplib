@@ -5,7 +5,7 @@
   -- Have a look to:
   --   https://github.com/crypto-agda/explore/blob/master/lib/Explore/GroupHomomorphism.agda
 open import Type using (Type_)
-open import Data.Product.NP using (_,_)
+open import Data.Product.NP using (_,_;fst;snd)
 import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Implicits
 open import Algebra.Monoid
@@ -33,6 +33,12 @@ record Group-Struct {ℓ} {G : Type ℓ} (grp-ops : Group-Ops G) : Type ℓ wher
 
   mon : Monoid G
   mon = mon-ops , mon-struct
+
+  ⁻¹∙-inverse : LeftInverse ε _⁻¹ _∙_
+  ⁻¹∙-inverse = fst inverse
+
+  ∙⁻¹-inverse : RightInverse ε _⁻¹ _∙_
+  ∙⁻¹-inverse = snd inverse
 
   open Monoid-Struct mon-struct                             public
   open From-Assoc-Identities-Inverse assoc identity inverse public
