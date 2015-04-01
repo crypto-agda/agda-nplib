@@ -102,12 +102,23 @@ module _ {a} {A : ★_ a} where
         q ∙ (r  ∙ ! r)  ≡⟨ p∙q∙!q q r ⟩
         q               ∎
 
+    ∙-cancel′ : (p : x ≡ y){q r : y ≡ z} → p ∙ q ≡ p ∙ r → q ≡ r
+    ∙-cancel′ p {q} {r} e
+      = q             ≡⟨ ! !p∙p∙q p q ⟩
+        ! p ∙ p ∙ q   ≡⟨ ap (_∙_ (! p)) e  ⟩
+        ! p ∙ p ∙ r   ≡⟨ !p∙p∙q p r ⟩
+        r             ∎
+
 !-ap : ∀ {a b}{A : Set a}{B : Set b}(f : A → B){x y}(p : x ≡ y)
        → ! (ap f p) ≡ ap f (! p)
 !-ap f idp = idp
 
 ap-id : ∀ {a}{A : Set a}{x y : A}(p : x ≡ y) → ap id p ≡ p
 ap-id idp = idp
+
+ap-∘ : ∀ {a b c}{A : Set a}{B : Set b}{C : Set c}(f : B → C)(g : A → B){x y}(p : x ≡ y)
+       → ap (f ∘ g) p ≡ ap f (ap g p)
+ap-∘ f g idp = idp
 
 module _ {a b}{A : Set a}{B : Set b}{f g : A → B}(H : ∀ x → f x ≡ g x) where
   ap-nat : ∀ {x y}(q : x ≡ y) → ap f q ∙ H _ ≡ H _ ∙ ap g q
@@ -278,7 +289,16 @@ module Equivalences where
       f-g' x = ! ap (f ∘ g) (f-g x) ∙ ap f (g-f (g x)) ∙ f-g x
       -- g-f' x = ap g {!f-g ?!} ∙ {!!}
 
-      postulate hae : HAE (qinv g f-g' g-f)
+      hae : HAE (qinv g f-g' g-f)
+      hae a = ∙-cancel′ (ap (f ∘ g) (f-g (f a)))
+        (ap (f ∘ g) (f-g (f a)) ∙ ap f (g-f a) ≡⟨ ∙= (ap-nat-id f-g (f a)) (! ap-id (ap f (g-f a))) ⟩
+         f-g (f (g (f a))) ∙ ap id (ap f (g-f a))  ≡⟨ ! ap-nat f-g {f (g (f a))} {f a} (ap f (g-f a)) ⟩
+         ap (f ∘ g) (ap f (g-f a)) ∙ f-g (f a)    ≡⟨ ap (flip _∙_ (f-g (f a))) (! ap-∘ (f ∘ g) f (g-f a)
+                                                                               ∙ ap-∘ f (g ∘ f) (g-f a))  ⟩
+         ap f (ap (λ z → g (f z)) (g-f a)) ∙ f-g (f a) ≡⟨ ap (flip _∙_ (f-g (f a))) (ap (ap f) (ap-nat-id g-f a)) ⟩
+         ap f (g-f (g (f a))) ∙ f-g (f a)      ≡⟨ ! p∙!p∙q (ap (f ∘ g) (f-g (f a))) (ap f (g-f (g (f a))) ∙ f-g (f a)) ⟩
+         ap (f ∘ g) (f-g (f a)) ∙ ! ap (f ∘ g) (f-g (f a)) ∙ ap f (g-f (g (f a))) ∙ f-g (f a)    ∎
+        )
 
       is-equiv : Is-equiv f
       is-equiv = record
