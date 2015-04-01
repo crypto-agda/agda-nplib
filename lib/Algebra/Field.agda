@@ -6,6 +6,7 @@ open import Function.Extensionality
 open import Data.Product.NP
 open import Data.Nat.NP using (ℕ; zero; fold) renaming (suc to 1+)
 open import Data.Integer using (ℤ; +_; -[1+_])
+open import Algebra.Raw
 open import Algebra.Monoid
 open import Algebra.Monoid.Commutative
 open import Algebra.Group
@@ -14,51 +15,9 @@ open import HoTT
 
 module Algebra.Field where
 
-record Field-Ops {ℓ} (A : Set ℓ) : Set ℓ where
-  infixl 6 2+_
-
-  field
-    +-grp-ops : Group-Ops A
-    *-grp-ops : Group-Ops A
-
-  open Additive-Group-Ops       +-grp-ops public
-    renaming (2⊗_ to 2*_)
-  open Multiplicative-Group-Ops *-grp-ops public
-
-  suc : A → A
-  suc = _+_ 1#
-
-  pred : A → A
-  pred x = x − 1#
-
-  2# 3# -0# -1# : A
-  2#  = suc 1#
-  3#  = suc 2#
-  -0# = 0− 0#
-  -1# = 0− 1#
-
-  ℕ[_] : ℕ → A
-  ℕ[ 0    ] = 0#
-  ℕ[ 1+ n ] = fold 1# suc n
-
-  ℤ[_] : ℤ → A
-  ℤ[ + x      ] = ℕ[ x ]
-  ℤ[ -[1+ x ] ] = 0− ℕ[ 1+ x ]
-
-  -- TODO use _^⁺_ and _^_ from group/monoid
-  _^ℕ_ : A → ℕ → A
-  b ^ℕ 0      = 1#
-  b ^ℕ (1+ e) = fold b (_*_ b) e
-
-  _^ℤ_ : A → ℤ → A
-  b ^ℤ (+ x)    = b ^ℕ x
-  b ^ℤ -[1+ x ] = (b ^ℕ (1+ x))⁻¹
-
-  2+_ : A → A
-  2+ x = 2# + x
-
 record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ where
   open Field-Ops field-ops
+
   open ≡-Reasoning
 
   field
@@ -76,6 +35,19 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   -- ...
 
   open Multiplicative-Commutative-Monoid-Struct *-comm-mon-struct public
+
+  -- open From-Field-Ops field-ops
+  open From-Ring-Ops rng-ops
+  open From-+Group-*Identity-DistributesOver
+             +-assoc
+             0+-identity
+             +0-identity
+             (snd 0−-inverse)
+             1*-identity
+             *1-identity
+             *-+-distrs
+             public
+             hiding (+-comm)
 
   +-grp-struct : Group-Struct +-grp-ops
   +-grp-struct = Abelian-Group-Struct.grp-struct +-abelian-grp-struct
@@ -117,13 +89,6 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
 
   *-+-distr : _*_ DistributesOverˡ _+_
   *-+-distr = fst *-+-distrs
-
-  *0-zero : RightZero 0# _*_
-  *0-zero = cancels-+-right  (+= idp (! *1-identity) ∙ ! *-+-distr
-                            ∙ *= idp 0+-identity ∙ *1-identity ∙ ! 0+-identity)
-
-  0*-zero : LeftZero 0# _*_
-  0*-zero = *-comm ∙ *0-zero
 
   c⁻¹*c*x : ∀ {c x} → c ≢ 0# → c ⁻¹ * c * x ≡ x
   c⁻¹*c*x c≢0 = *= (⁻¹-left-inverse c≢0) idp ∙ 1*-identity
@@ -184,47 +149,17 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
     *-abelian-grp/0 = *-grp-ops/0 , *-abelian-grp-struct/0
     -- module *-Grp/0 = Abelian-Group *-abelian-grp/0
 
-  0−-left-inverse : LeftInverse 0# 0−_ _+_
-  0−-left-inverse = fst 0−-inverse
-
-  0−-right-inverse : RightInverse 0# 0−_ _+_
-  0−-right-inverse = snd 0−-inverse
-
-  0−= : ∀ {x y} → x ≡ y → 0− x ≡ 0− y
-  0−= = ap 0−_
-
-  ⁻¹= : ∀ {x y} → x ≡ y → x ⁻¹ ≡ y ⁻¹
-  ⁻¹= = ap _⁻¹
-
-  *-+-distrʳ : _*_ DistributesOverʳ _+_
-  *-+-distrʳ = *-comm ∙ *-+-distr ∙ += *-comm *-comm
-
   /-+-distrʳ : _/_ DistributesOverʳ _+_
   /-+-distrʳ = *-+-distrʳ
 
-  0−c+c+x : ∀ {c x} → 0− c + c + x ≡ x
-  0−c+c+x = += 0−-left-inverse idp ∙ 0+-identity
-
-  -0≡0 : -0# ≡ 0#
-  -0≡0 = 0−0≡0
-
   0≢-1 : 0# ≢ -1#
-  0≢-1 0≡-1 = 0≢1 (! 0−-left-inverse ∙ +-comm ∙ ! ap suc 0≡-1 ∙ +0-identity)
-
-  0−-*-distr : ∀ {x y} → 0−(x * y) ≡ (0− x) * y
-  0−-*-distr = cancels-+-right (0−-left-inverse ∙ ! 0*-zero ∙ *= (! 0−-left-inverse) idp ∙ *-+-distrʳ)
-
-  -1*-neg : ∀ {x} → -1# * x ≡ 0− x
-  -1*-neg = ! 0−-*-distr ∙ 0−= 1*-identity
+  0≢-1 0≡-1 = 0≢1 (! 0−-inverseˡ ∙ +-comm ∙ ! ap suc 0≡-1 ∙ +0-identity)
 
   1⁻¹≡1 : 1# ⁻¹ ≡ 1#
   1⁻¹≡1 = ! *1-identity ∙ ⁻¹-left-inverse 1≢0
 
   /1-id : ∀ {x} → x / 1# ≡ x
   /1-id = *= idp 1⁻¹≡1 ∙ *1-identity
-
-  2*-spec : ∀ {n} → 2* n ≡ 2# * n
-  2*-spec = ! += 1*-identity 1*-identity ∙ ! *-+-distrʳ
 
   *-unique-inverse : ∀ {x y} → x ≢ 0# → x * y ≡ 1# → y ≡ x ⁻¹
   *-unique-inverse x≢0 xy=1 = ! 1*-identity ∙ *= (! ⁻¹-left-inverse x≢0) idp ∙ *-assoc ∙ *= idp xy=1 ∙ *1-identity
@@ -258,27 +193,9 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   /-quotient a' b b' = *= idp (⁻¹*-distr a' (⁻¹-non-zero b') ∙ *= idp (⁻¹-involutive b') ∙ *-comm)
     ∙ *-interchange ∙ *= idp (! ⁻¹*-distr b a')
 
-  0−-*-distr' : ∀ {x y} → 0−(x * y) ≡ x * (0− y)
-  0−-*-distr' = 0−= *-comm ∙ 0−-*-distr ∙ *-comm
-
-  *-−-distr : ∀ {x y z} → x * (y − z) ≡ x * y − x * z
-  *-−-distr = *-+-distr ∙ += idp (! 0−-*-distr')
-
-  0−-+-distr : ∀ {x y} → 0−(x + y) ≡ 0− x − y
-  0−-+-distr = 0−-hom
-
-  ²-*-distr : ∀ {x y} → (x * y)² ≡ x ² * y ²
-  ²-*-distr = *-interchange
-
-  ²-0−-distr : ∀ {x} → (0− x)² ≡ x ²
-  ²-0−-distr {x} = ! 0−-*-distr ∙ 0−= (! 0−-*-distr') ∙ 0−-involutive
-
-  2*-*-distr : ∀ {x y} → 2*(x * y) ≡ 2* x * y
-  2*-*-distr = ! *-+-distrʳ
-
   ²-+-distr : ∀ {x y} → (x + y)² ≡ x ² + y ² + 2* x * y
   ²-+-distr {x} {y} = (x + y)²
-                    ≡⟨ *-+-distr ⟩
+                    ≡⟨ *-+-distrˡ ⟩
                       (x + y) * x + (x + y) * y
                     ≡⟨ += *-+-distrʳ *-+-distrʳ ⟩
                       x ² + y * x + (x * y + y ²)
@@ -287,6 +204,9 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
                     ≡⟨ += idp 2*-*-distr ⟩
                        x ² + y ² + 2* x * y
                     ∎
+
+  ²-*-distr : ∀ {x y} → (x * y)² ≡ x ² * y ²
+  ²-*-distr = *-interchange
 
   ²-−-distr : ∀ {x y} → (x − y)² ≡ x ² + y ² − 2* x * y
   ²-−-distr = ²-+-distr ∙ += (+= idp ²-0−-distr) (*-comm ∙ ! 0−-*-distr ∙ 0−= *-comm)

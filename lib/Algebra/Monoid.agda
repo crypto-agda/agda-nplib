@@ -6,19 +6,9 @@ open import Data.Product.NP
 open import Relation.Binary.PropositionalEquality.NP using (_≡_; idp; ap; ap₂)
 import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Implicits
+open import Algebra.Raw
 
 module Algebra.Monoid where
-
-record Monoid-Ops {ℓ} (M : Type ℓ) : Type ℓ where
-  constructor _,_
-  infixl 7 _∙_
-
-  field
-    _∙_ : M → M → M
-    ε   : M
-
-  open From-Op₂ _∙_ public renaming (op= to ∙=)
-  open From-Monoid-Ops ε _∙_ public
 
 record Monoid-Struct {ℓ} {M : Type ℓ} (mon-ops : Monoid-Ops M) : Type ℓ where
   constructor _,_
@@ -38,7 +28,9 @@ record Monoid-Struct {ℓ} {M : Type ℓ} (mon-ops : Monoid-Ops M) : Type ℓ wh
   assoc  = fst assocs
   !assoc = snd assocs
 
-  open From-Assoc assoc public hiding (assocs)
+  open From-Monoid-Ops mon-ops
+  open From-Assoc               assoc             public hiding (assocs)
+  open From-Identities          identity          public
   open From-Assoc-LeftIdentity  assoc ε∙-identity public
   open From-Assoc-RightIdentity assoc ∙ε-identity public
 
@@ -49,30 +41,6 @@ record Monoid {ℓ}(M : Type ℓ) : Type ℓ where
     mon-struct : Monoid-Struct mon-ops
   open Monoid-Ops    mon-ops    public
   open Monoid-Struct mon-struct public
-
--- A renaming of Monoid-Ops with additive notation
-module Additive-Monoid-Ops {ℓ}{M : Set ℓ} (mon : Monoid-Ops M) where
-  private
-   module M = Monoid-Ops mon
-    using    ()
-    renaming ( _∙_ to _+_
-             ; ε to 0#
-             ; _² to 2⊗_
-             ; _³ to 3⊗_
-             ; _⁴ to 4⊗_
-             ; _^¹⁺_ to _⊗¹⁺_
-             ; _^⁺_ to _⊗⁺_
-             ; ∙= to +=
-             )
-  open M public using (0#; +=)
-  infixl 6 _+_
-  infixl 7 _⊗¹⁺_ _⊗⁺_ 2⊗_ 3⊗_ 4⊗_
-  _+_   = M._+_
-  _⊗¹⁺_ = M._⊗¹⁺_
-  _⊗⁺_  = M._⊗⁺_
-  2⊗_   = M.2⊗_
-  3⊗_   = M.3⊗_
-  4⊗_   = M.4⊗_
 
 -- A renaming of Monoid-Struct with additive notation
 module Additive-Monoid-Struct {ℓ}{M : Type ℓ}{mon-ops : Monoid-Ops M}
@@ -87,20 +55,13 @@ module Additive-Monoid-Struct {ℓ}{M : Type ℓ}{mon-ops : Monoid-Ops M}
              ; assoc= to +-assoc=
              ; !assoc= to +-!assoc=
              ; inner= to +-inner=
+             ; ε^⁺ to 0⊗⁺
              )
 
 -- A renaming of Monoid with additive notation
 module Additive-Monoid {ℓ}{M : Type ℓ} (mon : Monoid M) where
   open Additive-Monoid-Ops    (Monoid.mon-ops    mon) public
   open Additive-Monoid-Struct (Monoid.mon-struct mon) public
-
--- A renaming of Monoid-Ops with multiplicative notation
-module Multiplicative-Monoid-Ops {ℓ}{M : Type ℓ} (mon-ops : Monoid-Ops M)
-  = Monoid-Ops mon-ops
-    renaming ( _∙_ to _*_
-             ; ε to 1#
-             ; ∙= to *=
-             )
 
 -- A renaming of Monoid-Struct with multiplicative notation
 module Multiplicative-Monoid-Struct {ℓ}{M : Type ℓ}{mon-ops : Monoid-Ops M}
@@ -115,6 +76,7 @@ module Multiplicative-Monoid-Struct {ℓ}{M : Type ℓ}{mon-ops : Monoid-Ops M}
              ; assoc= to *-assoc=
              ; !assoc= to *-!assoc=
              ; inner= to *-inner=
+             ; ε^⁺ to 1^⁺
              )
 
 -- A renaming of Monoid with multiplicative notation

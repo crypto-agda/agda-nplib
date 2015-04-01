@@ -4,6 +4,7 @@ import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Implicits
 open import Algebra.Monoid
 open import Algebra.Monoid.Homomorphism
+open import Algebra.Raw
 open import Algebra.Group
 open import Algebra.Group.Constructions
 open import Level.NP

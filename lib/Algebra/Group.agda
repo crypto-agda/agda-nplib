@@ -8,23 +8,15 @@ open import Type using (Type_)
 open import Data.Product.NP using (_,_;fst;snd)
 import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Implicits
+open import Algebra.Raw
 open import Algebra.Monoid
 
 module Algebra.Group where
 
-record Group-Ops {ℓ} (G : Type ℓ) : Type ℓ where
-  constructor _,_
-
-  field
-    mon-ops : Monoid-Ops G
-    _⁻¹     : G → G
-
-  open Monoid-Ops mon-ops public
-  open From-Group-Ops ε _∙_ _⁻¹  public
-
 record Group-Struct {ℓ} {G : Type ℓ} (grp-ops : Group-Ops G) : Type ℓ where
   constructor _,_
   open Group-Ops grp-ops
+  open From-Group-Ops grp-ops
 
   -- laws
   field
@@ -53,25 +45,6 @@ record Group {ℓ}(G : Type ℓ) : Type ℓ where
   open Group-Ops    grp-ops    public
   open Group-Struct grp-struct public
 
--- A renaming of Group-Ops with additive notation
-module Additive-Group-Ops {ℓ}{G : Type ℓ} (grp : Group-Ops G) where
-  private
-   module M = Group-Ops grp
-    using    ()
-    renaming ( _⁻¹ to 0−_
-             ; _/_ to _−_
-             ; _^⁻_ to _⊗⁻_
-             ; _^_ to _⊗_
-             ; mon-ops to +-mon-ops
-             ; /= to −=)
-  open M public using (0−_; +-mon-ops; −=)
-  open Additive-Monoid-Ops +-mon-ops public
-  infixl 6 _−_
-  infixl 7 _⊗⁻_ _⊗_
-  _−_   = M._−_
-  _⊗⁻_  = M._⊗⁻_
-  _⊗_   = M._⊗_
-
 -- A renaming of Group-Struct with additive notation
 module Additive-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
                              (grp-struct : Group-Struct grp-ops)
@@ -87,6 +60,8 @@ module Additive-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
              ; !assoc= to +-!assoc=
              ; inner= to +-inner=
              ; inverse to 0−-inverse
+             ; inverseˡ to 0−-inverseˡ
+             ; inverseʳ to 0−-inverseʳ
              ; ∙-/ to +-−; /-∙ to −-+
              ; unique-ε-left to unique-0-left
              ; unique-ε-right to unique-0-right
@@ -105,17 +80,15 @@ module Additive-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
              ; ⁻¹-inj to 0−-inj
              ; ⁻¹-involutive to 0−-involutive
              ; ε⁻¹≡ε to 0−0≡0
+             ; ε^⁺ to 0⊗⁺
+             ; ε^⁻ to 0⊗⁻
+             ; ε^  to 0⊗
              )
 
 -- A renaming of Group with additive notation
 module Additive-Group {ℓ}{G : Type ℓ}(mon : Group G) where
   open Additive-Group-Ops    (Group.grp-ops    mon) public
   open Additive-Group-Struct (Group.grp-struct mon) public
-
--- A renaming of Group-Ops with multiplicative notation
-module Multiplicative-Group-Ops {ℓ}{G : Type ℓ} (grp : Group-Ops G) = Group-Ops grp
-    using    ( _⁻¹; _/_; /=; _^⁺_ ; _^⁻_; _^_; _²; _³; _⁴ )
-    renaming ( _∙_ to _*_; ε to 1#; mon-ops to *-mon-ops; ∙= to *= )
 
 -- A renaming of Group-Struct with multiplicative notation
 module Multiplicative-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
@@ -150,6 +123,9 @@ module Multiplicative-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
              ; elim-!assoc= to elim-*-!assoc=
              ; elim-inner= to elim-*-inner=
              ; ε⁻¹≡ε to 1⁻¹≡1
+             ; ε^⁺ to 1^⁺
+             ; ε^⁻ to 1^⁻
+             ; ε^  to 1^
              )
 
 -- A renaming of Group with multiplicative notation

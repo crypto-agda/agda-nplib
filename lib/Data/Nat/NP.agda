@@ -443,6 +443,9 @@ n ^2 = n * n
 ≤-steps′ : ∀ {x} y → x ≤ x + y
 ≤-steps′ {x} y rewrite ℕ°.+-comm x y = ≤-steps y ℕ≤.refl
 
+>→≥ : ∀ {m n} → m > n → m ≥ n
+>→≥ i = ≤-pred (ℕ≤.trans i (≤-steps 1 ℕ≤.refl))
+
 ≤⇒∃ : ∀ {m n} → m ≤ n → ∃ λ k → m + k ≡ n
 ≤⇒∃ z≤n      = _ , idp
 ≤⇒∃ (s≤s pf) = _ , ap suc (snd (≤⇒∃ pf))

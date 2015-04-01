@@ -9,12 +9,14 @@ import Algebra.FunctionProperties.Eq
 import Algebra.FunctionProperties.NP
 import Algebra.Group
 import Algebra.Group.Abelian
+import Algebra.Group.Constructions
 import Algebra.Group.Homomorphism
 import Algebra.Group.Isomorphism
 import Algebra.Monoid
 import Algebra.Monoid.Commutative
 import Algebra.Monoid.Homomorphism
 import Algebra.NP
+import Algebra.Raw
 import Category
 import Category.Applicative.NP
 import Category.Functor.NP

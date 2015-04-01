@@ -3,12 +3,14 @@ open import Type using () renaming (Type_ to Type)
 import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Implicits
 open import Algebra.Monoid
+open import Algebra.Raw
 
 module Algebra.Monoid.Commutative where
 
 record Commutative-Monoid-Struct {ℓ} {M : Type ℓ} (mon-ops : Monoid-Ops M) : Type ℓ where
   constructor _,_
   open Monoid-Ops mon-ops
+  open From-Monoid-Ops mon-ops
   field
     mon-struct : Monoid-Struct mon-ops
     comm : Commutative _∙_

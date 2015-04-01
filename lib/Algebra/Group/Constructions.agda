@@ -7,6 +7,7 @@ import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Implicits
 open import Relation.Binary.PropositionalEquality.NP
 open import Algebra.Monoid hiding (module Product; module Pointwise; module Pointwise′)
+open import Algebra.Raw
 open import Algebra.Group
 
 module Algebra.Group.Constructions where
