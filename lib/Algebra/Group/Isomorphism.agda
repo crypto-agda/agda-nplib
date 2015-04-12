@@ -1,3 +1,37 @@
+{-# OPTIONS --without-K #-}
+open import Type using (Type_)
+open import Level.NP
+open import Function.NP
+open import Data.Product using (_,_)
+open import Relation.Binary.PropositionalEquality.NP
+open ≡-Reasoning
+
+module Algebra.Group.Isomorphism where
+
+open import Algebra.Group
+open import Algebra.Group.Homomorphism
+  hiding (module Stability; module Stability-Minimal)
+
+record GroupIsomorphism
+         {a}{A : Type a}
+         {b}{B : Type b}
+         (G+   : Group A)
+         (G*   : Group B) : Set(a ⊔ b) where
+  open Additive-Group G+
+  open Multiplicative-Group G*
+
+  field
+    φ : A → B -- TODO
+    φ-+-* : ∀ {x y} → φ (x + y) ≡ φ x * φ y
+    φ⁻¹   : B → A
+    φ⁻¹-φ : ∀ {x} → φ⁻¹ (φ x) ≡ x
+    φ-φ⁻¹ : ∀ {x} → φ (φ⁻¹ x) ≡ x
+
+  φ-hom : GroupHomomorphism G+ G* φ
+  φ-hom = mk φ-+-*
+
+  open GroupHomomorphism φ-hom public
+
 {- How this proof can be used for crypto, in particular ElGamal to DDH
 
   the Group A is ℤq with modular addition as operation
@@ -6,91 +40,58 @@
   φ is g^, the proof only need that it is a group homomorphism
   and that it has a right inverse
 
-  we require that the explore (for type A) function (should work with only summation)
-  is Stable under addition of A (notice that we have flip in there that is so that
-  we don't need commutativity
+  F is the summation operator and is required to be stable
+  under addition of A.
 
-  finally we require that the explore function respects extensionality
+  F should respects extensionality
 
-  This proof adds φ⁻¹ m, because adding a constant is stable under the
-  big op F, this addition can then be pulled homomorphically through
-  f, to become a, multiplication by m.
+  This proof adds φ⁻¹ k, because adding a constant is stable under
+  the big op F, this addition can then be pulled homomorphically
+  through f, to become a, multiplication by k.
 -}
-open import Type using (Type_)
-open import Level.NP
-open import Function.NP
-open import Relation.Binary.PropositionalEquality.NP
-open ≡-Reasoning
-
-module Algebra.Group.Isomorphism where
-
-module M
+module Stability-Minimal
   {a}{A  : Type a}
   {b}{B  : Type b}
-  {c}{C  : Type c}
   (φ     : A → B)
   (φ⁻¹   : B → A)
-  (φ-sur : ∀ {x} → φ (φ⁻¹ x) ≡ x)
+  (φ-φ⁻¹ : ∀ {x} → φ (φ⁻¹ x) ≡ x)
   (_+_   : Op₂ A)
   (_*_   : Op₂ B)
   (φ-+-* : ∀ {x y} → φ (x + y) ≡ φ x * φ y)
+  {c}{C  : Type c}
   (F     : (A → B) → C)
   (F=    : ∀ {f g : A → B} → f ≗ g → F f ≡ F g)
-  (Fφ+   : ∀ {k} → F φ ≡ F (φ ∘ _+_ k))
-  {m     : B}
   where
 
-  *-stable : F φ ≡ F (_*_ m ∘ φ)
-  *-stable =
-    F φ                  ≡⟨ Fφ+ ⟩
-    F (φ ∘ _+_ (φ⁻¹ m))  ≡⟨ F= (λ x → φ (φ⁻¹ m + x)   ≡⟨ φ-+-* ⟩
-                                       φ (φ⁻¹ m) * φ x ≡⟨ ap₂ _*_ φ-sur idp ⟩
-                                       m * φ x         ∎) ⟩
-    F (_*_ m ∘ φ)        ∎
+  module _ (Fφ+ : ∀ {k} → F φ ≡ F (φ ∘ _+_ k)) where
 
-open import Algebra.Group
-open import Algebra.Group.Homomorphism
+    *-stable : ∀ {k} → F φ ≡ F (_*_ k ∘ φ)
+    *-stable {k} =
+      F φ                  ≡⟨ Fφ+ ⟩
+      F (φ ∘ _+_ (φ⁻¹ k))  ≡⟨ F= (λ x → φ (φ⁻¹ k + x)   ≡⟨ φ-+-* ⟩
+                                         φ (φ⁻¹ k) * φ x ≡⟨ ap₂ _*_ φ-φ⁻¹ idp ⟩
+                                         k * φ x         ∎) ⟩
+      F (_*_ k ∘ φ)        ∎
 
-record GroupIsomorphism 
-         {a}{A  : Type a}
-         {b}{B  : Type b}
-         (G+ : Group A)
-         (G* : Group B)
-          : Set(a ⊔ b) where
-  open Additive-Group G+
-  open Multiplicative-Group G*
+  {- The reverse direction comes from the homomorphism -}
+  open Algebra.Group.Homomorphism.Stability-Minimal
+    φ _+_ _*_ φ-+-* F F=
 
-  field
-    φ : A → B -- TODO
-    -- hom : GroupHomomorphism G+ G* φ
-    φ-+-* : ∀ {x y} → φ (x + y) ≡ φ x * φ y
-    φ⁻¹   : B → A
-    φ-sur : ∀ {x} → φ (φ⁻¹ x) ≡ x
-    -- φ-inj
+  stability : (∀ {k} → F φ ≡ F (φ ∘ _+_ k)) ↔ (∀ {k} → F φ ≡ F (_*_ k ∘ φ))
+  stability = *-stable , +-stable
 
-module N
+module Stability
   {a}{A  : Type a}
   {b}{B  : Type b}
-  {c}{C  : Type c}
   (G+ : Group A)
   (G* : Group B)
   (φ-iso : GroupIsomorphism G+ G*)
-  (open Additive-Group G+)
-  (open Multiplicative-Group G*)
-  (open GroupIsomorphism φ-iso)
-  (F     : (A → B) → C)
-  (F=    : ∀ {f g : A → B} → f ≗ g → F f ≡ F g)
-  (F+    : ∀ {k φ} → F φ ≡ F (φ ∘ _+_ k))
-  {m     : B}
   where
+  open Additive-Group G+
+  open Multiplicative-Group G*
+  open GroupIsomorphism φ-iso
 
-  *-stable : F φ ≡ F (_*_ m ∘ φ)
-  *-stable =
-    F φ                  ≡⟨ F+ ⟩
-    F (φ ∘ _+_ (φ⁻¹ m))  ≡⟨ F= (λ x → φ (φ⁻¹ m + x)   ≡⟨ φ-+-* ⟩
-                                       φ (φ⁻¹ m) * φ x ≡⟨ ap₂ _*_ φ-sur idp ⟩
-                                       m * φ x         ∎) ⟩
-    F (_*_ m ∘ φ)        ∎
+  open Stability-Minimal φ φ⁻¹ φ-φ⁻¹ _+_ _*_ φ-+-* public
 
 -- -}
 -- -}
