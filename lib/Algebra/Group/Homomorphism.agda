@@ -1,5 +1,7 @@
 module Algebra.Group.Homomorphism where
 
+open import Type using (Type_)
+open import Function.NP using (Op₂; _∘_)
 import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Implicits
 open import Algebra.Monoid
@@ -14,9 +16,9 @@ open import Data.Integer.NP using (ℤ; -[1+_]; +_; -_; module ℤ°)
 open import Relation.Binary.PropositionalEquality.NP
 open ≡-Reasoning
 
-record GroupHomomorphism {a}{A : Set a}{b}{B : Set b}
+record GroupHomomorphism {a}{A : Type a}{b}{B : Type b}
                          (grpA0+ : Group A)(grpB1* : Group B)
-                         (f : A → B) : Set (a ⊔ b) where
+                         (f : A → B) : Type (a ⊔ b) where
   constructor mk
 
   open Additive-Group grpA0+
@@ -75,7 +77,7 @@ record GroupHomomorphism {a}{A : Set a}{b}{B : Set b}
 
 module ℤ+ = Additive-Group ℤ+-grp
 
-module _ {ℓ}{G : Set ℓ}(𝔾 : Group G) where
+module _ {ℓ}{G : Type ℓ}(𝔾 : Group G) where
   open Groupᵒᵖ
   open Group 𝔾
 
@@ -90,6 +92,39 @@ module _ {ℓ}{G : Set ℓ}(𝔾 : Group G) where
     ^-+-hom = mk (λ {i} {j} → ^-+ i j)
 
     open GroupHomomorphism ^-+-hom public
+
+module Stability-Minimal
+  {a}{A  : Type a}
+  {b}{B  : Type b}
+  (φ     : A → B)
+  (_+_   : Op₂ A)
+  (_*_   : Op₂ B)
+  (φ-+-* : ∀ {x y} → φ (x + y) ≡ φ x * φ y)
+  {c}{C  : Type c}
+  (F     : (A → B) → C)
+  (F=    : ∀ {f g : A → B} → f ≗ g → F f ≡ F g)
+  (Fφ*   : ∀ {k} → F φ ≡ F (_*_ k ∘ φ))
+  where
+
+  +-stable : ∀ {k} → F φ ≡ F (φ ∘ _+_ k)
+  +-stable {k} =
+    F φ                ≡⟨ Fφ* ⟩
+    F (_*_ (φ k) ∘ φ)  ≡⟨ F= (λ x → ! φ-+-*) ⟩
+    F (φ ∘ _+_ k)      ∎
+
+module Stability
+  {a}{A  : Type a}
+  {b}{B  : Type b}
+  (G+ : Group A)
+  (G* : Group B)
+  (φ : A → B)
+  (φ-hom : GroupHomomorphism G+ G* φ)
+  where
+  open Additive-Group G+
+  open Multiplicative-Group G*
+  open GroupHomomorphism φ-hom
+
+  open Stability-Minimal φ _+_ _*_ hom public
 -- -}
 -- -}
 -- -}
