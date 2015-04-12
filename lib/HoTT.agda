@@ -3,7 +3,7 @@ module HoTT where
 
 open import Type
 open import Level.NP
-open import Function.NP
+open import Function.NP hiding (_↔_)
 open import Function.Extensionality
 open import Data.Zero using (𝟘; 𝟘-elim)
 open import Data.One using (𝟙)

@@ -14,7 +14,7 @@ open import Data.Nat.Base
 open import Data.Bool.Base
   renaming (Bool to 𝟚)
 open import Data.Product
-  using (Σ; _,_)
+  using (_×_; Σ; _,_)
 open import Data.Vec.N-ary
   using (N-ary; N-ary-level)
 open import Category.Monad
@@ -49,6 +49,9 @@ A →⟨ suc n ⟩₀ B = A → A →⟨ n ⟩₀ B
 _→⟨_⟩₁_ : ∀ (A : ★₀) (n : ℕ) (B : ★₁) → ★₁
 A →⟨ zero  ⟩₁ B = B
 A →⟨ suc n ⟩₁ B = A → A →⟨ n ⟩₁ B
+
+_↔_ : ∀ {a b} (A : ★ a) (B : ★ b) → ★ (a ⊔ b)
+A ↔ B = (A → B) × (B → A)
 
 Endo : ∀ {a} → ★ a → ★ a
 Endo A = A → A
