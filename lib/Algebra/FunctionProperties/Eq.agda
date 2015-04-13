@@ -15,6 +15,8 @@ open import Relation.Binary.PropositionalEquality.NP renaming (_∙_ to _♦_)
 import Algebra.FunctionProperties.NP
 open import Algebra.Raw
 open ≡-Reasoning
+open import HoTT using (module Equivalences)
+open Equivalences
 
 module Algebra.FunctionProperties.Eq {a} {A : Set a} where
 
@@ -330,6 +332,16 @@ module Implicits where
       open From-Assoc-RightIdentity-RightInverse assoc idr inverseʳ public
       open From-Assoc-LeftIdentity-LeftInverse assoc idl inverseˡ public
         hiding (⁻¹-inverseʳ)
+
+      ∙-is-equiv : ∀ {k} → Is-equiv (_∙_ k)
+      ∙-is-equiv {k} = is-equiv (_∙_ (k ⁻¹))
+                                (λ _ → ! assoc ♦ ∙= inverseʳ idp ♦ idl)
+                                (λ _ → ! assoc ♦ ∙= inverseˡ idp ♦ idl)
+
+      flip-∙-is-equiv : ∀ {k} → Is-equiv (flip _∙_ k)
+      flip-∙-is-equiv {k} = is-equiv (flip _∙_ (k ⁻¹))
+                                     (λ _ → assoc ♦ ∙= idp inverseˡ ♦ idr)
+                                     (λ _ → assoc ♦ ∙= idp inverseʳ ♦ idr)
 
       module _ {x y} where
         unique-⁻¹ : x ∙ y ≡ ε → x ≡ y ⁻¹

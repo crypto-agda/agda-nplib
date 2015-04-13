@@ -63,6 +63,8 @@ module Additive-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
              ; inverseˡ to 0−-inverseˡ
              ; inverseʳ to 0−-inverseʳ
              ; ∙-/ to +-−; /-∙ to −-+
+             ; ∙-is-equiv to +-is-equiv
+             ; flip-∙-is-equiv to flip-+-is-equiv
              ; unique-ε-left to unique-0-left
              ; unique-ε-right to unique-0-right
              ; x/y≡ε→x≡y to x−y≡0→x≡y
@@ -107,6 +109,8 @@ module Multiplicative-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
              ; ∙-/ to *-/; /-∙ to /-*
              ; mon-struct to *-mon-struct
              ; mon to *-mon
+             ; ∙-is-equiv to *-is-equiv
+             ; flip-∙-is-equiv to flip-*-is-equiv
              ; unique-ε-left to unique-1-left
              ; unique-ε-right to unique-1-right
              ; x/y≡ε→x≡y to x/y≡1→x≡y
