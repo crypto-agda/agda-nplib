@@ -16,12 +16,12 @@ record GroupIsomorphism
          {a}{A : Type a}
          {b}{B : Type b}
          (G+   : Group A)
-         (G*   : Group B) : Set(a ⊔ b) where
+         (G*   : Group B)
+         (φ    : A → B) : Set(a ⊔ b) where
   open Additive-Group G+
   open Multiplicative-Group G*
 
   field
-    φ : A → B -- TODO
     φ-+-* : ∀ {x y} → φ (x + y) ≡ φ x * φ y
     φ⁻¹   : B → A
     φ⁻¹-φ : ∀ {x} → φ⁻¹ (φ x) ≡ x
@@ -58,6 +58,7 @@ module Stability-Minimal
   (_+_   : Op₂ A)
   (_*_   : Op₂ B)
   (φ-+-* : ∀ {x y} → φ (x + y) ≡ φ x * φ y)
+
   {c}{C  : Type c}
   (F     : (A → B) → C)
   (F=    : ∀ {f g : A → B} → f ≗ g → F f ≡ F g)
@@ -85,7 +86,8 @@ module Stability
   {b}{B  : Type b}
   (G+ : Group A)
   (G* : Group B)
-  (φ-iso : GroupIsomorphism G+ G*)
+  (φ     : A → B)
+  (φ-iso : GroupIsomorphism G+ G* φ)
   where
   open Additive-Group G+
   open Multiplicative-Group G*
