@@ -308,6 +308,7 @@ vap : ∀ {m a b} {A : ★ a} {B : ★ b} (f : Vec A m → B)
         → ∀ {n} → Vec (Vec A n) m → Vec B n
 vap f = map f ∘ transpose
 
+infixl 2 _‼_
 _‼_ : ∀ {n a} {A : ★ a} → Vec A n → Fin n → A
 _‼_ = flip lookup
 

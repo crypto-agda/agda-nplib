@@ -14,7 +14,7 @@ import Data.List.NP as L
 
 -- Re-export some vector functions, maybe they should be given
 -- less generic types.
-open Data.Vec.NP public using ([]; _∷_; _++_; head; tail; map; replicate; RewireTbl; rewire; rewireTbl; onᵢ)
+open Data.Vec.NP public using ([]; _∷_; _++_; _‼_; head; tail; map; replicate; RewireTbl; rewire; rewireTbl; onᵢ)
 
 Bits : ℕ → ★₀
 Bits = Vec Bit
@@ -39,9 +39,6 @@ pattern 1∷_ xs = 1₂ ∷ xs
 1∷_ : ∀ {n} → Bits n → Bits (suc n)
 1∷ xs = 1₂ ∷ xs
 -}
-
-_!_ : ∀ {a n} {A : ★ a} → Vec A n → Fin n → A
-_!_ = flip lookup
 
 -- see Data.Bits.Properties
 _==_ : ∀ {n} (bs₀ bs₁ : Bits n) → Bit
