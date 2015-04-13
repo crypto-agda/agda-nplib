@@ -1,7 +1,7 @@
 -- NOTE with-K
 open import Type hiding (★)
 open import Level.NP
-open import Function.NP
+open import Function.NP hiding (_↔_)
 open import Data.Nat.NP hiding (⟨_↔+1⟩; ⟨0↔1+_⟩)
 open import Data.Nat.Properties
 open import Data.Vec.NP
