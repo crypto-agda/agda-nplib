@@ -5,7 +5,7 @@ open import Type hiding (★)
 import Algebra
 import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Explicits
-open import Data.Two.Base hiding (_==_; _²)
+open import Data.Two.Base hiding (_==_; _≟_; _²)
 open import Data.Product using (∃; _,_) renaming (proj₁ to fst; proj₂ to snd)
 open import Data.Sum renaming (map to ⊎-map)
 open import Data.Zero using (𝟘-elim; 𝟘)
@@ -13,6 +13,7 @@ open import Data.One using (𝟙)
 open import Function.NP
 open import Function.Extensionality
 open import Relation.Nullary
+open import Relation.Nullary.Decidable
 open import Relation.Binary.NP
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡ using (_≡_; _≢_; _≗_; module ≡-Reasoning; !_; _∙_; ap; ap₂; coe)
@@ -22,11 +23,17 @@ open Equivalences
 
 open import Data.Nat public hiding (module GeneralisedArithmetic; module ≤-Reasoning; fold)
 open import Data.Nat.Properties
+open import Data.Nat.Properties.Simple public using (+-suc; +-*-suc)
 
 pattern 1+_ x = suc x
 pattern 2+_ x = 1+ suc x
 pattern 3+_ x = 2+ suc x
 pattern 4+_ x = 3+ suc x
+pattern 5+_ x = 4+ suc x
+pattern 6+_ x = 5+ suc x
+pattern 7+_ x = 6+ suc x
+pattern 8+_ x = 7+ suc x
+pattern 9+_ x = 8+ suc x
 
 ⟨0↔1⟩ : ℕ → ℕ
 ⟨0↔1⟩ 0 = 1
@@ -217,6 +224,10 @@ zero   == suc _  = 0₂
 suc _  == zero   = 0₂
 suc m  == suc n  = m == n
 
+open FromOp₂ _+_
+  renaming ( op= to += )
+  public
+
 open FromAssocComm _+_ ℕ°.+-assoc ℕ°.+-comm
   renaming ( assoc-comm to +-assoc-comm
            ; assocs to +-assocs
@@ -242,6 +253,63 @@ open FromAssocComm _*_ ℕ°.*-assoc ℕ°.*-comm
            ; !assoc= to *-!assoc=
            )
   public
+
+no-<-> : ∀ {x y} → x < y → x > y → 𝟘
+no-<-> (s≤s p) (s≤s q) = no-<-> p q
+
+≡0→≟0 : ∀ n → n ≡ 0 → True (0 ≟ n)
+≡0→≟0 .0 idp = _
+
+≟0→≡0 : ∀ n → True (0 ≟ n) → n ≡ 0
+≟0→≡0 zero p = idp
+≟0→≡0 (suc n) ()
+
+≢0⇒0< : ∀ n → n ≢ 0 → 0 < n
+≢0⇒0< zero x = 𝟘-elim (x idp)
+≢0⇒0< (suc n) x = s≤s z≤n
+
+≤≢→< : ∀ {x y} → x ≤ y → x ≢ y → x < y
+≤≢→< z≤n     q = ≢0⇒0< _ (q ∘ !_)
+≤≢→< (s≤s p) q = s≤s (≤≢→< p (q ∘ ap suc))
+
+≤-steps′ : ∀ {x} y → x ≤ x + y
+≤-steps′ {x} y rewrite ℕ°.+-comm x y = ≤-steps y ℕ≤.refl
+
+>→≥ : ∀ {m n} → m > n → m ≥ n
+>→≥ i = ≤-pred (ℕ≤.trans i (≤-steps 1 ℕ≤.refl))
+
+≤⇒∃ : ∀ {m n} → m ≤ n → ∃ λ k → m + k ≡ n
+≤⇒∃ z≤n      = _ , idp
+≤⇒∃ (s≤s pf) = _ , ap suc (snd (≤⇒∃ pf))
+
++≤→≤∸ : ∀ {x} y {z} → y + x ≤ z → x ≤ z ∸ y
++≤→≤∸ {x} y i with ≤⇒∃ i
++≤→≤∸ {x} y i | k , idp =
+  x             ≤⟨ ≤-steps′ k ⟩
+  x + k         ≡⟨ ! m+n∸n≡m _ y ⟩
+  x + k + y ∸ y ≡⟨ ap (λ z → z ∸ y) (+-!assoc= {x} (ℕ°.+-comm k y)) ⟩
+  x + y + k ∸ y ≡⟨ ap (λ z → z + k ∸ y) (ℕ°.+-comm x y) ⟩
+  y + x + k ∸ y ∎
+  where open ≤-Reasoning
+
++-∸ : ∀ x y z → x ≡ y + z → y ≡ x ∸ z
++-∸ .(y + z) y z idp =
+  y ≡⟨ ℕ°.+-comm 0 y ⟩
+  y + 0 ≡⟨ ap (_+_ y) (! n∸n≡0 z) ⟩
+  y + (z ∸ z) ≡⟨ ! +-∸-assoc y (ℕ≤.refl {z}) ⟩
+  (y + z) ∸ z ∎
+  where open ≡-Reasoning
+
+
++-∸' : ∀ x y z → x + y ≡ z → y ≡ z ∸ x
++-∸' x y z e = +-∸ z y x (! e ∙ ℕ°.+-comm x y)
+
+≡+-≥ : ∀ x y z → x ≡ y + z → x ≥ z
+≡+-≥ .(y + z) y z idp = ≤-steps y ℕ≤.refl
+
++≤ : ∀ x {y z} → x + y ≤ z → x ≤ z
++≤ zero    i = z≤n
++≤ (suc x) (s≤s i) = s≤s (+≤ x i)
 
 a+b≡a⊔b+a⊓b : ∀ a b → a + b ≡ a ⊔ b + a ⊓ b
 a+b≡a⊔b+a⊓b zero    b       rewrite ℕ°.+-comm b 0 = idp
@@ -440,19 +508,49 @@ n ^2 = n * n
 
 1≤2^ n  = s≤s z≤n ∙≤ 1+≤2^ n
 
-≤-steps′ : ∀ {x} y → x ≤ x + y
-≤-steps′ {x} y rewrite ℕ°.+-comm x y = ≤-steps y ℕ≤.refl
-
->→≥ : ∀ {m n} → m > n → m ≥ n
->→≥ i = ≤-pred (ℕ≤.trans i (≤-steps 1 ℕ≤.refl))
-
-≤⇒∃ : ∀ {m n} → m ≤ n → ∃ λ k → m + k ≡ n
-≤⇒∃ z≤n      = _ , idp
-≤⇒∃ (s≤s pf) = _ , ap suc (snd (≤⇒∃ pf))
-
 is0? : ℕ → 𝟚
 is0? zero    = 1₂
 is0? (suc n) = 0₂
+
+infixl 6 _+ᵃ_
+
+-- Accumulator based addition
+_+ᵃ_ : ℕ → ℕ → ℕ
+zero  +ᵃ acc = acc
+suc n +ᵃ acc = n +ᵃ suc acc
+
+open FromOp₂ _+ᵃ_
+  renaming ( op= to +ᵃ= )
+  public
+
++ᵃ-+ : ∀ m n → m +ᵃ n ≡ m + n
++ᵃ-+ zero n = idp
++ᵃ-+ (suc m) n = +ᵃ-+ m (suc n) ∙ +-suc m n
+
++ᵃ-+= : ∀ m m' {n n'} → m + n ≡ m' + n' → m +ᵃ n ≡ m' +ᵃ n'
++ᵃ-+= m m' e = +ᵃ-+ m _ ∙ e ∙ ! +ᵃ-+ m' _
+
++ᵃ-comm : Commutative _+ᵃ_
++ᵃ-comm x y = +ᵃ-+= x y (ℕ°.+-comm x y)
+
++ᵃ-assoc : Associative _+ᵃ_
++ᵃ-assoc x y z = +ᵃ-+= (x +ᵃ y) x (+= (+ᵃ-+ x y) idp ∙ ℕ°.+-assoc x y z ∙ ap (_+_ x) (! +ᵃ-+ y z))
+
++ᵃ0-identity : ∀ x → x +ᵃ 0 ≡ x
++ᵃ0-identity x = +ᵃ-comm x 0
+
+open FromAssocComm _+ᵃ_ +ᵃ-assoc +ᵃ-comm
+  renaming ( assoc-comm to +ᵃ-assoc-comm
+           ; assocs to +ᵃ-assocs
+           ; interchange to +ᵃ-interchange
+           ; !assoc-comm to +ᵃ-!assoc-comm
+           ; comm= to +ᵃ-comm=
+           ; assoc= to +ᵃ-assoc=
+           ; !assoc= to +ᵃ-!assoc=
+           ; inner= to +ᵃ-inner=
+           ; outer= to +ᵃ-outer=
+           )
+  public
 
 module _ {{_ : UA}} where
     open Equivalences
