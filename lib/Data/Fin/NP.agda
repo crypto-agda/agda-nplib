@@ -6,7 +6,7 @@ open import Function
 open import Data.Zero
 open import Data.One using (𝟙)
 open import Data.Fin public renaming (toℕ to Fin▹ℕ; fromℕ to ℕ▹Fin)
-open import Data.Nat.NP using (ℕ; zero; suc; _<=_; module ℕ°) renaming (_+_ to _+ℕ_)
+open import Data.Nat.NP using (ℕ; zero; suc; _<=_; module ℕ°; z≤n; s≤s) renaming (_+_ to _+ℕ_; _<_ to _<ℕ_)
 open import Data.Two using (𝟚; 0₂; 1₂; [0:_1:_]; case_0:_1:_)
 import Data.Vec.NP as Vec
 open Vec using (Vec; []; _∷_; _∷ʳ_; allFin; lookup; rot₁; tabulate; foldr) renaming (map to vmap)
@@ -19,6 +19,39 @@ open import Relation.Binary.PropositionalEquality as ≡
 
 suc-injective : ∀ {m}{i j : Fin m} → Fin.suc i ≡ suc j → i ≡ j
 suc-injective refl = refl
+
+pattern #0 = zero
+pattern #1 = suc #0
+pattern #2 = suc #1
+pattern #3 = suc #2
+pattern #4 = suc #3
+pattern #5 = suc #4
+pattern #6 = suc #5
+pattern #7 = suc #6
+pattern #8 = suc #7
+pattern #9 = suc #8
+pattern #A = suc #9
+pattern #B = suc #A
+pattern #C = suc #B
+pattern #D = suc #C
+pattern #E = suc #D
+pattern #F = suc #E
+
+pattern #1+ x = suc x
+pattern #2+ x = suc (#1+ x)
+pattern #3+ x = suc (#2+ x)
+pattern #4+ x = suc (#3+ x)
+pattern #5+ x = suc (#4+ x)
+pattern #6+ x = suc (#5+ x)
+pattern #7+ x = suc (#6+ x)
+pattern #8+ x = suc (#7+ x)
+pattern #9+ x = suc (#8+ x)
+pattern #A+ x = suc (#9+ x)
+pattern #B+ x = suc (#A+ x)
+pattern #C+ x = suc (#B+ x)
+pattern #D+ x = suc (#C+ x)
+pattern #E+ x = suc (#D+ x)
+pattern #F+ x = suc (#E+ x)
 
 -- The isomorphisms about Fin, 𝟘, 𝟙, 𝟚 are in Function.Related.TypeIsomorphisms.NP
 
@@ -65,6 +98,10 @@ x == y = ⌊ x ≟ y ⌋
   helper : ∀ {n} {i j : Fin n} → Ordering i j → 𝟚
   helper (equal _) = 1₂
   helper _         = 0₂-}
+
+Fin▹ℕ< : ∀{y}(x : Fin y) → Fin▹ℕ x <ℕ y
+Fin▹ℕ< zero = s≤s z≤n
+Fin▹ℕ< (suc i) = s≤s (Fin▹ℕ< i)
 
 swap : ∀ {i} (x y : Fin i) → Fin i → Fin i
 swap x y z = case x == z 0: (case y == z 0: z 1: x) 1: y
