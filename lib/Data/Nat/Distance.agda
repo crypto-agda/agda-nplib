@@ -21,11 +21,11 @@ dist-x-x+y≡y : ∀ x y → dist x (x + y) ≡ y
 dist-x-x+y≡y zero    y = idp
 dist-x-x+y≡y (suc x) y = dist-x-x+y≡y x y
 
-dist-sym : ∀ x y → dist x y ≡ dist y x
-dist-sym zero zero = idp
-dist-sym zero (suc y) = idp
-dist-sym (suc x) zero = idp
-dist-sym (suc x) (suc y) = dist-sym x y
+dist-comm : ∀ x y → dist x y ≡ dist y x
+dist-comm zero zero = idp
+dist-comm zero (suc y) = idp
+dist-comm (suc x) zero = idp
+dist-comm (suc x) (suc y) = dist-comm x y
 
 dist-x+ : ∀ x y z → dist (x + y) (x + z) ≡ dist y z
 dist-x+ zero    y z = idp
@@ -47,7 +47,7 @@ dist-sym-wlog f pf x .(suc (x + k)) | less .x k with pf x (suc k)
 dist-sym-wlog f pf .y y | equal .y with pf y 0
 ... | q rewrite ℕ°.+-comm y 0 | dist-refl y = q
 dist-sym-wlog f pf .(suc (y + k)) y | greater .y k with pf y (suc k)
-... | q rewrite +-assoc-comm 1 y k | dist-sym (y + suc k) y | dist-x-x+y≡y y (suc k) | dist-sym (f (y + suc k)) (f y) = q
+... | q rewrite +-assoc-comm 1 y k | dist-comm (y + suc k) y | dist-x-x+y≡y y (suc k) | dist-comm (f (y + suc k)) (f y) = q
 
 dist-x* : ∀ x y z → dist (x * y) (x * z) ≡ x * dist y z
 dist-x* x = dist-sym-wlog (_*_ x) pf
@@ -72,9 +72,9 @@ dist-sum zero    (suc y) (suc z) = s≤s (dist-sum zero y z)
 dist-sum (suc x) zero    zero    = s≤s (ℕ≤.reflexive (ℕ°.+-comm 0 x))
 dist-sum (suc x) (suc y) zero
   rewrite ℕ°.+-comm (dist x y) (suc y)
-        | dist-sym x y = s≤s (dist-sum zero y x)
+        | dist-comm x y = s≤s (dist-sum zero y x)
 dist-sum (suc x) zero    (suc z) = dist-sum x zero z
-                                ∙≤ ℕ≤.reflexive (ap₂ _+_ (dist-sym x 0) idp)
+                                ∙≤ ℕ≤.reflexive (ap₂ _+_ (dist-comm x 0) idp)
                                 ∙≤ ≤-step (ℕ≤.refl {x} +-mono ≤-step ℕ≤.refl)
 dist-sum (suc x) (suc y) (suc z) = dist-sum x y z
 
@@ -83,6 +83,11 @@ dist≡0 zero zero d≡0 = refl
 dist≡0 zero (suc y) ()
 dist≡0 (suc x) zero ()
 dist≡0 (suc x) (suc y) d≡0 = ap suc (dist≡0 x y d≡0)
+
+∸-dist : ∀ x y → y ≤ x → x ∸ y ≡ dist x y
+∸-dist x .0 z≤n = ! dist-comm x 0
+∸-dist ._ ._ (s≤s y≤x) = ∸-dist _ _ y≤x
+
 {-
 post--ulate
   dist-≤     : ∀ x y → dist x y ≤ x
