@@ -1,38 +1,46 @@
 {-# OPTIONS --without-K #-}
 module Function.Extensionality where
 
-open import Function.NP
-open import Relation.Binary.PropositionalEquality.NP  -- renaming (subst to tr)
+-- See Function.Extensionality.Implicit for the extensionality of {x : A} → B x
 
-happly : ∀ {a b}{A : Set a}{B : A → Set b}{f g : (x : A) → B x}
-  → f ≡ g → (x : A) → f x ≡ g x
-happly p x = ap (λ f → f x) p
+open import Function.NP
+open import Relation.Binary.PropositionalEquality.NP
 
 postulate
     FunExt : Set
-    λ= : ∀ {a b}{A : Set a}{B : A → Set b}{f₀ f₁ : (x : A) → B x}{{fe : FunExt}}
-           (f= : ∀ x → f₀ x ≡ f₁ x) → f₀ ≡ f₁
 
-    happly-λ= : ∀ {a b}{A : Set a}{B : A → Set b}{f g : (x : A) → B x}{{fe : FunExt}}
-      (fg : ∀ x → f x ≡ g x) → happly (λ= fg) ≡ fg
+module _ {a b}{A : Set a}{B : A → Set b} where
+  infix 4 _∼_
 
-    λ=-happly : ∀ {a b}{A : Set a}{B : A → Set b}{f g : (x : A) → B x}{{fe : FunExt}}
-      (α : f ≡ g) → λ= (happly α) ≡ α
+  _∼_   : (f₀ f₁ : (x : A) → B x) → Set _
+  f₀ ∼ f₁ = (x : A) → f₀ x ≡ f₁ x
 
-    -- This should be derivable if I had a proper proof of λ=
-    tr-λ= : ∀ {a b p}{A : Set a}{B : A → Set b}{x}(P : B x → Set p)
-              {f g : (x : A) → B x}{{fe : FunExt}}(fg : (x : A) → f x ≡ g x)
-            → tr (λ f → P (f x)) (λ= fg) ≡ tr P (fg x)
+  module _ {f₀ f₁ : (x : A) → B x} where
+    happly : f₀ ≡ f₁ → f₀ ∼ f₁
+    happly p x = ap (λ f₀ → f₀ x) p
 
+    module _ {{fe : FunExt}} where
+      postulate
+        λ= : (f= : f₀ ∼ f₁) → f₀ ≡ f₁
 
-!-α-λ= : ∀ {a b}{A : Set a}{B : A → Set b}{f g : (x : A) → B x}{{fe : FunExt}}
-  (α : f ≡ g) → ! α ≡ λ= (!_ ∘ happly α)
-!-α-λ= refl = ! λ=-happly refl
+        happly-λ= : (f= : f₀ ∼ f₁) → happly (λ= f=) ≡ f=
 
-!-λ= : ∀ {a b}{A : Set a}{B : A → Set b}{f g : (x : A) → B x}{{fe : FunExt}}
-  (fg : ∀ x → f x ≡ g x) → ! (λ= fg) ≡ λ= (!_ ∘ fg)
-!-λ= fg = !-α-λ= (λ= fg) ∙ ap λ= (λ= (λ x → ap !_ (happly (happly-λ= fg) x)))
+        λ=-happly : (α : f₀ ≡ f₁) → λ= (happly α) ≡ α
+
+        -- This should be derivable if I had a proper proof of λ=
+        tr-λ= : ∀ {p x}(P : B x → Set p)(f= : f₀ ∼ f₁)
+                → tr (λ f₀ → P (f₀ x)) (λ= f=) ≡ tr P (f= x)
+
+      λ=ⁱ : (f= : ∀ {x} → f₀ x ≡ f₁ x) → f₀ ≡ f₁
+      λ=ⁱ f= = λ= λ x → f= {x}
+
+  !-α-λ= : ∀ {f₀ f₁ : (x : A) → B x}{{fe : FunExt}}
+             (α : f₀ ≡ f₁) → ! α ≡ λ= (!_ ∘ happly α)
+  !-α-λ= refl = ! λ=-happly refl
 
 module _ {a b}{A : Set a}{B : A → Set b}{f₀ f₁ : (x : A) → B x}{{fe : FunExt}} where
-  λ=ⁱ : (f= : ∀ {x} → f₀ x ≡ f₁ x) → f₀ ≡ f₁
-  λ=ⁱ f= = λ= λ x → f= {x}
+  !-λ= : (f= : f₀ ∼ f₁) → ! (λ= f=) ≡ λ= (!_ ∘ f=)
+  !-λ= f= = !-α-λ= (λ= f=) ∙ ap λ= (λ= (λ x → ap !_ (happly (happly-λ= f=) x)))
+-- -}
+-- -}
+-- -}
