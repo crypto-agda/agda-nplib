@@ -1,6 +1,6 @@
 open import Type using (Type_)
 open import Function.NP
-open import Data.Nat using (ℕ) renaming (suc to 1+_)
+open import Data.Nat.Base using (ℕ) renaming (suc to 1+_)
 open import Data.Integer using (ℤ; +_; -[1+_])
 open import Relation.Binary.PropositionalEquality.NP renaming (_∙_ to _♦_)
 
@@ -141,7 +141,7 @@ record Ring-Ops {ℓ} (A : Type ℓ) : Type ℓ where
   infixl 6 2+_
 
   field
-    +-grp-ops  : Group-Ops A
+    +-grp-ops : Group-Ops A
     *-mon-ops : Monoid-Ops A
 
   open Additive-Group-Ops        +-grp-ops public
@@ -177,6 +177,7 @@ record Ring-Ops {ℓ} (A : Type ℓ) : Type ℓ where
   2+ x = 2# + x
 
 record Field-Ops {ℓ} (A : Set ℓ) : Set ℓ where
+  constructor _,_
 
   field
     +-grp-ops : Group-Ops A
