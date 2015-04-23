@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Algebra.Group.Homomorphism where
 
 open import Type using (Type_)

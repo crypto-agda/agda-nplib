@@ -82,6 +82,12 @@ module Implicits where
       interchange : Interchange _∙_ _∙_
       interchange = assoc= (!assoc= comm)
 
+      on-sides : ∀ {x x' y y' z z' t t'}
+                 → x ∙ z ≡ x' ∙ z'
+                 → y ∙ t ≡ y' ∙ t'
+                 → (x ∙ y) ∙ (z ∙ t) ≡ (x' ∙ y') ∙ (z' ∙ t')
+      on-sides p q = interchange ♦ ∙= p q ♦ interchange
+
       module _ {c d x y x' y' : A}
                (e : (x ∙ y) ≡ (x' ∙ y')) where
         outer= : (x ∙ c) ∙ (d ∙ y) ≡ (x' ∙ c) ∙ (d ∙ y')

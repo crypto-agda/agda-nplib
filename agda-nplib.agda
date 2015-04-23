@@ -1,22 +1,23 @@
 module agda-nplib where
 import Algebra.Field
+-- import Algebra.Field.Reflection
 import Algebra.Field.Solver
-{-
-import Algebra.Field.Reflection
--}
 import Algebra.FunctionProperties.Derived
 import Algebra.FunctionProperties.Eq
 import Algebra.FunctionProperties.NP
 import Algebra.Group
 import Algebra.Group.Abelian
 import Algebra.Group.Constructions
+import Algebra.Group.Endomorphism
 import Algebra.Group.Homomorphism
 import Algebra.Group.Isomorphism
 import Algebra.Monoid
 import Algebra.Monoid.Commutative
 import Algebra.Monoid.Homomorphism
 import Algebra.NP
+import Algebra.Nearring
 import Algebra.Raw
+import Algebra.VectorSpace
 import Category
 import Category.Applicative.NP
 import Category.Functor.NP
@@ -52,11 +53,16 @@ import Data.Maybe.Param.Binary.NP
 import Data.Nat.Ack
 import Data.Nat.BoundedMonoInj-is-Id
 import Data.Nat.Distance
+import Data.Nat.DivMod.NP
+import Data.Nat.Divisibility.NP
+-- import Data.Nat.GCD.NP
 import Data.Nat.HyperOperators
 import Data.Nat.Logical
+import Data.Nat.ModInv
 import Data.Nat.NP
 import Data.Nat.NameLess
 import Data.Nat.Positive
+import Data.Nat.Primality.NP
 import Data.One
 import Data.Product.K
 import Data.Product.NP
@@ -82,6 +88,7 @@ import Data.Zero
 import Function.Bijection.NP
 import Function.Bijection.SyntaxKit
 import Function.Extensionality
+import Function.Extensionality.Implicit
 import Function.Im
 import Function.Injection.NP
 import Function.InstanceArguments
@@ -120,6 +127,7 @@ import Relation.Binary.On.NP
 import Relation.Binary.Permutation
 import Relation.Binary.PropositionalEquality.K
 import Relation.Binary.PropositionalEquality.NP
+import Relation.Binary.PropositionalEquality.TrustMe.NP
 import Relation.Binary.Sum.NP
 import Relation.Binary.ToNat
 import Relation.Nullary.NP

@@ -1,5 +1,4 @@
 {-# OPTIONS --without-K #-}
-
 open import Level.NP
 open import Function.Extensionality
 open import Algebra.Monoid
@@ -7,6 +6,7 @@ open import Algebra.Monoid.Homomorphism
 open import Algebra.Group
 open import Algebra.Group.Homomorphism
 open import Algebra.Field
+open import Algebra.Ring.Homomorphism
 open import Relation.Binary.PropositionalEquality.NP
 
 module Algebra.VectorSpace {{_ : FunExt}} where
@@ -30,6 +30,8 @@ record VectorSpace {ℓf}{F : Set ℓf}(𝔽 : Field F)
 
     ·-+ : MonoidHomomorphism 𝔽.+-mon (Pointwise′.mon V (Group.mon V-grp)) _·_
     ·-* : MonoidHomomorphism 𝔽.*-mon (∘-mon V) _·_
+
+--    ·-hom : RingHomomorphism 𝔽.ring ?
 
   open 𝔽
   open Additive-Group V-grp using () renaming (_+_ to _⊕_)
@@ -59,10 +61,14 @@ record VectorSpace {ℓf}{F : Set ℓf}(𝔽 : Field F)
   ∀ v → 1# · v ≡ v
   -}
 
-  ·-⊕ : ∀ {v w a} → a · (v ⊕ w) ≡ a · v ⊕ a · w
-  ·-⊕ {v} {w} {a} = {!!}
+--  ·-⊕ : ∀ {v w a} → a · (v ⊕ w) ≡ a · v ⊕ a · w
+--  ·-⊕ {v} {w} {a} = {!!}
   {-
   _·_(a + b) ≡ _·_(a) ∘ _·_(b)
   ∀ v → _·_(a + b) v ≡ (_·_(a) ∘ _·_(b)) v
   ∀ v → (a + b) · v ≡ a · (b · v)
   -}
+-- -}
+-- -}
+-- -}
+-- -}

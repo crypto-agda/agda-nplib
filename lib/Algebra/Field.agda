@@ -2,15 +2,14 @@
 open import Relation.Binary.PropositionalEquality.NP
 import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Implicits
-open import Function.Extensionality
-open import Data.Product.NP
-open import Data.Nat.NP using (ℕ; zero; fold) renaming (suc to 1+)
-open import Data.Integer using (ℤ; +_; -[1+_])
+open import Function.Extensionality using (FunExt)
+open import Data.Product.NP using (Σ; _,_; fst; snd)
 open import Algebra.Raw
 open import Algebra.Monoid
-open import Algebra.Monoid.Commutative
 open import Algebra.Group
 open import Algebra.Group.Abelian
+open import Algebra.Ring
+open import Algebra.Ring.Commutative
 open import HoTT
 
 module Algebra.Field where
@@ -21,57 +20,17 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   open ≡-Reasoning
 
   field
-    0≢1                  : 0# ≢ 1#
-    +-abelian-grp-struct : Abelian-Group-Struct +-grp-ops
+    comm-rng-struct : Commutative-Ring-Struct rng-ops
+    0≢1             : 0# ≢ 1#
+    ⁻¹-inverse      : InverseNonZero 0# 1# _⁻¹ _*_
 
-    *-comm-mon-struct    : Commutative-Monoid-Struct *-mon-ops
-    ⁻¹-inverse           : InverseNonZero 0# 1# _⁻¹ _*_
-    *-+-distrs           : _*_ DistributesOver _+_
+  open Commutative-Ring-Struct comm-rng-struct public
+    hiding (module +*-Ring)
 
-  open Additive-Abelian-Group-Struct +-abelian-grp-struct public
-  -- 0−-involutive   : Involutive 0−_
-  -- cancels-+-left  : LeftCancel _+_
-  -- cancels-+-right : RightCancel _+_
-  -- ...
+  comm-ring : Commutative-Ring A
+  comm-ring = rng-ops , comm-rng-struct
 
-  open Multiplicative-Commutative-Monoid-Struct *-comm-mon-struct public
-
-  -- open From-Field-Ops field-ops
-  open From-Ring-Ops rng-ops
-  open From-+Group-*Identity-DistributesOver
-             +-assoc
-             0+-identity
-             +0-identity
-             (snd 0−-inverse)
-             1*-identity
-             *1-identity
-             *-+-distrs
-             public
-             hiding (+-comm)
-
-  +-grp-struct : Group-Struct +-grp-ops
-  +-grp-struct = Abelian-Group-Struct.grp-struct +-abelian-grp-struct
-
-  +-abelian-grp : Abelian-Group A
-  +-abelian-grp = +-grp-ops , +-abelian-grp-struct
-
-  +-grp : Group A
-  +-grp = +-grp-ops , +-grp-struct
-
-  -- Since the Abelian-Group module includes all what Group and
-  -- Monoid provide, we can expose a single module.
-  module +-Grp = Abelian-Group +-abelian-grp
-
-  *-mon-struct : Monoid-Struct *-mon-ops
-  *-mon-struct = Commutative-Monoid-Struct.mon-struct *-comm-mon-struct
-
-  *-mon : Monoid A
-  *-mon = *-mon-ops , *-mon-struct
-
-  *-comm-mon : Commutative-Monoid A
-  *-comm-mon = *-mon-ops , *-comm-mon-struct
-
-  module *-Mon = Commutative-Monoid *-comm-mon
+  -- module +*-Ring = Commutative-Ring comm-ring
 
   1≢0 : 1# ≢ 0#
   1≢0 e = 0≢1 (! e)
@@ -86,9 +45,6 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
 
   ⁻¹-right-inverse : RightInverseNonZero 0# 1# _⁻¹ _*_
   ⁻¹-right-inverse = snd ⁻¹-inverse
-
-  *-+-distr : _*_ DistributesOverˡ _+_
-  *-+-distr = fst *-+-distrs
 
   c⁻¹*c*x : ∀ {c x} → c ≢ 0# → c ⁻¹ * c * x ≡ x
   c⁻¹*c*x c≢0 = *= (⁻¹-left-inverse c≢0) idp ∙ 1*-identity
@@ -193,25 +149,8 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
   /-quotient a' b b' = *= idp (⁻¹*-distr a' (⁻¹-non-zero b') ∙ *= idp (⁻¹-involutive b') ∙ *-comm)
     ∙ *-interchange ∙ *= idp (! ⁻¹*-distr b a')
 
-  ²-+-distr : ∀ {x y} → (x + y)² ≡ x ² + y ² + 2* x * y
-  ²-+-distr {x} {y} = (x + y)²
-                    ≡⟨ *-+-distrˡ ⟩
-                      (x + y) * x + (x + y) * y
-                    ≡⟨ += *-+-distrʳ *-+-distrʳ ⟩
-                      x ² + y * x + (x * y + y ²)
-                    ≡⟨ += (+= idp *-comm) +-comm ∙ +-interchange ⟩
-                      x ² + y ² + 2*(x * y)
-                    ≡⟨ += idp 2*-*-distr ⟩
-                       x ² + y ² + 2* x * y
-                    ∎
-
-  ²-*-distr : ∀ {x y} → (x * y)² ≡ x ² * y ²
-  ²-*-distr = *-interchange
-
-  ²-−-distr : ∀ {x y} → (x − y)² ≡ x ² + y ² − 2* x * y
-  ²-−-distr = ²-+-distr ∙ += (+= idp ²-0−-distr) (*-comm ∙ ! 0−-*-distr ∙ 0−= *-comm)
-
 record Field {ℓ} (A : Set ℓ) : Set ℓ where
+  constructor _,_
   field
     field-ops    : Field-Ops A
     field-struct : Field-Struct field-ops
