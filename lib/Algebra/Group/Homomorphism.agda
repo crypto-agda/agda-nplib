@@ -2,7 +2,7 @@
 module Algebra.Group.Homomorphism where
 
 open import Type using (Type_)
-open import Function.NP using (Op₂; _∘_)
+open import Function.NP using (Op₂; _∘_; id)
 import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Implicits
 open import Algebra.Monoid
@@ -126,6 +126,81 @@ module Stability
   open GroupHomomorphism φ-hom
 
   open Stability-Minimal φ _+_ _*_ hom public
+
+open GroupHomomorphism
+
+module Identity
+  {a}{A : Type a}
+  (𝔸 : Group A)
+  where
+
+  id-hom : GroupHomomorphism 𝔸 𝔸 id
+  id-hom = mk refl
+
+module Compose
+  {a}{A : Type a}
+  {b}{B : Type b}
+  {c}{C : Type c}
+  (𝔸 : Group A)
+  (𝔹 : Group B)
+  (ℂ : Group C)
+  (ψ : A → B)
+  (ψ-hom : GroupHomomorphism 𝔸 𝔹 ψ)
+  (φ : B → C)
+  (φ-hom : GroupHomomorphism 𝔹 ℂ φ)
+  where
+
+  ∘-hom : GroupHomomorphism 𝔸 ℂ (φ ∘ ψ)
+  ∘-hom = mk (ap φ (hom ψ-hom) ∙ hom φ-hom)
+
+module Delta
+  {a}{A : Type a}
+  (𝔸 : Group A)
+  where
+  open Algebra.Group.Constructions.Product
+
+  Δ-hom : GroupHomomorphism 𝔸 (×-grp 𝔸 𝔸) (λ x → x , x)
+  Δ-hom = mk refl
+
+module Zip
+  {a₀}{A₀ : Type a₀}
+  {a₁}{A₁ : Type a₁}
+  {b₀}{B₀ : Type b₀}
+  {b₁}{B₁ : Type b₁}
+  (𝔸₀ : Group A₀)
+  (𝔸₁ : Group A₁)
+  (𝔹₀ : Group B₀)
+  (𝔹₁ : Group B₁)
+  (φ₀ : A₀ → B₀)
+  (φ₀-hom : GroupHomomorphism 𝔸₀ 𝔹₀ φ₀)
+  (φ₁ : A₁ → B₁)
+  (φ₁-hom : GroupHomomorphism 𝔸₁ 𝔹₁ φ₁)
+  where
+  open Algebra.Group.Constructions.Product
+
+  zip-hom : GroupHomomorphism (×-grp 𝔸₀ 𝔸₁) (×-grp 𝔹₀ 𝔹₁) (map φ₀ φ₁)
+  zip-hom = mk (ap₂ _,_ (hom φ₀-hom) (hom φ₁-hom))
+
+module Pair
+  {a}{A   : Type a}
+  {b₀}{B₀ : Type b₀}
+  {b₁}{B₁ : Type b₁}
+  (𝔸  : Group A)
+  (𝔹₀ : Group B₀)
+  (𝔹₁ : Group B₁)
+  (φ₀ : A → B₀)
+  (φ₀-hom : GroupHomomorphism 𝔸 𝔹₀ φ₀)
+  (φ₁ : A → B₁)
+  (φ₁-hom : GroupHomomorphism 𝔸 𝔹₁ φ₁)
+  where
+
+  -- pair = zip ∘ Δ
+  pair-hom : GroupHomomorphism 𝔸 (Product.×-grp 𝔹₀ 𝔹₁) < φ₀ , φ₁ >
+  pair-hom = Compose.∘-hom _ _ _
+               _ (Delta.Δ-hom 𝔸)
+               _ (Zip.zip-hom _ _ _ _ _ φ₀-hom _ φ₁-hom)
+  -- OR:
+  pair-hom = mk (ap₂ _,_ (hom φ₀-hom) (hom φ₁-hom))
 -- -}
 -- -}
 -- -}
