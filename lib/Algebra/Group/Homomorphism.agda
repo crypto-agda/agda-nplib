@@ -200,7 +200,7 @@ module Pair
                _ (Delta.Δ-hom 𝔸)
                _ (Zip.zip-hom _ _ _ _ _ φ₀-hom _ φ₁-hom)
   -- OR:
-  pair-hom = mk (ap₂ _,_ (hom φ₀-hom) (hom φ₁-hom))
+  -- pair-hom = mk (ap₂ _,_ (hom φ₀-hom) (hom φ₁-hom))
 -- -}
 -- -}
 -- -}
