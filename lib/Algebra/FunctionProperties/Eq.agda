@@ -241,6 +241,9 @@ module Implicits where
             x ∙ (y ∙ (y ⁻¹ ∙ x ⁻¹)) ≡⟨ ! assoc ⟩
             (x ∙ y) ∙ (y ⁻¹ ∙ x ⁻¹) ∎)
 
+        ⁻¹-∙-distr′ : (x ∙ y)⁻¹ ≡ y ⁻¹ / x
+        ⁻¹-∙-distr′ = ⁻¹-hom′
+
       ⁻¹-hom′= : ∀ {x y z t} → x ∙ y ≡ z ∙ t → y ⁻¹ ∙ x ⁻¹ ≡ t ⁻¹ ∙ z ⁻¹
       ⁻¹-hom′= e = ! ⁻¹-hom′ ♦ ap _⁻¹ e ♦ ⁻¹-hom′
 
@@ -254,7 +257,7 @@ module Implicits where
       elim-∙-right-/ {c} {x} {y}
         = x ∙ c ∙ (y ∙ c)⁻¹  ≡⟨ ap (_∙_ _) ⁻¹-hom′  ⟩
           x ∙ c ∙ (c ⁻¹ / y) ≡⟨ elim-!inner= ⁻¹-inverseʳ ⟩
-          x / y ∎
+          x / y              ∎
 
     module From-Assoc-RightIdentity-RightInverse
              (assoc : Associative _∙_)
@@ -340,6 +343,20 @@ module Implicits where
 
         /′-∙ : (y ∙ x) /′ y ≡ x
         /′-∙ = elim-!assoc= inverseˡ
+
+        /-/′ : x / (x /′ y) ≡ y
+        /-/′ =
+          x ∙ (y ⁻¹ ∙ x) ⁻¹    ≡⟨ ∙= idp ⁻¹-hom′ ⟩
+          x ∙ (x ⁻¹ ∙ y ⁻¹ ⁻¹) ≡⟨ elim-!assoc= inverseʳ ⟩
+          y ⁻¹ ⁻¹              ≡⟨ ⁻¹-involutive ⟩
+          y                    ∎
+
+        /′-/ : x /′ (x / y) ≡ y
+        /′-/ =
+          (x / y)⁻¹ ∙ x        ≡⟨ ∙= ⁻¹-hom′ idp ⟩
+          y ⁻¹ ⁻¹ ∙ x ⁻¹ ∙ x   ≡⟨ elim-assoc= inverseˡ ⟩
+          y ⁻¹ ⁻¹              ≡⟨ ⁻¹-involutive ⟩
+          y                    ∎
 
       ∙-is-equiv : ∀ {k} → Is-equiv (_∙_ k)
       ∙-is-equiv {k} = is-equiv (_∙_ (k ⁻¹))
@@ -519,6 +536,7 @@ module Implicits where
                      ; inverseˡ to 0−-inverseˡ
                      ; ε⁻¹≡ε to 0−0≡0
                      ; ⁻¹-hom′ to 0−-hom′
+                     ; ⁻¹-∙-distr′ to 0−-+-distr′
                      )
 
       -0≡0 : -0# ≡ 0#
@@ -536,9 +554,6 @@ module Implicits where
       2*-spec : ∀ {n} → 2* n ≡ 2# * n
       2*-spec = ! += 1*-identity 1*-identity ♦ ! *-+-distrʳ
 
-      0−c+c+x : ∀ {c x} → 0− c + c + x ≡ x
-      0−c+c+x = += 0−-inverseˡ idp ♦ 0+-identity
-
       0−-*-distr : ∀ {x y} → 0−(x * y) ≡ (0− x) * y
       0−-*-distr = cancels-+-right (0−-inverseˡ ♦ ! 0*-zero ♦ *= (! 0−-inverseˡ) idp ♦ *-+-distrʳ)
 
@@ -547,9 +562,6 @@ module Implicits where
 
       2*-*-distr : ∀ {x y} → 2*(x * y) ≡ 2* x * y
       2*-*-distr = ! *-+-distrʳ
-
-      0−-+-distr′ : ∀ {x y} → 0−(x + y) ≡ 0− y − x
-      0−-+-distr′ = 0−-hom′
 
     module From-+Group-*Identity-DistributesOver
              (+-assoc : Associative _+_)
