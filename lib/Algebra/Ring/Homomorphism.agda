@@ -22,6 +22,9 @@ record RingHomomorphism {a}{A : Type a}{b}{B : Type b}
   module +-hom = GroupHomomorphism  +-hom
   module *-hom = MonoidHomomorphism *-hom
 
+--  f 𝔸.0# ≡ 𝔹.0#
+--  f (𝔸.0− a) = 𝔹.0−(f a)
+
 -- -}
 -- -}
 -- -}

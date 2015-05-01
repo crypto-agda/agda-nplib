@@ -121,7 +121,7 @@ rng-ops = ⊙-grp-ops , ∘-mon-ops G
 rng-ops' : Ring-Ops EndoG
 rng-ops' = ⊙-grp-ops' , ∘-mon-ops'
 
--- NOTE: only the the first function needs to be an homomorphism
+-- NOTE: only the first function needs to be an homomorphism
 ∘-⊙-distrˡ : _∘'_ DistributesOverˡ _⊙'_
 ∘-⊙-distrˡ {_ , mk f-hom} = endoG= f-hom
 

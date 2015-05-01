@@ -155,8 +155,7 @@ the product of monoids (since Π 𝟚 [ A , B ] ≃ A × B).
 module Pointwise {{_ : FunExt}}{a}(A : Type a){m}{M : A → Type m}
                  (𝕄 : (x : A) → Monoid (M x)) where
   private
-    module 𝕄 {x} = Monoid (𝕄 x)
-  open 𝕄 hiding (mon-ops; mon-struct)
+    open module 𝕄 {x} = Monoid (𝕄 x) hiding (mon-ops; mon-struct)
 
   ⟨ε⟩ : Π A M
   ⟨ε⟩ = λ _ → ε
@@ -173,7 +172,7 @@ module Pointwise {{_ : FunExt}}{a}(A : Type a){m}{M : A → Type m}
   mon : Monoid (Π A M)
   mon = mon-ops , mon-struct
 
-  open Monoid mon public hiding (mon-ops; mon-struct)
+  open module mon = Monoid mon public hiding (mon-ops; mon-struct)
 
 -- Non-dependent version of Pointwise′
 module Pointwise′ {{_ : FunExt}}{a}(A : Type a){m}{M : Type m}(𝕄 : Monoid M) =

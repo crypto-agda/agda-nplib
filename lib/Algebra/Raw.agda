@@ -32,6 +32,27 @@ record Magma {ℓ}(A : Type ℓ) : Type ℓ where
     ∙= : x ∙ y ≡ x' ∙ y'
     ∙= = ap (_∙_ x) q ♦ ap (λ z → z ∙ y') p
 
+-- A renaming of Monoid-Ops with additive notation
+module Additive-Magma {ℓ}{M : Set ℓ} (mag : Magma M) where
+  private
+   module M = Magma mag
+    using    ()
+    renaming ( _∙_ to _+_
+             ; _² to 2⊗_
+             ; _³ to 3⊗_
+             ; _⁴ to 4⊗_
+             ; _^¹⁺_ to _⊗¹⁺_
+             ; ∙= to +=
+             )
+  open M public using (+=)
+  infixl 6 _+_
+  infixl 7 _⊗¹⁺_ 2⊗_ 3⊗_ 4⊗_
+  _+_   = M._+_
+  _⊗¹⁺_ = M._⊗¹⁺_
+  2⊗_   = M.2⊗_
+  3⊗_   = M.3⊗_
+  4⊗_   = M.4⊗_
+
 record Monoid-Ops {ℓ} (A : Type ℓ) : Type ℓ where
   constructor _,_
   infixl 7 _∙_
@@ -43,7 +64,7 @@ record Monoid-Ops {ℓ} (A : Type ℓ) : Type ℓ where
   ∙-magma : Magma A
   ∙-magma = ⟨ _∙_ ⟩
 
-  open Magma ∙-magma public hiding (_∙_)
+  open module ∙-magma = Magma ∙-magma public hiding (_∙_)
 
   infix 8 _^⁺_
   _^⁺_ : A → ℕ → A
@@ -53,25 +74,15 @@ record Monoid-Ops {ℓ} (A : Type ℓ) : Type ℓ where
 module Additive-Monoid-Ops {ℓ}{M : Set ℓ} (mon : Monoid-Ops M) where
   private
    module M = Monoid-Ops mon
-    using    ()
-    renaming ( _∙_ to _+_
-             ; ε to 0#
-             ; _² to 2⊗_
-             ; _³ to 3⊗_
-             ; _⁴ to 4⊗_
-             ; _^¹⁺_ to _⊗¹⁺_
+    using ()
+    renaming ( ε to 0#
              ; _^⁺_ to _⊗⁺_
-             ; ∙= to +=
+             ; ∙-magma to +-magma
              )
-  open M public using (0#; +=)
-  infixl 6 _+_
-  infixl 7 _⊗¹⁺_ _⊗⁺_ 2⊗_ 3⊗_ 4⊗_
-  _+_   = M._+_
-  _⊗¹⁺_ = M._⊗¹⁺_
+  open M public using (0#; +-magma)
+  open module +-magma = Additive-Magma +-magma public
+  infixl 7 _⊗⁺_
   _⊗⁺_  = M._⊗⁺_
-  2⊗_   = M.2⊗_
-  3⊗_   = M.3⊗_
-  4⊗_   = M.4⊗_
 
 -- A renaming of Monoid-Ops with multiplicative notation
 module Multiplicative-Monoid-Ops {ℓ}{M : Type ℓ} (mon-ops : Monoid-Ops M)
@@ -79,6 +90,8 @@ module Multiplicative-Monoid-Ops {ℓ}{M : Type ℓ} (mon-ops : Monoid-Ops M)
     renaming ( _∙_ to _*_
              ; ε to 1#
              ; ∙= to *=
+             ; ∙-magma to *-magma
+             ; module ∙-magma to *-magma
              )
 
 record Group-Ops {ℓ} (A : Type ℓ) : Type ℓ where
@@ -88,12 +101,12 @@ record Group-Ops {ℓ} (A : Type ℓ) : Type ℓ where
     mon-ops : Monoid-Ops A
     _⁻¹     : A → A
 
-  open Monoid-Ops mon-ops public
+  open module mon-ops = Monoid-Ops mon-ops public
 
   ⁻¹= : ∀ {x y} → x ≡ y → x ⁻¹ ≡ y ⁻¹
   ⁻¹= = ap _⁻¹
 
-  infixl 7 _/_
+  infixl 7 _/_ _/′_
 
   _/_ : A → A → A
   x / y = x ∙ y ⁻¹
@@ -101,7 +114,15 @@ record Group-Ops {ℓ} (A : Type ℓ) : Type ℓ where
   /-magma : Magma A
   /-magma = ⟨ _/_ ⟩
 
-  open Magma /-magma public using () renaming (∙= to /=)
+  open module /-magma = Magma /-magma public using () renaming (∙= to /=)
+
+  _/′_ : A → A → A
+  x /′ y = y ⁻¹ ∙ x
+
+  /′-magma : Magma A
+  /′-magma = ⟨ _/′_ ⟩
+
+  open module /′-magma = Magma /′-magma public using () renaming (∙= to /′=)
 
   _^⁻_ _^⁻′_ : A → ℕ → A
   x ^⁻ n = (x ^⁺ n)⁻¹
@@ -119,12 +140,15 @@ module Additive-Group-Ops {ℓ}{G : Type ℓ} (grp : Group-Ops G) where
     renaming ( _⁻¹ to 0−_
              ; ⁻¹= to 0−=
              ; _/_ to _−_
+             ; _/′_ to _−′_
              ; _^⁻_ to _⊗⁻_
              ; _^_ to _⊗_
              ; mon-ops to +-mon-ops
-             ; /= to −=)
+             ; /= to −=
+             ; /′= to −′=
+             )
   open M public using (0−_; +-mon-ops; −=; 0−=)
-  open Additive-Monoid-Ops +-mon-ops public
+  open module +-mon-ops = Additive-Monoid-Ops +-mon-ops public
   infixl 6 _−_
   infixl 7 _⊗⁻_ _⊗_
   _−_   = M._−_
@@ -133,7 +157,10 @@ module Additive-Group-Ops {ℓ}{G : Type ℓ} (grp : Group-Ops G) where
 
 -- A renaming of Group-Ops with multiplicative notation
 module Multiplicative-Group-Ops {ℓ}{G : Type ℓ} (grp : Group-Ops G) = Group-Ops grp
-    using    ( _^⁺_; _²; _³; _⁴; _⁻¹; _/_; /=; _^⁻_; _^_; /-magma; ⁻¹= )
+    using    ( _^⁺_; _²; _³; _⁴; _⁻¹; _/_; /=; _/′_; /′=
+             ; _^⁻_; _^_
+             ; /-magma; module /-magma; /′-magma
+             ; module /′-magma; ⁻¹= )
     renaming ( _∙_ to _*_; ε to 1#; mon-ops to *-mon-ops; ∙= to *= )
 
 record Ring-Ops {ℓ} (A : Type ℓ) : Type ℓ where
@@ -144,9 +171,9 @@ record Ring-Ops {ℓ} (A : Type ℓ) : Type ℓ where
     +-grp-ops : Group-Ops A
     *-mon-ops : Monoid-Ops A
 
-  open Additive-Group-Ops        +-grp-ops public
+  open module +-grp-ops = Additive-Group-Ops        +-grp-ops public
     renaming (2⊗_ to 2*_)
-  open Multiplicative-Monoid-Ops *-mon-ops public
+  open module *-mon-ops = Multiplicative-Monoid-Ops *-mon-ops public
 
   suc : A → A
   suc = _+_ 1#
@@ -170,8 +197,11 @@ record Ring-Ops {ℓ} (A : Type ℓ) : Type ℓ where
 
   -- TODO use _^⁺_ and _^_ from group/monoid
   _^ℕ_ : A → ℕ → A
+  _^ℕ_ = _^⁺_
+  {-
   b ^ℕ 0      = 1#
   b ^ℕ (1+ n) = nest n (_*_ b) b
+  -}
 
   2+_ : A → A
   2+ x = 2# + x
@@ -183,18 +213,24 @@ record Field-Ops {ℓ} (A : Set ℓ) : Set ℓ where
     +-grp-ops : Group-Ops A
     *-grp-ops : Group-Ops A
 
-  open Multiplicative-Group-Ops *-grp-ops public
-    using ( _⁻¹; ⁻¹=; _/_; /-magma; /=; _^⁻_; _^_; *-mon-ops )
+  open module *-grp-ops = Multiplicative-Group-Ops *-grp-ops public
+    using ( _⁻¹; ⁻¹=
+          ; _/_; /=; /-magma; module /-magma
+          ; _/′_; /′=; /′-magma; module /′-magma
+          ; _^⁻_; _^_; *-mon-ops )
 
   rng-ops : Ring-Ops A
   rng-ops = +-grp-ops , *-mon-ops
 
-  open Ring-Ops rng-ops public
+  open module rng-ops = Ring-Ops rng-ops public
     hiding (+-grp-ops; *-mon-ops)
 
   _^ℤ_ : A → ℤ → A
+  _^ℤ_ = _^_
+  {-
   b ^ℤ (+ n)    = b ^ℕ n
   b ^ℤ -[1+ n ] = (b ^ℕ (1+ n))⁻¹
+  -}
 -- -}
 -- -}
 -- -}

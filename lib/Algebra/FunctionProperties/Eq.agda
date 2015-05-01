@@ -274,36 +274,31 @@ module Implicits where
           y              ∎
 
       inverseˡ : LeftInverse ε _⁻¹ _∙_
-      inverseˡ {x} = x ⁻¹ ∙ x                      ≡⟨ ! idr ⟩
-                  (x ⁻¹ ∙ x) ∙ ε                ≡⟨ ∙= idp (! inverseʳ) ⟩
-                  (x ⁻¹ ∙ x) ∙ (x ⁻¹ ∙ x ⁻¹ ⁻¹) ≡⟨ elim-inner= inverseʳ ⟩
-                  (x ⁻¹ ∙ x ⁻¹ ⁻¹)              ≡⟨ inverseʳ ⟩
-                  ε ∎
+      inverseˡ {x}
+        = x ⁻¹ ∙ x                      ≡⟨ ! idr ⟩
+          (x ⁻¹ ∙ x) ∙ ε                ≡⟨ ∙= idp (! inverseʳ) ⟩
+          (x ⁻¹ ∙ x) ∙ (x ⁻¹ ∙ x ⁻¹ ⁻¹) ≡⟨ elim-inner= inverseʳ ⟩
+          (x ⁻¹ ∙ x ⁻¹ ⁻¹)              ≡⟨ inverseʳ ⟩
+          ε                             ∎
 
       ⁻¹-involutive : Involutive _⁻¹
       ⁻¹-involutive {x}
         = cancels-∙-right
           (x ⁻¹ ⁻¹ ∙ x ⁻¹ ≡⟨ inverseˡ ⟩
            ε              ≡⟨ ! inverseʳ ⟩
-           x ∙ x ⁻¹ ∎)
+           x ∙ x ⁻¹       ∎)
 
       module _ {x y} where
-        /-∙ : x ≡ (x / y) ∙ y
-        /-∙ = x               ≡⟨ ! idr ⟩
-              x ∙ ε           ≡⟨ ap (_∙_ x) (! inverseˡ) ⟩
-              x ∙ (y ⁻¹ ∙ y)  ≡⟨ ! assoc ⟩
-              (x / y) ∙ y     ∎
+        /-∙ : (x / y) ∙ y ≡ x
+        /-∙ = elim-assoc= inverseˡ
 
-        ∙-/ : x ≡ (x ∙ y) / y
-        ∙-/ = x            ≡⟨ ! idr ⟩
-              x ∙ ε        ≡⟨ ap (_∙_ x) (! inverseʳ) ⟩
-              x ∙ (y / y)  ≡⟨ ! assoc ⟩
-              (x ∙ y) / y  ∎
+        ∙-/ : (x ∙ y) / y ≡ x
+        ∙-/ = elim-assoc= inverseʳ
 
       module _ {x y} where
         unique-ε-left : x ∙ y ≡ y → x ≡ ε
         unique-ε-left eq
-          = x            ≡⟨ ∙-/ ⟩
+          = x            ≡⟨ ! ∙-/ ⟩
             (x ∙ y) / y  ≡⟨ /= eq idp ⟩
             y / y        ≡⟨ inverseʳ ⟩
             ε            ∎
@@ -339,6 +334,13 @@ module Implicits where
       open From-Assoc-LeftIdentity-LeftInverse assoc idl inverseˡ public
         hiding (⁻¹-inverseʳ)
 
+      module _ {x y} where
+        ∙-/′ : y ∙ (x /′ y) ≡ x
+        ∙-/′ = elim-!assoc= inverseʳ
+
+        /′-∙ : (y ∙ x) /′ y ≡ x
+        /′-∙ = elim-!assoc= inverseˡ
+
       ∙-is-equiv : ∀ {k} → Is-equiv (_∙_ k)
       ∙-is-equiv {k} = is-equiv (_∙_ (k ⁻¹))
                                 (λ _ → ! assoc ♦ ∙= inverseʳ idp ♦ idl)
@@ -352,7 +354,7 @@ module Implicits where
       module _ {x y} where
         unique-⁻¹ : x ∙ y ≡ ε → x ≡ y ⁻¹
         unique-⁻¹ eq
-          = x            ≡⟨ ∙-/ ⟩
+          = x            ≡⟨ ! ∙-/ ⟩
             (x ∙ y) / y  ≡⟨ /= eq idp ⟩
             ε / y        ≡⟨ idl ⟩
             y ⁻¹         ∎
@@ -363,7 +365,7 @@ module Implicits where
               y ∙ ε          ≡⟨ ∙= idp (ε        ≡⟨ ! inverseˡ  ⟩
                                         x ⁻¹ ∙ x ≡⟨ ∙= e idp ⟩
                                         y ⁻¹ ∙ x ∎) ⟩
-              y ∙ (y ⁻¹ ∙ x) ≡⟨ elim-!assoc= inverseʳ ⟩
+              y ∙ (y ⁻¹ ∙ x) ≡⟨ ∙-/′ ⟩
               x ∎)
 
       module _ {b} where

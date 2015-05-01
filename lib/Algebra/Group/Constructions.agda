@@ -58,9 +58,8 @@ the product of groups (since Π 𝟚 [ A , B ] ≃ A × B).
 module Pointwise {{_ : FunExt}}{a}(A : Type a){ℓ}{G : A → Type ℓ}
                  (𝔾 : (x : A) → Group (G x)) where
   private
-    module 𝔾 {x} = Group (𝔾 x)
-  open 𝔾 hiding (mon-ops; mon-struct; grp-ops; grp-struct)
-  open Algebra.Monoid.Pointwise A (λ x → mon {x})
+    open module 𝔾 {x} = Group (𝔾 x) hiding (mon-ops; mon-struct; grp-ops; grp-struct)
+    open module 𝕄 = Algebra.Monoid.Pointwise A (λ x → mon {x})
 
   _⁽⁻¹⁾ : Op₁ (Π A G)
   (f ⁽⁻¹⁾) x = (f x)⁻¹

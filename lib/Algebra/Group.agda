@@ -107,6 +107,7 @@ module Multiplicative-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
              ; ∙ε-identity to *1-identity
              ; inverse to ⁻¹-inverse
              ; ∙-/ to *-/; /-∙ to /-*
+             ; ∙-/′ to *-/′; /′-∙ to /′-*
              ; mon-struct to *-mon-struct
              ; mon to *-mon
              ; ∙-is-equiv to *-is-equiv
