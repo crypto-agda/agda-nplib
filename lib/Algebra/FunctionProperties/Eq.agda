@@ -536,7 +536,6 @@ module Implicits where
                      ; inverseˡ to 0−-inverseˡ
                      ; ε⁻¹≡ε to 0−0≡0
                      ; ⁻¹-hom′ to 0−-hom′
-                     ; ⁻¹-∙-distr′ to 0−-+-distr′
                      )
 
       -0≡0 : -0# ≡ 0#

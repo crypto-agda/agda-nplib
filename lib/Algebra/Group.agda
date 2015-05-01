@@ -78,6 +78,7 @@ module Additive-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
              ; elim-assoc= to elim-+-assoc=
              ; elim-!assoc= to elim-+-!assoc=
              ; elim-inner= to elim-+-inner=
+             ; ⁻¹-∙-distr′ to 0−-+-distr′
              ; ⁻¹-hom′ to 0−-hom′
              ; ⁻¹-inj to 0−-inj
              ; ⁻¹-involutive to 0−-involutive
