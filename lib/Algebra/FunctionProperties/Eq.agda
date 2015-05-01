@@ -584,6 +584,7 @@ module Implicits where
                      ; cancels-∙-left to cancels-+-left
                      ; cancels-∙-right to cancels-+-right
                      ; inverseˡ to 0−-inverseˡ
+                     ; ⁻¹-∙-distr′ to 0−-+-distr′
                      )
 
       open From-+Group-1*Identity-DistributesOverʳ
