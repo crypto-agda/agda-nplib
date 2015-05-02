@@ -13,8 +13,9 @@ open import Data.Product
 open import Data.Fin using (Fin; zero; suc)
 import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡
-module _ {a}{A : Set a} where
-    open import Algebra.FunctionProperties.NP Π {A = A} _≡_ public
+import Algebra.FunctionProperties.Eq
+open Algebra.FunctionProperties.Eq.Explicits
+
 open import Data.Vec.NP
 
 ==-comm : ∀ {n} (xs ys : Bits n) → xs == ys ≡ ys == xs
@@ -25,6 +26,18 @@ open import Data.Vec.NP
 ==-refl [] = refl
 ==-refl (1₂ ∷ xs) = ==-refl xs
 ==-refl (0₂ ∷ xs) = ==-refl xs
+
+==-reflexive : ∀ {n} {xs ys : Bits n} → xs ≡ ys → (xs == ys) ≡ 1₂
+==-reflexive {xs = xs} refl = ==-refl xs
+
+==-sound : ∀ {n} {xs ys : Bits n} → (xs == ys) ≡ 1₂ → xs ≡ ys
+==-sound {xs = []} {[]} e = refl
+==-sound {xs = 1₂ ∷ xs} {1₂ ∷ ys} e = ap (_∷_ 1₂) (==-sound e)
+==-sound {xs = 0₂ ∷ xs} {0₂ ∷ ys} e = ap (_∷_ 0₂) (==-sound e)
+==-sound {xs = 1₂ ∷ xs} {0₂ ∷ ys} ()
+==-sound {xs = 0₂ ∷ xs} {1₂ ∷ ys} ()
+
+==⇒≡ = ==-sound
 
 vnot∘vnot≗id : ∀ {n} → vnot {n} ∘ vnot ≗ id
 vnot∘vnot≗id [] = refl
@@ -170,3 +183,5 @@ Bits▹ℕ∘ℕ▹Bits {suc n} x x<2ⁿ with 2^ n ℕ<= x | ≡.inspect (_ℕ<=
   ≡⟨ Bits▹ℕ∘ℕ▹Bits {n} y y< ⟩
     y
   ∎ where open ≡-Reasoning
+-- -}
+-- -}
