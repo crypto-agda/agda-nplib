@@ -2,11 +2,22 @@
 module Data.Fin.NP where
 
 open import Type hiding (★)
-open import Function
+import Algebra.FunctionProperties.Eq
+open Algebra.FunctionProperties.Eq.Implicits
+open import Function.NP
 open import Data.Zero
 open import Data.One using (𝟙)
 open import Data.Fin public renaming (toℕ to Fin▹ℕ; fromℕ to ℕ▹Fin)
-open import Data.Nat.NP using (ℕ; zero; suc; _<=_; module ℕ°; z≤n; s≤s) renaming (_+_ to _+ℕ_; _<_ to _<ℕ_)
+open import Data.Fin.Properties
+  public
+  renaming ( toℕ-injective to Fin▹ℕ-injective; _+′_ to _+′′_
+           ; toℕ-strengthen to Fin▹ℕ-strengthen
+           ; toℕ-raise to Fin▹ℕ-raise
+           ; toℕ-fromℕ≤ to Fin▹ℕ-fromℕ≤
+           ; reverse to reverse′)
+open import Data.Nat.NP using (ℕ; zero; suc; _<=_; module ℕ°; z≤n; s≤s; _∸_)
+                        renaming (_+_ to _+ℕ_; _≤_ to _≤ℕ_; _<_ to _<ℕ_; pred to predℕ)
+open import Data.Nat.Properties
 open import Data.Two using (𝟚; 0₂; 1₂; [0:_1:_]; case_0:_1:_)
 import Data.Vec.NP as Vec
 open Vec using (Vec; []; _∷_; _∷ʳ_; allFin; lookup; rot₁; tabulate; foldr) renaming (map to vmap)
@@ -15,7 +26,8 @@ open import Data.Maybe.NP
 open import Data.Sum as Sum
 open import Relation.Nullary
 open import Relation.Nullary.Decidable
-open import Relation.Binary.PropositionalEquality as ≡
+open import Relation.Binary.PropositionalEquality.NP as ≡
+import Data.Nat.BoundedMonoInj-is-Id as BMIII
 
 suc-injective : ∀ {m}{i j : Fin m} → Fin.suc i ≡ suc j → i ≡ j
 suc-injective refl = refl
@@ -84,6 +96,7 @@ _+′_ : ∀ {m n} (x : Fin m) (y : Fin n) → Fin (m +ℕ n)
 _+′_ {suc m} {n} zero y rewrite ℕ°.+-comm (suc m) n = inject+ _ y
 suc x +′ y = suc (x +′ y)
 
+{-
 _≟_ : ∀ {n} (i j : Fin n) → Dec (i ≡ j)
 zero ≟ zero = yes refl
 zero ≟ suc j = no (λ())
@@ -91,6 +104,7 @@ suc i ≟ zero = no (λ())
 suc i ≟ suc j with i ≟ j
 suc i ≟ suc j | yes p = yes (cong suc p)
 suc i ≟ suc j | no ¬p = no (¬p ∘ suc-injective)
+-}
 
 _==_ : ∀ {n} (x y : Fin n) → 𝟚
 x == y = ⌊ x ≟ y ⌋
@@ -146,13 +160,9 @@ reverse : ∀ {n} → Fin n → Fin n
 reverse {suc n} zero    = ℕ▹Fin n
 reverse {suc n} (suc x) = inject₁ (reverse {n} x)
 
-open import Data.Nat
-open import Data.Nat.Properties
-open import Data.Fin.Properties renaming (reverse to reverse-old)
-
-reverse-fromℕ : ∀ n → reverse (ℕ▹Fin n) ≡ zero
-reverse-fromℕ zero = refl
-reverse-fromℕ (suc n) rewrite reverse-fromℕ n = refl
+reverse-ℕ▹Fin : ∀ n → reverse (ℕ▹Fin n) ≡ zero
+reverse-ℕ▹Fin zero = refl
+reverse-ℕ▹Fin (suc n) rewrite reverse-ℕ▹Fin n = refl
 
 reverse-inject₁ : ∀ {n} (x : Fin n) → reverse (inject₁ x) ≡ suc (reverse x)
 reverse-inject₁ zero = refl
@@ -160,7 +170,7 @@ reverse-inject₁ (suc x) rewrite reverse-inject₁ x = refl
 
 {-
 reverse-involutive : ∀ {n} (x : Fin n) → reverse (reverse x) ≡ x
-reverse-involutive zero = reverse-fromℕ _
+reverse-involutive zero = reverse-ℕ▹Fin _
 reverse-involutive (suc x) rewrite reverse-inject₁ (reverse x) | reverse-involutive x = refl
 -}
 
@@ -173,20 +183,20 @@ Fin▹ℕ-ℕ-lem zero = to-from _
 Fin▹ℕ-ℕ-lem {zero} (suc ())
 Fin▹ℕ-ℕ-lem {suc n} (suc x) = Fin▹ℕ-ℕ-lem x
 
-reverse-old-lem : ∀ {n} (x : Fin n) → Fin▹ℕ (reverse-old x) ≡ n ∸ suc (Fin▹ℕ x)
-reverse-old-lem {zero} ()
-reverse-old-lem {suc n} x rewrite inject≤-lemma (n ℕ- x) (n∸m≤n (Fin▹ℕ x) (suc n)) = Fin▹ℕ-ℕ-lem x
+reverse′-lem : ∀ {n} (x : Fin n) → Fin▹ℕ (reverse′ x) ≡ n ∸ suc (Fin▹ℕ x)
+reverse′-lem {zero} ()
+reverse′-lem {suc n} x rewrite inject≤-lemma (n ℕ- x) (n∸m≤n (Fin▹ℕ x) (suc n)) = Fin▹ℕ-ℕ-lem x
 
 data FinView {n} : Fin (suc n) → ★₀ where
-  `fromℕ   : FinView (ℕ▹Fin n)
+  `ℕ▹Fin   : FinView (ℕ▹Fin n)
   `inject₁ : ∀ x → FinView (inject₁ x)
 
 sucFinView : ∀ {n} {i : Fin (suc n)} → FinView i → FinView (suc i)
-sucFinView `fromℕ = `fromℕ
+sucFinView `ℕ▹Fin = `ℕ▹Fin
 sucFinView (`inject₁ x) = `inject₁ (suc x)
 
 finView : ∀ {n} → (i : Fin (suc n)) → FinView i
-finView {zero}  zero    = `fromℕ
+finView {zero}  zero    = `ℕ▹Fin
 finView {suc n} zero    = `inject₁ zero
 finView {suc n} (suc i) = sucFinView (finView i)
 finView {zero}  (suc ())
@@ -253,16 +263,16 @@ module Modulo where
   sucmod-inj eq | just _  | nothing | _ | p | _ = 𝟘-elim (p (cong Maybe.just eq))
   sucmod-inj eq | nothing | just _  | _ | _ | p = 𝟘-elim (p (cong Maybe.just (sym eq)))
 
-  modq-fromℕ : ∀ q → modq (ℕ▹Fin q) ≡ nothing
-  modq-fromℕ zero = refl
-  modq-fromℕ (suc q) rewrite modq-fromℕ q = refl
+  modq-ℕ▹Fin : ∀ q → modq (ℕ▹Fin q) ≡ nothing
+  modq-ℕ▹Fin zero = refl
+  modq-ℕ▹Fin (suc q) rewrite modq-ℕ▹Fin q = refl
 
   modq-inject₁ : ∀ {q} (i : Fin q) → modq (inject₁ i) ≡ just i
   modq-inject₁ zero = refl
   modq-inject₁ (suc i) rewrite modq-inject₁ i = refl
 
-  sucmod-fromℕ : ∀ q → sucmod (ℕ▹Fin q) ≡ zero
-  sucmod-fromℕ q rewrite modq-fromℕ q = refl
+  sucmod-ℕ▹Fin : ∀ q → sucmod (ℕ▹Fin q) ≡ zero
+  sucmod-ℕ▹Fin q rewrite modq-ℕ▹Fin q = refl
 
   sucmod-inject₁ : ∀ {n} (i : Fin n) → sucmod (inject₁ i) ≡ suc i
   sucmod-inject₁ i rewrite modq-inject₁ i = refl
@@ -271,14 +281,14 @@ module Modulo where
   lem-inject₁ zero    (x₀ ∷ xs) x₁ = refl
   lem-inject₁ (suc i) (x₀ ∷ xs) x₁ = lem-inject₁ i xs x₁
 
-  lem-fromℕ : ∀ {n a} {A : ★ a} (xs : Vec A n) x → lookup (ℕ▹Fin n) (xs ∷ʳ x) ≡ x
-  lem-fromℕ {zero}  []       x = refl
-  lem-fromℕ {suc n} (_ ∷ xs) x = lem-fromℕ xs x
+  lem-ℕ▹Fin : ∀ {n a} {A : ★ a} (xs : Vec A n) x → lookup (ℕ▹Fin n) (xs ∷ʳ x) ≡ x
+  lem-ℕ▹Fin {zero}  []       x = refl
+  lem-ℕ▹Fin {suc n} (_ ∷ xs) x = lem-ℕ▹Fin xs x
 
   lookup-sucmod : ∀ {n a} {A : ★ a} (i : Fin (suc n)) (x : A) xs
                  → lookup i (xs ∷ʳ x) ≡ lookup (sucmod i) (x ∷ xs)
   lookup-sucmod i x xs with finView i
-  lookup-sucmod {n} .(ℕ▹Fin n) x xs | `fromℕ rewrite sucmod-fromℕ n = lem-fromℕ xs x
+  lookup-sucmod {n} .(ℕ▹Fin n) x xs | `ℕ▹Fin rewrite sucmod-ℕ▹Fin n = lem-ℕ▹Fin xs x
   lookup-sucmod .(inject₁ x) x₁ xs | `inject₁ x rewrite sucmod-inject₁ x = lem-inject₁ x xs x₁
 
   lookup-map : ∀ {n a b} {A : ★ a} {B : ★ b} (f : A → B) i (xs : Vec A n)
@@ -308,7 +318,86 @@ module Modulo where
         rot₁-map-sucmod : ∀ n → rot₁ (allFin n) ≡ vmap sucmod (allFin n)
         rot₁-map-sucmod _ = vec≗⇒≡ _ _ lookup-rot₁-allFin
 
-  {-
+data _≤F_ : ∀ {n} → Fin n → Fin n → Type where
+  z≤i : {n : ℕ}{i : Fin (suc n)} → zero ≤F i
+  s≤s : {n : ℕ}{i j : Fin n} → i ≤F j → suc i ≤F suc j
+
+≤F-refl : ∀ {n} (x : Fin n) → x ≤F x
+≤F-refl zero = z≤i
+≤F-refl (suc i) = s≤s (≤F-refl i)
+
+_<F_ : ∀ {n} → Fin n → Fin n → Type
+i <F j = suc i ≤F inject₁ j
+
+Fin▹ℕ-mono : ∀ {n}{i j : Fin n} → i ≤F j → Fin▹ℕ i ≤ℕ Fin▹ℕ j
+Fin▹ℕ-mono z≤i = z≤n
+Fin▹ℕ-mono (s≤s i≤F) = s≤s (Fin▹ℕ-mono i≤F)
+
+fin< : ∀ n → ℕ → Fin (suc n)
+fin< zero i = zero
+fin< (suc n₁) zero = zero
+fin< (suc n₁) (suc i) = suc (fin< n₁ i)
+
+fin<-inj : {n x y : ℕ} → x ≤ℕ n → y ≤ℕ n → fin< n x ≡ fin< n y → x ≡ y
+fin<-inj z≤n z≤n prf = refl
+fin<-inj z≤n (s≤s y≤n) ()
+fin<-inj (s≤s x≤n) z≤n ()
+fin<-inj (s≤s x≤n) (s≤s y≤n) prf rewrite (fin<-inj x≤n y≤n (suc-injective prf)) = refl
+
+fin<-mono : {n x y : ℕ} → x ≤ℕ y → y ≤ℕ n → fin< n x ≤F fin< n y
+fin<-mono z≤n z≤n = ≤F-refl _
+fin<-mono z≤n (s≤s y≤n) = z≤i
+fin<-mono (s≤s x≤y) (s≤s y≤n) = s≤s (fin<-mono x≤y y≤n)
+
+fin<-Fin▹ℕ : ∀ {n}(i : Fin (suc n)) → fin< n (Fin▹ℕ i) ≡ i
+fin<-Fin▹ℕ {zero} zero = refl
+fin<-Fin▹ℕ {zero} (suc ())
+fin<-Fin▹ℕ {suc n₁} zero = refl
+fin<-Fin▹ℕ {suc n₁} (suc i) rewrite fin<-Fin▹ℕ i = refl
+
+module From-mono-inj-suc {n}
+                         (f : Endo (Fin (suc n)))
+                         (f-inj : Injective f)
+                         (f-mono : ∀ {x y} → x ≤F y → f x ≤F f y) where
+  open BMIII
+
+  fn : Endo ℕ
+  fn = Fin▹ℕ ∘ f ∘ fin< n
+
+  f-fn : f ≗ fin< n ∘ fn ∘ Fin▹ℕ
+  f-fn x rewrite fin<-Fin▹ℕ x | fin<-Fin▹ℕ (f x) = refl
+
+  fn-monotone : Bounded-monotone (suc n) fn
+  fn-monotone x≤y (s≤s y≤n) = Fin▹ℕ-mono (f-mono (fin<-mono x≤y y≤n))
+
+  fn-inj : Bounded-injective (suc n) fn
+  fn-inj {x}{y} (s≤s sx≤sn) (s≤s sy≤sn) prf = fin<-inj sx≤sn sy≤sn (f-inj (Fin▹ℕ-injective prf))
+
+  fn-bounded : Bounded (suc n) fn
+  fn-bounded x _ = bounded (f (fin< n x))
+
+  open From-mono-inj fn fn-monotone fn-inj
+
+  fn≗id : ∀ x → x <ℕ (suc n) → fn x ≡ x
+  fn≗id = is-id fn-bounded
+
+  f≗id : f ≗ id
+  f≗id x rewrite f-fn x | fn≗id (Fin▹ℕ x) (bounded x) = fin<-Fin▹ℕ x
+
+private
+  f≗id' : ∀ {n}
+            (f : Endo (Fin n))
+            (f-inj : Injective f)
+            (f-mono : ∀ {x y} → x ≤F y → f x ≤F f y) → f ≗ id
+  f≗id' {zero}  f f-inj f-mono ()
+  f≗id' {suc n} f f-inj f-mono x = From-mono-inj-suc.f≗id f f-inj f-mono x
+
+module From-mono-inj {n}
+                     (f : Endo (Fin n))
+                     (f-inj : Injective f)
+                     (f-mono : ∀ {x y} → x ≤F y → f x ≤F f y) where
+  f≗id : f ≗ id
+  f≗id = f≗id' f f-inj f-mono
 
   -- -}
   -- -}

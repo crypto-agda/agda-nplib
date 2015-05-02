@@ -7,7 +7,7 @@ import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Explicits
 open import Data.Two.Base hiding (_==_; _≟_; _²)
 open import Data.Product using (∃; _,_) renaming (proj₁ to fst; proj₂ to snd)
-open import Data.Sum renaming (map to ⊎-map)
+open import Data.Sum.NP renaming (map to ⊎-map)
 open import Data.Zero using (𝟘-elim; 𝟘)
 open import Data.One using (𝟙)
 open import Function.NP
@@ -153,11 +153,11 @@ sucx≰x zero    = λ()
 sucx≰x (suc x) = sucx≰x x ∘ ≤-pred
 
 total-≤ : ∀ a b → a ≤ b ⊎ b ≤ a
-total-≤ zero b = inj₁ z≤n
-total-≤ (suc a) zero = inj₂ z≤n
+total-≤ zero b = inl z≤n
+total-≤ (suc a) zero = inr z≤n
 total-≤ (suc a) (suc b) with total-≤ a b
-... | inj₁ p = inj₁ (s≤s p)
-... | inj₂ p = inj₂ (s≤s p)
+... | inl p = inl (s≤s p)
+... | inr p = inr (s≤s p)
 
 a≡a⊓b+a∸b : ∀ a b → a ≡ a ⊓ b + (a ∸ b)
 a≡a⊓b+a∸b zero zero = idp
@@ -699,6 +699,17 @@ even? odd? : ℕ → 𝟚
 even? zero    = 1₂
 even? (suc n) = odd? n 
 odd? n = not (even? n)
+
+split-≤ : ∀ {x y} → x ≤ y → x ≡ y ⊎ x < y
+split-≤ {zero} {zero} p = inl idp
+split-≤ {zero} {suc y} p = inr (s≤s z≤n)
+split-≤ {suc x} {zero} ()
+split-≤ {suc x} {suc y} (s≤s p) with split-≤ {x} {y} p
+... | inl q rewrite q = inl idp
+... | inr q = inr (s≤s q)
+
+<→≤ : ∀ {x y} → x < y → x ≤ y
+<→≤ (s≤s p) = ≤-steps 1 p
 -- -}
 -- -}
 -- -}
