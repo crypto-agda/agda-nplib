@@ -1,7 +1,7 @@
 {-# OPTIONS --without-K #-}
 open import Data.Two hiding (_≟_; decSetoid)
 open import Type
-open import Relation.Binary
+open import Relation.Binary.NP
 open import Relation.Nullary
 open import Function
 import Relation.Binary.PropositionalEquality as ≡
@@ -11,21 +11,24 @@ module Data.Two.Equality where
 
 module ✓-== where
 
+    _≈_ : (x y : 𝟚) → ★₀
+    x ≈ y = ✓ (x == y)
+
+    subst : ∀ {ℓ} → Substitutive _≈_ ℓ
+    subst _ {0₂} {0₂} _ = id
+    subst _ {1₂} {1₂} _ = id
+    subst _ {0₂} {1₂} ()
+    subst _ {1₂} {0₂} ()
+
+    ⇒≡ : _≈_ ⇒ _≡_
+    ⇒≡ = substitutive⇒≡ subst
+
     decSetoid : DecSetoid _ _
     decSetoid = record { Carrier = 𝟚; _≈_ = _≈_; isDecEquivalence = isDecEquivalence }
       where
-        _≈_ : (x y : 𝟚) → ★₀
-        x ≈ y = ✓ (x == y)
-
         refl : Reflexive _≈_
         refl {0₂} = _
         refl {1₂} = _
-
-        subst : ∀ {ℓ} → Substitutive _≈_ ℓ
-        subst _ {0₂} {0₂} _ = id
-        subst _ {1₂} {1₂} _ = id
-        subst _ {0₂} {1₂} ()
-        subst _ {1₂} {0₂} ()
 
         sym : Symmetric _≈_
         sym {x} {y} eq = subst (λ y → y ≈ x) {x} {y} eq (refl {x})
@@ -47,25 +50,28 @@ module ✓-== where
         isDecEquivalence : IsDecEquivalence _≈_
         isDecEquivalence = record { isEquivalence = isEquivalence; _≟_ = _≟_ }
 
-    open DecSetoid decSetoid public hiding (_≈_; _≟_)
+    open DecSetoid decSetoid public hiding (_≈_)
 
 module ==-≡1₂ where
+
+    _≈_ : (x y : 𝟚) → ★₀
+    x ≈ y = (x == y) ≡ 1₂
+
+    subst : ∀ {ℓ} → Substitutive _≈_ ℓ
+    subst _ {0₂} {0₂} _ = id
+    subst _ {1₂} {1₂} _ = id
+    subst _ {0₂} {1₂} ()
+    subst _ {1₂} {0₂} ()
+
+    ⇒≡ : _≈_ ⇒ _≡_
+    ⇒≡ = substitutive⇒≡ subst
 
     decSetoid : DecSetoid _ _
     decSetoid = record { Carrier = 𝟚; _≈_ = _≈_; isDecEquivalence = isDecEquivalence }
       where
-        _≈_ : (x y : 𝟚) → ★₀
-        x ≈ y = (x == y) ≡ 1₂
-
         refl : Reflexive _≈_
         refl {0₂} = ≡.refl
         refl {1₂} = ≡.refl
-
-        subst : ∀ {ℓ} → Substitutive _≈_ ℓ
-        subst _ {0₂} {0₂} _ = id
-        subst _ {1₂} {1₂} _ = id
-        subst _ {0₂} {1₂} ()
-        subst _ {1₂} {0₂} ()
 
         sym : Symmetric _≈_
         sym {x} {y} eq = subst (λ y → y ≈ x) {x} {y} eq (refl {x})
@@ -87,7 +93,7 @@ module ==-≡1₂ where
         isDecEquivalence : IsDecEquivalence _≈_
         isDecEquivalence = record { isEquivalence = isEquivalence; _≟_ = _≟_ }
 
-    open DecSetoid decSetoid public
+    open DecSetoid decSetoid public hiding (_≈_)
 
 neg-xor : ∀ b₀ b₁ → b₀ == b₁ ≡ not (b₀ xor b₁)
 neg-xor 0₂ b = ≡.refl
