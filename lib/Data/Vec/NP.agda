@@ -6,7 +6,7 @@ open import Algebra
 open import Algebra.Structures
 import Algebra.FunctionProperties
 import Algebra.FunctionProperties.Eq
-open import Type hiding (★)
+open import Type hiding (Type)
 import Level as L
 open import Category.Applicative
 open import Data.Nat.NP using (ℕ; suc; zero; _+_; _*_; 2*_; module ℕ° ; +-interchange ; _≤_)
@@ -23,11 +23,11 @@ import Relation.Binary.PropositionalEquality.NP as ≡
 open ≡ using (_≡_; _≗_; ap; ap₂; idp; _∙_; !_)
 import Data.Vec.Equality
 
-module FunVec {a} {A : ★ a} where
-    _→ᵛ_ : ℕ → ℕ → ★ a
+module FunVec {a} {A : Type a} where
+    _→ᵛ_ : ℕ → ℕ → Type a
     i →ᵛ o = Vec A i → Vec A o
 
-ap-∷ : ∀ {a} {A : ★ a} {n}
+ap-∷ : ∀ {a} {A : Type a} {n}
          {x y : A} {xs ys : Vec A n} → x ≡ y → xs ≡ ys → x ∷ xs ≡ y ∷ ys
 ap-∷ = ap₂ _∷_
 
@@ -35,61 +35,61 @@ module waiting-for-a-fix-in-the-stdlib where
 
     infixl 4 _⊛_
 
-    _⊛_ : ∀ {a b n} {A : ★ a} {B : ★ b} →
+    _⊛_ : ∀ {a b n} {A : Type a} {B : Type b} →
           Vec (A → B) n → Vec A n → Vec B n
     _⊛_ {n = zero}  fs xs = []
     _⊛_ {n = suc n} fs xs = head fs (head xs) ∷ (tail fs ⊛ tail xs)
 
-    applicative : ∀ {a n} → RawApplicative (λ (A : ★ a) → Vec A n)
+    applicative : ∀ {a n} → RawApplicative (λ (A : Type a) → Vec A n)
     applicative = record
       { pure = replicate
       ; _⊛_  = _⊛_
       }
 
-    map : ∀ {a b n} {A : ★ a} {B : ★ b} →
+    map : ∀ {a b n} {A : Type a} {B : Type b} →
           (A → B) → Vec A n → Vec B n
     map f xs = replicate f ⊛ xs
 
-    zipWith : ∀ {a b c n} {A : ★ a} {B : ★ b} {C : ★ c} →
+    zipWith : ∀ {a b c n} {A : Type a} {B : Type b} {C : Type c} →
               (A → B → C) → Vec A n → Vec B n → Vec C n
     zipWith _⊕_ xs ys = replicate _⊕_ ⊛ xs ⊛ ys
 
-    zip : ∀ {a b n} {A : ★ a} {B : ★ b} →
+    zip : ∀ {a b n} {A : Type a} {B : Type b} →
           Vec A n → Vec B n → Vec (A × B) n
     zip = zipWith _,_
 
-    tabulate-∘ : ∀ {n a b} {A : ★ a} {B : ★ b}
+    tabulate-∘ : ∀ {n a b} {A : Type a} {B : Type b}
                  (f : A → B) (g : Fin n → A) →
                  tabulate (f ∘ g) ≡ map f (tabulate g)
     tabulate-∘ {zero}  f g = idp
     tabulate-∘ {suc n} f g = ap (_∷_ _) (tabulate-∘ f (g ∘ suc))
 
-    tabulate-ext : ∀ {n a}{A : ★ a}{f g : Fin n → A} → f ≗ g → tabulate f ≡ tabulate g
+    tabulate-ext : ∀ {n a}{A : Type a}{f g : Fin n → A} → f ≗ g → tabulate f ≡ tabulate g
     tabulate-ext {zero}  f≗g = idp
     tabulate-ext {suc n} f≗g = ap-∷ (f≗g zero) (tabulate-ext (f≗g ∘ suc))
 
     -- map is functorial.
 
-    map-id : ∀ {a n} {A : ★ a} → map id ≗ id {A = Vec A n}
+    map-id : ∀ {a n} {A : Type a} → map id ≗ id {A = Vec A n}
     map-id []       = idp
     map-id (x ∷ xs) = ap (_∷_ x) (map-id xs)
 
-    map-∘ : ∀ {a b c n} {A : ★ a} {B : ★ b} {C : ★ c}
+    map-∘ : ∀ {a b c n} {A : Type a} {B : Type b} {C : Type c}
             (f : B → C) (g : A → B) →
             _≗_ {A = Vec A n} (map (f ∘ g)) (map f ∘ map g)
     map-∘ f g []       = idp
     map-∘ f g (x ∷ xs) = ap (_∷_ (f (g x))) (map-∘ f g xs)
 
-    map-ext : ∀ {a b} {A : ★ a} {B : ★ b} {f g : A → B} {n} → f ≗ g → map f ≗ map {n = n} g
+    map-ext : ∀ {a b} {A : Type a} {B : Type b} {f g : A → B} {n} → f ≗ g → map f ≗ map {n = n} g
     map-ext f≗g []       = idp
     map-ext f≗g (x ∷ xs) = ap-∷ (f≗g x) (map-ext f≗g xs)
 
 open waiting-for-a-fix-in-the-stdlib public
 
 module With≈
-    {a ℓ ℓ'}{A : ★ a}
-    (_≈_ : A → A → ★ ℓ)
-    {_≈ᵛ_ : ∀ {n}(xs ys : Vec A n) → ★ ℓ'}
+    {a ℓ ℓ'}{A : Type a}
+    (_≈_ : A → A → Type ℓ)
+    {_≈ᵛ_ : ∀ {n}(xs ys : Vec A n) → Type ℓ'}
     ([]-cong  : [] ≈ᵛ [])
     (_∷-cong_ : ∀ {n} {x¹} {xs¹ : Vec A n} {x²} {xs² : Vec A n}
                   (x¹≈x² : x¹ ≈ x²) (xs¹≈xs² : xs¹ ≈ᵛ xs²) →
@@ -145,7 +145,7 @@ module WithSetoid {c ℓ} (S : Setoid c ℓ) where
   module V≈ = Data.Vec.Equality.Equality S
   open Algebra.FunctionProperties
   open V≈ hiding (_≈_)
-  _≈ᵛ_ : ∀ {n} → V n → V n → ★ _
+  _≈ᵛ_ : ∀ {n} → V n → V n → Type _
   xs ≈ᵛ ys = V≈._≈_ xs ys
 
   open With≈ _≈_ {_≈ᵛ_} []-cong (λ x y → x ∷-cong y) public
@@ -160,12 +160,12 @@ module WithSetoid {c ℓ} (S : Setoid c ℓ) where
     zipWith-cong []-cong []-cong = []-cong
     zipWith-cong (x≈y ∷-cong xs≈ys) (z≈t ∷-cong zs≈ts) = f-cong x≈y z≈t ∷-cong zipWith-cong xs≈ys zs≈ts
 
-∷= : ∀ {a}{A : ★ a}{n x} {xs : Vec A n} {y} {ys : Vec A n}
+∷= : ∀ {a}{A : Type a}{n x} {xs : Vec A n} {y} {ys : Vec A n}
        (p : x ≡ y) (q : xs ≡ ys) →
         x ∷ xs ≡ y ∷ ys
 ∷= ≡.refl ≡.refl = ≡.refl
 
-module With≡ {a}{A : ★ a} where
+module With≡ {a}{A : Type a} where
   open With≈ (_≡_ {A = A}) {_≡_} idp (λ x¹≈x² xs¹≈xs² → ∷= x¹≈x² xs¹≈xs²) public
 
 module LiftSemigroup {c ℓ} (Sg : Semigroup c ℓ) where
@@ -252,31 +252,31 @@ module Alternative-Reverse where
     rev-+ zero    = id
     rev-+ (suc x) = rev-+ x ∘ suc
 
-    rev-app : ∀ {a} {A : ★ a} {m n} →
+    rev-app : ∀ {a} {A : Type a} {m n} →
               Vec A n → Vec A m → Vec A (rev-+ n m)
     rev-app []       = id
     rev-app (x ∷ xs) = rev-app xs ∘ _∷_ x
 
-    rev-aux : ∀ {a} {A : ★ a} {m} n →
+    rev-aux : ∀ {a} {A : Type a} {m} n →
               Vec A (rev-+ n zero) →
               (∀ {m} → A → Vec A (rev-+ n m) → Vec A (rev-+ n (suc m))) →
               Vec A m → Vec A (rev-+ n m)
     rev-aux m acc op []       = acc
     rev-aux m acc op (x ∷ xs) = rev-aux (suc m) (op x acc) op xs
 
-    alt-reverse : ∀ {a n} {A : ★ a} → Vec A n → Vec A n
+    alt-reverse : ∀ {a n} {A : Type a} → Vec A n → Vec A n
     alt-reverse = rev-aux 0 [] _∷_
 
-vuncurry : ∀ {n a b} {A : ★ a} {B : ★ b} (f : A → Vec A n → B) → Vec A (1 + n) → B
+vuncurry : ∀ {n a b} {A : Type a} {B : Type b} (f : A → Vec A n → B) → Vec A (1 + n) → B
 vuncurry f (x ∷ xs) = f x xs
 
-countᶠ : ∀ {n a} {A : ★ a} → (A → Bool) → Vec A n → Fin (suc n)
+countᶠ : ∀ {n a} {A : Type a} → (A → Bool) → Vec A n → Fin (suc n)
 countᶠ pred = foldr (Fin ∘ suc) (λ x → if pred x then suc else inject₁) zero
 
-count : ∀ {n a} {A : ★ a} → (A → Bool) → Vec A n → ℕ
+count : ∀ {n a} {A : Type a} → (A → Bool) → Vec A n → ℕ
 count pred = toℕ ∘ countᶠ pred
 
-count-∘ : ∀ {n a b} {A : ★ a} {B : ★ b} (f : A → B) (pred : B → Bool) →
+count-∘ : ∀ {n a b} {A : Type a} {B : Type b} (f : A → B) (pred : B → Bool) →
             count {n} (pred ∘ f) ≗ count pred ∘ map f
 count-∘ f pred [] = idp
 count-∘ f pred (x ∷ xs) with pred (f x)
@@ -304,15 +304,15 @@ sum-mono : ∀ {A : ★₀} {n f g} (mono : ∀ x → f x ≤ g x)(xs : Vec A n)
 sum-mono f≤°g [] = Data.Nat.NP.z≤n
 sum-mono f≤°g (x ∷ xs) = f≤°g x +-mono sum-mono f≤°g xs
 
-module _ {a} {A : ★ a} where
+module _ {a} {A : Type a} where
   -- Exchange elements at positions 0 and 1 of a given vector
   -- (this only apply if the vector is long enough).
   0↔1 : ∀ {n} → Vec A n → Vec A n
   0↔1 (x₀ ∷ x₁ ∷ xs) = x₁ ∷ x₀ ∷ xs
   0↔1 xs = xs
 
-module _ {a} {A : ★ a} where
-  count-++ : ∀ {m n a} {A : ★ a} (pred : A → Bool) (xs : Vec A m) (ys : Vec A n)
+module _ {a} {A : Type a} where
+  count-++ : ∀ {m n} (pred : A → Bool) (xs : Vec A m) (ys : Vec A n)
               → count pred (xs ++ ys) ≡ count pred xs + count pred ys
   count-++ pred [] ys = idp
   count-++ pred (x ∷ xs) ys with pred x
@@ -320,42 +320,42 @@ module _ {a} {A : ★ a} where
   ... | 0b rewrite F.inject₁-lemma (countᶠ pred (xs ++ ys))
                     | F.inject₁-lemma (countᶠ pred xs) | count-++ pred xs ys = idp
 
-  ext-countᶠ : ∀ {n a} {A : ★ a} {f g : A → Bool} → f ≗ g → (xs : Vec A n) → countᶠ f xs ≡ countᶠ g xs
+  ext-countᶠ : ∀ {n} {f g : A → Bool} → f ≗ g → (xs : Vec A n) → countᶠ f xs ≡ countᶠ g xs
   ext-countᶠ f≗g [] = idp
   ext-countᶠ f≗g (x ∷ xs) rewrite ext-countᶠ f≗g xs | f≗g x = idp
 
-  filter : ∀ {n a} {A : ★ a} (pred : A → Bool) (xs : Vec A n) → Vec A (count pred xs)
+  filter : ∀ {n} (pred : A → Bool) (xs : Vec A n) → Vec A (count pred xs)
   filter pred [] = []
   filter pred (x ∷ xs) with pred x
   ... | 1b = x ∷ filter pred xs
   ... | 0b rewrite F.inject₁-lemma (countᶠ pred xs) = filter pred xs
 
-  transpose : ∀ {m n a} {A : ★ a} → Vec (Vec A m) n → Vec (Vec A n) m
+  transpose : ∀ {m n} → Vec (Vec A m) n → Vec (Vec A n) m
   transpose [] = replicate []
   transpose (xs ∷ xss) = zipWith _∷_ xs (transpose xss)
 
-  vap : ∀ {m a b} {A : ★ a} {B : ★ b} (f : Vec A m → B)
+  vap : ∀ {m b} {B : Type b} (f : Vec A m → B)
           → ∀ {n} → Vec (Vec A n) m → Vec B n
   vap f = map f ∘ transpose
 
   infixl 2 _‼_
-  _‼_ : ∀ {n a} {A : ★ a} → Vec A n → Fin n → A
+  _‼_ : ∀ {n} → Vec A n → Fin n → A
   _‼_ = flip lookup
 
-  η : ∀ {n a} {A : ★ a} → Vec A n → Vec A n
+  η : ∀ {n} → Vec A n → Vec A n
   η = tabulate ∘ _‼_
 
-  η′ : ∀ {n a} {A : ★ a} → Vec A n → Vec A n
+  η′ : ∀ {n} → Vec A n → Vec A n
   η′ {zero}  = λ _ → []
   η′ {suc n} = λ xs → head xs ∷ η (tail xs)
 
-  shallow-η : ∀ {n a} {A : ★ a} (xs : Vec A (1 + n)) → xs ≡ head xs ∷ tail xs
+  shallow-η : ∀ {n} (xs : Vec A (1 + n)) → xs ≡ head xs ∷ tail xs
   shallow-η (x ∷ xs) = idp
 
-  uncons : ∀ {n a} {A : ★ a} → Vec A (1 + n) → (A × Vec A n)
+  uncons : ∀ {n} → Vec A (1 + n) → (A × Vec A n)
   uncons (x ∷ xs) = x , xs
 
-  ∷-uncons : ∀ {n a} {A : ★ a} (xs : Vec A (1 + n)) → uncurry _∷_ (uncons xs) ≡ xs
+  ∷-uncons : ∀ {n} (xs : Vec A (1 + n)) → uncurry _∷_ (uncons xs) ≡ xs
   ∷-uncons (x ∷ xs) = idp
 
   splitAt′ : ∀ m {n} → Vec A (m + n) → Vec A m × Vec A n
@@ -445,10 +445,10 @@ module _ {a} {A : ★ a} where
   take-drop= m xs ys take= drop= =
     ! take-drop-lem m xs ∙ ap₂ _++_ take= drop= ∙ take-drop-lem m ys
 
-  rewireTbl : ∀ {a i o} {A : ★ a} → RewireTbl i o → Vec A i → Vec A o
+  rewireTbl : ∀ {i o} → RewireTbl i o → Vec A i → Vec A o
   rewireTbl tbl v = map (_‼_ v) tbl
 
-  onᵢ : ∀ {a} {A : ★ a} (f : A → A) {n} (i : Fin n) → Vec A n → Vec A n
+  onᵢ : ∀ (f : A → A) {n} (i : Fin n) → Vec A n → Vec A n
   onᵢ f zero    (x ∷ xs) = f x ∷ xs
   onᵢ f (suc i) (x ∷ xs) = x ∷ onᵢ f i xs
 
