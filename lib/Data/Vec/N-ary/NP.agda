@@ -55,10 +55,10 @@ module _ {m} where
             → f ≗ⁿ g
             → ∀ {n} → apⁿ f ≗ⁿ apⁿ g {n}
     liftⁿ f g pf = curryⁿ helper
-      where f' = vap {m} (_$ⁿ′_ f)
-            g' = vap {m} (_$ⁿ′_ g)
-            h  = λ (xs : Vec _ m) → curryⁿ′ f' $ⁿ′ xs ≡ curryⁿ′ g' $ⁿ′ xs
-            hh = λ (xs : Vec _ m) → f $ⁿ′ xs ≡ g $ⁿ′ xs
+      where f' = vap (_$ⁿ′_ f)
+            g' = vap (_$ⁿ′_ g)
+            h  = λ xs → curryⁿ′ f' $ⁿ′ xs ≡ curryⁿ′ g' $ⁿ′ xs
+            hh = λ xs → f $ⁿ′ xs ≡ g $ⁿ′ xs
             helper : ∀ (xs : Vec _ m) → curryⁿ′ h $ⁿ′ xs
             helper xs = coe! (curry-$ⁿ′ h xs)
               (curry-$ⁿ′ f' xs ∙
