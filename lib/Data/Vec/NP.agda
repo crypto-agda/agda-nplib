@@ -20,7 +20,7 @@ open import Data.Product hiding (map; zip; swap) renaming (proj₁ to fst; proj�
 open import Function.NP
 open import Relation.Binary
 import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_; _≗_; ap; ap₂; idp; _∙_; !_)
+open ≡ using (_≡_; _≗_; ap; ap₂; _∙_; !_) renaming (refl to idp)
 import Data.Vec.Equality
 
 module FunVec {a} {A : Type a} where
@@ -70,15 +70,25 @@ module waiting-for-a-fix-in-the-stdlib where
 
     -- map is functorial.
 
+    map-id= : ∀ {a n} {A : Type a}{f : A → A}
+             → f ≗ id → map f ≗ id {A = Vec A n}
+    map-id= f= []       = idp
+    map-id= f= (x ∷ xs) = ap-∷ (f= x) (map-id= f= xs)
+
     map-id : ∀ {a n} {A : Type a} → map id ≗ id {A = Vec A n}
-    map-id []       = idp
-    map-id (x ∷ xs) = ap (_∷_ x) (map-id xs)
+    map-id = map-id= (λ _ → idp)
+
+    map-∘= : ∀ {a b c n} {A : Type a} {B : Type b} {C : Type c}
+               {f : B → C}{g : A → B}{h : A → C} →
+               f ∘ g ≗ h →
+               _≗_ {A = Vec A n} (map f ∘ map g) (map h)
+    map-∘= fg= []       = idp
+    map-∘= fg= (x ∷ xs) = ap-∷ (fg= x) (map-∘= fg= xs)
 
     map-∘ : ∀ {a b c n} {A : Type a} {B : Type b} {C : Type c}
-            (f : B → C) (g : A → B) →
-            _≗_ {A = Vec A n} (map (f ∘ g)) (map f ∘ map g)
-    map-∘ f g []       = idp
-    map-∘ f g (x ∷ xs) = ap (_∷_ (f (g x))) (map-∘ f g xs)
+              (f : B → C) (g : A → B) →
+              _≗_ {A = Vec A n} (map (f ∘ g)) (map f ∘ map g)
+    map-∘ f g v = ! map-∘= (λ _ → idp) v
 
     map-ext : ∀ {a b} {A : Type a} {B : Type b} {f g : A → B} {n} → f ≗ g → map f ≗ map {n = n} g
     map-ext f≗g []       = idp
@@ -163,7 +173,7 @@ module WithSetoid {c ℓ} (S : Setoid c ℓ) where
 ∷= : ∀ {a}{A : Type a}{n x} {xs : Vec A n} {y} {ys : Vec A n}
        (p : x ≡ y) (q : xs ≡ ys) →
         x ∷ xs ≡ y ∷ ys
-∷= ≡.refl ≡.refl = ≡.refl
+∷= idp idp = idp
 
 module With≡ {a}{A : Type a} where
   open With≈ (_≡_ {A = A}) {_≡_} idp (λ x¹≈x² xs¹≈xs² → ∷= x¹≈x² xs¹≈xs²) public
@@ -178,7 +188,7 @@ module LiftSemigroup {c ℓ} (Sg : Semigroup c ℓ) where
     -- this should be in Data.Vec.Equality
     isEquivalence : ∀ {n} → IsEquivalence (_≈ᵛ_ {n})
     isEquivalence = record { refl = λ {xs} → V≈.refl xs
-                                         ; sym = V≈.sym ; trans = V≈.trans }
+                           ; sym = V≈.sym ; trans = V≈.trans }
 
     isSemigroup : ∀ {n} → IsSemigroup (_≈ᵛ_ {n}) _∙ᵛ_
     isSemigroup = record { isEquivalence = isEquivalence
@@ -267,23 +277,11 @@ module Alternative-Reverse where
     alt-reverse : ∀ {a n} {A : Type a} → Vec A n → Vec A n
     alt-reverse = rev-aux 0 [] _∷_
 
-vuncurry : ∀ {n a b} {A : Type a} {B : Type b} (f : A → Vec A n → B) → Vec A (1 + n) → B
-vuncurry f (x ∷ xs) = f x xs
-
 countᶠ : ∀ {n a} {A : Type a} → (A → Bool) → Vec A n → Fin (suc n)
 countᶠ pred = foldr (Fin ∘ suc) (λ x → if pred x then suc else inject₁) zero
 
 count : ∀ {n a} {A : Type a} → (A → Bool) → Vec A n → ℕ
 count pred = toℕ ∘ countᶠ pred
-
-count-∘ : ∀ {n a b} {A : Type a} {B : Type b} (f : A → B) (pred : B → Bool) →
-            count {n} (pred ∘ f) ≗ count pred ∘ map f
-count-∘ f pred [] = idp
-count-∘ f pred (x ∷ xs) with pred (f x)
-... | 1b rewrite count-∘ f pred xs = idp
-... | 0b rewrite F.inject₁-lemma (countᶠ pred (map f xs))
-                  | F.inject₁-lemma (countᶠ (pred ∘ f) xs)
-                  | count-∘ f pred xs = idp
 
 RewireTbl : (i o : ℕ) → ★₀
 RewireTbl i o = Vec (Fin i) o
@@ -389,25 +387,25 @@ module _ {a} {A : Type a} where
 
   take-∷ : ∀ {m} n x (xs : Vec A (n + m)) → take (suc n) (x ∷ xs) ≡ x ∷ take n xs
   take-∷ n x xs with splitAt n xs
-  take-∷ _ _ ._ | _ , _ , ≡.refl = ≡.refl
+  take-∷ _ _ ._ | _ , _ , idp = idp
 
   drop-∷ : ∀ {m} n x (xs : Vec A (n + m)) → drop (suc n) (x ∷ xs) ≡ drop n xs
   drop-∷ n x xs with splitAt n xs
-  drop-∷ _ _ ._ | _ , _ , ≡.refl = ≡.refl
+  drop-∷ _ _ ._ | _ , _ , idp = idp
 
   take-++ : ∀ m {n} (xs : Vec A m) (ys : Vec A n) → take m (xs ++ ys) ≡ xs
   take-++ m xs ys with xs ++ ys | ≡.inspect (_++_ xs) ys
   ... | zs | eq with splitAt m zs
-  take-++ m xs₁ ys₁ | .(xs ++ ys) | ≡.[ eq ] | xs , ys , ≡.refl = !(++-inj₁ eq)
+  take-++ m xs₁ ys₁ | .(xs ++ ys) | ≡.[ eq ] | xs , ys , idp = !(++-inj₁ eq)
 
   drop-++ : ∀ m {n} (xs : Vec A m) (ys : Vec A n) → drop m (xs ++ ys) ≡ ys
   drop-++ m xs ys with xs ++ ys | ≡.inspect (_++_ xs) ys
   ... | zs | eq with splitAt m zs
-  drop-++ m xs₁ ys₁ | .(xs ++ ys) | ≡.[ eq ] | xs , ys , ≡.refl = !(++-inj₂ xs₁ xs eq)
+  drop-++ m xs₁ ys₁ | .(xs ++ ys) | ≡.[ eq ] | xs , ys , idp = !(++-inj₂ xs₁ xs eq)
 
   take-drop-lem : ∀ m {n} (xs : Vec A (m + n)) → take m xs ++ drop m xs ≡ xs
   take-drop-lem m xs with splitAt m xs
-  take-drop-lem m .(ys ++ zs) | ys , zs , ≡.refl = ≡.refl
+  take-drop-lem m .(ys ++ zs) | ys , zs , idp = idp
 
   take-them-all : ∀ n (xs : Vec A (n + 0)) → take n xs ++ [] ≡ xs
   take-them-all n xs with splitAt n xs
@@ -495,6 +493,60 @@ module _ {a} {A : Type a} where
   sum-map-rot₁ f (x ∷ xs) = ap sum (map-∷ʳ f x xs)
                           ∙ sum-∷ʳ (f x) (map f xs)
                           ∙ ℕ°.+-comm (sum (map f xs)) (f x)
+
+  vec= : ∀ {n}{xs ys : Vec A n} → (∀ i → (xs ‼ i) ≡ (ys ‼ i)) → xs ≡ ys
+  vec= {xs = []}     {[]}     f= = idp
+  vec= {xs = x ∷ xs} {y ∷ ys} f= = ap-∷ (f= zero) (vec= (f= ∘ suc))
+
+  concat-group : ∀ m n (xs : Vec A (m * n)) → concat (group m n xs) ≡ xs
+  concat-group zero    n [] = idp
+  concat-group (suc m) n xs rewrite concat-group m n (drop n xs) = take-drop-lem n xs
+
+  group-concat : ∀ {m n}(xss : Vec (Vec A n) m) → group m n (concat xss) ≡ xss
+  group-concat [] = idp
+  group-concat (xs ∷ xss)
+    rewrite take-++ _ xs (concat xss)
+          | drop-++ _ xs (concat xss)
+          | group-concat xss
+          = idp
+
+  -- These are also in the stdlib as Data.Vec.Properties.lookup-morphism
+  ‼-replicate : ∀ {n}(i : Fin n)(x : A) → (replicate x ‼ i) ≡ x
+  ‼-replicate zero    = λ _ → idp
+  ‼-replicate (suc i) = ‼-replicate i
+
+module _ {a b}{A : Type a}{B : Type b} where
+  ‼-⊛= : ∀ {n} i {fs : Vec (A → B) n}{xs : Vec A n}{f x}
+           (fs= : (fs ‼ i) ≡ f)
+           (xs= : (xs ‼ i) ≡ x)
+         → (fs ⊛ xs ‼ i) ≡ f x
+  ‼-⊛= zero    {f ∷ fs} {x ∷ xs} f= xs= = ap₂ _$_ f= xs=
+  ‼-⊛= (suc i) {f ∷ fs} {x ∷ xs} f= xs= = ‼-⊛= i f= xs=
+
+  ‼-⊛ : ∀ {n} i (fs : Vec (A → B) n) (xs : Vec A n) →
+          (fs ⊛ xs ‼ i) ≡ (fs ‼ i) (xs ‼ i)
+  ‼-⊛ i fs xs = ‼-⊛= i idp idp
+
+  ‼-map= : ∀ {n} i (f : A → B) {xs : Vec A n}{x : A}
+             (xs= : (xs ‼ i) ≡ x)
+           → (map f xs ‼ i) ≡ f x
+  ‼-map= i f = ‼-⊛= i (‼-replicate i f)
+
+  ‼-map : ∀ {n} i (f : A → B) (xs : Vec A n) →
+            (map f xs ‼ i) ≡ f (xs ‼ i)
+  ‼-map i f xs = ‼-map= i f idp
+
+  vuncurry : ∀ {n}(f : A → Vec A n → B) → Vec A (1 + n) → B
+  vuncurry f (x ∷ xs) = f x xs
+
+  count-∘ : ∀ {n}(f : A → B)(pred : B → Bool) →
+              count {n} (pred ∘ f) ≗ count pred ∘ map f
+  count-∘ f pred [] = idp
+  count-∘ f pred (x ∷ xs) with pred (f x)
+  ... | 1b rewrite count-∘ f pred xs = idp
+  ... | 0b rewrite F.inject₁-lemma (countᶠ pred (map f xs))
+                 | F.inject₁-lemma (countᶠ (pred ∘ f) xs)
+                 | count-∘ f pred xs = idp
 
 sum-rot₁ : ∀ {n} (xs : Vec ℕ n) → sum xs ≡ sum (rot₁ xs)
 sum-rot₁ []       = idp
