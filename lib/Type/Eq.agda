@@ -9,6 +9,7 @@ open import Data.Product
               renaming (proj₁ to fst; proj₂ to snd)
 
 record Eq? {a} (A : Set a) : Set a where
+  infix 7 _==_
   field
     _==_ : A → A → 𝟚
     ≡⇒== : ∀ {x y} → x ≡ y → ✓ (x == y)
@@ -34,9 +35,10 @@ module _ {a b}{A : Set a}{B : Set b}
   instance
     ×-Eq? : Eq? (A × B)
     ×-Eq? = record
-      { _==_ = λ x y → fst x == fst y ∧ snd x == snd y
+      { _==_ = λ x y → (fst x == fst y) ∧ (snd x == snd y)
       ; ≡⇒== = λ e → ✓∧ (≡⇒== (ap fst e)) (≡⇒== (ap snd e))
       ; ==⇒≡ = λ e → let p = ✓∧× e in
                       ap₂ _,_ (==⇒≡ (fst p))
                               (==⇒≡ (snd p))
       }
+-- -}
