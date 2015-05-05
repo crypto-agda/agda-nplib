@@ -58,12 +58,12 @@ private
 ⟨0↔1+ suc n ⟩ = ⟨0↔1⟩ ∘ ⇑⟨ ⟨0↔1+ n ⟩ ⟩ ∘ ⟨0↔1⟩
 
 ⟨_↔+1⟩ : ℕ → ℕ → ℕ
-⟨ 0     ↔+1⟩ = ⟨0↔1⟩
+⟨ 0     ↔+1⟩ x       = ⟨0↔1⟩ x
 ⟨ suc n ↔+1⟩ 0       = 0
 ⟨ suc n ↔+1⟩ (suc m) = suc (⟨ n ↔+1⟩ m)
 
 ⟨_↔+1⟩-involutive : ∀ n → ⟨ n ↔+1⟩ ∘ ⟨ n ↔+1⟩ ≗ id
-⟨_↔+1⟩-involutive 0 = ⟨0↔1⟩-involutive
+⟨_↔+1⟩-involutive 0       x       = ⟨0↔1⟩-involutive x
 ⟨_↔+1⟩-involutive (suc _) 0       = idp
 ⟨_↔+1⟩-involutive (suc n) (suc m) = ap suc (⟨ n ↔+1⟩-involutive m)
 

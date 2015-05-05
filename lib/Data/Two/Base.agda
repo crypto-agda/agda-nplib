@@ -99,7 +99,7 @@ b₀ == b₁ = (not b₀) xor b₁
 -- See also ✓-∧
 ✓∧₁ : ∀ {b₁ b₂} → ✓ (b₁ ∧ b₂) → ✓ b₁
 ✓∧₁ {0₂} ()
-✓∧₁ {1₂} = _
+✓∧₁ {1₂} _ = _
 
 ✓∧₂ : ∀ {b₁ b₂} → ✓ (b₁ ∧ b₂) → ✓ b₂
 ✓∧₂ {0₂} ()
@@ -116,7 +116,7 @@ b₀ == b₁ = (not b₀) xor b₁
 
 -- Similar to ✓-∨
 ✓∨₁ : ∀ {b₁ b₂} → ✓ b₁ → ✓ (b₁ ∨ b₂)
-✓∨₁ {1₂} = _
+✓∨₁ {1₂} _ = _
 ✓∨₁ {0₂} ()
 
 -- Similar to ✓-∨
@@ -141,7 +141,7 @@ b₀ == b₁ = (not b₀) xor b₁
 -- Namely the proof is "re-created" when b is 1₂.
 check : ∀ b → {pf : ✓ b} → ✓ b
 check 0₂ {}
-check 1₂ = _
+check 1₂ {_} = _
 
 ✓dec : ∀ b → Dec (✓ b)
 ✓dec = [0: no (λ())
