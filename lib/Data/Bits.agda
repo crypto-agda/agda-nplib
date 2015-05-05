@@ -179,3 +179,7 @@ and = foldr _ _∧_ 1₂
 ✓-and' : ∀ {n}{xs : Bits n} → ✓(and xs) → ∀ l → ✓(xs ‼ l)
 ✓-and' {xs = x ∷ xs} e zero = ✓∧₁ {x} e
 ✓-and' {xs = x ∷ xs} e (suc l) = ✓-and' (✓∧₂ {x} e) l
+
+and-1* : ∀ n → ✓(and {n} (replicate 1₂))
+and-1* zero    = _
+and-1* (suc n) = and-1* n
