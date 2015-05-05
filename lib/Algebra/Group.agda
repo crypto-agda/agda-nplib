@@ -64,6 +64,7 @@ module Additive-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
              ; inverseʳ to 0−-inverseʳ
              ; ∙-/ to +-−; /-∙ to −-+
              ; ∙-is-equiv to +-is-equiv
+             ; /-/′ to −-−′; /′-/ to −′-−
              ; flip-∙-is-equiv to flip-+-is-equiv
              ; unique-ε-left to unique-0-left
              ; unique-ε-right to unique-0-right
@@ -101,6 +102,8 @@ module Multiplicative-Group-Struct {ℓ}{G : Type ℓ}{grp-ops : Group-Ops G}
              ; ⁻¹-hom′
              ; ⁻¹-inj
              ; ⁻¹-involutive
+             ; /-/′
+             ; /′-/
              )
     renaming ( assoc to *-assoc
              ; identity to *-identity
