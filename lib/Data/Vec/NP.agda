@@ -16,7 +16,7 @@ open import Data.Vec using (Vec; []; _∷_; head; tail; replicate; tabulate; fol
 import Data.Fin.Properties as F
 open import Data.Bit
 open import Data.Bool using (Bool; if_then_else_)
-open import Data.Product hiding (map; zip; swap) renaming (proj₁ to fst; proj₂ to snd)
+open import Data.Product hiding (zip; swap) renaming (proj₁ to fst; proj₂ to snd; map to ×-map)
 open import Function.NP
 open import Relation.Binary
 import Relation.Binary.PropositionalEquality.NP as ≡
@@ -409,11 +409,14 @@ module _ {a} {A : Type a} where
 
   take-them-all : ∀ n (xs : Vec A (n + 0)) → take n xs ++ [] ≡ xs
   take-them-all n xs with splitAt n xs
-  take-them-all n .(ys ++ []) | ys , [] , ≡.refl = ≡.refl
+  take-them-all n .(ys ++ []) | ys , [] , idp = idp
 
   drop′ : ∀ m {n} → Vec A (m + n) → Vec A n
   drop′ zero    = id
   drop′ (suc m) = drop′ m ∘ tail
+
+  map2*-++ : ∀ {m n}(f : Vec A m → Vec A n) → map2* m n f ∘ uncurry _++_ ≗ uncurry _++_ ∘ ×-map f f
+  map2*-++ {m} f (x , y) rewrite take-++ m x y | drop-++ m x y = idp
 
   drop′-spec : ∀ m {n} → drop′ m {n} ≗ drop m {n}
   drop′-spec zero    _        = idp
