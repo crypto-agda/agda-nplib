@@ -539,6 +539,10 @@ module _ {a b}{A : Type a}{B : Type b} where
             (map f xs ‼ i) ≡ f (xs ‼ i)
   ‼-map i f xs = ‼-map= i f idp
 
+  ⊛-replicate : ∀ {n}(fs : Vec (A → B) n)(x : A) → fs ⊛ replicate x ≡ map (λ f → f x) fs
+  ⊛-replicate []       x = idp
+  ⊛-replicate (f ∷ fs) x = ap (_∷_ (f x)) (⊛-replicate fs x)
+
   vuncurry : ∀ {n}(f : A → Vec A n → B) → Vec A (1 + n) → B
   vuncurry f (x ∷ xs) = f x xs
 
@@ -550,6 +554,18 @@ module _ {a b}{A : Type a}{B : Type b} where
   ... | 0b rewrite F.inject₁-lemma (countᶠ pred (map f xs))
                  | F.inject₁-lemma (countᶠ (pred ∘ f) xs)
                  | count-∘ f pred xs = idp
+
+module _ {a}{A : Type a} where
+  ⊛-take-drop-lem : ∀ m {n o} (xs : Vec (Vec A (m + n)) o)
+       → map _++_ (map (take m) xs) ⊛ (map (drop m) xs) ≡ xs
+  ⊛-take-drop-lem m xs = vec= λ i →
+    ‼-⊛= i (‼-map= i _ (‼-map i _ _)) (‼-map i _ _) ∙
+    take-drop-lem m _
+
+  take2*-++ : ∀ n b (xs ys : Vec A n)
+              → take2* n b (xs ++ ys) ≡ proj′ (xs , ys) b
+  take2*-++ n 0b xs ys = take-++ n xs ys
+  take2*-++ n 1b xs ys = drop-++ n xs ys
 
 sum-rot₁ : ∀ {n} (xs : Vec ℕ n) → sum xs ≡ sum (rot₁ xs)
 sum-rot₁ []       = idp
