@@ -1,6 +1,6 @@
 {-# OPTIONS --without-K #-}
 open import Type using (★; ★_)
-open import Data.Maybe.NP using (_→?_; module M?; just; maybe′; nothing; map?)
+open import Data.Maybe.NP using (_→?_; module M?; just; maybe′; nothing; map?; is-nothing)
 open import Data.Nat using (zero; suc)
 open import Data.One using (𝟙)
 open import Data.Char.NP renaming (_==_ to _==ᶜ_)
@@ -25,7 +25,7 @@ pure a s = just (a , s)
 
 infixr 3 _⟨|⟩_
 _⟨|⟩_ : ∀ {A} → (f g : Parser A) → Parser A
-_⟨|⟩_ f g s = maybe′ just (g s) $ f s
+(f ⟨|⟩ g) s = maybe′ just (g s) (f s)
 
 empty : ∀ {A} → Parser A
 empty _ = nothing
@@ -34,8 +34,17 @@ sat : (Char → Bool) → Parser Char
 sat pred (x ∷ xs) = (if pred x then pure x else empty) xs
 sat _    []       = nothing
 
+lookSat : (List Char → Bool) → Parser 𝟙
+lookSat p xs = if p xs then just (_ , xs) else nothing
+
+notFollowedBy : ∀ {A} → Parser A → Parser 𝟙
+notFollowedBy m = lookSat (is-nothing ∘ m)
+
+lookAhead : ∀ {A} → Parser A → Parser A
+lookAhead p xs = map? (second (const xs)) (p xs)
+
 eof : Parser 𝟙
-eof s = if null s then pure _ [] else empty []
+eof = lookSat null
 
 -- The remaning input is dropped, you may want to first
 -- combine your parser `p' with `eof': `p <* eof'
@@ -168,9 +177,6 @@ manyNoneOf cs = manySat (λ c → c `notElem` cs)
 manyNoneOfˢ : String → Parser String
 manyNoneOfˢ = map L▹S ∘ manyNoneOf ∘ S▹L
 
-lookSat : (List Char → Bool) → Parser 𝟙
-lookSat p xs = if p xs then just (_ , xs) else nothing
-
 lookSatHead : (Char → Bool) → Parser 𝟙
 lookSatHead pᶜ = lookSat p
     where p : List Char → Bool
@@ -204,3 +210,4 @@ module _ {A} where
     brackets = betweenᶜ '[' ']'
     angles   = betweenᶜ '<' '>'
     oxford   = betweenᶜ '⟦' '⟧'
+-- -}
