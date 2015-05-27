@@ -2,7 +2,7 @@
 module Function.NP where
 
 open import Level
-  using (_⊔_)
+  using (_⊔_; Lift; lift; lower)
 open import Type
   hiding (★)
 open import Algebra
@@ -64,6 +64,9 @@ Op₁ A = A → A
 
 Op₂ : ∀ {a} → ★ a → ★ a
 Op₂ A = A → A → A
+
+lift-op₂ : ∀ {a}{A : ★_ a}(op : Op₂ A){ℓ} → Lift {ℓ = ℓ} A → Lift {ℓ = ℓ} A → Lift {ℓ = ℓ} A
+lift-op₂ op x y = lift (op (lower x) (lower y))
 
 -- More properties about nest/fold are in Data.Nat.NP
 nest : ∀ {a} {A : ★ a} → ℕ → Endo (Endo A)
