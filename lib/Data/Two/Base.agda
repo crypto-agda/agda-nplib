@@ -73,6 +73,8 @@ nor b₀ b₁ = not (b₀ ∨ b₁)
 nand : (b₀ b₁ : 𝟚) → 𝟚
 nand b₀ b₁ = not (b₀ ∧ b₁)
 
+infix 4 _==_
+
 -- For properties about _==_ see Data.Two.Equality
 _==_ : (b₀ b₁ : 𝟚) → 𝟚
 b₀ == b₁ = (not b₀) xor b₁

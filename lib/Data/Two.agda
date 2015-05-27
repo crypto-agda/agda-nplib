@@ -64,6 +64,10 @@ xor-inj₂ : ∀ x {y z} → (y xor x) ≡ (z xor x) → y ≡ z
 xor-inj₂ x {y} {z} p = xor-inj₁ x (Xor°.+-comm x y ∙ p ∙ Xor°.+-comm z x)
 
 module Indexed {a} {A : ★ a} where
+
+    infixr 6 _∧°_
+    infixr 5 _∨°_ _xor°_
+
     _∧°_ : Op₂ (A → 𝟚)
     x ∧° y = x ⟨ _∧_ ⟩° y
 
