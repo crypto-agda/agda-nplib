@@ -67,6 +67,7 @@ module Indexed {a} {A : ★ a} where
 
     infixr 6 _∧°_
     infixr 5 _∨°_ _xor°_
+    infix  5 _==°_
 
     _∧°_ : Op₂ (A → 𝟚)
     x ∧° y = x ⟨ _∧_ ⟩° y
