@@ -18,7 +18,7 @@ nonZeroDivisor-lemmaℕ
   : ∀ n m {r} → n modℕ m ≡ suc r → ¬ m ∣ n
 nonZeroDivisor-lemmaℕ .(suc r) zero {r} refl p with 0∣⇒≡0 {suc r} p
 ... | ()
-nonZeroDivisor-lemmaℕ n (suc m) H p = nonZeroDivisor-lemma m (n div (suc m)) (n mod suc m) helper (tr (_∣_ (suc m)) (divModProp n (suc m)) p)
+nonZeroDivisor-lemmaℕ n (suc m) H p = nonZeroDivisor-lemma m (n div (suc m)) (n mod suc m) helper ((_∣_ (suc m) ▸ divModProp n (suc m)) p)
   where helper : Fin▹ℕ (n mod suc m) ≢ 0
         helper e rewrite FinP.toℕ-fromℕ≤ (modℕ<divisor n (suc m)) with ! H ∙ e
         ... | ()

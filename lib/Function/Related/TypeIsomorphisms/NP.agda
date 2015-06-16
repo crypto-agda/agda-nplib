@@ -35,7 +35,7 @@ open import Relation.Binary.Sum public using (_⊎-cong_)
 open import Relation.Binary.Product.Pointwise
 open import Relation.Binary.Sum
 import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_ ; _≢_; _≗_)
+open ≡ using (_≡_ ; _≢_; _≗_; _▸_)
 open import HoTT
 
 module _ {a b f} {A : Set a} {B : A → Set b}
@@ -187,7 +187,7 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A → ★ c} (f : A ↔ B) where
     left-f = Inverse.left-inverse-of f
     right-f = Inverse.right-inverse-of f
     coe : ∀ x → C x → C (from f (to f x))
-    coe x = ≡.tr C (≡.sym (left-f x))
+    coe x = C ▸ ! left-f x
     ⇒ : Σ A C → Σ B (C F.∘ from f)
     ⇒ (x , p) = to f x , coe x p
     ⇐ : Σ B (C F.∘ from f) → Σ A C
@@ -197,7 +197,7 @@ module _ {a b c} {A : ★ a} {B : ★ b} {C : A → ★ c} (f : A ↔ B) where
     ⇒⇐ : ∀ x → ⇒ (⇐ x) ≡ x
     ⇒⇐ p = mkΣ≡ (C F.∘ from f) (right-f (fst p)) (helper p)
             where
-                helper : ∀ p → ≡.tr (C F.∘ from f) (right-f (fst p)) (coe (fst (⇐ p)) (snd (⇐ p))) ≡ snd p
+                helper : ∀ p → ((C F.∘ from f) ▸ right-f (fst p)) (coe (fst (⇐ p)) (snd (⇐ p))) ≡ snd p
                 helper p with to f (from f (fst p)) | right-f (fst p) | left-f (from f (fst p))
                 helper _ | ._ | ≡.refl | ≡.refl = ≡.refl
   first-iso : Σ A C ↔ Σ B (C F.∘ from f)

@@ -44,7 +44,7 @@ module Dec₂ where
   map₂′ _   _   π₂  _         (no ¬p₂)  = no (¬p₂ ∘ π₂)
   map₂′ mk  _   _   (yes p₁)  (yes p₂)  = yes (mk p₁ p₂)
 
-mkΣ≡ : ∀ {a b} {A : ★ a} {x y : A} (B : A → ★ b) {p : B x} {q : B y} (xy : x ≡ y) → tr B xy p ≡ q → (x Σ., p) ≡ (y , q)
+mkΣ≡ : ∀ {a b} {A : ★ a} {x y : A} (B : A → ★ b) {p : B x} {q : B y} (xy : x ≡ y) → (B ▸ xy) p ≡ q → (x Σ., p) ≡ (y , q)
 mkΣ≡ _ xy h rewrite xy | h = ≡.refl
 
 Σ,-injective₁ : ∀ {a b} {A : ★ a} {B : A → ★ b} {x₁ x₂ : A} {y₁ : B x₁} {y₂ : B x₂} → (x₁ , y₁) ≡ (x₂ , y₂) → x₁ ≡ x₂

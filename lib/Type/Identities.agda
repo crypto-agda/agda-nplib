@@ -17,7 +17,7 @@ open import Data.Product.NP renaming (map to map×)
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_]; map to map⊎)
 
 import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_; _≢_ ; ap; coe; coe!; !_; _∙_; J ; inspect ; [_]; tr; ap₂; apd) renaming (refl to idp; _≗_ to _∼_; J-orig to J')
+open ≡ using (_≡_; _≢_ ; ap; coe; coe!; !_; _∙_; J ; inspect ; [_]; _▸_; ap₂; apd) renaming (refl to idp; _≗_ to _∼_; J-orig to J')
 
 module Type.Identities where
 
@@ -132,7 +132,7 @@ module _ {{_ : UA}}{{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b}{B₀ : A₀ → ★_
 module _ {{_ : FunExt}}{a}{A₀ A₁ : ★_ a}{b}{B₀ : A₀ → ★_ b}{B₁ : A₁ → ★_ b}(A : A₀ ≃ A₁)(B : (x : A₁) → B₀ (<– A x) ≃ B₁ x) where
     Π≃' : (Π A₀ B₀) ≃ (Π A₁ B₁)
     Π≃' = equiv (λ f x → –> (B x) (f (<– A x)))
-                (λ f x → tr B₀ (<–-inv-l A x) (<– (B (–> A x)) (f (–> A x))))
+                (λ f x → (B₀ ▸ <–-inv-l A x) (<– (B (–> A x)) (f (–> A x))))
                 (λ f → λ= (λ x → {!apd (<–-inv-l A (<– A x))!}))
                 {!λ f → λ= (λ x → <–-inv-l B _ ∙ ap f (<–-inv-l A x))!}
     -}

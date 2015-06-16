@@ -3,7 +3,7 @@ module Relation.Binary.PropositionalEquality.K where
 
 open import Level.NP using (ₛ; _⊔_)
 open import Type using (★₀; ★_)
-open import Relation.Binary.PropositionalEquality.NP using (_≡_; J; refl; !_; tr)
+open import Relation.Binary.PropositionalEquality.NP using (_≡_; J; refl; !_; _▸_)
 open import Relation.Binary.NP using (Decidable)
 open import Relation.Nullary using (yes)
 open import Function using (flip)
@@ -33,7 +33,7 @@ module _ {a} {A : ★ a} where
     K-Elim→K-Axiom K-elim = K-elim (flip _≡_ refl) refl
 
     K-Axiom→K-Elim : ∀ {ℓ} → K-Axiom → K-Elim {ℓ}
-    K-Axiom→K-Elim K P P-refl p = tr P (! K→UIP K p refl) P-refl
+    K-Axiom→K-Elim K P P-refl p = (P ▸ ! K→UIP K p refl) P-refl
 
 postulate
   KA : ★₀

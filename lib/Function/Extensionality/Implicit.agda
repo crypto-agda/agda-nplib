@@ -31,8 +31,10 @@ module _ {f₀ f₁ : T} where
       λ=-happly : (α : f₀ ≡' f₁) → λ= (happly α) ≡ α
 
       -- This should be derivable if I had a proper proof of λ=
-      tr-λ= : ∀ {p x}(P : B x → Set p)(f= : f₀ ∼ f₁)
-              → tr (λ f₀ → P (f₀ {x})) (λ= f=) ≡ tr P (f= x)
+      ▸-λ= : ∀ {p x}(P : B x → Set p)(f= : f₀ ∼ f₁)
+              → (λ f₀ → P (f₀ {x})) ▸ λ= f= ≡ P ▸ f= x
+
+    tr-λ= = ▸-λ=
 
 !-α-λ= : ∀ {f₀ f₁ : T}{{fe : FunExt}}
            (α : f₀ ≡' f₁) → ! α ≡ λ= (!_ ∘ happly α)

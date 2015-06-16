@@ -76,6 +76,9 @@ module _ {ℓ ℓp}
     tr! : (p : y ≡ x) → P x → P y
     tr! p = tr (! p)
 
+    _▸_ = tr
+    -- black version of ◃ = tr!
+
 cong₃ : ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : Set d}
           (f : A → B → C → D) {a₀ a₁ b₀ b₁ c₀ c₁}
         → a₀ ≡ a₁ → b₀ ≡ b₁ → c₀ ≡ c₁ → f a₀ b₀ c₀ ≡ f a₁ b₁ c₁
