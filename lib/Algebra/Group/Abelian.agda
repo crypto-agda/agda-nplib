@@ -9,6 +9,7 @@ import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Implicits
 open ≡-Reasoning
 open import Algebra.Group
+open import Algebra.Monoid.Commutative
 open import Algebra.Raw
 import Algebra.Group.Constructions
 
@@ -21,10 +22,18 @@ record Abelian-Group-Struct {ℓ} {G : Type ℓ} (grp-ops : Group-Ops G) : Type 
   field
     grp-struct : Group-Struct grp-ops
     comm : Commutative _∙_
-  open Group-Struct grp-struct public
 
-  open From-Assoc-Comm assoc comm public
-    hiding (assoc=; !assoc=; inner=; assocs)
+  open Group-Struct grp-struct public
+    hiding ( ^⁺0-ε; ^⁺1-id; ^⁺2-∙; ^⁺3-∙; ^⁺4-∙; ^⁺-^¹⁺; ^⁺-+; ^⁺-*
+           ; assoc; !assoc; !assoc=; assoc=; inner=; assocs
+           ; comm-ε; elim-!assoc=; elim-!inner=; elim-assoc=; elim-inner=
+           ; identity; is-ε-left; is-ε-right; ε^⁺; ε∙-identity; ∙ε-identity )
+
+  comm-mon-struct : Commutative-Monoid-Struct mon-ops
+  comm-mon-struct = mon-struct , comm
+
+  open Commutative-Monoid-Struct comm-mon-struct public
+    hiding (comm; mon-struct)
 
   ⁻¹-hom : ∀ {x y} → (x ∙ y)⁻¹ ≡ x ⁻¹ ∙ y ⁻¹
   ⁻¹-hom = ⁻¹-hom′ ♦ comm
@@ -57,15 +66,16 @@ module Additive-Abelian-Group-Struct
     (grp-comm-struct : Abelian-Group-Struct grp-ops) where
   open Additive-Group-Struct (Abelian-Group-Struct.grp-struct grp-comm-struct) public
   open Abelian-Group-Struct grp-comm-struct public
-    using    ()
+    using    (comm-mon-struct)
     renaming ( ⁻¹-hom to 0−-hom
-             ; assoc-comm to +-assoc-comm
-             ; comm to +-comm
-             ; comm= to +-comm=
              ; elim-∙-left-/ to elim-+-left-−
-             ; interchange to +-interchange
              ; split-/-∙ to split-−-+
              )
+  open Additive-Commutative-Monoid-Struct comm-mon-struct public
+    hiding ( +-identity; +0-identity; 0+-identity; 0⊗⁺; +-assoc; +-!assoc; +-!assoc=
+           ; +-assoc=; +-inner=; +-assocs; ^⁺-*; ^⁺-+; ^⁺-^¹⁺; ^⁺0-ε
+           ; comm-ε; elim-!assoc=; elim-!inner=; elim-assoc=; elim-inner=
+           ; is-ε-left; is-ε-right; ⊗⁺1-id; ⊗⁺2-⊕; ⊗⁺3-⊕; ⊗⁺4-⊕ )
 
 module Additive-Abelian-Group {ℓ}{G : Type ℓ} (grp-comm : Abelian-Group G) where
   open Additive-Group-Ops            (Abelian-Group.grp-ops  grp-comm) public
@@ -76,14 +86,13 @@ module Multiplicative-Abelian-Group-Struct
     (grp-comm-struct : Abelian-Group-Struct grp-ops) where
   open Multiplicative-Group-Struct (Abelian-Group-Struct.grp-struct grp-comm-struct) public
   open Abelian-Group-Struct grp-comm-struct public
-    using    (⁻¹-hom)
-    renaming ( assoc-comm to *-assoc-comm
-             ; comm to *-comm
-             ; comm= to *-comm=
-             ; elim-∙-left-/ to elim-*-left-−
-             ; interchange to *-interchange
+    using    (⁻¹-hom; comm-mon-struct)
+    renaming ( elim-∙-left-/ to elim-*-left-−
              ; split-/-∙ to split-/-*
              )
+  open Multiplicative-Commutative-Monoid-Struct comm-mon-struct public
+    hiding (*-identity; *1-identity; 1*-identity; 1^⁺; *-assoc; *-!assoc=; *-assoc=; *-inner=; *-assocs
+           ; *-!assoc; ^⁺1-id; ^⁺2-∙; ^⁺3-∙; ^⁺4-∙ )
 
 module Multiplicative-Abelian-Group {ℓ}{G : Type ℓ} (grp-comm : Abelian-Group G) where
   open Multiplicative-Group-Ops            (Abelian-Group.grp-ops  grp-comm) public

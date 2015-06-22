@@ -93,8 +93,8 @@ record Commutative-Ring-Struct {ℓ} {A : Set ℓ} (rng-ops : Ring-Ops A) : Set 
                        x ² + y ² + 2* x * y
                     ∎
 
-  ²-*-distr : ∀ {x y} → (x * y)² ≡ x ² * y ²
-  ²-*-distr = *-interchange
+  -- already available through Multiplicative-Commutative-Monoid-Struct
+  -- ²-*-distr : ∀ {x y} → (x * y)² ≡ x ² * y ²
 
   ²-−-distr : ∀ {x y} → (x − y)² ≡ x ² + y ² − 2* x * y
   ²-−-distr = ²-+-distr ∙ += (+= idp ²-0−-distr) (*-comm ∙ ! 0−-*-distr ∙ 0−= *-comm)

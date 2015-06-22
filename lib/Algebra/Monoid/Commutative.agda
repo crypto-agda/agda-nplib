@@ -38,8 +38,12 @@ module Additive-Commutative-Monoid-Struct
     renaming ( comm to +-comm
              ; comm= to +-comm=
              ; assoc-comm to +-assoc-comm
+             ; !assoc-comm to +-!assoc-comm
              ; interchange to +-interchange
              ; outer= to +-outer=
+             ; on-sides to +-on-sides
+             ; ²-∙-distr to 2*-+-distr
+             ; ²-∙-distr' to 2*-+-distr'
              )
 
 module Additive-Commutative-Monoid {ℓ}{M : Type ℓ}(mon : Commutative-Monoid M) where
@@ -56,8 +60,12 @@ module Multiplicative-Commutative-Monoid-Struct
     renaming ( comm to *-comm
              ; comm= to *-comm=
              ; assoc-comm to *-assoc-comm
+             ; !assoc-comm to *-!assoc-comm
              ; interchange to *-interchange
              ; outer= to *-outer=
+             ; on-sides to *-on-sides
+             ; ²-∙-distr to ²-*-distr
+             ; ²-∙-distr' to ²-*-distr'
              )
 
 module Multiplicative-Commutative-Monoid {ℓ}{M : Type ℓ}(mon : Commutative-Monoid M) where

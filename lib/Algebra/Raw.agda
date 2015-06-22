@@ -1,6 +1,6 @@
 open import Type using (Type_)
 open import Function.NP
-open import Data.Nat.Base using (ℕ) renaming (suc to 1+_)
+open import Data.Nat.Base using (ℕ) renaming (suc to sucℕ)
 open import Data.Integer using (ℤ; +_; -[1+_])
 open import Relation.Binary.PropositionalEquality.NP renaming (_∙_ to _♦_)
 
@@ -129,7 +129,7 @@ record Group-Ops {ℓ} (A : Type ℓ) : Type ℓ where
   x ^⁻′ n = (x ⁻¹)^⁺ n
 
   _^_ : A → ℤ → A
-  x ^ -[1+ n ] = x ^⁻(1+ n)
+  x ^ -[1+ n ] = x ^⁻(sucℕ n)
   x ^ (+ n)    = x ^⁺ n
 
 -- A renaming of Group-Ops with additive notation
@@ -165,7 +165,7 @@ module Multiplicative-Group-Ops {ℓ}{G : Type ℓ} (grp : Group-Ops G) = Group-
 
 record Ring-Ops {ℓ} (A : Type ℓ) : Type ℓ where
   constructor _,_
-  infixl 6 2+_
+  infixl 6 1+_ 2+_
 
   field
     +-grp-ops : Group-Ops A
@@ -175,11 +175,12 @@ record Ring-Ops {ℓ} (A : Type ℓ) : Type ℓ where
     renaming (2⊗_ to 2*_)
   open module *-mon-ops = Multiplicative-Monoid-Ops *-mon-ops public
 
-  suc : A → A
-  suc = _+_ 1#
+  suc pred : A → A
 
-  pred : A → A
+  suc = _+_ 1#
   pred x = x − 1#
+
+  1+_ = suc
 
   2# 3# -0# -1# : A
   2#  = suc 1#
@@ -189,18 +190,18 @@ record Ring-Ops {ℓ} (A : Type ℓ) : Type ℓ where
 
   ℕ[_] : ℕ → A
   ℕ[ 0    ] = 0#
-  ℕ[ 1+ n ] = nest n suc 1#
+  ℕ[ sucℕ n ] = nest n suc 1#
 
   ℤ[_] : ℤ → A
   ℤ[ + x      ] = ℕ[ x ]
-  ℤ[ -[1+ x ] ] = 0− ℕ[ 1+ x ]
+  ℤ[ -[1+ x ] ] = 0− ℕ[ sucℕ x ]
 
   -- TODO use _^⁺_ and _^_ from group/monoid
   _^ℕ_ : A → ℕ → A
   _^ℕ_ = _^⁺_
   {-
-  b ^ℕ 0      = 1#
-  b ^ℕ (1+ n) = nest n (_*_ b) b
+  b ^ℕ 0        = 1#
+  b ^ℕ (sucℕ n) = nest n (_*_ b) b
   -}
 
   2+_ : A → A
@@ -229,7 +230,7 @@ record Field-Ops {ℓ} (A : Set ℓ) : Set ℓ where
   _^ℤ_ = _^_
   {-
   b ^ℤ (+ n)    = b ^ℕ n
-  b ^ℤ -[1+ n ] = (b ^ℕ (1+ n))⁻¹
+  b ^ℤ -[1+ n ] = (b ^ℕ (sucℕ n))⁻¹
   -}
 -- -}
 -- -}

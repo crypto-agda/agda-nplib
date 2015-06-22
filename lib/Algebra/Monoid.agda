@@ -56,6 +56,10 @@ module Additive-Monoid-Struct {ℓ}{M : Type ℓ}{mon-ops : Monoid-Ops M}
              ; !assoc= to +-!assoc=
              ; inner= to +-inner=
              ; ε^⁺ to 0⊗⁺
+             ; ^⁺1-id to ⊗⁺1-id
+             ; ^⁺2-∙  to ⊗⁺2-⊕
+             ; ^⁺3-∙  to ⊗⁺3-⊕
+             ; ^⁺4-∙  to ⊗⁺4-⊕
              )
 
 -- A renaming of Monoid with additive notation
@@ -67,6 +71,11 @@ module Additive-Monoid {ℓ}{M : Type ℓ} (mon : Monoid M) where
 module Multiplicative-Monoid-Struct {ℓ}{M : Type ℓ}{mon-ops : Monoid-Ops M}
                                     (mon-struct : Monoid-Struct mon-ops)
   = Monoid-Struct mon-struct
+    using    ( ^⁺1-id
+             ; ^⁺2-∙
+             ; ^⁺3-∙
+             ; ^⁺4-∙
+             )
     renaming ( identity to *-identity
              ; ε∙-identity to 1*-identity
              ; ∙ε-identity to *1-identity

@@ -82,6 +82,12 @@ module Implicits where
       interchange : Interchange _∙_ _∙_
       interchange = assoc= (!assoc= comm)
 
+      ²-∙-distr : ∀ {x y} → (x ∙ y)² ≡ x ² ∙ y ²
+      ²-∙-distr = interchange
+
+      ²-∙-distr' : ∀ {x y z} → x ² ∙ (y ∙ z) ≡ (x ∙ y) ∙ (x ∙ z)
+      ²-∙-distr' = interchange
+
       on-sides : ∀ {x x' y y' z z' t t'}
                  → x ∙ z ≡ x' ∙ z'
                  → y ∙ t ≡ y' ∙ t'
