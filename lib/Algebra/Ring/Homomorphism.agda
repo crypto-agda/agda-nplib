@@ -10,6 +10,7 @@ open import Algebra.Group.Homomorphism
 record RingHomomorphism {a}{A : Type a}{b}{B : Type b}
                         (𝔸 : Ring A)(𝔹 : Ring B)
                         (f : A → B) : Type (a ⊔ b) where
+  inductive -- NO_ETA
   constructor _,_
 
   module 𝔸 = Ring 𝔸

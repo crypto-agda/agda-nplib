@@ -13,6 +13,7 @@ open import Algebra.Ring
 module Algebra.Ring.Commutative where
 
 record Commutative-Ring-Struct {ℓ} {A : Set ℓ} (rng-ops : Ring-Ops A) : Set ℓ where
+  inductive -- NO_ETA
   open Ring-Ops rng-ops
 
   open ≡-Reasoning
@@ -100,6 +101,7 @@ record Commutative-Ring-Struct {ℓ} {A : Set ℓ} (rng-ops : Ring-Ops A) : Set 
   ²-−-distr = ²-+-distr ∙ += (+= idp ²-0−-distr) (*-comm ∙ ! 0−-*-distr ∙ 0−= *-comm)
 
 record Commutative-Ring {ℓ} (A : Set ℓ) : Set ℓ where
+  inductive -- NO_ETA
   constructor _,_
   field
     rng-ops         : Ring-Ops A

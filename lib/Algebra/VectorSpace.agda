@@ -14,6 +14,7 @@ module Algebra.VectorSpace {{_ : FunExt}} where
 
 record VectorSpace {ℓf}{F : Set ℓf}(𝔽 : Field F)
                    {ℓv}(V : Set ℓv) : Set (ℓf ⊔ ℓv) where
+  inductive -- NO_ETA
 
   module 𝔽 = Field {ℓf} {F} 𝔽
 

@@ -22,6 +22,7 @@ record MonoidHomomorphism {a}{A : Type a}{b}{B : Type b}
                           (monA0+ : Monoid A)
                           (monB1* : Monoid B)
                           (f : A → B) : Type(a ⊔ b) where
+  inductive -- NO_ETA
   constructor _,_
   open Additive-Monoid monA0+
   open Multiplicative-Monoid monB1*

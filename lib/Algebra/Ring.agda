@@ -11,6 +11,7 @@ open import Algebra.Group.Abelian
 module Algebra.Ring where
 
 record Ring-Struct {ℓ} {A : Set ℓ} (rng-ops : Ring-Ops A) : Set ℓ where
+  inductive -- NO_ETA
   open Ring-Ops rng-ops
 
   open ≡-Reasoning
@@ -60,6 +61,7 @@ record Ring-Struct {ℓ} {A : Set ℓ} (rng-ops : Ring-Ops A) : Set ℓ where
   module *-Mon = Monoid *-mon
 
 record Ring {ℓ} (A : Set ℓ) : Set ℓ where
+  inductive -- NO_ETA
   constructor _,_
   field
     rng-ops    : Ring-Ops A

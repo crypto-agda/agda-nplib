@@ -11,6 +11,7 @@ open import Algebra.Raw
 module Algebra.Monoid where
 
 record Monoid-Struct {ℓ} {M : Type ℓ} (mon-ops : Monoid-Ops M) : Type ℓ where
+  inductive -- NO_ETA
   constructor _,_
   open Monoid-Ops mon-ops
 
@@ -35,6 +36,7 @@ record Monoid-Struct {ℓ} {M : Type ℓ} (mon-ops : Monoid-Ops M) : Type ℓ wh
   open From-Assoc-RightIdentity assoc ∙ε-identity public
 
 record Monoid {ℓ}(M : Type ℓ) : Type ℓ where
+  inductive -- NO_ETA
   constructor _,_
   field
     mon-ops    : Monoid-Ops M

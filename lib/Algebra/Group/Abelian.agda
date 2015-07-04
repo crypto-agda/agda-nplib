@@ -16,6 +16,7 @@ import Algebra.Group.Constructions
 module Algebra.Group.Abelian where
 
 record Abelian-Group-Struct {ℓ} {G : Type ℓ} (grp-ops : Group-Ops G) : Type ℓ where
+  inductive -- NO_ETA
   constructor _,_
   open Group-Ops grp-ops
   open From-Group-Ops grp-ops
@@ -52,6 +53,7 @@ record Abelian-Group-Struct {ℓ} {G : Type ℓ} (grp-ops : Group-Ops G) : Type 
       y / z ∎
 
 record Abelian-Group {ℓ}(G : Type ℓ) : Type ℓ where
+  inductive -- NO_ETA
   constructor _,_
   field
     grp-ops    : Group-Ops G

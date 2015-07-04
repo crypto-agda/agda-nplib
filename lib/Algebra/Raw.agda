@@ -1,12 +1,14 @@
+{-# OPTIONS --without-K #-}
 open import Type using (Type_)
-open import Function.NP
+open import Function.Base using (nest)
 open import Data.Nat.Base using (ℕ) renaming (suc to sucℕ)
-open import Data.Integer using (ℤ; +_; -[1+_])
-open import Relation.Binary.PropositionalEquality.NP renaming (_∙_ to _♦_)
+open import Data.Integer.Base using (ℤ; +_; -[1+_])
+open import Relation.Binary.PropositionalEquality.Base using (_≡_; ap; ap₂)
 
 module Algebra.Raw where
 
 record Magma {ℓ}(A : Type ℓ) : Type ℓ where
+  inductive -- NO_ETA
   constructor ⟨_⟩
   infixl 7 _∙_
 
@@ -54,6 +56,7 @@ module Additive-Magma {ℓ}{M : Set ℓ} (mag : Magma M) where
   4⊗_   = M.4⊗_
 
 record Monoid-Ops {ℓ} (A : Type ℓ) : Type ℓ where
+  inductive -- NO_ETA
   constructor _,_
   infixl 7 _∙_
 
@@ -95,6 +98,7 @@ module Multiplicative-Monoid-Ops {ℓ}{M : Type ℓ} (mon-ops : Monoid-Ops M)
              )
 
 record Group-Ops {ℓ} (A : Type ℓ) : Type ℓ where
+  inductive -- NO_ETA
   constructor _,_
 
   field
@@ -164,6 +168,7 @@ module Multiplicative-Group-Ops {ℓ}{G : Type ℓ} (grp : Group-Ops G) = Group-
     renaming ( _∙_ to _*_; ε to 1#; mon-ops to *-mon-ops; ∙= to *= )
 
 record Ring-Ops {ℓ} (A : Type ℓ) : Type ℓ where
+  inductive -- NO_ETA
   constructor _,_
   infixl 6 1+_ 2+_
 
@@ -208,6 +213,7 @@ record Ring-Ops {ℓ} (A : Type ℓ) : Type ℓ where
   2+ x = 2# + x
 
 record Field-Ops {ℓ} (A : Set ℓ) : Set ℓ where
+  inductive -- NO_ETA
   constructor _,_
 
   field

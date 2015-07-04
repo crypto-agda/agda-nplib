@@ -8,6 +8,7 @@ open import Algebra.Raw
 module Algebra.Monoid.Commutative where
 
 record Commutative-Monoid-Struct {ℓ} {M : Type ℓ} (mon-ops : Monoid-Ops M) : Type ℓ where
+  inductive -- NO_ETA
   constructor _,_
   open Monoid-Ops mon-ops
   open From-Monoid-Ops mon-ops
@@ -19,6 +20,7 @@ record Commutative-Monoid-Struct {ℓ} {M : Type ℓ} (mon-ops : Monoid-Ops M) :
     hiding (!assoc=; assoc=; inner=; assocs)
 
 record Commutative-Monoid {ℓ}(M : Type ℓ) : Type ℓ where
+  inductive -- NO_ETA
   constructor _,_
   field
     mon-ops    : Monoid-Ops M

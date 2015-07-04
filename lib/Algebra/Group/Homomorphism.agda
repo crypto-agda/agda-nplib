@@ -20,6 +20,7 @@ open ≡-Reasoning
 record GroupHomomorphism {a}{A : Type a}{b}{B : Type b}
                          (grpA0+ : Group A)(grpB1* : Group B)
                          (f : A → B) : Type (a ⊔ b) where
+  inductive -- NO_ETA
   constructor mk
 
   open Additive-Group grpA0+

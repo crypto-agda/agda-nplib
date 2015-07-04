@@ -16,6 +16,7 @@ open import HoTT
 module Algebra.Nearring where
 
 record Nearring+1-Struct {ℓ} {A : Set ℓ} (rng-ops : Ring-Ops A) : Set ℓ where
+  inductive -- NO_ETA
   open Ring-Ops rng-ops
 
   open ≡-Reasoning
@@ -54,6 +55,7 @@ record Nearring+1-Struct {ℓ} {A : Set ℓ} (rng-ops : Ring-Ops A) : Set ℓ wh
   module *-Mon = Monoid *-mon
 
 record Nearring+1 {ℓ} (A : Set ℓ) : Set ℓ where
+  inductive -- NO_ETA
   field
     rng-ops           : Ring-Ops A
     nearring+1-struct : Nearring+1-Struct rng-ops

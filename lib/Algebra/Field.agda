@@ -15,6 +15,7 @@ open import HoTT
 module Algebra.Field where
 
 record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ where
+  inductive -- NO_ETA
   open Field-Ops field-ops
 
   open ≡-Reasoning
@@ -150,6 +151,7 @@ record Field-Struct {ℓ} {A : Set ℓ} (field-ops : Field-Ops A) : Set ℓ wher
     ∙ *-interchange ∙ *= idp (! ⁻¹*-distr b a')
 
 record Field {ℓ} (A : Set ℓ) : Set ℓ where
+  inductive -- NO_ETA
   constructor _,_
   field
     field-ops    : Field-Ops A

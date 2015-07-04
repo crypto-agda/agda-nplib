@@ -18,6 +18,7 @@ record GroupIsomorphism
          (G+   : Group A)
          (G*   : Group B)
          (φ    : A → B) : Set(a ⊔ b) where
+  inductive -- NO_ETA
   open Additive-Group G+
   open Multiplicative-Group G*
 
