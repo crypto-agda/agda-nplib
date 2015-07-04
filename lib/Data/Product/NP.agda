@@ -4,12 +4,11 @@ module Data.Product.NP where
 open import Type hiding (★)
 open import Level
 open import Data.Product public hiding (∃) renaming (proj₁ to fst; proj₂ to snd)
-open import Relation.Binary.PropositionalEquality.NP as ≡
+open import Relation.Binary.PropositionalEquality.Base as ≡
 open import Relation.Unary.NP hiding (Decidable)
-open import Relation.Binary
+open import Relation.Binary.Core
 open import Relation.Nullary
 open import Function
-open import Function.Injection using (Injection; module Injection)
 
 ∃ : ∀ {a b} {A : ★ a} → (A → ★ b) → ★ (a ⊔ b)
 ∃ = Σ _
@@ -54,7 +53,7 @@ fst-injective : ∀ {a b} {A : ★ a} {B : A → ★ b} {x y : Σ A B}
                     (B-uniq : ∀ {z} (p₁ p₂ : B z) → p₁ ≡ p₂)
                   → fst x ≡ fst y → x ≡ y
 fst-injective {x = (a , p₁)} {y = (_ , p₂)} B-uniq eq rewrite sym eq
-  = cong (λ p → (a , p)) (B-uniq p₁ p₂)
+  = ap (λ p → (a , p)) (B-uniq p₁ p₂)
 
 snd-irrelevance : ∀ {a b} {A : ★ a} {B C : A → ★ b} {x₁ x₂ : A}
                       {y₁ : B x₁} {y₂ : B x₂} {z₁ : C x₁} {z₂ : C x₂}
@@ -69,17 +68,8 @@ snd-irrelevance C-uniq = fst-injective C-uniq ∘ Σ,-injective₁
      → Decidable {A = Σ A P} _≡_
 ≟Σ' decA uniqP (w₁ , p₁) (w₂ , p₂) with decA w₁ w₂
 ≟Σ' decA uniqP (w  , p₁) (.w , p₂) | yes refl
-  = yes (cong (λ p → (w , p)) (uniqP p₁ p₂))
-≟Σ' decA uniqP (w₁ , p₁) (w₂ , p₂) | no w≢ = no (w≢ ∘ cong fst)
-
-fst-Injection : ∀ {a b} {A : ★ a} {B : A →  ★ b}
-                  → (∀ {x} (p₁ p₂ : B x) → p₁ ≡ p₂)
-                  → Injection (setoid (Σ A B))
-                              (setoid A)
-fst-Injection {B = B} B-uniq
-     = record { to        = →-to-⟶ (fst {B = B})
-              ; injective = fst-injective B-uniq
-              }
+  = yes (ap (λ p → (w , p)) (uniqP p₁ p₂))
+≟Σ' decA uniqP (w₁ , p₁) (w₂ , p₂) | no w≢ = no (w≢ ∘ ap fst)
 
 Δ : ∀ {a} {A : ★ a} → A → A × A
 Δ x = x , x

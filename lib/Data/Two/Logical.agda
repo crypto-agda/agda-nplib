@@ -3,7 +3,7 @@ module Data.Two.Logical where
 open import Data.Two.Param.Binary
 
 open import Function
-open import Data.Two hiding (_≟_; decSetoid)
+open import Data.Two hiding (_≟_)
 open import Data.Bool using (if_then_else_)
 open import Data.Bool.NP using (If′_then_else_)
 open import Relation.Nullary

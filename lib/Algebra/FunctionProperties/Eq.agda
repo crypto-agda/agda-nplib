@@ -1,22 +1,27 @@
 {-# OPTIONS --without-K #-}
-open import Function.NP using (flip; Π; Πⁱ; Op₁; Op₂; nest)
-open import Data.Nat.Base using (ℕ; _≤_; _∸_; z≤n; s≤s)
+open import Function.Base using (flip; Π; Πⁱ; Op₂)
+open import Data.Nat.Base
+  using (_≤_; _∸_; z≤n; s≤s)
   renaming (_+_ to _+ℕ_; _*_ to _*ℕ_; suc to 1+_)
 import Data.Nat.Properties.Simple as ℕ°
-open import Data.Integer.NP
+open import Data.Integer.Base
   using    (ℤ; +_; -[1+_]; _⊖_; -_)
   renaming ( _+_ to _+ℤ_; _-_ to _−ℤ_
            ; suc to sucℤ; pred to predℤ
            )
-open import Data.Product.NP using (_×_; _,_; fst; snd)
+open import Data.Product
+  using (_×_; _,_)
+  renaming (proj₁ to fst; proj₂ to snd)
 open import Relation.Nullary using (¬_)
-open import Relation.Binary.NP
-open import Relation.Binary.PropositionalEquality.NP renaming (_∙_ to _♦_)
-import Algebra.FunctionProperties.NP
-open import Algebra.Raw
+open import Relation.Binary.PropositionalEquality.Base
+  using (_≡_; _≢_; idp; !_; ap; module ≡-Reasoning)
+  renaming (_∙_ to _♦_)
 open ≡-Reasoning
 open import HoTT using (module Equivalences)
-open Equivalences
+open Equivalences using (Is-equiv; is-equiv)
+
+open import Algebra.Raw
+import Algebra.FunctionProperties.NP
 
 module Algebra.FunctionProperties.Eq {a} {A : Set a} where
 

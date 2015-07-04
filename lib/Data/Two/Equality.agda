@@ -1,5 +1,5 @@
 {-# OPTIONS --without-K #-}
-open import Data.Two hiding (_≟_; decSetoid)
+open import Data.Two hiding (_≟_)
 open import Type
 open import Relation.Binary.NP
 open import Relation.Nullary

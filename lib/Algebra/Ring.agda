@@ -6,6 +6,7 @@ open import Data.Product.NP using (fst; snd)
 open import Algebra.Raw
 open import Algebra.Monoid
 open import Algebra.Group
+open import Algebra.Group.Homomorphism
 open import Algebra.Group.Abelian
 
 module Algebra.Ring where
@@ -59,6 +60,9 @@ record Ring-Struct {ℓ} {A : Set ℓ} (rng-ops : Ring-Ops A) : Set ℓ where
   *-mon = *-mon-ops , *-mon-struct
 
   module *-Mon = Monoid *-mon
+
+  *-hom : ∀ b → GroupHomomorphism +-grp +-grp (_*_ b)
+  *-hom _ = mk *-+-distrˡ
 
 record Ring {ℓ} (A : Set ℓ) : Set ℓ where
   inductive -- NO_ETA

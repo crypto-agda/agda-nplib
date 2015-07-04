@@ -1,13 +1,10 @@
 {-# OPTIONS --without-K #-}
-{-# OPTIONS --universe-polymorphism #-}
 module Relation.Binary.Bijection where
 
-open import Level
-open import Function
-open import Data.Sum
-open import Relation.Binary
-import Relation.Binary.PropositionalEquality as ≡
-open ≡ using (_≡_;_≢_)
+open import Level using (_⊔_)
+open import Function using (flip)
+open import Relation.Binary using (Rel;REL)
+open import Relation.Binary.Core using (_≡_)
 
 InjectiveREL : ∀ {a b ℓ} (A : Set a) (B : Set b) → REL A B ℓ → Set _
 InjectiveREL _ _ _∼_ = ∀ {x y z} → x ∼ z → y ∼ z → x ≡ y

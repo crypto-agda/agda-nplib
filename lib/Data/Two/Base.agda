@@ -3,7 +3,7 @@ module Data.Two.Base where
 
 open import Data.Zero
 
-open import Data.Bool
+open import Data.Bool.Base
   public
   hiding (if_then_else_)
   renaming (Bool to 𝟚; false to 0₂; true to 1₂; T to ✓)
@@ -21,7 +21,7 @@ open import Type using (★_)
 
 open import Relation.Nullary using (¬_; Dec; yes; no)
 
-open import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality.Base
   using (_≡_; _≢_; refl)
 
 0≢1₂ : 0₂ ≢ 1₂

@@ -1,10 +1,10 @@
 {-# OPTIONS --without-K #-}
 module Type.Eq where
 
-open import Data.Two
+open import Data.Two.Base
               renaming (_==_ to _==𝟚_)
-open import Relation.Binary.PropositionalEquality
-              renaming (cong to ap; cong₂ to ap₂)
+open import Relation.Binary.PropositionalEquality.Base
+              using (_≡_; refl; ap; ap₂)
 open import Data.Product
               renaming (proj₁ to fst; proj₂ to snd)
 

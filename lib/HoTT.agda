@@ -11,7 +11,7 @@ open import Data.Product.NP
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_])
 open import Relation.Nullary.NP
 open import Relation.Binary using (Reflexive; Symmetric; Transitive)
-import Relation.Binary.PropositionalEquality.NP as ≡
+import Relation.Binary.PropositionalEquality.Base as ≡
 open ≡ using (_≡_; ap; coe; coe!; !_; _∙_; J; ap↓; PathOver; tr; ap₂)
        renaming (refl to idp; J-orig to J')
 open ≡.≡-Reasoning

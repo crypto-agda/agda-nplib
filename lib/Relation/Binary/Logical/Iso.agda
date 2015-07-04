@@ -74,7 +74,8 @@ data 𝟚ʳ : 𝟚 → 𝟚 → ★ ₀ where
   0₂1₂ : 𝟚ʳ 0₂ 1₂
   1₂0₂ : 𝟚ʳ 1₂ 0₂
 
-open import Data.Nat.NP using (ℕ; zero; suc; ℕˢ)
+open import Data.Nat.Base using (ℕ; zero; suc)
+ℕˢ = ≡.setoid ℕ
 ⟪ℕ⟫ : ℕˢ ≅ ℕˢ
 ⟪ℕ⟫ = id
 ⟪zero⟫ : (zero , zero) ∈ ⟪ℕ⟫

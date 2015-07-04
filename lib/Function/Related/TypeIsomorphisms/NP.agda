@@ -35,7 +35,7 @@ open import Relation.Binary.Sum public using (_⊎-cong_)
 open import Relation.Binary.Product.Pointwise
 open import Relation.Binary.Sum
 import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_ ; _≢_; _≗_; _▸_)
+open ≡ using (_≡_ ; _≢_; _≗_; _▸_; !_)
 open import HoTT
 
 module _ {a b f} {A : Set a} {B : A → Set b}
@@ -78,7 +78,7 @@ Maybe-injective f = Iso.iso (g f) (g-empty f)
                   | fof-tot (⇒ x)
                   | left-inverse-of f (just x)
                   | right-inverse-of f (just (⇒ x))
-          ⇐⇒ x | just x₁ | p | just x₂ | q | b | c  = just-injective (≡.trans (≡.sym (left-inverse-of f (just x₂))) (≡.trans (≡.cong (from f) c) b))
+          ⇐⇒ x | just x₁ | p | just x₂ | q | b | c  = just-injective (≡.trans (≡.sym (left-inverse-of f (just x₂))) (≡.trans (≡.ap (from f) c) b))
           ⇐⇒ x | just x₁ | p | nothing | q | _ | _  = 𝟘-elim (q ≡.refl)
           ⇐⇒ x | nothing | p | z       | q | _ | _  = 𝟘-elim (p ≡.refl)
 
@@ -89,7 +89,7 @@ Maybe-injective f = Iso.iso (g f) (g-empty f)
                   | tof-tot (⇐ x)
                   | right-inverse-of f (just x)
                   | left-inverse-of f (just (⇐ x))
-          ⇒⇐ x | just x₁ | p | just x₂ | q | b | c = just-injective (≡.trans (≡.sym (right-inverse-of f (just x₂))) (≡.trans (≡.cong (to f) c) b))
+          ⇒⇐ x | just x₁ | p | just x₂ | q | b | c = just-injective (≡.trans (≡.sym (right-inverse-of f (just x₂))) (≡.trans (≡.ap (to f) c) b))
           ⇒⇐ x | just x₁ | p | nothing | q | _ | _ = 𝟘-elim (q ≡.refl)
           ⇒⇐ x | nothing | p | z       | q | _ | _ = 𝟘-elim (p ≡.refl)
 
@@ -102,7 +102,7 @@ Maybe-injective f = Iso.iso (g f) (g-empty f)
       ... | ()
 
       f-empty' : from f nothing ≡ nothing
-      f-empty' = ≡.trans (≡.sym (≡.cong (from f) f-empty)) (left-inverse-of f nothing)
+      f-empty' = ≡.trans (≡.sym (≡.ap (from f) f-empty)) (left-inverse-of f nothing)
 
       fof-tot : ∀ x → from f (just x) ≢ nothing
       fof-tot x eq with injective (sym f) (≡.trans eq (≡.sym f-empty'))
@@ -533,8 +533,8 @@ lift-⊎ {A}{B} = record
   } where
     cong : Setoid._≈_ (≡.setoid A ⊎-setoid ≡.setoid B)  =[ _ ]⇒ Setoid._≈_ (≡.setoid (A ⊎ B))
     cong (₁∼₂ ())
-    cong (₁∼₁ x∼₁y) = ≡.cong inl x∼₁y
-    cong (₂∼₂ x∼₂y) = ≡.cong inr x∼₂y
+    cong (₁∼₁ x∼₁y) = ≡.ap inl x∼₁y
+    cong (₂∼₂ x∼₂y) = ≡.ap inr x∼₂y
 
 swap-iso : ∀ {a b} {A : ★ a} {B : ★ b} → (A × B) ↔ (B × A)
 swap-iso = inverses swap swap (λ _ → ≡.refl) (λ _ → ≡.refl)
@@ -620,7 +620,7 @@ Fin-injective = go _ _ where
     ...                       | ()
     go (suc m) zero    iso with to iso zero
     ...                       | ()
-    go (suc m) (suc n) iso = ≡.cong suc (go m n (Maybe-injective (Fin∘suc↔Maybe∘Fin ∘ iso ∘ sym Fin∘suc↔Maybe∘Fin)))
+    go (suc m) (suc n) iso = ≡.ap suc (go m n (Maybe-injective (Fin∘suc↔Maybe∘Fin ∘ iso ∘ sym Fin∘suc↔Maybe∘Fin)))
 
 -- PORTED to HoTT
 Lift↔id : ∀ {a} {A : ★ a} → Lift {a} {a} A ↔ A
@@ -648,9 +648,9 @@ not-𝟚↔𝟚 = inverses not not not-involutive not-involutive
 
 {-
 ≡-iso : ∀ {ℓ ℓ'}{A : ★_ ℓ}{B : ★_ ℓ'}{x y : A} → (π : A ↔ B) → (x ≡ y) ↔ (to π x ≡ to π y)
-≡-iso {x = x}{y} π = inverses (≡.cong (to π))
+≡-iso {x = x}{y} π = inverses (≡.ap (to π))
                               (λ p → ≡.trans (≡.sym (Inverse.left-inverse-of π x))
-                                    (≡.trans (≡.cong (from π) p)
+                                    (≡.trans (≡.ap (from π) p)
                                              (Inverse.left-inverse-of π y)))
                               (λ x → ≡.proof-irrelevance _ x) (λ x → ≡.proof-irrelevance _ x)
 -}

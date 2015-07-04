@@ -32,7 +32,7 @@ record Magma {ℓ}(A : Type ℓ) : Type ℓ where
 
   module _ {x x' y y'}(p : x ≡ x')(q : y ≡ y') where
     ∙= : x ∙ y ≡ x' ∙ y'
-    ∙= = ap (_∙_ x) q ♦ ap (λ z → z ∙ y') p
+    ∙= = ap₂ _∙_ p q
 
 -- A renaming of Monoid-Ops with additive notation
 module Additive-Magma {ℓ}{M : Set ℓ} (mag : Magma M) where
@@ -220,7 +220,8 @@ record Field-Ops {ℓ} (A : Set ℓ) : Set ℓ where
     +-grp-ops : Group-Ops A
     *-grp-ops : Group-Ops A
 
-  open module *-grp-ops = Multiplicative-Group-Ops *-grp-ops public
+  -- JS BUG this creates a conflict with *-grp-ops and shouldn't
+  open module *-grp-ops' = Multiplicative-Group-Ops *-grp-ops public
     using ( _⁻¹; ⁻¹=
           ; _/_; /=; /-magma; module /-magma
           ; _/′_; /′=; /′-magma; module /′-magma

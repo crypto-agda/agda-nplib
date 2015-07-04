@@ -4,8 +4,7 @@ module Relation.Binary.NP where
 
 open import Level
 open import Relation.Binary public
-import Relation.Binary.PropositionalEquality as PropEq
-open PropEq using (_≡_)
+open import Relation.Binary.Core using (_≡_) renaming (refl to idp)
 
 -- could this be moved in place of Trans is Relation.Binary.Core
 Trans' : ∀ {a b c ℓ₁ ℓ₂ ℓ₃} {A : Set a} {B : Set b} {C : Set c} →
@@ -17,7 +16,7 @@ substitutive-to-reflexive : ∀ {a ℓ ℓ'} {A : Set a} {≈ : Rel A ℓ} {≋ 
 substitutive-to-reflexive {≈ = ≈} ≡-subst ≈-refl xᵣ = ≡-subst (≈ _) xᵣ ≈-refl
 
 substitutive⇒≡ : ∀ {a ℓ} {A : Set a} {≋ : Rel A ℓ} → Substitutive ≋ a → ≋ ⇒ _≡_
-substitutive⇒≡ subst = substitutive-to-reflexive {≈ = _≡_} subst PropEq.refl
+substitutive⇒≡ subst = substitutive-to-reflexive {≈ = _≡_} subst idp
 
 record Equality {a ℓ} {A : Set a} (_≋_ : Rel A ℓ) : Set (suc a ⊔ ℓ) where
   field

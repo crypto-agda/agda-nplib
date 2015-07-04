@@ -10,20 +10,21 @@ open import Data.Product using (∃; _,_) renaming (proj₁ to fst; proj₂ to s
 open import Data.Sum.NP renaming (map to ⊎-map)
 open import Data.Zero using (𝟘-elim; 𝟘)
 open import Data.One using (𝟙)
-open import Function.NP
+open import Function.Base
 open import Function.Extensionality
 open import Relation.Nullary
 open import Relation.Nullary.Decidable
 open import Relation.Binary.NP
-import Relation.Binary.PropositionalEquality.NP as ≡
-open ≡ using (_≡_; _≢_; _≗_; module ≡-Reasoning; !_; _∙_; ap; ap₂; coe)
-       renaming (refl to idp)
+open import Relation.Binary.PropositionalEquality.Base
+  using (_≡_; _≢_; _≗_; module ≡-Reasoning; !_; _∙_; ap; ap₂; coe; isEquivalence)
+  renaming (refl to idp)
 open import HoTT
 open Equivalences
 
 open import Data.Nat public hiding (module GeneralisedArithmetic; module ≤-Reasoning; fold)
 open import Data.Nat.Properties
-open import Data.Nat.Properties.Simple public using (+-suc; +-*-suc)
+open import Data.Nat.Properties.Simple public
+  using (+-suc; +-*-suc; +-comm; *-comm; +-assoc; *-assoc)
 
 pattern 1+_ x = suc x
 pattern 2+_ x = 1+ suc x
@@ -86,27 +87,20 @@ module _ {{_ : UA}} where
     ⟨_↔+1⟩-eq-β : ∀ n m → coe ⟨ n ↔+1⟩-eq m ≡ ⟨ n ↔+1⟩ m
     ⟨_↔+1⟩-eq-β = coe-β ∘ ⟨_↔+1⟩-equiv
 
-ℕˢ = ≡.setoid ℕ
-
-module ℕcmp = StrictTotalOrder strictTotalOrder
-module ℕ≤   = DecTotalOrder decTotalOrder
-module ℕ°   = Algebra.CommutativeSemiring commutativeSemiring
-module ℕ+   = Algebra.CommutativeMonoid ℕ°.+-commutativeMonoid
-module ℕ+′  = Algebra.Monoid ℕ°.+-monoid
-module ⊔°   = Algebra.CommutativeSemiringWithoutOne ⊔-⊓-0-commutativeSemiringWithoutOne
-module ℕˢ   = Setoid ℕˢ
-
-infixr 8 _∙≤_
-_∙≤_ = ℕ≤.trans
-_∙cmp_ = ℕcmp.trans
-_∙<_ = <-trans
-
 [P:_zero:_suc:_] : ∀ {p} (P : ℕ → ★ p) → P zero → (∀ {n} → P n → P (suc n)) → ∀ n → P n
 [P: _ zero: z suc: _ ] zero    = z
 [P: P zero: z suc: s ] (suc n) = s ([P: P zero: z suc: s ] n)
 
 [zero:_suc:_] : ∀ {a} {A : ★ a} → A → (ℕ → A → A) → ℕ → A
 [zero: z suc: s ] = [P: _ zero: z suc: (λ {n} → s n) ]
+
+module ℕcmp = StrictTotalOrder strictTotalOrder
+module ℕ≤   = DecTotalOrder decTotalOrder
+
+infixr 8 _∙≤_
+_∙<_ = <-trans
+_∙≤_ = ℕ≤.trans
+_∙cmp_ = ℕcmp.trans
 
 module ≤-Reasoning where
   open Preorder-Reasoning ℕ≤.preorder public renaming (_∼⟨_⟩_ to _≤⟨_⟩_)
@@ -169,7 +163,7 @@ a≡a⊓b+a∸b (suc a) (suc b) rewrite ! a≡a⊓b+a∸b a b = idp
 ¬n≤x<n n p q = sucx≰x _ (q ∙≤ p)
 
 ¬n+≤y<n : ∀ n {x y} → n + x ≤ y → y < n → 𝟘
-¬n+≤y<n n p q = sucx≰x _ (q ∙≤ ℕ≤.reflexive (ℕ°.+-comm 0 n) ∙≤ ℕ≤.refl {n} +-mono z≤n ∙≤ p)
+¬n+≤y<n n p q = sucx≰x _ (q ∙≤ ℕ≤.reflexive (+-comm 0 n) ∙≤ ℕ≤.refl {n} +-mono z≤n ∙≤ p)
 
 fold : ∀ {a} {A : ★ a} → A → Endo A → ℕ → A
 fold x f n = nest n f x
@@ -216,7 +210,7 @@ module more-nest-Properties {a} {A : ★ a} where
 2* x = x + x
 
 2*-spec : ∀ n → 2* n ≡ 2 * n
-2*-spec n rewrite ℕ°.+-comm n 0 = idp
+2*-spec n rewrite +-comm n 0 = idp
 
 _==_ : (x y : ℕ) → 𝟚
 zero   == zero   = 1₂
@@ -228,7 +222,7 @@ open FromOp₂ _+_
   renaming ( op= to += )
   public
 
-open FromAssocComm _+_ ℕ°.+-assoc ℕ°.+-comm
+open FromAssocComm _+_ +-assoc +-comm
   renaming ( assoc-comm to +-assoc-comm
            ; assocs to +-assocs
            ; interchange to +-interchange
@@ -241,7 +235,7 @@ open FromAssocComm _+_ ℕ°.+-assoc ℕ°.+-comm
            )
   public
 
-open FromAssocComm _*_ ℕ°.*-assoc ℕ°.*-comm
+open FromAssocComm _*_ *-assoc *-comm
   renaming ( assoc-comm to *-assoc-comm
            ; assocs to *-assocs
            ; interchange to *-interchange
@@ -273,7 +267,7 @@ no-<-> (s≤s p) (s≤s q) = no-<-> p q
 ≤≢→< (s≤s p) q = s≤s (≤≢→< p (q ∘ ap suc))
 
 ≤-steps′ : ∀ {x} y → x ≤ x + y
-≤-steps′ {x} y rewrite ℕ°.+-comm x y = ≤-steps y ℕ≤.refl
+≤-steps′ {x} y rewrite +-comm x y = ≤-steps y ℕ≤.refl
 
 >→≥ : ∀ {m n} → m > n → m ≥ n
 >→≥ i = ≤-pred (ℕ≤.trans i (≤-steps 1 ℕ≤.refl))
@@ -287,14 +281,14 @@ no-<-> (s≤s p) (s≤s q) = no-<-> p q
 +≤→≤∸ {x} y i | k , idp =
   x             ≤⟨ ≤-steps′ k ⟩
   x + k         ≡⟨ ! m+n∸n≡m _ y ⟩
-  x + k + y ∸ y ≡⟨ ap (λ z → z ∸ y) (+-!assoc= {x} (ℕ°.+-comm k y)) ⟩
-  x + y + k ∸ y ≡⟨ ap (λ z → z + k ∸ y) (ℕ°.+-comm x y) ⟩
+  x + k + y ∸ y ≡⟨ ap (λ z → z ∸ y) (+-!assoc= {x} (+-comm k y)) ⟩
+  x + y + k ∸ y ≡⟨ ap (λ z → z + k ∸ y) (+-comm x y) ⟩
   y + x + k ∸ y ∎
   where open ≤-Reasoning
 
 +-∸ : ∀ x y z → x ≡ y + z → y ≡ x ∸ z
 +-∸ .(y + z) y z idp =
-  y ≡⟨ ℕ°.+-comm 0 y ⟩
+  y ≡⟨ +-comm 0 y ⟩
   y + 0 ≡⟨ ap (_+_ y) (! n∸n≡0 z) ⟩
   y + (z ∸ z) ≡⟨ ! +-∸-assoc y (ℕ≤.refl {z}) ⟩
   (y + z) ∸ z ∎
@@ -302,7 +296,7 @@ no-<-> (s≤s p) (s≤s q) = no-<-> p q
 
 
 +-∸' : ∀ x y z → x + y ≡ z → y ≡ z ∸ x
-+-∸' x y z e = +-∸ z y x (! e ∙ ℕ°.+-comm x y)
++-∸' x y z e = +-∸ z y x (! e ∙ +-comm x y)
 
 ≡+-≥ : ∀ x y z → x ≡ y + z → x ≥ z
 ≡+-≥ .(y + z) y z idp = ≤-steps y ℕ≤.refl
@@ -312,7 +306,7 @@ no-<-> (s≤s p) (s≤s q) = no-<-> p q
 +≤ (suc x) (s≤s i) = s≤s (+≤ x i)
 
 a+b≡a⊔b+a⊓b : ∀ a b → a + b ≡ a ⊔ b + a ⊓ b
-a+b≡a⊔b+a⊓b zero    b       rewrite ℕ°.+-comm b 0 = idp
+a+b≡a⊔b+a⊓b zero    b       rewrite +-comm b 0 = idp
 a+b≡a⊔b+a⊓b (suc a) zero    = idp
 a+b≡a⊔b+a⊓b (suc a) (suc b) rewrite +-assoc-comm a 1 b
                                   | +-assoc-comm (a ⊔ b) 1 (a ⊓ b)
@@ -325,7 +319,7 @@ a⊓b≡a (s≤s a≤b) rewrite a⊓b≡a a≤b = idp
 
 ⊔≤+ : ∀ a b → a ⊔ b ≤ a + b
 ⊔≤+ zero b          = ℕ≤.refl
-⊔≤+ (suc a) zero    = s≤s (ℕ≤.reflexive (ℕ°.+-comm 0 a))
+⊔≤+ (suc a) zero    = s≤s (ℕ≤.reflexive (+-comm 0 a))
 ⊔≤+ (suc a) (suc b) = s≤s (⊔≤+ a b ∙≤ ≤-step ℕ≤.refl ∙≤ ℕ≤.reflexive (+-assoc-comm 1 a b))
 
 2*′_ : ℕ → ℕ
@@ -393,8 +387,8 @@ a⊓b≡a (s≤s a≤b) rewrite a⊓b≡a a≤b = idp
 
 cancel-*-left : ∀ i j {k} → suc k * i ≡ suc k * j → i ≡ j
 cancel-*-left i j {k}
-  rewrite ℕ°.*-comm (suc k) i
-        | ℕ°.*-comm (suc k) j = cancel-*-right i j {k}
+  rewrite *-comm (suc k) i
+        | *-comm (suc k) j = cancel-*-right i j {k}
 
 2ⁿ*0≡0 : ∀ n → ⟨2^ n * 0 ⟩ ≡ 0
 2ⁿ*0≡0 zero    = idp
@@ -407,20 +401,20 @@ cancel-*-left i j {k}
 2*-∸ : ∀ x y → 2* x ∸ 2* y ≡ 2* (x ∸ y)
 2*-∸ _       zero    = idp
 2*-∸ zero    (suc _) = idp
-2*-∸ (suc x) (suc y) rewrite ! 2*-∸ x y | ℕ°.+-comm x (1 + x) | ℕ°.+-comm y (1 + y) = idp
+2*-∸ (suc x) (suc y) rewrite ! 2*-∸ x y | +-comm x (1 + x) | +-comm y (1 + y) = idp
 
 n+k∸m : ∀ {m n} k → m ≤ n → n + k ∸ m ≡ (n ∸ m) + k
 n+k∸m k z≤n = idp
 n+k∸m k (s≤s m≤n) = n+k∸m k m≤n
 
 factor-+-∸ : ∀ {b x y} → x ≤ b → y ≤ b → (b ∸ x) + (b ∸ y) ≡ 2* b ∸ (x + y)
-factor-+-∸ {b} {zero} {y} z≤n y≤b rewrite ℕ°.+-comm b (b ∸ y) = ! n+k∸m b y≤b
-factor-+-∸ (s≤s {x} {b} x≤b) z≤n             rewrite ℕ°.+-comm x 0 = ! n+k∸m (suc b) x≤b
-factor-+-∸ (s≤s {x} {b} x≤b) (s≤s {y} y≤b)   rewrite factor-+-∸ x≤b y≤b
-                                              | ℕ°.+-comm b (suc b)
-                                              | ℕ°.+-comm x (suc y)
+factor-+-∸ {b} {zero} {y} z≤n y≤b          rewrite +-comm b (b ∸ y) = ! n+k∸m b y≤b
+factor-+-∸ (s≤s {x} {b} x≤b) z≤n           rewrite +-comm x 0 = ! n+k∸m (suc b) x≤b
+factor-+-∸ (s≤s {x} {b} x≤b) (s≤s {y} y≤b) rewrite factor-+-∸ x≤b y≤b
+                                              | +-comm b (suc b)
+                                              | +-comm x (suc y)
                                               | n+k∸m (suc y) x≤b
-                                              | ℕ°.+-comm x y = idp
+                                              | +-comm x y = idp
 
 _*′_ : ℕ → ℕ → ℕ
 0 *′ n = 0
@@ -429,11 +423,15 @@ m *′ 0 = 0
 m *′ 1 = m
 m *′ n = m * n
 
+private
+  *1-identity : ∀ n → n * 1 ≡ n
+  *1-identity n = *-comm n 1 ∙ +-comm n 0
+
 *′-spec : ∀ m n → m *′ n ≡ m * n
 *′-spec 0             n = idp
-*′-spec 1             n = ℕ°.+-comm 0 n
-*′-spec (suc (suc m)) 0 = ℕ°.*-comm 0 m
-*′-spec (suc (suc m)) 1 = ap (suc ∘′ suc) (! snd ℕ°.*-identity m)
+*′-spec 1             n = +-comm 0 n
+*′-spec (suc (suc m)) 0 = *-comm 0 m
+*′-spec (suc (suc m)) 1 = ap (suc ∘′ suc) (! *1-identity m)
 *′-spec (suc (suc m)) (suc (suc n)) = idp
 
 ≤→≢1+ : ∀ {x y} → x ≤ y → x ≢ suc y
@@ -469,11 +467,11 @@ module ^-Props where
   open ≡-Reasoning
 
   ^1-id : ∀ n → n ^ 1 ≡ n
-  ^1-id = snd ℕ°.*-identity
+  ^1-id = *1-identity
 
   ^-+ : ∀ b m n → b ^ (m + n) ≡ b ^ m * b ^ n
-  ^-+ b 0 n = ! snd ℕ°.+-identity (b ^ n)
-  ^-+ b (1+ m) n rewrite ^-+ b m n = ! ℕ°.*-assoc b (b ^ m) (b ^ n)
+  ^-+ b 0 n = +-comm 0 (b ^ n)
+  ^-+ b (1+ m) n rewrite ^-+ b m n = ! *-assoc b (b ^ m) (b ^ n)
 
   ^-* : ∀ b m n → b ^(m * n) ≡ (b ^ n) ^ m
   ^-* b 0   n = idp
@@ -486,7 +484,7 @@ _^2 : ℕ → ℕ
 n ^2 = n * n
 
 ^2-spec : ∀ n → n ^2 ≡ n ^ 2
-^2-spec n rewrite snd ℕ°.*-identity n = idp
+^2-spec n rewrite *1-identity n = idp
 
 2^_ : ℕ → ℕ
 2^ n = ⟨2^ n * 1 ⟩
@@ -496,10 +494,10 @@ n ^2 = n * n
 2^-spec (suc n) rewrite 2^-spec n | 2*-spec (2 ^ n) = idp
 
 2^*-spec : ∀ m n → 2^⟨ m ⟩* n ≡ 2 ^ m * n
-2^*-spec zero    n rewrite ℕ°.+-comm n 0 = idp
+2^*-spec zero    n rewrite +-comm n 0 = idp
 2^*-spec (suc m) n rewrite 2^*-spec m n
-                         | ℕ°.*-assoc 2 (2 ^ m) n
-                         | ℕ°.+-comm (2 ^ m * n) 0 = idp
+                         | *-assoc 2 (2 ^ m) n
+                         | +-comm (2 ^ m * n) 0 = idp
 
 1≤2^ : ∀ n → 2^ n ≥ 1
 1+≤2^ : ∀ n → 2^ n ≥ 1 + n
@@ -531,10 +529,10 @@ open FromOp₂ _+ᵃ_
 +ᵃ-+= m m' e = +ᵃ-+ m _ ∙ e ∙ ! +ᵃ-+ m' _
 
 +ᵃ-comm : Commutative _+ᵃ_
-+ᵃ-comm x y = +ᵃ-+= x y (ℕ°.+-comm x y)
++ᵃ-comm x y = +ᵃ-+= x y (+-comm x y)
 
 +ᵃ-assoc : Associative _+ᵃ_
-+ᵃ-assoc x y z = +ᵃ-+= (x +ᵃ y) x (+= (+ᵃ-+ x y) idp ∙ ℕ°.+-assoc x y z ∙ ap (_+_ x) (! +ᵃ-+ y z))
++ᵃ-assoc x y z = +ᵃ-+= (x +ᵃ y) x (+= (+ᵃ-+ x y) idp ∙ +-assoc x y z ∙ ap (_+_ x) (! +ᵃ-+ y z))
 
 +ᵃ0-identity : ∀ x → x +ᵃ 0 ≡ x
 +ᵃ0-identity x = +ᵃ-comm x 0
@@ -645,7 +643,7 @@ module <= where
     trans : Transitive ℛ
     trans {x} {y} {z} p q = complete (ℕ≤.trans (sound x y p) (sound y z q))
     isPreorder : IsPreorder _≡_ ℛ
-    isPreorder = record { isEquivalence = ≡.isEquivalence
+    isPreorder = record { isEquivalence = isEquivalence
                         ; reflexive = reflexive
                         ; trans = λ {x} {y} {z} → trans {x} {y} {z} }
     antisym : Antisymmetric _≡_ ℛ
@@ -710,6 +708,11 @@ split-≤ {suc x} {suc y} (s≤s p) with split-≤ {x} {y} p
 
 <→≤ : ∀ {x y} → x < y → x ≤ y
 <→≤ (s≤s p) = ≤-steps 1 p
+
+module ℕ°   = Algebra.CommutativeSemiring commutativeSemiring
+module ℕ+   = Algebra.CommutativeMonoid ℕ°.+-commutativeMonoid
+module ℕ+′  = Algebra.Monoid ℕ°.+-monoid
+module ⊔°   = Algebra.CommutativeSemiringWithoutOne ⊔-⊓-0-commutativeSemiringWithoutOne
 -- -}
 -- -}
 -- -}

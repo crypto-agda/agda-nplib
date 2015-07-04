@@ -9,17 +9,15 @@ open import Function
 open import Data.Nat.Base using (ℕ; zero; suc)
 open import Data.Zero
 open import Data.One
-open import Relation.Binary
-import Relation.Binary.PropositionalEquality as ≡
-open ≡ using (_≡_;_≗_)
+open import Relation.Binary.PropositionalEquality.Base using (_≡_;_≗_) renaming (refl to idp)
 
 [inl:_,inr:_] = [_,_]
 
 inl-inj : ∀ {a b} {A : ★ a} {B : ★ b} {x y : A} → inl {B = B} x ≡ inl y → x ≡ y
-inl-inj ≡.refl = ≡.refl
+inl-inj idp = idp
 
 inr-inj : ∀ {a b} {A : ★ a} {B : ★ b} {x y : B} → inr {A = A} x ≡ inr y → x ≡ y
-inr-inj ≡.refl = ≡.refl
+inr-inj idp = idp
 
 module _ {a} {A : ★ a} where
     untag : A ⊎ A → A
@@ -36,14 +34,14 @@ module _ {a₁ a₂ b₁ b₂}
               {B₁ : ★ b₁} {B₂ : ★ b₂} {C : ★ c}
               {f₁ : B₁ → C} {g₁ : A₁ → B₁} {f₂ : B₂ → C} {g₂ : A₂ → B₂} →
               [ f₁ , f₂ ] ∘′ map g₁ g₂ ≗ [ f₁ ∘ g₁ , f₂ ∘ g₂ ]
-[,]-assoc (inl _) = ≡.refl
-[,]-assoc (inr _) = ≡.refl
+[,]-assoc (inl _) = idp
+[,]-assoc (inr _) = idp
 
 [,]-factor : ∀ {a₁ a₂ b c} {A₁ : ★ a₁} {A₂ : ★ a₂} {B : ★ b} {C : ★ c}
               {f : B → C} {g₁ : A₁ → B} {g₂ : A₂ → B} →
               [ f ∘ g₁ , f ∘ g₂ ] ≗ f ∘ [ g₁ , g₂ ]
-[,]-factor (inl _) = ≡.refl
-[,]-factor (inr _) = ≡.refl
+[,]-factor (inl _) = idp
+[,]-factor (inr _) = idp
 
 map-assoc : ∀ {a₁ a₂ b₁ b₂ c₁ c₂} {A₁ : ★ a₁} {A₂ : ★ a₂}
               {B₁ : ★ b₁} {B₂ : ★ b₂} {C₁ : ★ c₁} {C₂ : ★ c₂}

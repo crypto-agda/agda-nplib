@@ -12,7 +12,7 @@ open import Data.Nat.GCD
 open import Data.Product.NP
 open import Data.Fin.NP using (Fin; Fin▹ℕ; zero; suc; Fin▹ℕ<)
 open import Relation.Nullary.Decidable hiding (⌊_⌋)
-open import Relation.Binary.PropositionalEquality.NP
+open import Relation.Binary.PropositionalEquality.Base
 
 module Data.Nat.ModInv (q : ℕ) (q-prime : Prime q) where
 

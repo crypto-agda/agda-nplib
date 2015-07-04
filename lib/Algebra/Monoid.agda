@@ -1,7 +1,7 @@
 {-# OPTIONS --without-K #-}
 open import Type using (Type_)
-open import Function.NP
-open import Function.Extensionality
+open import Function.Base using (flip; Op₂; Π; Endo; id; _∘′_)
+open import Function.Extensionality using (FunExt; λ=ⁱ)
 open import Data.Product.NP
 open import Relation.Binary.PropositionalEquality.NP using (_≡_; idp; ap; ap₂)
 import Algebra.FunctionProperties.Eq

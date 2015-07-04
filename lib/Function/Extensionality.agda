@@ -3,8 +3,8 @@ module Function.Extensionality where
 
 -- See Function.Extensionality.Implicit for the extensionality of {x : A} → B x
 
-open import Function.NP
-open import Relation.Binary.PropositionalEquality.NP
+open import Function
+open import Relation.Binary.PropositionalEquality.Base
 
 postulate
     FunExt : Set

@@ -26,7 +26,7 @@ open import Data.Maybe.NP
 open import Data.Sum as Sum
 open import Relation.Nullary
 open import Relation.Nullary.Decidable
-open import Relation.Binary.PropositionalEquality.NP as ≡
+open import Relation.Binary.PropositionalEquality.Base as ≡
 import Data.Nat.BoundedMonoInj-is-Id as BMIII
 
 suc-injective : ∀ {m}{i j : Fin m} → Fin.suc i ≡ suc j → i ≡ j
@@ -102,7 +102,7 @@ zero ≟ zero = yes refl
 zero ≟ suc j = no (λ())
 suc i ≟ zero = no (λ())
 suc i ≟ suc j with i ≟ j
-suc i ≟ suc j | yes p = yes (cong suc p)
+suc i ≟ suc j | yes p = yes (ap suc p)
 suc i ≟ suc j | no ¬p = no (¬p ∘ suc-injective)
 -}
 
@@ -131,7 +131,7 @@ module _ {a} {A : ★ a}
   iterate-foldr∘tabulate :
     ∀ {n} (f : Fin n → A) → iterate f ≡ foldr B _◅_ ε (tabulate f)
   iterate-foldr∘tabulate {zero} f = refl
-  iterate-foldr∘tabulate {suc n} f = cong (_◅_ (f zero)) (iterate-foldr∘tabulate (f ∘ suc))
+  iterate-foldr∘tabulate {suc n} f = ap (_◅_ (f zero)) (iterate-foldr∘tabulate (f ∘ suc))
 
 module _ {a} {A : ★ a} (B : ★₀)
          (_◅_ : A → B → B)
@@ -143,7 +143,7 @@ data FinSum m n : Fin (m +ℕ n) → ★₀ where
   bound : (x : Fin m) → FinSum m n (inject+ n x)
   free  : (x : Fin n) → FinSum m n (raise m x)
 
-open import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality.Base
 
 cmp : ∀ m n (x : Fin (m +ℕ n)) → FinSum m n x
 cmp zero n x = free x
@@ -220,10 +220,10 @@ module Modulo where
   modq-inj {suc q} (suc i) zero () | just x
   modq-inj {suc q} (suc i) zero () | nothing
   modq-inj {suc q} (suc i) (suc j) eq with modq i | modq j | modq-inj i j
-  modq-inj {suc q} (suc i) (suc j) eq | just x | just x₁ | p = cong suc (p (cong just (suc-injective (just-injective eq))))
+  modq-inj {suc q} (suc i) (suc j) eq | just x | just x₁ | p = ap suc (p (ap just (suc-injective (just-injective eq))))
   modq-inj {suc q} (suc i) (suc j) () | just x | nothing | p
   modq-inj {suc q} (suc i) (suc j) () | nothing | just x | p
-  modq-inj {suc q} (suc i) (suc j) eq | nothing | nothing | p = cong suc (p refl)
+  modq-inj {suc q} (suc i) (suc j) eq | nothing | nothing | p = ap suc (p refl)
 
   modq′ : ∀ {q} → Fin (suc q) → Fin (suc q)
   modq′ {zero}  _       = zero
@@ -258,10 +258,10 @@ module Modulo where
 
   sucmod-inj : ∀ {q}{i j : Fin q} → sucmod i ≡ sucmod j → i ≡ j
   sucmod-inj {i = i} {j} eq with modq (suc i) | modq (suc j) | modq-inj (suc i) (suc j) | modq-suc i j | modq-suc j i
-  sucmod-inj eq | just _  | just _  | p | _ | _ = suc-injective (p (cong just eq))
+  sucmod-inj eq | just _  | just _  | p | _ | _ = suc-injective (p (ap just eq))
   sucmod-inj eq | nothing | nothing | p | _ | _ = suc-injective (p refl)
-  sucmod-inj eq | just _  | nothing | _ | p | _ = 𝟘-elim (p (cong Maybe.just eq))
-  sucmod-inj eq | nothing | just _  | _ | _ | p = 𝟘-elim (p (cong Maybe.just (sym eq)))
+  sucmod-inj eq | just _  | nothing | _ | p | _ = 𝟘-elim (p (ap Maybe.just eq))
+  sucmod-inj eq | nothing | just _  | _ | _ | p = 𝟘-elim (p (ap Maybe.just (sym eq)))
 
   modq-ℕ▹Fin : ∀ q → modq (ℕ▹Fin q) ≡ nothing
   modq-ℕ▹Fin zero = refl
