@@ -5,7 +5,7 @@ open import Type hiding (★)
 import Algebra
 import Algebra.FunctionProperties.Eq
 open Algebra.FunctionProperties.Eq.Explicits
-open import Data.Two.Base hiding (_==_; _≟_; _²)
+open import Data.Two.Base using (𝟚; 0₂; 1₂; ✓; not; ✓-not-¬)
 open import Data.Product using (∃; _,_) renaming (proj₁ to fst; proj₂ to snd)
 open import Data.Sum.NP renaming (map to ⊎-map)
 open import Data.Zero using (𝟘-elim; 𝟘)
