@@ -2,6 +2,7 @@
 module Data.Two where
 
 open import Data.Two.Base public
+open import Data.Bool using (_≟_)
 open import Data.Bool.Properties
   public
   using (isCommutativeSemiring-∨-∧
