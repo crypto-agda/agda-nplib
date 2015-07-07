@@ -1,5 +1,5 @@
 {-# OPTIONS --without-K #-}
-open import Data.Two hiding (_≟_)
+open import Data.Two using (𝟚; 0₂; 1₂; ✓; _==_; _xor_; not; not-involutive)
 open import Type
 open import Relation.Binary.NP
 open import Relation.Nullary
