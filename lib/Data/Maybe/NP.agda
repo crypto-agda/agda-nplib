@@ -239,13 +239,13 @@ module FunctorLemmas {a} where
   <$>-injective₁ : ∀ {A B}
                      {f : A → B} {x y : Maybe A}
                      (f-inj : ∀ {x y} → f x ≡ f y → x ≡ y)
-                   → f <$> x ≡ f <$> y → x ≡ y
+                   → (f <$> x) ≡ (f <$> y) → x ≡ y
   <$>-injective₁ {x = just _}  {just _}  f-inj eq = ≡.cong just (f-inj (just-injective eq))
   <$>-injective₁ {x = nothing} {nothing} _     _  = ≡.refl
   <$>-injective₁ {x = just _}  {nothing} _     ()
   <$>-injective₁ {x = nothing} {just _}  _     ()
 
-  <$>-assoc : ∀ {A B C} {f : A → B} {g : C → A} (x : Maybe C) → f ∘ g <$> x ≡ f <$> (g <$> x)
+  <$>-assoc : ∀ {A B C} {f : A → B} {g : C → A} (x : Maybe C) → (f ∘ g <$> x) ≡ (f <$> (g <$> x))
   <$>-assoc (just _) = ≡.refl
   <$>-assoc nothing  = ≡.refl
 
@@ -255,11 +255,11 @@ module MonadLemmas {a} where
  --  open RawApplicative applicative public
 
   cong-Maybe : ∀ {A B}
-                 (f : A → B) {x y} → x ≡ pure y → f <$> x ≡ pure (f y)
+                 (f : A → B) {x y} → x ≡ pure y → (f <$> x) ≡ pure (f y)
   cong-Maybe f ≡.refl = ≡.refl
 
   cong₂-Maybe : ∀ {A B C}
-                  (f : A → B → C) {x y u v} → x ≡ pure y → u ≡ pure v → pure f ⊛ x ⊛ u ≡ pure (f y v)
+                  (f : A → B → C) {x y u v} → x ≡ pure y → u ≡ pure v → (pure f ⊛ x ⊛ u) ≡ pure (f y v)
   cong₂-Maybe f ≡.refl ≡.refl = ≡.refl
 
   Maybe-comm-monad :
@@ -271,13 +271,13 @@ module MonadLemmas {a} where
   Maybe-comm-monad {x = just _}  {nothing}  = ≡.refl
   Maybe-comm-monad {x = just _}  {just _}   = ≡.refl
 
-  Maybe-comm-appl : ∀ {A B} {f : Maybe (A → B)} {x} → f ⊛ x ≡ (flip _$_) <$> x ⊛ f
+  Maybe-comm-appl : ∀ {A B} {f : Maybe (A → B)} {x} → (f ⊛ x) ≡ ((flip _$_) <$> x ⊛ f)
   Maybe-comm-appl {f = nothing} {nothing}  = ≡.refl
   Maybe-comm-appl {f = nothing} {just _}   = ≡.refl
   Maybe-comm-appl {f = just _}  {nothing}  = ≡.refl
   Maybe-comm-appl {f = just _}  {just _}   = ≡.refl
 
-  Maybe-comm-appl₂ : ∀ {A B C} {f : A → B → C} {x y} → f <$> x ⊛ y ≡ flip f <$> y ⊛ x
+  Maybe-comm-appl₂ : ∀ {A B C} {f : A → B → C} {x y} → (f <$> x ⊛ y) ≡ (flip f <$> y ⊛ x)
   Maybe-comm-appl₂ {x = nothing} {nothing}  = ≡.refl
   Maybe-comm-appl₂ {x = nothing} {just _}   = ≡.refl
   Maybe-comm-appl₂ {x = just _}  {nothing}  = ≡.refl
