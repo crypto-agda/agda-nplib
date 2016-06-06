@@ -570,7 +570,7 @@ module Implicits where
       -1*-neg : ∀ {x} → -1# * x ≡ 0− x
       -1*-neg = ! 0−-*-distr ♦ 0−= 1*-identity
 
-      2*-*-distr : ∀ {x y} → 2*(x * y) ≡ 2* x * y
+      2*-*-distr : ∀ {x y} → 2*(x * y) ≡ (2* x) * y
       2*-*-distr = ! *-+-distrʳ
 
     module From-+Group-*Identity-DistributesOver

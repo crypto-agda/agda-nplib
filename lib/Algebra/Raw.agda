@@ -83,7 +83,7 @@ module Additive-Monoid-Ops {ℓ}{M : Set ℓ} (mon : Monoid-Ops M) where
              ; ∙-magma to +-magma
              )
   open M public using (0#; +-magma)
-  open module +-magma = Additive-Magma +-magma public
+  open Additive-Magma +-magma public
   infixl 7 _⊗⁺_
   _⊗⁺_  = M._⊗⁺_
 
@@ -152,7 +152,7 @@ module Additive-Group-Ops {ℓ}{G : Type ℓ} (grp : Group-Ops G) where
              ; /′= to −′=
              )
   open M public using (0−_; +-mon-ops; −=; 0−=)
-  open module +-mon-ops = Additive-Monoid-Ops +-mon-ops public
+  open Additive-Monoid-Ops +-mon-ops public
   infixl 6 _−_
   infixl 7 _⊗⁻_ _⊗_
   _−_   = M._−_

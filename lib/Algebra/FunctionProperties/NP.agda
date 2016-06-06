@@ -55,16 +55,16 @@ Zero : A → Op₂ A → Set _
 Zero z · = LeftZero z · × RightZero z ·
 
 LeftInverse : A → Op₁ A → Op₂ A → Set _
-LeftInverse e _⁻¹ _·_ = ∀₁ λ x → x ⁻¹ · x ≈ e
+LeftInverse e _⁻¹ _·_ = ∀₁ λ x → (x ⁻¹) · x ≈ e
 
 LeftInverseNonZero : (zero e : A) → Op₁ A → Op₂ A → Set _
-LeftInverseNonZero zero e _⁻¹ _·_ = ∀₁ λ x → x ≉ zero → x ⁻¹ · x ≈ e
+LeftInverseNonZero zero e _⁻¹ _·_ = ∀₁ λ x → x ≉ zero → (x ⁻¹) · x ≈ e
 
 RightInverse : A → Op₁ A → Op₂ A → Set _
-RightInverse e _⁻¹ _·_ = ∀₁ λ x → x · x ⁻¹ ≈ e
+RightInverse e _⁻¹ _·_ = ∀₁ λ x → x · (x ⁻¹) ≈ e
 
 RightInverseNonZero : (zero e : A) → Op₁ A → Op₂ A → Set _
-RightInverseNonZero zero e _⁻¹ _·_ = ∀₁ λ x → x ≉ zero → x · x ⁻¹ ≈ e
+RightInverseNonZero zero e _⁻¹ _·_ = ∀₁ λ x → x ≉ zero → x · (x ⁻¹) ≈ e
 
 Inverse : A → Op₁ A → Op₂ A → Set _
 Inverse e ⁻¹ · = LeftInverse e ⁻¹ · × RightInverse e ⁻¹ ·
@@ -121,7 +121,7 @@ module Morphisms {b ℓᴮ}{B : Set b}(_≈ᴮ_ : Rel B ℓᴮ)(⟦_⟧ : A → 
   Homomorphic₀ ∙ ∘ = ⟦ ∙ ⟧ ≈ᴮ ∘
 
   Homomorphic₁ : Fun₁ A → Op₁ B → Set _
-  Homomorphic₁ ∙_ ∘_ = ∀₁ λ x → ⟦ ∙ x ⟧ ≈ᴮ ∘ ⟦ x ⟧
+  Homomorphic₁ ∙_ ∘_ = ∀₁ λ x → ⟦ ∙ x ⟧ ≈ᴮ (∘ ⟦ x ⟧)
 
   Homomorphic₂ : Fun₂ A → Op₂ B → Set _
   Homomorphic₂ _∙_ _∘_ =
