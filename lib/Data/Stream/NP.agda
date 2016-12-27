@@ -267,7 +267,7 @@ data _∈'_ {A} : Stream A → Stream (Stream A) → ★ where
 _∉'_ : ∀ {A} (xs : Stream A) (xss : Stream (Stream A)) → ★
 xs ∉' xss = ¬(xs ∈' xss)
 
-≈-head : ∀ {A} {x y : A} {xs ys} → x ∷ xs ≈ y ∷ ys → x ≡ y
+≈-head : ∀ {A : ★} {x y : A} {xs ys} → x ∷ xs ≈ y ∷ ys → x ≡ y
 ≈-head (≡.refl ∷ _) = ≡.refl
 
 not∷ : ∀ b bs bs' → ¬(not b ∷ bs ≈ b ∷ bs')
@@ -330,7 +330,7 @@ diagonal-cong : ∀ {A} {xs ys : Stream (Stream A)} →
                   xs ≋ ys → diagonal xs ≈ diagonal ys
 diagonal-cong {A} {._ ∷ _} {._ ∷ _} ((x≡ ∷ xs≈) ∷ xss≈) = x≡ ∷ ♯ diagonal-cong (map-tail-cong' (♭ xss≈))
 
-map-tail-repeat : ∀ {A} (xs : Stream A) → map tail (map repeat xs) ≈ map repeat xs
+map-tail-repeat : ∀ {A : ★} (xs : Stream A) → map tail (map repeat xs) ≈ map repeat xs
 map-tail-repeat (x ∷ xs) = ≡.refl ∷ ♯ map-tail-repeat (♭ xs)
 
 -- map not (diag (map tail xss)) = tail (map not (diag xss))

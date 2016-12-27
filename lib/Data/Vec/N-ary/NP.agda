@@ -37,7 +37,7 @@ module _ {a b} {A : ★ a} {B : ★ b} where
 
     lift³ : (f g : N-ary 3 A B) → (∀ x y z → f x y z ≡ g x y z)
             → ∀ {n} (xs ys zs : Vec A n)
-            → replicate f ⊛ xs ⊛ ys ⊛ zs ≡ replicate g ⊛ xs ⊛ ys ⊛ zs
+            → (replicate f ⊛ xs ⊛ ys ⊛ zs) ≡ (replicate g ⊛ xs ⊛ ys ⊛ zs)
     lift³ f g pf []       []       []       = idp
     lift³ f g pf (x ∷ xs) (y ∷ ys) (z ∷ zs) = ap-∷ (pf x y z) (lift³ f g pf xs ys zs)
 

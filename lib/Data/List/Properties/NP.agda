@@ -42,7 +42,7 @@ module _ {a} {A : ★ a} where
     ++-length {[]}     = refl
     ++-length {x ∷ xs} = ap suc (++-length {xs})
 
-    dup-length : (xs : List A) → length (dup xs) ≡ 2* length xs
+    dup-length : (xs : List A) → length (dup xs) ≡ 2*(length xs)
     dup-length xs = ++-length {xs}
 
     dup-inj : Injective dup

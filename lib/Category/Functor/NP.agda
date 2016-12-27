@@ -16,11 +16,11 @@ Fmap _↝₁_ _↝₂_ F = ∀ {A B} → A ↝₁ B → F A ↝₂ F B
 record IsFunctorial {ℓ} {F : Set ℓ → Set ℓ} (rawFunctor : RawFunctor F) : ★_ (ₛ ℓ) where
   open RawFunctor rawFunctor
   field
-    <$>-id : ∀ {A} (x : F A) → id <$> x ≡ x
+    <$>-id : ∀ {A} (x : F A) → (id <$> x) ≡ x
 
-    <$>-∘  : ∀ {A B C} (f : B → C) (g : A → B) x → (f ∘ g) <$> x ≡ f <$> (g <$> x)
+    <$>-∘  : ∀ {A B C} (f : B → C) (g : A → B) x → ((f ∘ g) <$> x) ≡ (f <$> (g <$> x))
 
-  <$-∘ : ∀ {A B C} (f : A → B) (x : C) y → x <$ y ≡ x <$ (f <$> y)
+  <$-∘ : ∀ {A B C} (f : A → B) (x : C) y → (x <$ y) ≡ (x <$ (f <$> y))
   <$-∘ f x = <$>-∘ (const x) f
 
 record Functor {ℓ} (F : Set ℓ → Set ℓ) : ★_ (ₛ ℓ) where

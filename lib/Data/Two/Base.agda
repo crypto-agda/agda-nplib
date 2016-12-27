@@ -27,6 +27,8 @@ open import Relation.Binary.PropositionalEquality.Base
 0≢1₂ : 0₂ ≢ 1₂
 0≢1₂ ()
 
+infix 8 _²
+
 _² : ∀ {a} → ★ a → ★ a
 A ² = 𝟚 → A
 

@@ -104,6 +104,7 @@ Bits▹ℕ-inj {suc n} (1₂ ∷ xs) (1₂ ∷ ys) p = cong 1∷_ (Bits▹ℕ-in
 Bits▹ℕ-inj {suc n} (0₂ ∷ xs) (1₂ ∷ ys) p = 𝟘-elim (2ⁿ+≰Bits▹ℕ xs (ℕ≤.reflexive (≡.sym p)))
 Bits▹ℕ-inj {suc n} (1₂ ∷ xs) (0₂ ∷ ys) p = 𝟘-elim (2ⁿ+≰Bits▹ℕ ys (ℕ≤.reflexive p))
 
+infix 4 _≤ᴮ_
 data _≤ᴮ_ : ∀ {n} (p q : Bits n) → ★₀ where
   []    : [] ≤ᴮ []
   there : ∀ {n} {p q : Bits n} b → p ≤ᴮ q → (b ∷ p) ≤ᴮ (b ∷ q)

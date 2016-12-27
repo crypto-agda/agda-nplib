@@ -13,6 +13,8 @@ open import Algebra.Group
 module Algebra.Group.Constructions where
 
 module Groupᵒᵖ {ℓ}{G : Type ℓ} where
+  infix 8 _ᵒᵖ-ops _ᵒᵖ-struct _ᵒᵖ
+
   _ᵒᵖ-ops : Endo (Group-Ops G)
   (mon , inv) ᵒᵖ-ops = mon Monoidᵒᵖ.ᵒᵖ-ops , inv
 

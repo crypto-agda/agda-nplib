@@ -45,7 +45,7 @@ module Implicits where
     module From-Comm
              (comm  : Commutative _∙_)
              {x y x' y' : A}
-             (e : (y ∙ x) ≡ (y' ∙ x'))
+             (e : y ∙ x ≡ y' ∙ x')
            where
       comm= : x ∙ y ≡ x' ∙ y'
       comm= = comm ♦ e ♦ comm
@@ -58,7 +58,7 @@ module Implicits where
       assocs = assoc , ! assoc
 
       module _ {c x y x' y' : A}
-               (e : (x ∙ y) ≡ (x' ∙ y')) where
+               (e : x ∙ y ≡ x' ∙ y') where
         assoc= : x ∙ (y ∙ c) ≡ x' ∙ (y' ∙ c)
         assoc= = ! assoc ♦ ∙= e idp ♦ assoc
 
@@ -66,7 +66,7 @@ module Implicits where
         !assoc= = assoc ♦ ∙= idp e ♦ ! assoc
 
       module _ {c d x y x' y' : A}
-               (e : (x ∙ y) ≡ (x' ∙ y')) where
+               (e : x ∙ y ≡ x' ∙ y') where
         inner= : (c ∙ x) ∙ (y ∙ d) ≡ (c ∙ x') ∙ (y' ∙ d)
         inner= = assoc= (!assoc= e)
 
@@ -100,15 +100,17 @@ module Implicits where
       on-sides p q = interchange ♦ ∙= p q ♦ interchange
 
       module _ {c d x y x' y' : A}
-               (e : (x ∙ y) ≡ (x' ∙ y')) where
+               (e : x ∙ y ≡ x' ∙ y') where
         outer= : (x ∙ c) ∙ (d ∙ y) ≡ (x' ∙ c) ∙ (d ∙ y')
         outer= = ∙= comm comm ♦ assoc= (!assoc= e) ♦ ∙= comm comm
+
+    open Magma magma public using (∙=)
 
   module From-Op₂ (op : Op₂ A) = From-Magma ⟨ op ⟩
 
   module From-Monoid-Ops (mon-ops : Monoid-Ops A) where
     open Monoid-Ops mon-ops
-    open From-Op₂ _∙_ public
+    open From-Op₂ _∙_ hiding (∙=) public
 
     module From-LeftIdentity (idl : LeftIdentity ε _∙_) where
       module _ {x y} where
@@ -161,7 +163,7 @@ module Implicits where
         elim-assoc= : (c ∙ x) ∙ y ≡ c
         elim-assoc= = assoc ♦ ∙= idp e ♦ idr
 
-      module _ {c d x y} (e : (x ∙ y) ≡ ε) where
+      module _ {c d x y} (e : x ∙ y ≡ ε) where
         elim-inner= : (c ∙ x) ∙ (y ∙ d) ≡ c ∙ d
         elim-inner= = ! assoc ♦ ∙= (elim-assoc= e) idp
 
@@ -190,7 +192,7 @@ module Implicits where
         elim-!assoc= : x ∙ (y ∙ c) ≡ c
         elim-!assoc= = ! assoc ♦ ∙= e idp ♦ idl
 
-      module _ {c d x y} (e : (x ∙ y) ≡ ε) where
+      module _ {c d x y} (e : x ∙ y ≡ ε) where
         elim-!inner= : (c ∙ x) ∙ (y ∙ d) ≡ c ∙ d
         elim-!inner= = assoc ♦ ap (_∙_ c) (elim-!assoc= e)
 
@@ -642,69 +644,75 @@ module Explicits where
   open Algebra.FunctionProperties.NP Π  {a}{a}{A} _≡_ public
 
   -- REPEATED from above but with explicit arguments
-  module FromOp₂
-           (_∙_ : Op₂ A){x x' y y'}(p : x ≡ x')(q : y ≡ y')
-         where
-    op= : x ∙ y ≡ x' ∙ y'
-    op= = ap (_∙_ x) q ♦ ap (λ z → z ∙ y') p
+  module From-Magma (magma : Magma A) where
 
-  module FromComm
-           (_∙_   : Op₂ A)
-           (comm  : Commutative _∙_)
-           (x y x' y' : A)
-           (e : (y ∙ x) ≡ (y' ∙ x'))
-         where
-    open FromOp₂ _∙_
+    open Magma magma
 
-    comm= : x ∙ y ≡ x' ∙ y'
-    comm= = comm _ _ ♦ e ♦ comm _ _
+    module From-Comm
+             (comm  : Commutative _∙_)
+             {x y x' y' : A}
+             (e : y ∙ x ≡ y' ∙ x')
+           where
+      comm= : x ∙ y ≡ x' ∙ y'
+      comm= = comm _ _ ♦ e ♦ comm _ _
 
-  module FromAssoc
-           (_∙_   : Op₂ A)
-           (assoc : Associative _∙_)
+    module From-Assoc
+             (assoc : Associative _∙_)
+           where
 
-         where
-    open FromOp₂ _∙_
+      assocs : Associative _∙_ × Associative (flip _∙_)
+      assocs = assoc , (λ _ _ _ → ! assoc _ _ _)
 
-    assocs : Associative _∙_ × Associative (flip _∙_)
-    assocs = assoc , (λ _ _ _ → ! assoc _ _ _)
+      module _ c {x y x' y' : A}
+               (e : x ∙ y ≡ x' ∙ y') where
+        assoc= : x ∙ (y ∙ c) ≡ x' ∙ (y' ∙ c)
+        assoc= = ! assoc _ _ _ ♦ ∙= e idp ♦ assoc _ _ _
 
-    module _ {c x y x' y' : A}
-             (e : (x ∙ y) ≡ (x' ∙ y')) where
-      assoc= : x ∙ (y ∙ c) ≡ x' ∙ (y' ∙ c)
-      assoc= = ! assoc _ _ _ ♦ op= e idp ♦ assoc _ _ _
+        !assoc= : (c ∙ x) ∙ y ≡ (c ∙ x') ∙ y'
+        !assoc= = assoc _ _ _ ♦ ∙= idp e ♦ ! assoc _ _ _
 
-      !assoc= : (c ∙ x) ∙ y ≡ (c ∙ x') ∙ y'
-      !assoc= = assoc _ _ _ ♦ op= idp e ♦ ! assoc _ _ _
+      module _ c d {x y x' y' : A}
+               (e : x ∙ y ≡ x' ∙ y') where
+        inner= : (c ∙ x) ∙ (y ∙ d) ≡ (c ∙ x') ∙ (y' ∙ d)
+        inner= = assoc= _ (!assoc= _ e)
 
-    module _ {c d x y x' y' : A}
-             (e : (x ∙ y) ≡ (x' ∙ y')) where
-      inner= : (c ∙ x) ∙ (y ∙ d) ≡ (c ∙ x') ∙ (y' ∙ d)
-      inner= = assoc= (!assoc= e)
+    module From-Assoc-Comm
+             (assoc : Associative _∙_)
+             (comm  : Commutative _∙_)
+           where
+      open From-Assoc assoc public
+      open From-Comm  comm  public
 
-  module FromAssocComm
-           (_∙_   : Op₂ A)
-           (assoc : Associative _∙_)
-           (comm  : Commutative _∙_)
-         where
-    open FromOp₂   _∙_       renaming (op= to ∙=)
-    open FromAssoc _∙_ assoc public
-    open FromComm  _∙_ comm  public
+      module _ x y z where
+        assoc-comm : x ∙ (y ∙ z) ≡ y ∙ (x ∙ z)
+        assoc-comm = assoc= _ (comm _ _)
 
-    module _ x y z where
-      assoc-comm : x ∙ (y ∙ z) ≡ y ∙ (x ∙ z)
-      assoc-comm = assoc= (comm _ _)
+        !assoc-comm : (x ∙ y) ∙ z ≡ (x ∙ z) ∙ y
+        !assoc-comm = !assoc= _ (comm _ _)
 
-      !assoc-comm : (x ∙ y) ∙ z ≡ (x ∙ z) ∙ y
-      !assoc-comm = !assoc= (comm _ _)
+      interchange : Interchange _∙_ _∙_
+      interchange _ _ _ _ = assoc= _ (!assoc= _ (comm _ _))
 
-    interchange : Interchange _∙_ _∙_
-    interchange _ _ _ _ = assoc= (!assoc= (comm _ _))
+      ²-∙-distr : ∀ x y → (x ∙ y)² ≡ x ² ∙ y ²
+      ²-∙-distr _ _ = interchange _ _ _ _
 
-    module _ {c d x y x' y' : A}
-             (e : (x ∙ y) ≡ (x' ∙ y')) where
-      outer= : (x ∙ c) ∙ (d ∙ y) ≡ (x' ∙ c) ∙ (d ∙ y')
-      outer= = ∙= (comm _ _) (comm _ _) ♦ assoc= (!assoc= e) ♦ ∙= (comm _ _) (comm _ _)
+      ²-∙-distr' : ∀ x y z → x ² ∙ (y ∙ z) ≡ (x ∙ y) ∙ (x ∙ z)
+      ²-∙-distr' _ _ _ = interchange _ _ _ _
+
+      on-sides : ∀ {x x' y y' z z' t t'}
+                 → x ∙ z ≡ x' ∙ z'
+                 → y ∙ t ≡ y' ∙ t'
+                 → (x ∙ y) ∙ (z ∙ t) ≡ (x' ∙ y') ∙ (z' ∙ t')
+      on-sides p q = interchange _ _ _ _ ♦ ∙= p q ♦ interchange _ _ _ _
+
+      module _ c d {x y x' y'}
+               (e : x ∙ y ≡ x' ∙ y') where
+        outer= : (x ∙ c) ∙ (d ∙ y) ≡ (x' ∙ c) ∙ (d ∙ y')
+        outer= = ∙= (comm _ _) (comm _ _) ♦ assoc= _ (!assoc= _ e) ♦ ∙= (comm _ _) (comm _ _)
+
+    open Magma magma public using (∙=)
+
+  module From-Op₂ (op : Op₂ A) = From-Magma ⟨ op ⟩
 
   module _ {b}{B : Set b} where
     open Morphisms {B = B} _≡_ public

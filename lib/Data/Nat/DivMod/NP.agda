@@ -1,5 +1,6 @@
 module Data.Nat.DivMod.NP where
 
+open import Agda.Builtin.Nat using (div-helper; mod-helper)
 open import Data.Fin as Fin using (Fin; toℕ; #_)
 import Data.Fin.Properties as FinP
 open import Data.Product
@@ -8,7 +9,7 @@ open import Data.Nat.Properties as NatP
 open import Data.Nat.Properties.Simple
 open import Relation.Nullary.Decidable
 open import Relation.Binary.PropositionalEquality as P using (_≡_)
-open import Relation.Binary.PropositionalEquality.TrustMe.NP
+open import Relation.Binary.PropositionalEquality.TrustMe.NP as TrustMe
   using (erase)
 open import Relation.Binary
 
@@ -34,6 +35,7 @@ record DivMod (dividend divisor : ℕ) : Set where
 
 -- Integer division.
 
+{-
 private
 
   div-helper : ℕ → ℕ → ℕ → ℕ → ℕ
@@ -42,6 +44,7 @@ private
   div-helper ack s (suc d) (suc n) = div-helper ack       s d n
 
   {-# BUILTIN NATDIVSUCAUX div-helper #-}
+-}
 
 div-helper' : ℕ → ℕ → ℕ → ℕ
 div-helper' s zero    n       = 0
@@ -68,12 +71,14 @@ _div_ : (dividend divisor : ℕ) → ℕ
 
 private
 
+{-
   mod-helper : ℕ → ℕ → ℕ → ℕ → ℕ
   mod-helper ack s zero    n       = ack
   mod-helper ack s (suc d) zero    = mod-helper zero      s d s
   mod-helper ack s (suc d) (suc n) = mod-helper (suc ack) s d n
 
   {-# BUILTIN NATMODSUCAUX mod-helper #-}
+-}
 
   -- The remainder is not too large.
 
@@ -297,10 +302,10 @@ private
 
 divModPropℕ : ∀ d s → d ≡ d modℕ s + (d div s) * s
 divModPropℕ _ zero    = P.sym (+-comm _ 0)
-divModPropℕ d (suc s) = erase (division-lemma 0 0 d s)
+divModPropℕ d (suc s) = TrustMe.erase (division-lemma 0 0 d s)
 
 divModProp : ∀ d s {≢0 : False (s ≟ 0)} → d ≡ toℕ ((d mod s){≢0}) + (d div s) * s
-divModProp d (s) {≢0} = erase (begin
+divModProp d (s) {≢0} = TrustMe.erase (begin
     d                                       ≡⟨ divModPropℕ d (s) ⟩
     d modℕ s + (d div s) * s                ≡⟨ P.cong₂ _+_ (P.sym (FinP.toℕ-fromℕ≤ lemma)) P.refl ⟩
     toℕ (Fin.fromℕ≤ lemma) + (d div s) * s  ∎)

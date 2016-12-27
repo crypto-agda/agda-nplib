@@ -5,7 +5,7 @@ open import Function
 open import Relation.Binary
 open import Relation.Nullary
 open import Relation.Binary.PropositionalEquality.NP
-open import Relation.Binary.PropositionalEquality.TrustMe.NP
+open import Relation.Binary.PropositionalEquality.TrustMe.NP as TrustMe
 
 open import Data.Fin.NP using (Fin▹ℕ; Fin; zero; suc; fromℕ≤)
 open import Data.Fin.Properties as FinP
@@ -25,7 +25,7 @@ nonZeroDivisor-lemmaℕ n (suc m) H p = nonZeroDivisor-lemma m (n div (suc m)) (
 
 _∣?_ : Decidable _∣_
 m ∣? n  with n modℕ m | inspect (_modℕ_ n) m
-... | zero  | [ e ] = yes (divides (n div m) (erase (divModPropℕ n m ∙ += e idp)))
+... | zero  | [ e ] = yes (divides (n div m) (TrustMe.erase (divModPropℕ n m ∙ += e idp)))
 ... | suc r | [ e ] = no  (nonZeroDivisor-lemmaℕ n m e)
 
 -- -}

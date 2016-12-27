@@ -35,6 +35,8 @@ inverses to from left right =
   where inv : →-to-⟶ from InverseOf →-to-⟶ to
         inv = record { left-inverse-of = left ; right-inverse-of = right }
 
+infixl 5 _$₁_ _$₂_
+
 _$₁_ : ∀ {f₁ f₂ t₁ t₂}
          {From : Setoid f₁ f₂} {To : Setoid t₁ t₂}
        → Inverse From To → Setoid.Carrier From → Setoid.Carrier To

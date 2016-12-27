@@ -31,6 +31,7 @@ module Data.Vec.Permutation where
 ⟨0↔zero⟩ : ∀ {n a} {A : ★ a} → ⟨0↔ zero ⟩ ≗ id {A = Vec A (suc n)}
 ⟨0↔zero⟩ _ = refl
 
+infix 8 _²
 private
     _² : ∀ {a} {A : ★ a} → Endo (Endo A)
     f ² = f ∘ f
@@ -94,6 +95,7 @@ module PermutationSyntax where
       _`⁏_ : ∀ {n} → Perm n → Perm n → Perm n
       `tl : ∀ {n} → Perm n → Perm (1 + n)
 
+    infix 8 _⁻¹
     _⁻¹ : ∀ {n} → Endo (Perm n)
     `id ⁻¹ = `id
     (f₀ `⁏ f₁) ⁻¹ = f₁ ⁻¹ `⁏ f₀ ⁻¹
@@ -122,7 +124,7 @@ module PermutationSemantics {a} {A : ★ a} where
     eval `0↔1     = 0↔1
     eval (`tl f)  = λ xs → head xs ∷ eval f (tail xs)
 
-    infixr 9 _·_
+    infixr 7 _·_
     _·_ : ∀ {n} → Perm n → Endo (Vec A n)
     _·_ = eval
 
@@ -134,11 +136,13 @@ module PermutationSemantics {a} {A : ★ a} where
     `⟨0↔ zero  ⟩-spec xs = refl
     `⟨0↔ suc i ⟩-spec xs = `⟨0↔1+ i ⟩-spec xs
 
+    infix 4 _≗′_
     _≗′_ : ∀ {n} → Perm n → Perm n → ★ _
     f ≗′ g = ∀ xs → f · xs ≡ g · xs
 
     open ⟨↔⟩ A hiding (⟨_↔_⟩)
 
+    infix 8 _⁻¹-inverse _⁻¹-inverse′ _⁻¹-involutive
     _⁻¹-inverse : ∀ {n} (f : Perm n) → (f `⁏ f ⁻¹) ≗′ `id
     (`id ⁻¹-inverse) xs = refl
     ((f `⁏ g) ⁻¹-inverse) xs
@@ -187,7 +191,7 @@ module PermutationProperties {a : Level} where
 
     private
         lem : ∀ {n} {A : ★ a} (fs : Vec (Endo A) n) f xs
-              → fs ⊛ f · xs ≡ f · (f ⁻¹ · fs ⊛ xs)
+              → (fs ⊛ f · xs) ≡ f · (f ⁻¹ · fs ⊛ xs)
         lem fs f xs rewrite sym (⊛-dist-· (f ⁻¹ · fs) f xs) | (f ⁻¹-inverse′) fs = refl
 
     ·-map : ∀ {n} {A : ★ a} (f : Endo A) g (xs : Vec A n) → map f (g · xs) ≡ g · map f xs

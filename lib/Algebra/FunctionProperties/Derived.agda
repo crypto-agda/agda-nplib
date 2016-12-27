@@ -9,11 +9,16 @@ open import Algebra.FunctionProperties.NP Π _≈_
 
 module FromAssocCommCong
          (isEquivalence : IsEquivalence _≈_)
-         (_∙_ : Op₂ A)
-         (∙-assoc : Associative _∙_)
-         (∙-comm : Commutative _∙_)
-         (∙-cong : ∀ {x y} z → x ≈ y → (x ∙ z) ≈ (y ∙ z))
+         (op : Op₂ A)
+         (∙-assoc : Associative op)
+         (∙-comm : Commutative op)
+         (∙-cong : ∀ {x y} z → x ≈ y → op x z ≈ op y z)
          where
+
+    infix 6 _∙_
+    private
+      _∙_ : Op₂ A
+      _∙_ = op
 
     open IsEquivalence isEquivalence
     open Equivalence-Reasoning isEquivalence

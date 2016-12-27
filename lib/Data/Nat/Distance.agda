@@ -43,11 +43,13 @@ open Generic id id public
 module Add where
   open Generic id (suc ∘ suc)
     public
-    renaming ( dist to _+'_
+    renaming ( dist to dist-+'
              ; dist-0≡id to +'0-identity
              ; dist-0≡id′ to 0+'-identity
              ; dist-comm to +'-comm
              )
+  infixl 6 _+'_
+  _+'_ = dist-+'
 
   +-spec : ∀ x y → x +' y ≡ x + y
   +-spec zero    _       = idp
@@ -63,6 +65,9 @@ module AddMult where
              ; dist-0≡id′ to 0+*-identity
              ; dist-comm to +*-comm
              )
+
+  infixl 6 _+'_
+  infixl 7 _*'_
 
   _+'_ : ℕ → ℕ → ℕ
   x +' y = fst (x +* y)
@@ -85,11 +90,14 @@ module AddMult where
 module Min where
   open Generic (const zero) suc
     public
-    renaming ( dist to _⊓'_
+    renaming ( dist to dist-⊓'
              ; dist-0≡id to ⊓'0-zero
              ; dist-0≡id′ to 0⊓'-zero
              ; dist-comm to ⊓'-comm
              )
+
+  infixl 7 _⊓'_
+  _⊓'_ = dist-⊓'
 
   ⊓'-spec : ∀ x y → x ⊓' y ≡ x ⊓ y
   ⊓'-spec zero    zero    = idp
@@ -100,17 +108,45 @@ module Min where
 module Max where
   open Generic id suc
     public
-    renaming ( dist to _⊔'_
+    renaming ( dist to dist-⊔'
              ; dist-0≡id to ⊔'0-identity
              ; dist-0≡id′ to 0⊔'-identity
              ; dist-comm to ⊔'-comm
              )
+
+  infixl 6 _⊔'_
+  _⊔'_ = dist-⊔'
 
   ⊔'-spec : ∀ x y → x ⊔' y ≡ x ⊔ y
   ⊔'-spec zero    zero    = idp
   ⊔'-spec zero    (suc y) = idp
   ⊔'-spec (suc x) zero    = idp
   ⊔'-spec (suc x) (suc y) = ap suc (⊔'-spec x y)
+
+module MaxMin where
+  open Generic (λ x → x , 0)
+               (λ { (a , i) → (suc a , suc i) })
+    public
+    renaming ( dist to _⊔⊓_
+             ; dist-0≡id to ⊔⊓0-identity
+             ; dist-0≡id′ to 0⊔⊓-identity
+             ; dist-comm to ⊔⊓-comm
+             )
+
+  infixl 6 _⊔'_
+  infixl 7 _⊓'_
+
+  _⊔'_ : ℕ → ℕ → ℕ
+  x ⊔' y = fst (x ⊔⊓ y)
+
+  _⊓'_ : ℕ → ℕ → ℕ
+  x ⊓' y = snd (x ⊔⊓ y)
+
+  ⊔⊓-spec : ∀ x y → (x ⊔' y ≡ x ⊔ y) × (x ⊓' y ≡ x ⊓ y)
+  ⊔⊓-spec zero    _       = idp , idp
+  ⊔⊓-spec (suc x) zero    = idp , idp
+  ⊔⊓-spec (suc x) (suc y) = ap suc (fst p) , ap suc (snd p)
+    where p = ⊔⊓-spec x y
 
 dist-refl : ∀ x → dist x x ≡ 0
 dist-refl zero = idp
@@ -124,7 +160,7 @@ dist-x+ : ∀ x y z → dist (x + y) (x + z) ≡ dist y z
 dist-x+ zero    y z = idp
 dist-x+ (suc x) y z = dist-x+ x y z
 
-dist-2* : ∀ x y → dist (2* x) (2* y) ≡ 2* dist x y
+dist-2* : ∀ x y → dist (2* x) (2* y) ≡ 2*(dist x y)
 dist-2* zero y = idp
 dist-2* (suc x) zero = idp
 dist-2* (suc x) (suc y) rewrite +-assoc-comm x 1 x | +-assoc-comm y 1 y = dist-2* x y

@@ -57,10 +57,11 @@ record CoMap {u u'}(U : Universe u u')
       map-Code : Code U → Code V
       comap-El : ∀ {u} → El V (map-Code u) → El U u
 
-module _ 
+module _
   {e u v}(U : Universe u e)
          (V : Universe v e)
   where
+    infix 4 _⊏_
     record _⊏_ : ★_ (u ⊔ v ⊔ ₛ e) where
       constructor mk
       field

@@ -38,6 +38,7 @@ module BijectionSemantics {a b} {A : ★ a} (bijKitᴬ : BijKit b A) where
                                   id-spec to idᴬ-spec)
     open BijectionSyntax A Bijᴬ
 
+    infix 10 _⁻¹
     _⁻¹ : ∀ {n} → Endo (Bij n)
     `id ⁻¹ = `id
     (f₀ `⁏ f₁) ⁻¹ = f₁ ⁻¹ `⁏ f₀ ⁻¹
@@ -54,8 +55,11 @@ module BijectionSemantics {a b} {A : ★ a} (bijKitᴬ : BijKit b A) where
     _·_ : ∀ {n} → Bij n → Endo (Vec A n)
     _·_ = eval
 
+    infix 4 _≗′_
     _≗′_ : ∀ {n} → Bij n → Bij n → ★ _
     f ≗′ g = ∀ xs → f · xs ≡ g · xs
+
+    infix 10 _⁻¹-inverse _⁻¹-involutive
 
     _⁻¹-inverse : ∀ {n} (f : Bij n) → (f `⁏ f ⁻¹) ≗′ `id
     (`id ⁻¹-inverse) xs = refl

@@ -9,6 +9,7 @@ import Function.NP as F
 open F using (-→-)
 
 record RawCategory {ℓ} (_↝_ : Rel (★ ℓ) ℓ) : ★ (suc ℓ) where
+  infixr 9 _∘_
   field
     id  : ∀ {A : ★ ℓ} → A ↝ A
     _∘_ : ∀ {A B C : ★ ℓ} → B ↝ C → A ↝ B → A ↝ C

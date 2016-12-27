@@ -171,13 +171,13 @@ BazaarRawApplicative {A} {B} = record { pure = buy; _⊛_ = _⊛_ }
     trade mf x ⊛ mx = trade (map flip mf ⊛ mx) x
     -}
 
-    identity : ∀ {T} (x : F T) → buy id ⊛ x ≡ x
+    identity : ∀ {T} (x : F T) → (buy id ⊛ x) ≡ x
     identity = map-id
 
     -- this one seems annoying
     -- composition : ∀ {R S T} (u : F (S → T)) (v : F (R → S)) (w : F R) → buy _∘′_ ⊛ u ⊛ v ⊛ w ≡ u ⊛ (v ⊛ w)
 
-    homomorphism : ∀ {S T} (f : S → T) (x : S) → buy f ⊛ buy x ≡ buy (f x)
+    homomorphism : ∀ {S T} (f : S → T) (x : S) → (buy f ⊛ buy x) ≡ buy (f x)
     homomorphism _ _ = refl
 
 -- universe issue

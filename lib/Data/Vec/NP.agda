@@ -9,7 +9,7 @@ import Algebra.FunctionProperties.Eq
 open import Type hiding (Type)
 import Level as L
 open import Category.Applicative
-open import Data.Nat.NP using (ℕ; suc; zero; _+_; _*_; 2*_; module ℕ° ; +-interchange ; _≤_)
+open import Data.Nat.NP using (ℕ; suc; zero; _+_; _*_; 2*; module ℕ° ; +-interchange ; _≤_)
 open import Data.Nat.Properties using (_+-mono_)
 open import Data.Fin hiding (_≤_) renaming (_+_ to _+ᶠ_)
 open import Data.Vec using (Vec; []; _∷_; head; tail; replicate; tabulate; foldr; _++_; lookup; splitAt; take; drop; sum; _∷ʳ_; concat)
@@ -453,7 +453,7 @@ module _ {a} {A : Type a} where
   onᵢ f zero    (x ∷ xs) = f x ∷ xs
   onᵢ f (suc i) (x ∷ xs) = x ∷ onᵢ f i xs
 
-  ⊛-dist-0↔1 : ∀ {n}(fs : Vec (Endo A) n) xs → 0↔1 fs ⊛ 0↔1 xs ≡ 0↔1 (fs ⊛ xs)
+  ⊛-dist-0↔1 : ∀ {n}(fs : Vec (Endo A) n) xs → (0↔1 fs ⊛ 0↔1 xs) ≡ 0↔1 (fs ⊛ xs)
   ⊛-dist-0↔1 _           []          = idp
   ⊛-dist-0↔1 (_ ∷ [])    (_ ∷ [])    = idp
   ⊛-dist-0↔1 (_ ∷ _ ∷ _) (_ ∷ _ ∷ _) = idp
@@ -539,7 +539,7 @@ module _ {a b}{A : Type a}{B : Type b} where
             (map f xs ‼ i) ≡ f (xs ‼ i)
   ‼-map i f xs = ‼-map= i f idp
 
-  ⊛-replicate : ∀ {n}(fs : Vec (A → B) n)(x : A) → fs ⊛ replicate x ≡ map (λ f → f x) fs
+  ⊛-replicate : ∀ {n}(fs : Vec (A → B) n)(x : A) → (fs ⊛ replicate x) ≡ map (λ f → f x) fs
   ⊛-replicate []       x = idp
   ⊛-replicate (f ∷ fs) x = ap (_∷_ (f x)) (⊛-replicate fs x)
 
@@ -557,7 +557,7 @@ module _ {a b}{A : Type a}{B : Type b} where
 
 module _ {a}{A : Type a} where
   ⊛-take-drop-lem : ∀ m {n o} (xs : Vec (Vec A (m + n)) o)
-       → map _++_ (map (take m) xs) ⊛ (map (drop m) xs) ≡ xs
+       → (map _++_ (map (take m) xs) ⊛ map (drop m) xs) ≡ xs
   ⊛-take-drop-lem m xs = vec= λ i →
     ‼-⊛= i (‼-map= i _ (‼-map i _ _)) (‼-map i _ _) ∙
     take-drop-lem m _

@@ -1,13 +1,14 @@
 {-# OPTIONS --without-K #-}
 module HoTT where
 
-open import Type
+open import Type using (Type_)
 open import Level.NP
 open import Function.NP hiding (_↔_)
 open import Function.Extensionality
+import Function.Extensionality.Implicit as I
 open import Data.Zero using (𝟘; 𝟘-elim)
 open import Data.One using (𝟙)
-open import Data.Product.NP
+open import Data.Product.NP as Prod hiding (∃!)
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr; [_,_] to [inl:_,inr:_])
 open import Relation.Nullary.NP
 open import Relation.Binary using (Reflexive; Symmetric; Transitive)
@@ -19,15 +20,15 @@ open ≡.≡-Reasoning
 import Function.Inverse.NP as Inv
 open Inv using (_↔_; inverses; module Inverse) renaming (_$₁_ to to; _$₂_ to from)
 
-module _ {a} {A : ★_ a} where
-  idp_ : (x : A) → x ≡ x
-  idp_ _ = idp
+module _ {a} {A : Type a} where
+  idp[_] : (x : A) → x ≡ x
+  idp[ _ ] = idp
 
-  refl-∙ : ∀ {x y : A} (p : x ≡ y) → idp_ x ∙ p ≡ p
+  refl-∙ : ∀ {x y : A} (p : x ≡ y) → idp[ x ] ∙ p ≡ p
   refl-∙ _ = idp
 
-  ∙-refl : ∀ {x y : A} (p : x ≡ y) → p ∙ idp_ y ≡ p
-  ∙-refl = J' (λ (x y : A) (p : x ≡ y) → (p ∙ idp_ y) ≡ p) (λ x → idp)
+  ∙-refl : ∀ {x y : A} (p : x ≡ y) → p ∙ idp[ y ] ≡ p
+  ∙-refl = J' (λ (x y : A) (p : x ≡ y) → (p ∙ idp[ y ]) ≡ p) (λ x → idp)
 
   -- could be derived in any groupoid
   hom-!-∙ : ∀ {x y z : A} (p : x ≡ y)(q : y ≡ z) → !(p ∙ q) ≡ ! q ∙ ! p
@@ -41,12 +42,12 @@ module _ {a} {A : ★_ a} where
 
     module _ (p : x ≡ y) where
       -- ! is a left-inverse for _∙_
-      !-∙ : ! p ∙ p ≡ idp_ y
-      !-∙ = J' (λ x y p → (! p ∙ p) ≡ idp_ y) (λ x → idp) p
+      !-∙ : ! p ∙ p ≡ idp[ y ]
+      !-∙ = J' (λ x y p → (! p ∙ p) ≡ idp[ y ]) (λ x → idp) p
 
       -- ! is a right-inverse for _∙_
-      ∙-! : p ∙ ! p ≡ idp_ x
-      ∙-! = J' (λ x y p → (p ∙ ! p) ≡ idp_ x) (λ x → idp) p
+      ∙-! : p ∙ ! p ≡ idp[ x ]
+      ∙-! = J' (λ x y p → (p ∙ ! p) ≡ idp[ x ]) (λ x → idp) p
 
       -- ! is involutive
       !-involutive : ! (! p) ≡ p
@@ -55,22 +56,22 @@ module _ {a} {A : ★_ a} where
       !p∙p = !-∙
       p∙!p = ∙-!
 
-      ==-refl-∙ : {q : x ≡ x} → q ≡ idp_ x → q ∙ p ≡ p
+      ==-refl-∙ : {q : x ≡ x} → q ≡ idp[ x ] → q ∙ p ≡ p
       ==-refl-∙ = ap (flip _∙_ p)
 
-      ∙-==-refl : {q : y ≡ y} → q ≡ idp_ y → p ∙ q ≡ p
+      ∙-==-refl : {q : y ≡ y} → q ≡ idp[ y ] → p ∙ q ≡ p
       ∙-==-refl qr = ap (_∙_ p) qr ∙ ∙-refl p
 
   module _ {x y : A} where
     module _ (p : x ≡ x)(q : x ≡ y)(e : p ∙ q ≡ q) where
       unique-idp-left : p ≡ idp
       unique-idp-left
-        = p              ≡⟨ ! ∙-refl p ⟩
-          p ∙ idp        ≡⟨ ap (_∙_ p) (! ∙-! q) ⟩
-          p ∙ (q ∙ ! q)  ≡⟨ ∙-assoc p q (! q) ⟩
-          (p ∙ q) ∙ ! q  ≡⟨ ap (flip _∙_ (! q)) e ⟩
-          q ∙ ! q        ≡⟨ ∙-! q ⟩
-          idp            ∎
+        = p               ≡⟨ (! (∙-refl p)) ⟩
+          (p ∙ idp[ x ])  ≡⟨ ap (_∙_ p) (! (∙-! q)) ⟩
+          (p ∙ (q ∙ ! q)) ≡⟨ ∙-assoc p q (! q) ⟩
+          ((p ∙ q) ∙ ! q) ≡⟨ ap (flip _∙_ (! q)) e ⟩
+          (q ∙ ! q)       ≡⟨ ∙-! q ⟩
+          (idp[ x ])      ∎
 
   module _ {x y z : A}{p₀ p₁ : x ≡ y}{q₀ q₁ : y ≡ z}(p : p₀ ≡ p₁)(q : q₀ ≡ q₁) where
       ∙= : p₀ ∙ q₀ ≡ p₁ ∙ q₁
@@ -78,7 +79,7 @@ module _ {a} {A : ★_ a} where
 
   module _ {x y z : A} where
     module _ (p : x ≡ y)(q : y ≡ z) where
-      ∙-∙-==-refl : {r : z ≡ z} → r ≡ idp_ z → p ∙ q ∙ r ≡ p ∙ q
+      ∙-∙-==-refl : {r : z ≡ z} → r ≡ idp[ z ] → p ∙ q ∙ r ≡ p ∙ q
       ∙-∙-==-refl rr = ∙-assoc p q _ ∙ ∙-==-refl (p ∙ q) rr
 
       !p∙p∙q : ! p ∙ p ∙ q ≡ q
@@ -109,78 +110,78 @@ module _ {a} {A : ★_ a} where
         ! p ∙ p ∙ r   ≡⟨ !p∙p∙q p r ⟩
         r             ∎
 
-!-ap : ∀ {a b}{A : Set a}{B : Set b}(f : A → B){x y}(p : x ≡ y)
+!-ap : ∀ {a b}{A : Type a}{B : Type b}(f : A → B){x y}(p : x ≡ y)
        → ! (ap f p) ≡ ap f (! p)
 !-ap f idp = idp
 
-ap-id : ∀ {a}{A : Set a}{x y : A}(p : x ≡ y) → ap id p ≡ p
+ap-id : ∀ {a}{A : Type a}{x y : A}(p : x ≡ y) → ap id p ≡ p
 ap-id idp = idp
 
-ap-∘ : ∀ {a b c}{A : Set a}{B : Set b}{C : Set c}(f : B → C)(g : A → B){x y}(p : x ≡ y)
+ap-∘ : ∀ {a b c}{A : Type a}{B : Type b}{C : Type c}(f : B → C)(g : A → B){x y}(p : x ≡ y)
        → ap (f ∘ g) p ≡ ap f (ap g p)
 ap-∘ f g idp = idp
 
-module _ {a b}{A : Set a}{B : Set b}{f g : A → B}(H : ∀ x → f x ≡ g x) where
+module _ {a b}{A : Type a}{B : Type b}{f g : A → B}(H : ∀ x → f x ≡ g x) where
   ap-nat : ∀ {x y}(q : x ≡ y) → ap f q ∙ H _ ≡ H _ ∙ ap g q
   ap-nat idp = ! ∙-refl _
 
-module _ {a}{A : Set a}{f : A → A}(H : ∀ x → f x ≡ x) where
+module _ {a}{A : Type a}{f : A → A}(H : ∀ x → f x ≡ x) where
   ap-nat-id : ∀ x → ap f (H x) ≡ H (f x)
   ap-nat-id x = ∙-cancel (H x) (ap-nat H (H x) ∙ ap (_∙_ (H (f x))) (ap-id (H x)))
 
-tr-∘ : ∀ {a b p}{A : Set a}{B : Set b}(P : B → Set p)(f : A → B){x y}(p : x ≡ y)
+tr-∘ : ∀ {a b p}{A : Type a}{B : Type b}(P : B → Type p)(f : A → B){x y}(p : x ≡ y)
   → tr (P ∘ f) p ≡ tr P (ap f p)
 tr-∘ P f idp = idp
 
-module _ {a}{A : ★_ a} where
-    tr-∙′ : ∀ {ℓ}(P : A → ★_ ℓ) {x y z} (p : x ≡ y) (q : y ≡ z) →
+module _ {a}{A : Type a} where
+    tr-∙′ : ∀ {ℓ}(P : A → Type ℓ) {x y z} (p : x ≡ y) (q : y ≡ z) →
              tr P (p ∙ q) ∼ tr P q ∘ tr P p
     tr-∙′ P idp _ _ = idp
 
-    tr-∙ : ∀ {ℓ}(P : A → ★_ ℓ) {x y z} (p : x ≡ y) (q : y ≡ z) (pq : x ≡ z) →
+    tr-∙ : ∀ {ℓ}(P : A → Type ℓ) {x y z} (p : x ≡ y) (q : y ≡ z) (pq : x ≡ z) →
              pq ≡ p ∙ q →
              tr P pq ∼ tr P q ∘ tr P p
     tr-∙ P p q ._ idp = tr-∙′ P p q
 
-module _ {k} {K : ★_ k} {a} {A : ★_ a} {x y : A} (p : x ≡ y) where
+module _ {k} {K : Type k} {a} {A : Type a} {x y : A} (p : x ≡ y) where
     tr-const : tr (const K) p ≡ id
     tr-const = J (λ _ p₁ → tr (const K) p₁ ≡ id) idp p
 
 -- Contractible
-module _ {a}(A : ★_ a) where
-    Is-contr : ★_ a
+module _ {a}(A : Type a) where
+    Is-contr : Type a
     Is-contr = Σ A λ x → ∀ y → x ≡ y
 
-module _ {a}{b}{A : ★_ a}{B : A → ★_ b} where
+module _ {a}{b}{A : Type a}{B : A → Type b} where
     pair= : ∀ {x y : Σ A B} → (p : fst x ≡ fst y) → tr B p (snd x) ≡ snd y → x ≡ y
     pair= idp = ap (_,_ _)
 
     snd= : ∀ {x : A} {y y' : B x} → y ≡ y' → _≡_ {A = Σ A B} (x , y) (x , y')
     snd= = pair= idp
 
-    tr-snd= : ∀ {p}(P : Σ A B → ★_ p){x}{y₀ y₁ : B x}(y= : y₀ ≡ y₁)
+    tr-snd= : ∀ {p}(P : Σ A B → Type p){x}{y₀ y₁ : B x}(y= : y₀ ≡ y₁)
             → tr P (snd= {x = x} y=) ∼ tr (P ∘ _,_ x) y=
     tr-snd= P idp p = idp
 
-module _ {a}{A : ★_ a} where
+module _ {a}{A : Type a} where
   tr-r≡ : {x y z : A}(p : y ≡ z)(q : x ≡ y) → tr (λ v → x ≡ v) p q ≡ q ∙ p
   tr-r≡ idp q = ! ∙-refl q
 
   tr-l≡ : {x y z : A}(p : x ≡ y)(q : x ≡ z) → tr (λ v → v ≡ z) p q ≡ ! p ∙ q
   tr-l≡ idp q = idp
 
-module _ {A : ★}(f g : A → ★){x y : A}(p : x ≡ y)(h : f x → g x) where
+module _ {a b}{A : Type a}(f g : A → Type b){x y : A}(p : x ≡ y)(h : f x → g x) where
     tr-→ : tr (λ x → f x → g x) p h ≡ (λ x → tr g p (h (tr f (! p) x)))
     tr-→ = J' (λ x y p → (h : f x → g x) → tr (λ x → f x → g x) p h ≡ (λ x → tr g p (h (tr f (! p) x))))
              (λ _ _ → idp) p h
 
-module _ {a}{b}{A : ★_ a}{B : ★_ b} where
+module _ {a}{b}{A : Type a}{B : Type b} where
     pair×= : ∀ {x x' : A}(p : x ≡ x')
                {y y' : B}(q : y ≡ y')
              → (x , y) ≡ (x' , y')
     pair×= idp q = snd= q
 
-module _ {a b c}{A : ★_ a}{B : A → ★_ b}{x₀ : A}{y₀ : B x₀}{C : ★_ c}
+module _ {a b c}{A : Type a}{B : A → Type b}{x₀ : A}{y₀ : B x₀}{C : Type c}
          (f : (x : A) (y : B x) → C) where
     ap₂↓ : {x₁ : A}(x= : x₀ ≡ x₁)
            {y₁ : B x₁}(y= : y₀ ≡ y₁ [ B ↓ x= ])
@@ -201,7 +202,7 @@ module _ {a b c}{A : ★_ a}{B : A → ★_ b}{x₀ : A}{y₀ : B x₀}{C : ★_
                 (λ y= → ap (f x₀) y=) x=
     -- -}
 
-module _ {a b c d}{A : ★_ a}{B : A → ★_ b}{C : ★_ c}{x₀ : A}{y₀ : B x₀ → C}{D : ★_ d}
+module _ {a b c d}{A : Type a}{B : A → Type b}{C : Type c}{x₀ : A}{y₀ : B x₀ → C}{D : Type d}
          {{_ : FunExt}}
          (f : (x : A) (y : B x → C) → D) where
     apd₂⁻ : {x₁ : A}(x= : x₀ ≡ x₁)
@@ -211,14 +212,14 @@ module _ {a b c d}{A : ★_ a}{B : A → ★_ b}{C : ★_ c}{x₀ : A}{y₀ : B 
 
 module Equivalences where
 
-  module _ {a b}{A : ★_ a}{B : ★_ b} where
-    _LeftInverseOf_ : (B → A) → (A → B) → ★_ a
+  module _ {a b}{A : Type a}{B : Type b} where
+    _LeftInverseOf_ : (B → A) → (A → B) → Type a
     linv LeftInverseOf f = ∀ x → linv (f x) ≡ x
 
-    _RightInverseOf_ : (B → A) → (A → B) → ★_ b
+    _RightInverseOf_ : (B → A) → (A → B) → Type b
     rinv RightInverseOf f = ∀ x → f (rinv x) ≡ x
 
-    record Linv (f : A → B) : ★_(a ⊔ b) where
+    record Linv (f : A → B) : Type(a ⊔ b) where
       field
         linv    : B → A
         is-linv : ∀ x → linv (f x) ≡ x
@@ -226,7 +227,7 @@ module Equivalences where
       injective : ∀ {x y} → f x ≡ f y → x ≡ y
       injective p = ! is-linv _ ∙ ap linv p ∙ is-linv _
 
-    record Rinv (f : A → B) : ★_(a ⊔ b) where
+    record Rinv (f : A → B) : Type(a ⊔ b) where
       field
         rinv    : B → A
         is-rinv : ∀ x → f (rinv x) ≡ x
@@ -234,7 +235,7 @@ module Equivalences where
       surjective : ∀ y → ∃ λ x → f x ≡ y
       surjective y = rinv y , is-rinv y
 
-    record Biinv (f : A → B) : ★_(a ⊔ b) where
+    record Biinv (f : A → B) : Type(a ⊔ b) where
       field
         has-linv : Linv f
         has-rinv : Rinv f
@@ -249,7 +250,7 @@ module Equivalences where
       biinv = record { has-linv = record { linv = g ; is-linv = g-f }
                      ; has-rinv = record { rinv = h ; is-rinv = f-h } }
 
-    record Qinv (f : A → B) : ★_(a ⊔ b) where
+    record Qinv (f : A → B) : Type(a ⊔ b) where
       field
         inv : B → A
         inv-is-linv : ∀ x → inv (f x) ≡ x
@@ -263,11 +264,11 @@ module Equivalences where
 
       open Biinv has-biinv public
 
-    HAE : {f : A → B} → Qinv f → ★_(a ⊔ b)
+    HAE : {f : A → B} → Qinv f → Type(a ⊔ b)
     HAE {f} f-qinv = ∀ x → ap f (F.inv-is-linv x) ≡ F.inv-is-rinv (f x)
       where module F = Qinv f-qinv
 
-    record Is-equiv (f : A → B) : ★_(a ⊔ b) where
+    record Is-equiv (f : A → B) : Type(a ⊔ b) where
       field
         has-qinv : Qinv f
         is-hae   : HAE has-qinv
@@ -305,7 +306,7 @@ module Equivalences where
         { has-qinv = qinv g f-g' g-f
         ; is-hae   = hae }
 
-  module Biinv-inv {a b}{A : ★_ a}{B : ★_ b}{f : A → B}
+  module Biinv-inv {a b}{A : Type a}{B : Type b}{f : A → B}
                    (fᴮ : Biinv f) where
       open Biinv fᴮ
       inv : B → A
@@ -316,7 +317,7 @@ module Equivalences where
         biinv f (λ x → ap f (is-linv (rinv x)) ∙ is-rinv x)
               f (λ x → ap linv (is-rinv (f x)) ∙ is-linv x)
 
-  module _ {a b}{A : ★_ a}{B : ★_ b}{f : A → B}
+  module _ {a b}{A : Type a}{B : Type b}{f : A → B}
            (fᴱ : Is-equiv f) where
       open Is-equiv fᴱ
 
@@ -325,17 +326,17 @@ module Equivalences where
 
   module _ {a b} where
     infix 4 _≃_
-    _≃_ : ★_ a → ★_ b → ★_(a ⊔ b)
+    _≃_ : Type a → Type b → Type(a ⊔ b)
     A ≃ B = Σ (A → B) Is-equiv
 
-  module _ {a b}{A : ★_ a}{B : ★_ b}
+  module _ {a b}{A : Type a}{B : Type b}
            (f : A → B)(g : B → A)
            (f-g : (y : B) → f (g y) ≡ y)
            (g-f : (x : A) → g (f x) ≡ x) where
     equiv : A ≃ B
     equiv = f , is-equiv g f-g g-f
 
-  module _ {a}{A : ★_ a}
+  module _ {a}{A : Type a}
            (f : A → A)(f-inv : f LeftInverseOf f) where
       self-inv-is-equiv : Is-equiv f
       self-inv-is-equiv = is-equiv f f-inv f-inv
@@ -346,14 +347,15 @@ module Equivalences where
       self-inv-biinv : Biinv f
       self-inv-biinv = biinv f f-inv f f-inv
 
-  module _ {a}{A : ★_ a} where
+  module _ {a}{A : Type a} where
     idᴱ : Is-equiv {A = A} id
     idᴱ = self-inv-is-equiv _ λ _ → idp
 
     idᴮ : Biinv {A = A} id
     idᴮ = self-inv-biinv _ λ _ → idp
 
-  module _ {a b c}{A : ★_ a}{B : ★_ b}{C : ★_ c}{g : B → C}{f : A → B} where
+  module _ {a b c}{A : Type a}{B : Type b}{C : Type c}{g : B → C}{f : A → B} where
+    infixr 9 _∘ᴱ_ _∘ᴮ_
     _∘ᴱ_ : Is-equiv g → Is-equiv f → Is-equiv (g ∘ f)
     gᴱ ∘ᴱ fᴱ = is-equiv (F.inv ∘ G.inv)
                         (λ x → ap g (F.inv-is-rinv _) ∙ G.inv-is-rinv _)
@@ -372,7 +374,7 @@ module Equivalences where
         module G = Biinv gᴮ
         module F = Biinv fᴮ
 
-  module Equiv {a b}{A : ★_ a}{B : ★_ b}(e : A ≃ B) where
+  module Equiv {a b}{A : Type a}{B : Type b}(e : A ≃ B) where
     ·→ : A → B
     ·→ = fst e
 
@@ -405,11 +407,11 @@ module Equivalences where
     ≃-! = ≃-sym
     _≃-∙_ = ≃-trans
 
-  module _ {a}(A : ★_ a) where
-    Paths : ★_ a
+  module _ {a}(A : Type a) where
+    Paths : Type a
     Paths = Σ A λ x → Σ A λ y → x ≡ y
 
-  module _ {a}{A : ★_ a} where
+  module _ {a}{A : Type a} where
     id-path : A → Paths A
     id-path x = x , x , idp
 
@@ -422,24 +424,24 @@ module Equivalences where
     ≃-Paths : A ≃ Paths A
     ≃-Paths = id-path , id-path-is-equiv
 
-  module _ {a b}{A : ★_ a}{B : ★_ b}(f : A → B) where
-    hfiber : (y : B) → ★_(a ⊔ b)
+  module _ {a b}{A : Type a}{B : Type b}(f : A → B) where
+    hfiber : (y : B) → Type(a ⊔ b)
     hfiber y = Σ A λ x → f x ≡ y
 
-    Is-equiv-alt : ★_(a ⊔ b)
+    Is-equiv-alt : Type(a ⊔ b)
     Is-equiv-alt = (y : B) → Is-contr (hfiber y)
 
-  module Is-contr-to-Is-equiv {a}{A : ★_ a}(A-contr : Is-contr A) where
+  module Is-contr-to-Is-equiv {a}{A : Type a}(A-contr : Is-contr A) where
     const-is-equiv : Is-equiv (λ (_ : 𝟙) → fst A-contr)
     const-is-equiv = is-equiv _ (snd A-contr) (λ _ → idp)
     𝟙≃ : 𝟙 ≃ A
     𝟙≃ = _ , const-is-equiv
-  module Is-equiv-to-Is-contr {a}{A : ★_ a}(f : 𝟙 → A)(f-is-equiv : Is-equiv f) where
+  module Is-equiv-to-Is-contr {a}{A : Type a}(f : 𝟙 → A)(f-is-equiv : Is-equiv f) where
     open Is-equiv f-is-equiv
     A-contr : Is-contr A
     A-contr = f _ , is-rinv
 
-  module _ {a}{A : ★_ a}{b}{B : ★_ b} where
+  module _ {a}{A : Type a}{b}{B : Type b} where
     iso-to-equiv : (A ↔ B) → (A ≃ B)
     iso-to-equiv iso = to iso , is-equiv (from iso) (Inverse.right-inverse-of iso) (Inverse.left-inverse-of iso)
 
@@ -459,7 +461,7 @@ module Equivalences where
     -}
 open Equivalences
 
-data T-level : ★₀ where
+data T-level : Type ₀ where
   ⟨-2⟩ : T-level
   ⟨S_⟩ : (n : T-level) → T-level
 
@@ -473,7 +475,7 @@ data T-level : ★₀ where
 
 module _ {a} where
     private
-      U = ★_ a
+      U = Type a
 
     has-level : T-level → U → U
     has-level ⟨-2⟩   A = Is-contr A
@@ -527,6 +529,31 @@ module _ {a} where
         is-prop-is-prop h0 h1 = λ= λ x → λ= λ y → {!!}
       -}
 
+private
+  ∃! : ∀ {ℓA}{A : Type ℓA}{ℓB}(B : A → Type ℓB) → Type _
+  ∃! = Prod.∃! _≡_
+module _ {ℓA}{A : Type ℓA}{ℓB}{B : A → Type ℓB} where
+  module _ (B-prop : ∀ a → is-prop (B a)) where
+    ∃!→Is-contr-∃ : ∃! B → Is-contr (∃ B)
+    ∃!→Is-contr-∃ (a , b , u) = (a , b) , λ y →
+      pair= (u (snd y)) (prop-has-all-paths (B-prop _) _ _)
+
+{-
+    module _ {{_ : FunExt}} where
+      ∃!-all-paths : has-all-paths (∃! B)
+      ∃!-all-paths (a , b , u) (a' , b' , u') =
+        pair= (u b')
+          (pair= (prop-has-all-paths (B-prop _) _ _)
+                 (I.λ= (λ x → λ= (λ y → {!u' b!}))))
+
+      ∃!-is-prop : is-prop (∃! B)
+      ∃!-is-prop = all-paths-is-prop ∃!-all-paths
+-}
+
+  Is-contr→∃! : Is-contr (∃ B) → ∃! B
+  Is-contr→∃! ((a , b) , u) =
+    a , b , λ b' → ap fst (u (_ , b'))
+
 𝟘-is-prop : is-prop 𝟘
 𝟘-is-prop () _
 
@@ -542,7 +569,7 @@ module _ {a} where
 𝟙-has-all-paths : has-all-paths 𝟙
 𝟙-has-all-paths _ _ = idp
 
-module _ {{_ : FunExt}}{a b}{A : ★_ a}{B : A → ★_ b} where
+module _ {{_ : FunExt}}{a b}{A : Type a}{B : A → Type b} where
   Π-has-all-paths : (∀ x → has-all-paths (B x)) → has-all-paths (Π A B)
   Π-has-all-paths B-has-all-paths f g
     = λ= λ _ → B-has-all-paths _ _ _
@@ -550,20 +577,20 @@ module _ {{_ : FunExt}}{a b}{A : ★_ a}{B : A → ★_ b} where
   Π-is-prop : (∀ x → is-prop (B x)) → is-prop (Π A B)
   Π-is-prop B-is-prop = all-paths-is-prop (Π-has-all-paths (prop-has-all-paths ∘ B-is-prop))
 
-module _ {{_ : FunExt}}{a}{A : ★_ a} where
+module _ {{_ : FunExt}}{a}{A : Type a} where
     ¬-has-all-paths : has-all-paths (¬ A)
     ¬-has-all-paths = Π-has-all-paths (λ _ → 𝟘-has-all-paths)
 
     ¬-is-prop : is-prop (¬ A)
     ¬-is-prop = Π-is-prop (λ _ → 𝟘-is-prop)
 
-module _ {a} (A : ★_ a) where
-    has-dec-eq : ★_ a
+module _ {a} (A : Type a) where
+    has-dec-eq : Type a
     has-dec-eq = (x y : A) → Dec (x ≡ y)
 
-module _ {a} {A : ★_ a} (d : has-dec-eq A) where
+module _ {a} {A : Type a} (d : has-dec-eq A) where
     private
-        Code' : {x y : A} (dxy : Dec (x ≡ y)) (dxx : Dec (x ≡ x)) → x ≡ y → ★_ a
+        Code' : {x y : A} (dxy : Dec (x ≡ y)) (dxx : Dec (x ≡ x)) → x ≡ y → Type a
         Code' {x} {y} dxy dxx p = case dxy of λ
           { (no  _) → Lift 𝟘
           ; (yes b) → case dxx of λ
@@ -572,7 +599,7 @@ module _ {a} {A : ★_ a} (d : has-dec-eq A) where
                       }
           }
 
-        Code : {x y : A} → x ≡ y → ★_ a
+        Code : {x y : A} → x ≡ y → Type a
         Code {x} {y} p = Code' (d x y) (d x x) p
 
         encode : {x y : A} → (p : x ≡ y) -> Code p
@@ -586,7 +613,7 @@ module _ {a} {A : ★_ a} (d : has-dec-eq A) where
     dec-eq-is-set : is-set A
     dec-eq-is-set _ _ = all-paths-is-prop UIP-dec
 
-module _ {ℓ}{A : ★_ ℓ} where
+module _ {ℓ}{A : Type ℓ} where
     UIP-set : is-set A → UIP A
     UIP-set A-is-set p q = fst (A-is-set _ _ p q)
 
@@ -614,13 +641,13 @@ module _ {ℓ}{A : ★_ ℓ} where
     coe-inj : ∀ {B}{x y : A}(p : A ≡ B) → coe p x ≡ coe p y → x ≡ y
     coe-inj idp = id
 
-    module _ {B : ★_ ℓ}(p : A ≡ B){x y : A} where
+    module _ {B : Type ℓ}(p : A ≡ B){x y : A} where
         coe-paths-equiv : (x ≡ y) ≡ (coe p x ≡ coe p y)
         coe-paths-equiv = J (λ B (p : A ≡ B) → (x ≡ y) ≡ (coe p x ≡ coe p y)) idp p
 
 postulate
-  UA : ★
-module _ {ℓ}{A B : ★_ ℓ}{{_ : UA}} where
+  UA : Type ₀
+module _ {ℓ}{A B : Type ℓ}{{_ : UA}} where
   postulate
     ua : (A ≃ B) → (A ≡ B)
     coe-equiv-β : (e : A ≃ B) → coe-equiv (ua e) ≡ e

@@ -22,7 +22,7 @@ private
       {Aᵣ : ⟦★⟧ aᵣ A A}
       {Bᵣ : ⟦★⟧ bᵣ B B}
       {f}
-    → (Aᵣ ⟦→⟧ Bᵣ) f f ⇔ f Preserves Aᵣ ⟶ Bᵣ
+    → (Aᵣ ⟦→⟧ Bᵣ) f f ⇔ (f Preserves Aᵣ ⟶ Bᵣ)
 
   ⟦→⟧⇔Preserves = equivalence (λ x → x) (λ x → x)
 
@@ -33,7 +33,7 @@ private
       {Bᵣ : ⟦★⟧ bᵣ B B}
       {Cᵣ : ⟦★⟧ cᵣ C C}
       {f}
-    → (Aᵣ ⟦→⟧ Bᵣ ⟦→⟧ Cᵣ) f f ⇔ f Preserves₂ Aᵣ ⟶ Bᵣ ⟶ Cᵣ
+    → (Aᵣ ⟦→⟧ Bᵣ ⟦→⟧ Cᵣ) f f ⇔ (f Preserves₂ Aᵣ ⟶ Bᵣ ⟶ Cᵣ)
 
   ⟦→⟧²⇔Preserves₂ = equivalence (λ f {x} {y}   {_} {_} z → f {x} {y} z)
                                 (λ f {x} {y} z {_} {_}   → f z)
@@ -47,3 +47,5 @@ private
            {b bᵣ} {B : ★ b} (Bᵣ : ⟦★⟧ bᵣ B B)
            (f : A → B) → ★ _
 ⟦Inj⟧′ Aᵣ Bᵣ f = ⟦Inj⟧ Aᵣ Bᵣ f f
+
+-- -}

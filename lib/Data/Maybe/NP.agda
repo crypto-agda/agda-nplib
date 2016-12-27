@@ -157,6 +157,8 @@ _≗?_ : ∀ {a b} {A : ★ a} {B : ★ b} →
          (f g : A →? B) → ★ _
 (f ≗? g) = ∀ x → f x ≡JAll g x
 
+infixr 9 _∘?_
+
 _∘?_ : ∀ {a b c} {A : ★ a} {B : ★ b} {C : ★ c}
        → B →? C → A →? B → A →? C
 (f ∘? g) x = g x >>=? f

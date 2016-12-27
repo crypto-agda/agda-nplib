@@ -6,7 +6,7 @@ open import Data.Product.NP
 open import Data.Zero
 open import Data.One
 open import Data.Sum
-open import Data.List
+open import Data.List hiding ([_])
 open import Relation.Nullary
 open import Relation.Binary
 import Relation.Binary.PropositionalEquality as ≡
@@ -20,6 +20,10 @@ private
 
 ⟨_,_⟩∈_ : ∀ {ℓ a b} {A : Set a} {B : Set b} (x : A) (y : B) → REL A B ℓ → Set ℓ
 ⟨_,_⟩∈_ x y R = R x y
+
+infix 4 ⟨_,_⟩∈_
+
+infix 6 _[_↔_]
 
 data _[_↔_] {a} {A : Set a} (R : Rel A a) (x y : A) : Rel A a where
 

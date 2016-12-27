@@ -40,20 +40,17 @@ module Additive-Magma {ℓ}{M : Set ℓ} (mag : Magma M) where
    module M = Magma mag
     using    ()
     renaming ( _∙_ to _+_
-             ; _² to 2⊗_
-             ; _³ to 3⊗_
-             ; _⁴ to 4⊗_
+             ; _² to 2⊗
+             ; _³ to 3⊗
+             ; _⁴ to 4⊗
              ; _^¹⁺_ to _⊗¹⁺_
              ; ∙= to +=
              )
-  open M public using (+=)
+  open M public using (+=; 2⊗; 3⊗; 4⊗)
   infixl 6 _+_
-  infixl 7 _⊗¹⁺_ 2⊗_ 3⊗_ 4⊗_
+  infixl 7 _⊗¹⁺_
   _+_   = M._+_
   _⊗¹⁺_ = M._⊗¹⁺_
-  2⊗_   = M.2⊗_
-  3⊗_   = M.3⊗_
-  4⊗_   = M.4⊗_
 
 record Monoid-Ops {ℓ} (A : Type ℓ) : Type ℓ where
   inductive -- NO_ETA
@@ -82,8 +79,8 @@ module Additive-Monoid-Ops {ℓ}{M : Set ℓ} (mon : Monoid-Ops M) where
              ; _^⁺_ to _⊗⁺_
              ; ∙-magma to +-magma
              )
-  open M public using (0#; +-magma)
-  open Additive-Magma +-magma public
+  open M public using (0#; +-magma) hiding (module +-magma)
+  open module +-magma = Additive-Magma +-magma public
   infixl 7 _⊗⁺_
   _⊗⁺_  = M._⊗⁺_
 
@@ -110,7 +107,9 @@ record Group-Ops {ℓ} (A : Type ℓ) : Type ℓ where
   ⁻¹= : ∀ {x y} → x ≡ y → x ⁻¹ ≡ y ⁻¹
   ⁻¹= = ap _⁻¹
 
+  infix  8 _⁻¹
   infixl 7 _/_ _/′_
+  infixl 8 _^⁻_ _^⁻′_ _^_
 
   _/_ : A → A → A
   x / y = x ∙ y ⁻¹
@@ -151,8 +150,8 @@ module Additive-Group-Ops {ℓ}{G : Type ℓ} (grp : Group-Ops G) where
              ; /= to −=
              ; /′= to −′=
              )
-  open M public using (0−_; +-mon-ops; −=; 0−=)
-  open Additive-Monoid-Ops +-mon-ops public
+  open M public using (0−_; +-mon-ops; −=; 0−=) hiding (module +-mon-ops)
+  open module +-mon-ops = Additive-Monoid-Ops +-mon-ops public
   infixl 6 _−_
   infixl 7 _⊗⁻_ _⊗_
   _−_   = M._−_
@@ -177,7 +176,7 @@ record Ring-Ops {ℓ} (A : Type ℓ) : Type ℓ where
     *-mon-ops : Monoid-Ops A
 
   open module +-grp-ops = Additive-Group-Ops        +-grp-ops public
-    renaming (2⊗_ to 2*_)
+    renaming (2⊗ to 2*)
   open module *-mon-ops = Multiplicative-Monoid-Ops *-mon-ops public
 
   suc pred : A → A

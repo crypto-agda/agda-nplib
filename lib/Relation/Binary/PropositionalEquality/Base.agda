@@ -44,6 +44,8 @@ module _ {a} {A : Set a} where
     refl ∙ q  = q
     q ∙' refl = q
 
+    infix 9 !_
+
     !_ : {x y : A} → (x ≡ y → y ≡ x)
     !_ refl = refl
 
@@ -82,6 +84,7 @@ module _ {ℓ ℓp}
     tr! : (p : y ≡ x) → P x → P y
     tr! p = tr (! p)
 
+    infixr 5 _▸_
     _▸_ = tr
     -- black version of ◃ = tr!
 

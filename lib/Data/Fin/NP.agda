@@ -14,7 +14,8 @@ open import Data.Fin.Properties
            ; toℕ-strengthen to Fin▹ℕ-strengthen
            ; toℕ-raise to Fin▹ℕ-raise
            ; toℕ-fromℕ≤ to Fin▹ℕ-fromℕ≤
-           ; reverse to reverse′)
+           ; reverse to reverse′
+           ; cmp to cmp′)
 open import Data.Nat.NP using (ℕ; zero; suc; _<=_; module ℕ°; z≤n; s≤s; _∸_)
                         renaming (_+_ to _+ℕ_; _≤_ to _≤ℕ_; _<_ to _<ℕ_; pred to predℕ)
 open import Data.Nat.Properties
@@ -28,9 +29,6 @@ open import Relation.Nullary
 open import Relation.Nullary.Decidable
 open import Relation.Binary.PropositionalEquality.Base as ≡
 import Data.Nat.BoundedMonoInj-is-Id as BMIII
-
-suc-injective : ∀ {m}{i j : Fin m} → Fin.suc i ≡ suc j → i ≡ j
-suc-injective refl = refl
 
 pattern #0 = zero
 pattern #1 = suc #0

@@ -11,6 +11,8 @@ open import Relation.Binary.PropositionalEquality
 
 record BijKit b {a} (A : ★ a) : ★ (ₛ b ⊔ a) where
   constructor mk
+  infix 10 _⁻¹
+  infixl 9 _⁏Bij_
   field
     Bij   : ★ b
     eval  : Bij → Endo A
@@ -21,15 +23,19 @@ record BijKit b {a} (A : ★ a) : ★ (ₛ b ⊔ a) where
   eval⁻¹ : Bij → Endo A
   eval⁻¹ f = eval (f ⁻¹)
 
+  infix 4 _≗Bij_
   _≗Bij_ : Bij → Bij → ★ _
   _≗Bij_ = λ f g → ∀ (x : A) → eval f x ≡ eval g x
+
+  infix 10 _⁻¹-inverse _⁻¹-inverseBij _⁻¹-involutive
+  infixl 9 _⁏-spec_
 
   field
     id-spec : eval idBij ≗ id
     _⁏-spec_ : ∀ f g → eval (f ⁏Bij g) ≗ eval g ∘ eval f
 
     _⁻¹-inverse : ∀ f → eval (f ⁻¹) ∘ eval f ≗ id
-    _⁻¹-involutive : ∀ f → (f ⁻¹) ⁻¹ ≗Bij f
+    _⁻¹-involutive : ∀ f → ((f ⁻¹) ⁻¹) ≗Bij f
 
   _⁻¹-inverseBij : ∀ f → (f ⁏Bij f ⁻¹) ≗Bij idBij
   (f ⁻¹-inverseBij) x rewrite (f ⁏-spec (f ⁻¹)) x

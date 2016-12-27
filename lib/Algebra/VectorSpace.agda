@@ -18,6 +18,8 @@ record VectorSpace {ℓf}{F : Set ℓf}(𝔽 : Field F)
 
   module 𝔽 = Field {ℓf} {F} 𝔽
 
+  infixr 8 _·_
+
   field
 
     V-grp : Group V

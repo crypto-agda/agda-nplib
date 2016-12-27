@@ -21,8 +21,7 @@ open ≡
 
 module Data.Bits.OperationSyntax where
 
-module 𝟚Bij = 𝟚Bijection
-open 𝟚Bij public using (`id; 𝟚Bij) renaming (bool-bijKit to bitBijKit; `not to `notᴮ)
+open 𝟚Bijection public using (`id; 𝟚Bij) renaming (bool-bijKit to bitBijKit; `not to `notᴮ)
 open BijectionSyntax Bit 𝟚Bij public
 open BijectionSemantics bitBijKit public
 
@@ -37,7 +36,7 @@ open BijectionSemantics bitBijKit public
 `not = 𝟚Bij.`not `∷ const `id
 
 `xor : ∀ {n} → Bit → Bij (1 + n)
-`xor b = 𝟚Bij.`xor b `∷ const `id
+`xor b = 𝟚Bijection.`xor b `∷ const `id
 
 `[0:_1:_] : ∀ {n} → Bij n → Bij n → Bij (1 + n)
 `[0: f 1: g ] = 𝟚Bij.`id `∷ [0: f 1: g ]
@@ -86,12 +85,12 @@ map-inner f = `when1 `not `⁏ `0↔1 `⁏ `when1 f `⁏ `0↔1 `⁏ `when1 `not
 map-outer : ∀ {n} → Bij n → Bij n → Bij (1 + n)
 map-outer = `[0:_1:_]
 
-0↔1∷_ : ∀ {n} → Bits n → Bij (1 + n)
+0↔1∷ : ∀ {n} → Bits n → Bij (1 + n)
 0↔1∷ [] = `not
 0↔1∷ (0₂ ∷ p) = on-firsts   (0↔1∷ p)
 0↔1∷ (1₂ ∷ p) = on-extremes (0↔1∷ p)
 
-0↔_ : ∀ {n} → Bits n → Bij n
+0↔ : ∀ {n} → Bits n → Bij n
 0↔ [] = `id
 0↔ (0₂ ∷ p) = `when0 (0↔ p)
 0↔ (1₂ ∷ p) = 0↔1∷ p
@@ -111,7 +110,7 @@ if∷′ : ∀ {n} a (xs ys : Bits n) → (if a then (1₂ ∷ xs) else (0₂ �
 if∷′ 1₂ xs ys = refl
 if∷′ 0₂ xs ys = refl
 
-⟨0↔1∷_⟩-spec : ∀ {n} (p : Bits n) xs → 0↔1∷ p · xs ≡ ⟨0↔ (1∷ p) ⟩-sem xs
+⟨0↔1∷_⟩-spec : ∀ {n} (p : Bits n) xs → (0↔1∷ p · xs) ≡ ⟨0↔ (1∷ p) ⟩-sem xs
 ⟨0↔1∷_⟩-spec [] (1₂ ∷ []) = refl
 ⟨0↔1∷_⟩-spec [] (0₂ ∷ []) = refl
 ⟨0↔1∷_⟩-spec (1₂ ∷ ps) (1₂ ∷ 1₂ ∷ xs)

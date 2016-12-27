@@ -26,13 +26,13 @@ record IsMonadic {M : Set ℓ → Set ℓ} (rawMonad : RawMonad M) : ★_ (ₛ �
   liftM : ∀ {A B} → (A → B) → M A → M B
   liftM f x = x >>= return ∘ f
 
-  <$>-liftM : ∀ {A B} (f : A → B) x → f <$> x ≡ liftM f x
+  <$>-liftM : ∀ {A B} (f : A → B) x → (f <$> x) ≡ liftM f x
   <$>-liftM f x = return->>= (λ g → liftM g x) f
 
   liftM-id : ∀ {A} (mx : M A) → liftM id mx ≡ mx
   liftM-id = >>=-return
 
-  <$>-id : ∀ {A} (mx : M A) → id <$> mx ≡ mx
+  <$>-id : ∀ {A} (mx : M A) → (id <$> mx) ≡ mx
   <$>-id mx = trans (<$>-liftM id mx) (liftM-id mx)
 
   {- requires function extensionality

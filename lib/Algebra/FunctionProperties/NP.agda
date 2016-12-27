@@ -106,15 +106,19 @@ Interchange _·_ _∘_ = ∀₄ λ x y z t → (x · y) ∘ (z · t) ≈ (x ∘ 
 
 LeftCancel : Op₂ A → Set _
 LeftCancel _·_ = ∀₃ λ c x y → c · x ≈ c · y → x ≈ y
+-- LeftCancel _·_ ≡ ∀ c → Injective (c ·)
 
 RightCancel : Op₂ A → Set _
 RightCancel _·_ = ∀₃ λ c x y → x · c ≈ y · c → x ≈ y
+-- RightCancel _·_ ≡ ∀ c → Injective (· c)
 
 LeftCancelNonZero : A → Op₂ A → Set _
 LeftCancelNonZero zero _·_ = ∀₃ λ c x y → c ≉ zero → c · x ≈ c · y → x ≈ y
+-- LeftCancelNonZero zero _·_ ≡ ∀ c → c ≉ zero → Injective (c ·)
 
 RightCancelNonZero : A → Op₂ A → Set _
 RightCancelNonZero zero _·_ = ∀₃ λ c x y → c ≉ zero → x · c ≈ y · c → x ≈ y
+-- RightCancelNonZero zero _·_ ≡ ∀ c → c ≉ zero → Injective (· c)
 
 module Morphisms {b ℓᴮ}{B : Set b}(_≈ᴮ_ : Rel B ℓᴮ)(⟦_⟧ : A → B) where
   Homomorphic₀ : A → B → Set _

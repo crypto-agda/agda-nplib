@@ -15,6 +15,7 @@ module Internals where
   _==ᴬ_ : (x y : Atom) → Bool
   _==ᴬ_ = Nat._==_
 
+  infix 5 _ᴬ
   _ᴬ : ℕ → Atom
   _ᴬ = id
 
@@ -32,6 +33,7 @@ abstract
   _==ᴬ_ : (x y : Atom) → Bool
   _==ᴬ_ = Internals._==ᴬ_
 
+  infix 5 _ᴬ
   _ᴬ : ℕ → Atom
   _ᴬ = Internals._ᴬ
 

@@ -41,6 +41,7 @@ pattern 9+_ x = 8+ suc x
 ⟨0↔1⟩ 1 = 0
 ⟨0↔1⟩ n = n
 
+infix 8 _²
 private
   _² : ∀ {A : ★₀} → Endo (Endo A)
   f ² = f ∘ f
@@ -163,7 +164,7 @@ a≡a⊓b+a∸b (suc a) (suc b) rewrite ! a≡a⊓b+a∸b a b = idp
 ¬n≤x<n n p q = sucx≰x _ (q ∙≤ p)
 
 ¬n+≤y<n : ∀ n {x y} → n + x ≤ y → y < n → 𝟘
-¬n+≤y<n n p q = sucx≰x _ (q ∙≤ ℕ≤.reflexive (+-comm 0 n) ∙≤ ℕ≤.refl {n} +-mono z≤n ∙≤ p)
+¬n+≤y<n n p q = sucx≰x _ (q ∙≤ ℕ≤.reflexive (+-comm 0 n) ∙≤ (ℕ≤.refl {n} +-mono z≤n) ∙≤ p)
 
 fold : ∀ {a} {A : ★ a} → A → Endo A → ℕ → A
 fold x f n = nest n f x
@@ -206,7 +207,7 @@ module more-nest-Properties {a} {A : ★ a} where
 +-inj-over-∸ : ∀ x y z → (x + y) ∸ (x + z) ≡ y ∸ z
 +-inj-over-∸ = [i+j]∸[i+k]≡j∸k 
 
-2*_ : ℕ → ℕ
+2* : ℕ → ℕ
 2* x = x + x
 
 2*-spec : ∀ n → 2* n ≡ 2 * n
@@ -218,11 +219,11 @@ zero   == suc _  = 0₂
 suc _  == zero   = 0₂
 suc m  == suc n  = m == n
 
-open FromOp₂ _+_
-  renaming ( op= to += )
+open From-Op₂ _+_
+  renaming ( ∙= to += )
   public
 
-open FromAssocComm _+_ +-assoc +-comm
+open From-Op₂.From-Assoc-Comm _+_ +-assoc +-comm
   renaming ( assoc-comm to +-assoc-comm
            ; assocs to +-assocs
            ; interchange to +-interchange
@@ -232,10 +233,13 @@ open FromAssocComm _+_ +-assoc +-comm
            ; !assoc= to +-!assoc=
            ; inner= to +-inner=
            ; outer= to +-outer=
+           ; on-sides to +-on-sides
+           ; ²-∙-distr to 2*-+-distr
+           ; ²-∙-distr' to 2*-+-distr'
            )
   public
 
-open FromAssocComm _*_ *-assoc *-comm
+open From-Op₂.From-Assoc-Comm _*_ *-assoc *-comm
   renaming ( assoc-comm to *-assoc-comm
            ; assocs to *-assocs
            ; interchange to *-interchange
@@ -245,6 +249,9 @@ open FromAssocComm _*_ *-assoc *-comm
            ; outer= to *-outer=
            ; assoc= to *-assoc=
            ; !assoc= to *-!assoc=
+           ; on-sides to *-on-sides
+           ; ²-∙-distr to ²-*-distr
+           ; ²-∙-distr' to ²-*-distr'
            )
   public
 
@@ -281,7 +288,7 @@ no-<-> (s≤s p) (s≤s q) = no-<-> p q
 +≤→≤∸ {x} y i | k , idp =
   x             ≤⟨ ≤-steps′ k ⟩
   x + k         ≡⟨ ! m+n∸n≡m _ y ⟩
-  x + k + y ∸ y ≡⟨ ap (λ z → z ∸ y) (+-!assoc= {x} (+-comm k y)) ⟩
+  x + k + y ∸ y ≡⟨ ap (λ z → z ∸ y) (+-!assoc= x (+-comm k y)) ⟩
   x + y + k ∸ y ≡⟨ ap (λ z → z + k ∸ y) (+-comm x y) ⟩
   y + x + k ∸ y ∎
   where open ≤-Reasoning
@@ -322,15 +329,15 @@ a⊓b≡a (s≤s a≤b) rewrite a⊓b≡a a≤b = idp
 ⊔≤+ (suc a) zero    = s≤s (ℕ≤.reflexive (+-comm 0 a))
 ⊔≤+ (suc a) (suc b) = s≤s (⊔≤+ a b ∙≤ ≤-step ℕ≤.refl ∙≤ ℕ≤.reflexive (+-assoc-comm 1 a b))
 
-2*′_ : ℕ → ℕ
-2*′_ = fold 0 (suc ∘′ suc)
+2*′ : ℕ → ℕ
+2*′ = fold 0 (suc ∘′ suc)
 
 2*′-spec : ∀ n → 2*′ n ≡ 2* n
 2*′-spec zero = idp
 2*′-spec (suc n) rewrite 2*′-spec n | +-assoc-comm 1 n n = idp
 
 2^⟨_⟩* : ℕ → ℕ → ℕ
-2^⟨ n ⟩* x = fold x 2*_ n
+2^⟨ n ⟩* x = fold x 2* n
 
 ⟨2^_*_⟩ : ℕ → ℕ → ℕ
 ⟨2^ n * x ⟩ = 2^⟨ n ⟩* x
@@ -383,7 +390,7 @@ a⊓b≡a (s≤s a≤b) rewrite a⊓b≡a a≤b = idp
 
 2^-+ : ∀ x y z → ⟨2^ x * ⟨2^ y * z ⟩ ⟩ ≡ ⟨2^ (x + y) * z ⟩
 2^-+ zero    y z = idp
-2^-+ (suc x) y z = ap 2*_ (2^-+ x y z)
+2^-+ (suc x) y z = ap 2* (2^-+ x y z)
 
 cancel-*-left : ∀ i j {k} → suc k * i ≡ suc k * j → i ≡ j
 cancel-*-left i j {k}
@@ -415,6 +422,8 @@ factor-+-∸ (s≤s {x} {b} x≤b) (s≤s {y} y≤b) rewrite factor-+-∸ x≤b 
                                               | +-comm x (suc y)
                                               | n+k∸m (suc y) x≤b
                                               | +-comm x y = idp
+
+infixl 7 _*′_
 
 _*′_ : ℕ → ℕ → ℕ
 0 *′ n = 0
@@ -480,13 +489,15 @@ module ^-Props where
       b ^ n * b ^(m * n)   ≡⟨ ap (_*_ (b ^ n)) (^-* b m n) ⟩
       b ^ n * (b ^ n) ^ m  ∎
 
+infix 8 _^2
+
 _^2 : ℕ → ℕ
 n ^2 = n * n
 
 ^2-spec : ∀ n → n ^2 ≡ n ^ 2
 ^2-spec n rewrite *1-identity n = idp
 
-2^_ : ℕ → ℕ
+2^ : ℕ → ℕ
 2^ n = ⟨2^ n * 1 ⟩
 
 2^-spec : ∀ n → 2^ n ≡ 2 ^ n
@@ -517,8 +528,9 @@ _+ᵃ_ : ℕ → ℕ → ℕ
 zero  +ᵃ acc = acc
 suc n +ᵃ acc = n +ᵃ suc acc
 
-open FromOp₂ _+ᵃ_
-  renaming ( op= to +ᵃ= )
+open From-Op₂ _+ᵃ_
+  using ()
+  renaming ( ∙= to +ᵃ= )
   public
 
 +ᵃ-+ : ∀ m n → m +ᵃ n ≡ m + n
@@ -537,7 +549,7 @@ open FromOp₂ _+ᵃ_
 +ᵃ0-identity : ∀ x → x +ᵃ 0 ≡ x
 +ᵃ0-identity x = +ᵃ-comm x 0
 
-open FromAssocComm _+ᵃ_ +ᵃ-assoc +ᵃ-comm
+open From-Op₂.From-Assoc-Comm _+ᵃ_ +ᵃ-assoc +ᵃ-comm
   renaming ( assoc-comm to +ᵃ-assoc-comm
            ; assocs to +ᵃ-assocs
            ; interchange to +ᵃ-interchange

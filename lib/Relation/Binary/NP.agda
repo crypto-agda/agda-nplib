@@ -54,7 +54,7 @@ module Refl-Trans-Reasoning
          (trans : Transitive _≈_) where
 
   open Trans-Reasoning _≈_ trans public hiding (finally)
-  infix  3 _∎
+  infix 3 _∎
 
   _∎ : ∀ x → x ≈ x
   _ ∎ = refl
