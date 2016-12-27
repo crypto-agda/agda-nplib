@@ -1,2 +1,2 @@
 #!/bin/bash -eu
-exec agda-pkg -cagda-pkg.conf agda-nplib.agda
+exec agda-pkg -cagda-pkg.conf nplib.agda
