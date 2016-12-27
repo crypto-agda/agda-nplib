@@ -1,4 +1,4 @@
-module agda-nplib where
+module nplib where
 import Algebra.Field
 -- import Algebra.Field.Reflection
 import Algebra.Field.Solver

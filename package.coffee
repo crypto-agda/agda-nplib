@@ -2,10 +2,10 @@ fs   = require 'fs'
 find = require 'find'
 find.file /\.agda$/, '.', (files) ->
   fs.writeFile 'package.json', JSON.stringify
-    name: "agda-nplib"
+    name: "nplib"
     version: "0.0.1"
-    description: "Extension of agda-stdlib"
-    main: "agda-nplib.agda"
+    description: "Extension of agda standard-library"
+    main: "nplib.agda"
     scripts:
       test: "echo \"Error: no test specified\" && exit 1"
     files: [ "README" ].concat(files)
@@ -22,7 +22,7 @@ find.file /\.agda$/, '.', (files) ->
       url: "https://github.com/crypto-agda/agda-nplib/issues"
     homepage: "https://github.com/crypto-agda/agda-nplib"
     dependencies:
-      "agda-parametricity": ">= 0.0.3"
+      "parametricity": ">= 0.0.3"
     agda:
       include: [
         "."
